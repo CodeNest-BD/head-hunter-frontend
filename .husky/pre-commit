@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx)$' || true)
+
+if [ -n "$STAGED" ]; then
+  echo "Formatting staged files with Prettier..."
+  echo "$STAGED"
+  echo ""
+  npx prettier --write $STAGED
+  git add $STAGED
+fi

@@ -1,0 +1,222 @@
+name: "CI"
+
+on:
+  pull_request:
+  push:
+    branches:
+      - v3
+
+jobs:
+  precommit:
+    name: Precommit Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Cheap (<100 ms) diagnostic — prints CPU / RAM / disk so when
+      # `next build` OOMs or slows down we can see the runner spec
+      # the failure happened on without re-running with extra flags.
+      - name: Runner specs
+        run: |
+          echo "CPUs:  $(nproc)"
+          echo "Memory:"; free -h
+          echo "Disk:"; df -h /
+
+      # `cache: npm` hashes package-lock.json automatically and restores
+      # the global npm cache (~/.npm) when the lockfile is unchanged,
+      # so `npm ci` becomes a near-instant link step on a cache hit.
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Next.js incremental build cache. Webpack's persistent cache inside
+      # `.next/cache` is content-hashed per module, so it already
+      # invalidates the right entries on source change — hashing source
+      # into the cache key would just thrash the 10 GB repo cache budget.
+      # Keying on the lockfile alone gives one stable entry that every
+      # branch hits, and webpack figures out what to rebuild.
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}
+
+      - name: Get changed files
+        id: changed-files
+        run: |
+          set -e
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            FILES=$(git diff --name-only --diff-filter=ACMRT origin/${{ github.base_ref }}...HEAD || echo "")
+          else
+            FILES=$(git diff --name-only --diff-filter=ACMRT HEAD^ HEAD || echo "")
+          fi
+
+          if [ -z "$FILES" ]; then
+            echo "No files changed"
+            echo "files=" >> $GITHUB_OUTPUT
+          else
+            echo "files=$(echo "$FILES" | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run ESLint on changed files
+        if: steps.changed-files.outputs.files != ''
+        run: |
+          set -e
+          FILES="${{ steps.changed-files.outputs.files }}"
+          JS_TS_FILES=$(echo "$FILES" | tr ' ' '\n' | grep -E '\.(js|jsx|ts|tsx)$' || true)
+          if [ -n "$JS_TS_FILES" ]; then
+            echo "Linting files:"
+            echo "$JS_TS_FILES"
+            echo "$JS_TS_FILES" | xargs npx eslint --max-warnings=0
+          else
+            echo "No JS/TS files to lint"
+          fi
+
+      - name: Run Prettier check on changed files
+        if: steps.changed-files.outputs.files != ''
+        run: |
+          set -e
+          FILES="${{ steps.changed-files.outputs.files }}"
+          if [ -n "$FILES" ]; then
+            echo "Checking formatting for files:"
+            echo "$FILES" | tr ' ' '\n'
+            echo "$FILES" | xargs npx prettier --check --ignore-unknown
+          else
+            echo "No files to check"
+          fi
+
+      - name: Check Naming Conventions
+        run: |
+          set -e
+
+          # Function to check if a string is in PascalCase
+          is_pascal_case() {
+              echo "$1" | grep -Eq '^[A-Z][a-zA-Z0-9]*$'
+          }
+
+          # Function to check if a string is in camelCase
+          is_camel_case() {
+              echo "$1" | grep -Eq '^[a-z][a-zA-Z0-9]*$'
+          }
+
+          # Function to check if a string is in kebab-case
+          is_kebab_case() {
+              echo "$1" | grep -Eq '^[a-z0-9]+(-[a-z0-9]+)*$'
+          }
+
+          # Get changed files based on event type
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT origin/${{ github.base_ref }}...HEAD || echo "")
+          else
+            CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT HEAD^ HEAD || echo "")
+          fi
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No files changed, skipping naming convention checks"
+            exit 0
+          fi
+
+          echo "Checking naming conventions for changed files..."
+
+          # Check React component naming (TSX)
+          echo "$CHANGED_FILES" | grep '^src/.*\.tsx$' | while IFS= read -r file; do
+              [ -z "$file" ] && continue
+              [ ! -f "$file" ] && continue
+
+              filename=$(basename "$file" .tsx)
+              if [ "$filename" = "page" ] || [ "$filename" = "layout" ] || [ "$filename" = "index" ] || echo "$file" | grep -q '/ui-components/controls/.*\.tsx$' || echo "$filename" | grep -q '^use' || echo "$filename" | grep -q '\.test$'; then
+                  continue
+              fi
+              if ! is_pascal_case "$filename"; then
+                  echo "Error: React component $file should use PascalCase."
+                  exit 1
+              fi
+          done
+
+          # Check TypeScript file naming (TS)
+          echo "$CHANGED_FILES" | grep '^src/.*\.ts$' | while IFS= read -r file; do
+              [ -z "$file" ] && continue
+              [ ! -f "$file" ] && continue
+
+              if echo "$file" | grep -q '\.d\.ts$' || echo "$file" | grep -q '^src/shared/sentry/'; then
+                  continue
+              fi
+              filename=$(basename "$file" .ts)
+              if echo "$filename" | grep -q '\.test$'; then
+                  continue
+              fi
+              if ! is_camel_case "$filename"; then
+                  echo "Error: TypeScript file $file should use camelCase."
+                  exit 1
+              fi
+          done
+
+          # Check folder naming
+          echo "$CHANGED_FILES" | grep '^src/' | cut -d'/' -f2 | sort -u | while IFS= read -r folder; do
+              [ -z "$folder" ] && continue
+              [ ! -d "src/$folder" ] && continue
+
+              if ! is_kebab_case "$folder" && ! echo "$folder" | grep -Eq '^[a-zA-Z]+$' && ! echo "$folder" | grep -Eq '^[a-zA-Z0-9]+$'; then
+                  echo "Error: Folder src/$folder should use kebab-case or be a single word."
+                  exit 1
+              fi
+          done
+
+          # Check for correct use of 'interface' and 'type' in @features folder
+          echo "$CHANGED_FILES" | grep '^src/features/.*\.tsx$' | while IFS= read -r file; do
+              [ -z "$file" ] && continue
+              [ ! -f "$file" ] && continue
+
+              if grep -q "type.*Props" "$file"; then
+                  echo "Error: Use 'interface' instead of 'type' for component props in $file"
+                  exit 1
+              fi
+              if ! grep -q "interface.*Props" "$file"; then
+                  echo "Warning: No 'interface' found for component props in $file. Make sure to use 'interface' for props."
+              fi
+          done
+
+          echo "Naming conventions check passed."
+
+      # `next build` no longer runs `tsc` / `next lint` (see next.config.js).
+      # Keep them here as explicit gates so type errors and lint regressions
+      # block merges. They run in parallel-friendly steps and surface
+      # actionable failures faster than they did when bundled into the build.
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Next.js lint
+        run: npx next lint --max-warnings=0
+
+      - name: Build
+        env:
+          # Standard GitHub-hosted runners are 2 vCPU / 7.8 GiB (6.8 GiB
+          # available after OS/runner agent). 5120 MB caps V8's old
+          # space so peak RSS (~5.6 GiB incl. native heap + new space)
+          # leaves ~1.2 GiB margin before swap. Sits comfortably above
+          # the historic 4 GB OOM threshold, which only happened with
+          # Sentry source-map widening (now disabled in sentryConfig.js).
+          # Matches the Dockerfile builder stage. Re-tune if we move to
+          # a larger runner class.
+          NODE_OPTIONS: --max-old-space-size=5120
+          # Dummy values for build-time module load. apiClient / scopedHttp
+          # throw if their respective NEXT_PUBLIC_* vars are missing, which
+          # would otherwise break static prerender of pages that import
+          # them transitively. Real deploys re-build with the actual values
+          # from the deployment environment; this CI build is a code-level
+          # verification only, not a deployable artifact.
+          NEXT_PUBLIC_API_URL: http://localhost:8080/v1
+          NEXT_PUBLIC_API_URL_V3: http://localhost:8080/v3
+          NEXT_PUBLIC_AI_CHAT_URL: http://localhost:8000
+          NEXT_PUBLIC_COPILOT_API_URL: http://localhost:8001
+          NEXT_PUBLIC_NOTEBOOK_URL: http://localhost:8002
+        run: npm run build

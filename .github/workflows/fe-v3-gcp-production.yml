@@ -1,0 +1,159 @@
+name: Deploy to GCP Production
+
+on:
+  workflow_dispatch: # Manual trigger only; disable auto-trigger for now.
+  release:
+    types: [released]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GKE_CLUSTER: cluster-prod
+  GCP_PROD_REGION: ${{ secrets.GCP_PROD_REGION }}
+  DEPLOYMENT_NAME: head-hunter-frontend-production
+  IMAGE: head-hunter-frontend
+  REGISTRY: ${{ secrets.GCP_PROD_REGION }}-docker.pkg.dev
+  REPOSITORY: ${{ secrets.GCP_PROJECT_ID }}/head-hunter-prod/head-hunter-frontend
+  NAMESPACE: production
+
+jobs:
+  build:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.build.outputs.image-tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      - name: Configure Docker to use gcloud as credential helper
+        run: |
+          gcloud auth configure-docker ${{ secrets.GCP_PROD_REGION }}-docker.pkg.dev
+
+      - name: Install Infisical CLI
+        run: |
+          curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo bash
+          sudo apt-get update && sudo apt-get install -y infisical
+
+      - name: Build, tag, and push image to Artifact Registry
+        id: build
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN_V3 }}
+        run: |
+          infisical export --token=$INFISICAL_TOKEN --env=prod --format=dotenv > .env
+          export $(cat .env | xargs)
+
+          # Build a docker container and push it to Artifact Registry
+          IMAGE_TAG=release-${GITHUB_SHA::8}
+          FULL_IMAGE_NAME=$REGISTRY/$REPOSITORY:$IMAGE_TAG
+          FULL_IMAGE_LATEST=$REGISTRY/$REPOSITORY:release-latest
+
+          docker build \
+            --build-arg NEXT_PUBLIC_ACTIVITY_LOG_API_URL=$NEXT_PUBLIC_ACTIVITY_LOG_API_URL \
+            --build-arg NEXT_PUBLIC_AI_CHAT_URL=$NEXT_PUBLIC_AI_CHAT_URL \
+            --build-arg NEXT_PUBLIC_AI_URL=$NEXT_PUBLIC_AI_URL \
+            --build-arg NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+            --build-arg NEXT_PUBLIC_API_URL_V3=$NEXT_PUBLIC_API_URL_V3 \
+            --build-arg NEXT_PUBLIC_AUTH_REFRESH_LEAD_MINUTES=$NEXT_PUBLIC_AUTH_REFRESH_LEAD_MINUTES \
+            --build-arg NEXT_PUBLIC_COOKIE_DOMAIN=$NEXT_PUBLIC_COOKIE_DOMAIN \
+            --build-arg NEXT_PUBLIC_COPILOT_API_URL=$NEXT_PUBLIC_COPILOT_API_URL \
+            --build-arg NEXT_PUBLIC_COVARIATE_TIMEOUT=$NEXT_PUBLIC_COVARIATE_TIMEOUT \
+            --build-arg NEXT_PUBLIC_ANALYTICS_HOST=$NEXT_PUBLIC_ANALYTICS_HOST \
+            --build-arg NEXT_PUBLIC_ANALYTICS_KEY=$NEXT_PUBLIC_ANALYTICS_KEY \
+            --build-arg NEXT_PUBLIC_DEEP_SEARCH_SUPABASE_URL=$NEXT_PUBLIC_DEEP_SEARCH_SUPABASE_URL \
+            --build-arg NEXT_PUBLIC_DEEP_SEARCH_SUPABASE_PUBLIC_KEY=$NEXT_PUBLIC_DEEP_SEARCH_SUPABASE_PUBLIC_KEY \
+            --build-arg NEXT_PUBLIC_ENVIRONMENT=$NEXT_PUBLIC_ENVIRONMENT \
+            --build-arg NEXT_PUBLIC_EVENTS_SOCKET_URL=$NEXT_PUBLIC_EVENTS_SOCKET_URL \
+            --build-arg NEXT_PUBLIC_FCM_VAPID_KEY=$NEXT_PUBLIC_FCM_VAPID_KEY \
+            --build-arg NEXT_PUBLIC_FILES_UPLOAD_LIMIT=$NEXT_PUBLIC_FILES_UPLOAD_LIMIT \
+            --build-arg NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY \
+            --build-arg NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID \
+            --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN \
+            --build-arg NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID \
+            --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID \
+            --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID \
+            --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET \
+            --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID \
+            --build-arg NEXT_PUBLIC_MSAL_CLIENT_ID=$NEXT_PUBLIC_MSAL_CLIENT_ID \
+            --build-arg NEXT_PUBLIC_MSAL_AUTHORITY=$NEXT_PUBLIC_MSAL_AUTHORITY \
+            --build-arg NEXT_PUBLIC_MSAL_REDIRECT_URI=$NEXT_PUBLIC_MSAL_REDIRECT_URI \
+            --build-arg NEXT_PUBLIC_METABASE_URL=$NEXT_PUBLIC_METABASE_URL \
+            --build-arg NEXT_PUBLIC_NOTEBOOK_URL=$NEXT_PUBLIC_NOTEBOOK_URL \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN \
+            --build-arg NEXT_PUBLIC_SENTRY_ORG=$NEXT_PUBLIC_SENTRY_ORG \
+            --build-arg NEXT_PUBLIC_SENTRY_PROJECT=$NEXT_PUBLIC_SENTRY_PROJECT \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_SECRET_MAIN=$NEXT_PUBLIC_SUPABASE_ANON_SECRET_MAIN \
+            --build-arg NEXT_PUBLIC_SUPABASE_SEARCH_ANON_KEY=$NEXT_PUBLIC_SUPABASE_SEARCH_ANON_KEY \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL_MAIN=$NEXT_PUBLIC_SUPABASE_URL_MAIN \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL_SEARCH=$NEXT_PUBLIC_SUPABASE_URL_SEARCH \
+            --build-arg NEXT_PUBLIC_SUPPORT_EMAIL=$NEXT_PUBLIC_SUPPORT_EMAIL \
+            --build-arg NEXT_PUBLIC_SYNC_FUSION_LICENSE_KEY=$NEXT_PUBLIC_SYNC_FUSION_LICENSE_KEY \
+            -t $FULL_IMAGE_NAME \
+            -t $FULL_IMAGE_LATEST .
+            
+          docker push $FULL_IMAGE_NAME
+          docker push $FULL_IMAGE_LATEST
+          echo "image-tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: Deploy to GKE Production
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      - name: "Use gcloud CLI"
+        run: "gcloud info"
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials "$GKE_CLUSTER" --region "$GCP_PROD_REGION"
+
+      - name: Update image in deployment
+        run: |
+          # Update the image in the deployment YAML
+          sed -i "s|IMAGE_PLACEHOLDER|$REGISTRY/$REPOSITORY:${{ needs.build.outputs.image-tag }}|g" k8s/$NAMESPACE/deployment.yml
+
+      - name: Deploy to GKE
+        run: |
+          APPLY_OUTPUT=$(kubectl apply -f k8s/$NAMESPACE/deployment.yml -n $NAMESPACE)
+          kubectl apply -f k8s/$NAMESPACE/service.yml -n $NAMESPACE
+          kubectl apply -f k8s/$NAMESPACE/hpa.yml -n $NAMESPACE
+          kubectl apply -f k8s/$NAMESPACE/pdb.yml -n $NAMESPACE
+          kubectl apply -f k8s/$NAMESPACE/ingress.yml -n $NAMESPACE
+
+          # Force restart if deployment was unchanged to apply possible env change in infisical
+          if echo "$APPLY_OUTPUT" | grep -q "unchanged"; then
+            echo "Deployment unchanged, forcing rollout restart..."
+            kubectl rollout restart deployment/$DEPLOYMENT_NAME -n $NAMESPACE
+          fi
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/$DEPLOYMENT_NAME -n $NAMESPACE --timeout=600s
+          kubectl get services -n $NAMESPACE
+          kubectl get pods -n $NAMESPACE
+          kubectl get hpa -n $NAMESPACE
+          kubectl get ingress -n $NAMESPACE
