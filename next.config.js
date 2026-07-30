@@ -48,7 +48,7 @@ const baseConfig = {
   transpilePackages: ["@react-pdf-viewer/core"],
   images: {
     // Add this project's remote image hosts here
-    // (e.g. your Supabase storage domain, CloudFront distribution, or S3 bucket).
+    // (e.g. your image CDN, CloudFront distribution, or S3 bucket).
     domains: [],
   },
 
