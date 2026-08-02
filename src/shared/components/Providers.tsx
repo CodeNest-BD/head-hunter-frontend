@@ -6,7 +6,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Toaster } from "sonner";
 import { store } from "@/shared/store/store";
 import { queryClient } from "@/shared/libs/queryClient";
-import { AuthProvider } from "@/features/auth/providers/AuthProvider";
+import { AuthProvider } from "@/features/auth";
 
 // Google OAuth needs a real client id. When it's absent (or the build-time
 // "placeholder") the Google buttons opt out entirely rather than rendering

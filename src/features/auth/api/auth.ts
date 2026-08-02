@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { apiClient } from "@/shared/libs/apiClient";
-import type { Role } from "../types";
+import type { SignupRole } from "../types";
 
 const accessTokenResponse = z.object({ accessToken: z.string().min(1) });
 export type AccessTokenResponse = z.infer<typeof accessTokenResponse>;
@@ -17,7 +17,7 @@ interface SignUpInput {
   name: string;
   email: string;
   password: string;
-  role: Role;
+  role: SignupRole;
 }
 
 /** POST /auth/sign-up → 201 { id, email }. User must then verify an OTP. */
@@ -71,7 +71,7 @@ export async function signIn(input: {
  */
 export async function googleLogin(input: {
   credential: string;
-  role?: Role;
+  role?: SignupRole;
   name?: string;
 }): Promise<AccessTokenResponse> {
   const { data } = await apiClient.post<unknown>("/auth/google", input, {

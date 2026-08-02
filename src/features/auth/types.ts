@@ -1,8 +1,20 @@
 import { z } from "zod";
 
-/** Account roles a user can hold in the marketplace. */
-export const roleSchema = z.enum(["company", "recruiter"]);
+/**
+ * Account roles a user can hold. `admin` is provisioned out of band and cannot
+ * be self-assigned at sign-up, but it MUST be parseable here — omitting it made
+ * an admin login fail authUserSchema.parse and break session boot entirely.
+ */
+export const roleSchema = z.enum(["company", "recruiter", "admin"]);
 export type Role = z.infer<typeof roleSchema>;
+
+/**
+ * The subset a user may choose at sign-up. Kept separate from `roleSchema`
+ * deliberately: the backend rejects a self-assigned admin (SELF_SIGNUP_ROLES),
+ * so the form must never offer it even though the session parser accepts it.
+ */
+export const signupRoleSchema = z.enum(["company", "recruiter"]);
+export type SignupRole = z.infer<typeof signupRoleSchema>;
 
 /**
  * User profile as returned by GET /auth/me. `profile` is backend-shaped and

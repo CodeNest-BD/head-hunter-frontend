@@ -8,13 +8,13 @@ import { isApiError } from "@/shared/libs/errorHandler";
 import { hasGoogleClientId } from "@/shared/components/Providers";
 import { googleLogin } from "../api/auth";
 import { useAuth } from "../hooks/useAuth";
-import type { Role } from "../types";
+import type { SignupRole } from "../types";
 
 interface GoogleAuthButtonProps {
   // Signup passes the chosen role (+ optional name) so the backend can
   // provision a new google user. Login omits both (login-only) and handles the
   // 409 role_required by nudging the user to sign up.
-  role?: Role;
+  role?: SignupRole;
   name?: string;
 }
 
