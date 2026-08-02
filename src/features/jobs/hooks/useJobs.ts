@@ -9,20 +9,21 @@ import {
   type JobListParams,
   type JobWriteInput,
 } from "../api/jobs";
+import { jobKeys } from "../keys";
 import type { JobStatus } from "../schemas";
-
-export const jobsKey = (params: JobListParams) => ["jobs", params] as const;
-export const jobKey = (id: string) => ["job", id] as const;
 
 export function useJobs(params: JobListParams) {
   return useQuery({
-    queryKey: jobsKey(params),
+    queryKey: jobKeys.list(params),
     queryFn: () => fetchJobs(params),
   });
 }
 
 export function useJob(id: string) {
-  return useQuery({ queryKey: jobKey(id), queryFn: () => fetchJob(id) });
+  return useQuery({
+    queryKey: jobKeys.detail(id),
+    queryFn: () => fetchJob(id),
+  });
 }
 
 export function useCreateJob() {
@@ -31,7 +32,7 @@ export function useCreateJob() {
   return useMutation({
     mutationFn: (input: JobWriteInput) => createJob(input),
     onSuccess: (job) => {
-      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      void queryClient.invalidateQueries({ queryKey: jobKeys.all });
       toast.success("Draft saved");
       router.push(`/company/jobs/${job.id}`);
     },
@@ -44,8 +45,8 @@ export function useUpdateJob(id: string) {
     mutationFn: (input: Partial<JobWriteInput> & { status?: JobStatus }) =>
       updateJob(id, input),
     onSuccess: (job) => {
-      queryClient.setQueryData(jobKey(id), job);
-      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      queryClient.setQueryData(jobKeys.detail(id), job);
+      void queryClient.invalidateQueries({ queryKey: jobKeys.all });
     },
   });
 }

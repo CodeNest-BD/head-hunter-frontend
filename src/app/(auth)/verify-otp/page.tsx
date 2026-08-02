@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { OtpForm } from "@/features/auth/components/OtpForm";
+import { OtpForm } from "@/features/auth";
 
 const emailParamSchema = z.string().email();
 

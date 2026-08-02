@@ -1,9 +1,8 @@
 "use client";
 
+import { RequireRole } from "@/features/auth";
 import Link from "next/link";
-import { JobForm } from "@/features/jobs/components/JobForm";
-import { useCreateJob } from "@/features/jobs/hooks/useJobs";
-import { RequireRole } from "@/shared/components/RequireRole";
+import { JobForm, useCreateJob } from "@/features/jobs";
 
 export default function NewJobPage() {
   const create = useCreateJob();

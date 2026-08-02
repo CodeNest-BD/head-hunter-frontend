@@ -5,22 +5,18 @@ import {
   type CompanyListParams,
 } from "../api/companyProfiles";
 import { followCompany, unfollowCompany } from "../api/follows";
-
-export const companiesKey = (params: CompanyListParams) =>
-  ["companies", params] as const;
-export const followedCompaniesKey = (params: CompanyListParams) =>
-  ["companies", "followed", params] as const;
+import { companyKeys } from "../keys";
 
 export function useCompanies(params: CompanyListParams) {
   return useQuery({
-    queryKey: companiesKey(params),
+    queryKey: companyKeys.list(params),
     queryFn: () => fetchCompanies(params),
   });
 }
 
 export function useFollowedCompanies(params: CompanyListParams) {
   return useQuery({
-    queryKey: followedCompaniesKey(params),
+    queryKey: companyKeys.followed(params),
     queryFn: () => fetchFollowedCompanies(params),
   });
 }
@@ -40,7 +36,7 @@ export function useToggleFollow() {
       isFollowed: boolean;
     }) => (isFollowed ? unfollowCompany(companyId) : followCompany(companyId)),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["companies"] });
+      void queryClient.invalidateQueries({ queryKey: companyKeys.all });
     },
   });
 }

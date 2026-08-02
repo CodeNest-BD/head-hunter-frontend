@@ -1,8 +1,8 @@
 "use client";
 
+import { RequireRole } from "@/features/auth";
 import Link from "next/link";
-import { NotificationList } from "@/features/notifications/components/NotificationList";
-import { RequireRole } from "@/shared/components/RequireRole";
+import { NotificationList } from "@/features/notifications";
 
 export default function NotificationsPage() {
   return (

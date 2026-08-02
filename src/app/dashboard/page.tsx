@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import type { Role } from "@/features/auth/types";
-import { useUnreadCount } from "@/features/notifications/hooks/useNotifications";
+import { useAuth, type Role } from "@/features/auth";
+
+import { useUnreadCount } from "@/features/notifications";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -45,6 +45,9 @@ const LINKS_BY_ROLE: Record<Role, DashboardLink[]> = {
       description: "New jobs from the companies you follow.",
     },
   ],
+  // No admin surface yet; an admin still gets a working dashboard rather than
+  // a crash.
+  admin: [],
 };
 
 /** Recruiter-only: the count endpoint is not rendered for a company. */
@@ -90,6 +93,12 @@ export default function DashboardPage() {
           Log out
         </Button>
       </div>
+
+      {links.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          There is no admin console yet.
+        </p>
+      )}
 
       <div className="flex flex-col gap-4">
         {links.map((link) => (

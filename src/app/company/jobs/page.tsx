@@ -1,8 +1,8 @@
 "use client";
 
+import { RequireRole } from "@/features/auth";
 import Link from "next/link";
-import { JobsTable } from "@/features/jobs/components/JobsTable";
-import { RequireRole } from "@/shared/components/RequireRole";
+import { JobsTable } from "@/features/jobs";
 import { Button } from "@/shared/ui-components/controls/button";
 
 export default function CompanyJobsPage() {

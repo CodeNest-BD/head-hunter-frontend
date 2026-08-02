@@ -1,8 +1,8 @@
 "use client";
 
+import { RequireRole } from "@/features/auth";
 import Link from "next/link";
-import { CompanyList } from "@/features/companies/components/CompanyList";
-import { RequireRole } from "@/shared/components/RequireRole";
+import { CompanyList } from "@/features/companies";
 
 export default function CompaniesPage() {
   return (

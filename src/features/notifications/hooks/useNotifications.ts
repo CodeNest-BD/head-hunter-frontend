@@ -6,20 +6,20 @@ import {
   markNotificationRead,
   type NotificationListParams,
 } from "../api/notifications";
-
-export const notificationsKey = (params: NotificationListParams) =>
-  ["notifications", params] as const;
-export const unreadCountKey = ["notifications", "unread-count"] as const;
+import { notificationKeys } from "../keys";
 
 export function useNotifications(params: NotificationListParams) {
   return useQuery({
-    queryKey: notificationsKey(params),
+    queryKey: notificationKeys.list(params),
     queryFn: () => fetchNotifications(params),
   });
 }
 
 export function useUnreadCount() {
-  return useQuery({ queryKey: unreadCountKey, queryFn: fetchUnreadCount });
+  return useQuery({
+    queryKey: notificationKeys.unreadCount,
+    queryFn: fetchUnreadCount,
+  });
 }
 
 /** Both mutations invalidate the list and the badge, which must stay in step. */
@@ -28,7 +28,7 @@ export function useMarkRead() {
   return useMutation({
     mutationFn: (id: string) => markNotificationRead(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });
 }
@@ -38,7 +38,7 @@ export function useMarkAllRead() {
   return useMutation({
     mutationFn: markAllNotificationsRead,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });
 }

@@ -9,7 +9,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const useAuthMock = vi.fn();
-vi.mock("@/features/auth/hooks/useAuth", () => ({
+vi.mock("../hooks/useAuth", () => ({
   useAuth: () => useAuthMock(),
 }));
 

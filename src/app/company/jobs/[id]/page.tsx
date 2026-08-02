@@ -1,14 +1,9 @@
 "use client";
 
+import { RequireRole } from "@/features/auth";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { JobForm } from "@/features/jobs/components/JobForm";
-import {
-  usePublishJob,
-  useJob,
-  useUpdateJob,
-} from "@/features/jobs/hooks/useJobs";
-import { RequireRole } from "@/shared/components/RequireRole";
+import { JobForm, useJob, usePublishJob, useUpdateJob } from "@/features/jobs";
 import { Button } from "@/shared/ui-components/controls/button";
 
 function EditJobContent({ jobId }: { jobId: string }) {

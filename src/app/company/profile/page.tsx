@@ -1,9 +1,8 @@
 "use client";
 
+import { RequireRole } from "@/features/auth";
 import Link from "next/link";
-import { CompanyProfileForm } from "@/features/companies/components/CompanyProfileForm";
-import { useMyCompanyProfile } from "@/features/companies/hooks/useCompanyProfile";
-import { RequireRole } from "@/shared/components/RequireRole";
+import { CompanyProfileForm, useMyCompanyProfile } from "@/features/companies";
 
 function CompanyProfileContent() {
   const { data, isPending, isError, refetch } = useMyCompanyProfile();

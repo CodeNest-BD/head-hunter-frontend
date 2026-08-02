@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { roleSchema } from "./types";
+import { signupRoleSchema } from "./types";
 
 export const signInSchema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -14,7 +14,7 @@ export const signUpSchema = z.object({
     .string()
     .min(8, "Password must be at least 8 characters")
     .max(72, "Password must be at most 72 characters"),
-  role: roleSchema,
+  role: signupRoleSchema,
 });
 export type SignUpFormData = z.infer<typeof signUpSchema>;
 

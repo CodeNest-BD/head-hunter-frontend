@@ -5,12 +5,11 @@ import {
   updateMyCompanyProfile,
   type UpdateCompanyProfileInput,
 } from "../api/companyProfiles";
-
-export const myCompanyProfileKey = ["company-profile", "me"] as const;
+import { companyKeys } from "../keys";
 
 export function useMyCompanyProfile() {
   return useQuery({
-    queryKey: myCompanyProfileKey,
+    queryKey: companyKeys.myProfile,
     queryFn: fetchMyCompanyProfile,
   });
 }
@@ -21,7 +20,7 @@ export function useUpdateMyCompanyProfile() {
     mutationFn: (input: UpdateCompanyProfileInput) =>
       updateMyCompanyProfile(input),
     onSuccess: (profile) => {
-      queryClient.setQueryData(myCompanyProfileKey, profile);
+      queryClient.setQueryData(companyKeys.myProfile, profile);
       toast.success("Profile saved");
     },
   });
