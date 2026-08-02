@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { renderWithProviders } from "@/test/utils/renderWithProviders";
+import { renderWithProviders } from "@/test/utils";
 import { RequireRole } from "./RequireRole";
 
 const replace = vi.fn();
