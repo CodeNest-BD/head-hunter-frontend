@@ -9,10 +9,12 @@ export { JobsTable } from "./components/JobsTable";
 export {
   useCreateJob,
   useJob,
+  useJobMap,
   useJobs,
   usePublishJob,
   useUpdateJob,
 } from "./hooks/useJobs";
 export { jobKeys } from "./keys";
-export type { Job, JobStatus, RoleCategory } from "./schemas";
+export type { Job, JobMapEntry, JobStatus, RoleCategory } from "./schemas";
+export { ROLE_CATEGORIES } from "./schemas";
 export { ROLE_CATEGORY_LABELS } from "./schemas";

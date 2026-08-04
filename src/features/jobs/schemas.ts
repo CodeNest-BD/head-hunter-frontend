@@ -117,3 +117,11 @@ export const jobFormSchema = z
     { message: "Maximum must be at least the minimum", path: ["salaryMax"] },
   );
 export type JobFormValues = z.infer<typeof jobFormSchema>;
+
+/** One row of GET /v1/jobs/map — the per-state aggregate behind the job map. */
+export const jobMapEntrySchema = z.object({
+  locationState: z.string(),
+  openRoles: z.number(),
+  averageFeeMinor: z.number(),
+});
+export type JobMapEntry = z.infer<typeof jobMapEntrySchema>;

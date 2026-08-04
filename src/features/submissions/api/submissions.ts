@@ -1,0 +1,45 @@
+import { apiClient } from "@/shared/libs/apiClient";
+import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
+import {
+  submissionSchema,
+  type Submission,
+  type SubmissionStatus,
+} from "../schemas";
+
+export interface SubmissionListParams {
+  page?: number;
+  limit?: number;
+  jobId?: string;
+  status?: SubmissionStatus;
+}
+
+/** GET /v1/submissions — a company sees submissions on its own jobs. */
+export async function fetchSubmissions(
+  params: SubmissionListParams,
+): Promise<Paginated<Submission>> {
+  const { data } = await apiClient.get<unknown>("/submissions", { params });
+  return paginatedSchema(submissionSchema).parse(data);
+}
+
+/** GET /v1/submissions/:id */
+export async function fetchSubmission(id: string): Promise<Submission> {
+  const { data } = await apiClient.get<unknown>(`/submissions/${id}`);
+  return submissionSchema.parse(data);
+}
+
+/**
+ * PATCH /v1/submissions/:id
+ *
+ * The API splits ownership by role: a company may set `status`, a recruiter may
+ * set `note`, and sending the other side's field is rejected. This helper only
+ * exposes status because the inbox is the company's view.
+ */
+export async function updateSubmissionStatus(
+  id: string,
+  status: SubmissionStatus,
+): Promise<Submission> {
+  const { data } = await apiClient.patch<unknown>(`/submissions/${id}`, {
+    status,
+  });
+  return submissionSchema.parse(data);
+}
