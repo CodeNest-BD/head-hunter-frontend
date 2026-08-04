@@ -29,10 +29,29 @@ export const COMPANY_SETTABLE_STATUSES = [
   "rejected",
 ] as const satisfies readonly SubmissionStatus[];
 
+/**
+ * What a company may see about the submitting recruiter. Contact details are
+ * deliberately absent server-side — name and experience only.
+ */
+export const recruiterSummarySchema = z.object({
+  id: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  yearsExperience: z.number().nullable(),
+  specializations: z.array(z.string()).nullable(),
+});
+export type RecruiterSummary = z.infer<typeof recruiterSummarySchema>;
+
+export const recruiterDisplayName = (
+  recruiter: RecruiterSummary | null,
+): string =>
+  recruiter ? `${recruiter.firstName} ${recruiter.lastName}`.trim() : "—";
+
 export const submissionSchema = z.object({
   id: z.string(),
   jobId: z.string(),
   recruiterProfileId: z.string(),
+  recruiter: recruiterSummarySchema.nullable(),
   status: submissionStatusSchema,
   note: z.string().nullable(),
   createdAt: z.coerce.date(),

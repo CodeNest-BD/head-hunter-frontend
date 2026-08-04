@@ -12,4 +12,5 @@ export {
   SUBMISSION_STATUSES,
   SUBMISSION_STATUS_LABELS,
 } from "./schemas";
-export type { Submission, SubmissionStatus } from "./schemas";
+export { recruiterDisplayName } from "./schemas";
+export type { RecruiterSummary, Submission, SubmissionStatus } from "./schemas";

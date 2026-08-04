@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useJobs } from "@/features/jobs";
 import { useSubmissions } from "../hooks/useSubmissions";
-import { SUBMISSION_STATUS_LABELS, type SubmissionStatus } from "../schemas";
+import {
+  SUBMISSION_STATUS_LABELS,
+  recruiterDisplayName,
+  type SubmissionStatus,
+} from "../schemas";
 
 const STATUS_STYLES: Record<SubmissionStatus, string> = {
   submitted: "bg-blue-100 text-blue-800",
@@ -64,6 +68,7 @@ export function InboxTable({ status, jobId }: InboxTableProps) {
         <thead className="border-b bg-muted/40 text-left">
           <tr>
             <th className="px-4 py-3 font-medium">Job</th>
+            <th className="px-4 py-3 font-medium">Recruiter</th>
             <th className="px-4 py-3 font-medium">Received</th>
             <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3" />
@@ -74,6 +79,15 @@ export function InboxTable({ status, jobId }: InboxTableProps) {
             <tr key={submission.id} className="border-b last:border-0">
               <td className="px-4 py-3 font-medium">
                 {jobTitles.get(submission.jobId) ?? "—"}
+              </td>
+              <td className="px-4 py-3">
+                {recruiterDisplayName(submission.recruiter)}
+                {submission.recruiter?.yearsExperience !== null &&
+                  submission.recruiter !== null && (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {submission.recruiter.yearsExperience} yrs
+                    </span>
+                  )}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
                 {submission.createdAt.toLocaleDateString()}

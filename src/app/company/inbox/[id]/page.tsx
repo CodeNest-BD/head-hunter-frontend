@@ -7,6 +7,7 @@ import { CandidateCard, useCandidates } from "@/features/candidates";
 import {
   COMPANY_SETTABLE_STATUSES,
   SUBMISSION_STATUS_LABELS,
+  recruiterDisplayName,
   useSubmission,
   useUpdateSubmissionStatus,
   type SubmissionStatus,
@@ -72,7 +73,15 @@ function SubmissionHeader({ submissionId }: { submissionId: string }) {
     <div className="flex flex-col gap-4 rounded-xl border p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">Submission status</p>
+          <p className="text-sm text-muted-foreground">Submitted by</p>
+          <p className="font-medium">{recruiterDisplayName(data.recruiter)}</p>
+          {data.recruiter?.yearsExperience !== null &&
+            data.recruiter !== null && (
+              <p className="text-sm text-muted-foreground">
+                {data.recruiter.yearsExperience} years of recruiting experience
+              </p>
+            )}
+          <p className="mt-2 text-sm text-muted-foreground">Status</p>
           <p className="font-medium">{SUBMISSION_STATUS_LABELS[data.status]}</p>
         </div>
         <select
