@@ -78,7 +78,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            Signed in as {user.email} ·{" "}
+            Signed in as {user.firstName} {user.lastName} ({user.email}) ·{" "}
             <span className="capitalize">{user.role}</span>
           </p>
         </div>

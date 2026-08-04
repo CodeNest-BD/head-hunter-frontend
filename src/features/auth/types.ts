@@ -24,6 +24,10 @@ export type SignupRole = z.infer<typeof signupRoleSchema>;
 export const authUserSchema = z.object({
   id: z.string(),
   email: z.string().email(),
+  username: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  phone: z.string().nullable(),
   role: roleSchema,
   emailVerified: z.boolean(),
   profile: z.record(z.unknown()).nullable().catch(null),

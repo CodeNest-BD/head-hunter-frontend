@@ -91,6 +91,7 @@ Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:` (
 **2. Refactor & consolidate**: reduce nested logic, hold functions to a single responsibility, and standardize naming, error handling, and response shapes.
 
 **3. Verify** — run and confirm:
+
 - `npx tsc --noEmit` (no type leakage: no `any`, no `as`).
 - `npm run test` and `npm run lint`.
 - `npx prettier --write .`.

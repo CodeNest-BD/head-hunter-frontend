@@ -15,7 +15,17 @@ vi.mock("../hooks/useAuth", () => ({
 
 const signedInAs = (role: "company" | "recruiter") => ({
   status: "authenticated" as const,
-  user: { id: "u1", email: "a@b.c", role, emailVerified: true, profile: null },
+  user: {
+    id: "u1",
+    email: "a@b.c",
+    username: "user_one",
+    firstName: "User",
+    lastName: "One",
+    phone: null,
+    role,
+    emailVerified: true,
+    profile: null,
+  },
 });
 
 describe("RequireRole", () => {
