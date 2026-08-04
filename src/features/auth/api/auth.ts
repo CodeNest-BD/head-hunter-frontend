@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiClient } from "@/shared/libs/apiClient";
 import type { SignupRole } from "../types";
+import type { SignUpPayload } from "../schemas";
 
 const accessTokenResponse = z.object({ accessToken: z.string().min(1) });
 export type AccessTokenResponse = z.infer<typeof accessTokenResponse>;
@@ -13,15 +14,8 @@ export type SignUpResponse = z.infer<typeof signUpResponse>;
 
 const successResponse = z.object({ success: z.boolean() });
 
-interface SignUpInput {
-  name: string;
-  email: string;
-  password: string;
-  role: SignupRole;
-}
-
 /** POST /auth/sign-up → 201 { id, email }. User must then verify an OTP. */
-export async function signUp(input: SignUpInput): Promise<SignUpResponse> {
+export async function signUp(input: SignUpPayload): Promise<SignUpResponse> {
   const { data } = await apiClient.post<unknown>("/auth/sign-up", input, {
     suppressGlobalErrorToast: true,
   });
