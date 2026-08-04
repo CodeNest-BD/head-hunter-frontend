@@ -27,6 +27,11 @@ const LINKS_BY_ROLE: Record<Role, DashboardLink[]> = {
       description: "What recruiters see when they browse companies.",
     },
     {
+      href: "/company/inbox",
+      title: "Inbox",
+      description: "Candidates recruiters have submitted to your jobs.",
+    },
+    {
       href: "/company/jobs",
       title: "Jobs",
       description: "Create a job, then publish it to notify your followers.",
