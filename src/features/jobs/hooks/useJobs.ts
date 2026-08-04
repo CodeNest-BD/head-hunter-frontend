@@ -4,8 +4,10 @@ import { toast } from "sonner";
 import {
   createJob,
   fetchJob,
+  fetchJobMap,
   fetchJobs,
   updateJob,
+  type JobFilterParams,
   type JobListParams,
   type JobWriteInput,
 } from "../api/jobs";
@@ -16,6 +18,13 @@ export function useJobs(params: JobListParams) {
   return useQuery({
     queryKey: jobKeys.list(params),
     queryFn: () => fetchJobs(params),
+  });
+}
+
+export function useJobMap(params: JobFilterParams) {
+  return useQuery({
+    queryKey: jobKeys.map(params),
+    queryFn: () => fetchJobMap(params),
   });
 }
 

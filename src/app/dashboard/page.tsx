@@ -34,6 +34,17 @@ const LINKS_BY_ROLE: Record<Role, DashboardLink[]> = {
   ],
   recruiter: [
     {
+      href: "/jobs",
+      title: "Job map",
+      description: "Open roles by state, and the fee each company is offering.",
+    },
+    {
+      href: "/recruiter/profile",
+      title: "My profile",
+      description:
+        "Your details, specializations, references and subscription.",
+    },
+    {
       href: "/companies",
       title: "Companies",
       description:

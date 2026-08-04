@@ -1,8 +1,24 @@
 import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
-import { jobSchema, type Job, type JobStatus } from "../schemas";
+import {
+  jobMapEntrySchema,
+  jobSchema,
+  type Job,
+  type JobMapEntry,
+  type JobStatus,
+} from "../schemas";
 
-export interface JobListParams {
+/** Filters shared by the list and the map so both stay in step. */
+export interface JobFilterParams {
+  roleCategory?: string;
+  locationState?: string;
+  isRemote?: boolean;
+  feeMin?: number;
+  feeMax?: number;
+  q?: string;
+}
+
+export interface JobListParams extends JobFilterParams {
   page?: number;
   limit?: number;
   status?: JobStatus;
@@ -49,4 +65,12 @@ export async function updateJob(
 ): Promise<Job> {
   const { data } = await apiClient.patch<unknown>(`/jobs/${id}`, input);
   return jobSchema.parse(data);
+}
+
+/** GET /v1/jobs/map — not paginated; at most one row per US state. */
+export async function fetchJobMap(
+  params: JobFilterParams,
+): Promise<JobMapEntry[]> {
+  const { data } = await apiClient.get<unknown>("/jobs/map", { params });
+  return jobMapEntrySchema.array().parse(data);
 }
