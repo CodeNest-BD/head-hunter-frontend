@@ -13,13 +13,13 @@ import {
   X,
 } from "lucide-react";
 
-import { projectAlbersUsa } from "@/shared/data/albers-usa";
-import { US_CITIES, type UsCity } from "@/shared/data/us-cities";
+import { projectAlbersUsa } from "@/shared/data/albersUsa";
+import { US_CITIES, type UsCity } from "@/shared/data/usCities";
 import {
   US_STATES,
   US_STATE_NAME_BY_CODE,
   US_VIEWBOX,
-} from "@/shared/data/us-states-geo";
+} from "@/shared/data/usStatesGeo";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { formatMinor } from "@/shared/utils/money";
