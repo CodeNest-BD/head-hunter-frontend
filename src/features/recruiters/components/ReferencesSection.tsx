@@ -2,6 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { Trash2, UserRound } from "lucide-react";
+
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
@@ -50,24 +52,31 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
 
   return (
     <section className="flex flex-col gap-4">
-      <div>
-        <h2 className="text-lg font-semibold">References</h2>
+      <div className="flex flex-col gap-1">
+        <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground">
+          References
+        </h2>
         <p className="text-sm text-muted-foreground">
           Up to {MAX_REFERENCES} professional references from recruiting roles.
         </p>
       </div>
 
       {references.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No references yet.</p>
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border/70 bg-card/50 px-6 py-10 text-center">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <UserRound className="h-5 w-5" />
+          </span>
+          <p className="text-sm text-muted-foreground">No references yet.</p>
+        </div>
       ) : (
         <ul className="flex flex-col gap-2">
           {references.map((reference) => (
             <li
               key={reference.id}
-              className="flex items-start justify-between gap-4 rounded-lg border p-3"
+              className="flex items-start justify-between gap-4 rounded-xl border border-border/70 bg-card p-4 shadow-sm"
             >
               <div className="text-sm">
-                <p className="font-medium">{reference.name}</p>
+                <p className="font-medium text-foreground">{reference.name}</p>
                 <p className="text-muted-foreground">
                   {[reference.title, reference.company]
                     .filter(Boolean)
@@ -83,7 +92,9 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
                 size="sm"
                 disabled={remove.isPending}
                 onClick={() => remove.mutate(reference.id)}
+                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
+                <Trash2 className="h-4 w-4" />
                 Remove
               </Button>
             </li>
@@ -92,21 +103,21 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
       )}
 
       {atCapacity ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
           You have the maximum of {MAX_REFERENCES} references. Remove one to add
           another.
         </p>
       ) : (
         <form
           onSubmit={onSubmit}
-          className="flex flex-col gap-3 rounded-lg border p-4"
+          className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card p-5 shadow-sm"
         >
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="ref-name">Name</Label>
               <Input id="ref-name" {...register("name")} />
               {errors.name && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive">
                   {errors.name.message}
                 </p>
               )}

@@ -98,7 +98,7 @@ export function JobForm({
           {...register("title")}
         />
         {errors.title && (
-          <p className="text-sm text-destructive">{errors.title.message}</p>
+          <p className="text-xs text-destructive">{errors.title.message}</p>
         )}
       </div>
 
@@ -166,7 +166,7 @@ export function JobForm({
             {...register("locationState")}
           />
           {errors.locationState && (
-            <p className="text-sm text-destructive">
+            <p className="text-xs text-destructive">
               {errors.locationState.message}
             </p>
           )}
@@ -181,8 +181,12 @@ export function JobForm({
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" className="h-4 w-4" {...register("isRemote")} />
+      <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-foreground">
+        <input
+          type="checkbox"
+          className="h-4 w-4 rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          {...register("isRemote")}
+        />
         Remote
       </label>
 
@@ -203,7 +207,7 @@ export function JobForm({
             {...register("salaryMax")}
           />
           {errors.salaryMax && (
-            <p className="text-sm text-destructive">
+            <p className="text-xs text-destructive">
               {errors.salaryMax.message}
             </p>
           )}
@@ -222,7 +226,7 @@ export function JobForm({
           {...register("recruiterFee")}
         />
         {errors.recruiterFee && (
-          <p className="text-sm text-destructive">
+          <p className="text-xs text-destructive">
             {errors.recruiterFee.message}
           </p>
         )}

@@ -79,7 +79,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
             {...register("state")}
           />
           {errors.state && (
-            <p className="text-sm text-destructive">{errors.state.message}</p>
+            <p className="text-xs text-destructive">{errors.state.message}</p>
           )}
         </div>
         <div className="flex flex-col gap-2">
@@ -97,26 +97,31 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
           {...register("yearsExperience")}
         />
         {errors.yearsExperience && (
-          <p className="text-sm text-destructive">
+          <p className="text-xs text-destructive">
             {errors.yearsExperience.message}
           </p>
         )}
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium">Specializations</legend>
+        <legend className="mb-2 text-sm font-medium text-foreground">
+          Specializations
+        </legend>
         <Controller
           control={control}
           name="specializations"
           render={({ field }) => (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {SPECIALIZATIONS.map((item) => {
                 const checked = field.value.includes(item);
                 return (
-                  <label key={item} className="flex items-center gap-2 text-sm">
+                  <label
+                    key={item}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-border has-[:checked]:border-primary/50 has-[:checked]:bg-primary/10"
+                  >
                     <input
                       type="checkbox"
-                      className="h-4 w-4"
+                      className="h-4 w-4 rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       checked={checked}
                       onChange={() =>
                         field.onChange(

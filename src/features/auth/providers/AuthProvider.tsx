@@ -14,8 +14,8 @@ const LOGIN_ROUTE = "/login";
 const DASHBOARD_ROUTE = "/dashboard";
 // Auth-only pages an already-signed-in user has no reason to see.
 const AUTH_ROUTES = new Set(["/login", "/signup", "/verify-otp"]);
-// Routes that render without a session (auth pages plus the marketing home).
-const PUBLIC_ROUTES = new Set(["/", ...AUTH_ROUTES]);
+// Routes that render without a session (auth pages plus the marketing homes).
+const PUBLIC_ROUTES = new Set(["/", "/temp", ...AUTH_ROUTES]);
 
 function isPublicRoute(pathname: string | null): boolean {
   if (!pathname) return false;
@@ -91,7 +91,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   if (!isPublicRoute(pathname)) {
     if (status === "booting") {
       return (
-        <div className="flex min-h-screen items-center justify-center text-sm text-zinc-500">
+        <div className="flex min-h-screen items-center justify-center gap-2 bg-background text-sm text-muted-foreground">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
           Loading…
         </div>
       );

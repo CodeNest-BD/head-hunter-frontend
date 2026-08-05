@@ -1,5 +1,7 @@
 "use client";
 
+import { CheckCircle2, Lock } from "lucide-react";
+
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -25,25 +27,42 @@ export function SubscriptionCard({ profile }: SubscriptionCardProps) {
 
   if (profile.hasMarketplaceAccess) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Subscription active</CardTitle>
-          <CardDescription>
-            You have full access to the job map and job list.
-          </CardDescription>
+      <Card className="border-emerald-500/40 bg-emerald-500/5">
+        <CardHeader className="flex-row items-center gap-3 space-y-0">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300">
+            <CheckCircle2 className="h-[18px] w-[18px]" />
+          </span>
+          <div className="flex flex-col gap-1">
+            <CardTitle className="font-heading tracking-tight">
+              Subscription active
+            </CardTitle>
+            <CardDescription>
+              You have full access to the job map and job list.
+            </CardDescription>
+          </div>
         </CardHeader>
       </Card>
     );
   }
 
   return (
-    <Card className="border-amber-300 bg-amber-50">
-      <CardHeader>
-        <CardTitle>Subscription required</CardTitle>
-        <CardDescription>
-          Jobs are only visible to subscribed recruiters. Your status is{" "}
-          <span className="font-medium">{profile.subscriptionStatus}</span>.
-        </CardDescription>
+    <Card className="border-amber-500/40 bg-amber-500/5">
+      <CardHeader className="flex-row items-start gap-3 space-y-0">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-300">
+          <Lock className="h-[18px] w-[18px]" />
+        </span>
+        <div className="flex flex-col gap-1">
+          <CardTitle className="font-heading tracking-tight">
+            Subscription required
+          </CardTitle>
+          <CardDescription>
+            Jobs are only visible to subscribed recruiters. Your status is{" "}
+            <span className="font-medium text-foreground">
+              {profile.subscriptionStatus}
+            </span>
+            .
+          </CardDescription>
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <p className="text-sm text-muted-foreground">
