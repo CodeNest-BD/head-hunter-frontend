@@ -52,7 +52,9 @@ export function PageHeader({
             </p>
           )}
         </div>
-        {actions && <div className="flex shrink-0 items-center gap-3">{actions}</div>}
+        {actions && (
+          <div className="flex shrink-0 items-center gap-3">{actions}</div>
+        )}
       </div>
       <GradientRule className="mt-5 max-w-[min(100%,320px)] opacity-80" />
       {children}
