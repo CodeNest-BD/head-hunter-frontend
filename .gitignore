@@ -58,3 +58,6 @@ super_docs/*
 docker-compose.local.yml
 Dockerfile.local
 
+
+# Client requirement docs — local only
+requirements/
