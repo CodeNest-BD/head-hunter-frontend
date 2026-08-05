@@ -184,7 +184,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <Link href="/dashboard" className="lg:hidden">
+        <Link href="/temp" aria-label="HeadHunter home" className="lg:hidden">
           <Logo />
         </Link>
       </header>
@@ -192,7 +192,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Fixed sidebar (desktop) */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
         <div className="flex h-16 items-center border-b border-sidebar-border px-6">
-          <Link href="/dashboard">
+          <Link href="/temp" aria-label="HeadHunter home">
             <Logo />
           </Link>
         </div>
@@ -209,7 +209,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           />
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[80%] flex-col border-r border-sidebar-border bg-sidebar shadow-2xl">
             <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-6">
-              <Logo />
+              <Link href="/temp" aria-label="HeadHunter home" onClick={close}>
+                <Logo />
+              </Link>
               <button
                 type="button"
                 onClick={close}
