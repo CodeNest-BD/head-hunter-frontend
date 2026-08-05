@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "@/features/auth";
 import { Logo } from "@/shared/ui-components/layout/Logo";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -20,11 +21,14 @@ const NAV_LINKS: readonly NavLink[] = [
 
 /**
  * Sticky white marketing nav copied from the v2 mock: brand lockup left,
- * anchor links center-right, and the "Log in" / "Get started" CTAs. Collapses
- * to a hamburger-driven sheet on small screens.
+ * anchor links center-right, and auth CTAs. Signed-in visitors see a single
+ * "Go to dashboard" action instead of "Log in" / "Get started". Collapses to a
+ * hamburger sheet on small screens.
  */
 export function LandingNav() {
   const [open, setOpen] = useState(false);
+  const { status } = useAuth();
+  const isAuthed = status === "authenticated";
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#E7EAF0] bg-white/95 backdrop-blur">
@@ -51,16 +55,24 @@ export function LandingNav() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button
-            asChild
-            variant="outline"
-            className="border-[#C9D2E3] font-semibold text-navy hover:border-primary hover:bg-transparent hover:text-primary"
-          >
-            <Link href="/login">Log in</Link>
-          </Button>
-          <Button asChild className="font-bold">
-            <Link href="/signup">Get started</Link>
-          </Button>
+          {isAuthed ? (
+            <Button asChild className="font-bold">
+              <Link href="/dashboard">Go to dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Button
+                asChild
+                variant="outline"
+                className="border-[#C9D2E3] font-semibold text-navy hover:border-primary hover:bg-transparent hover:text-primary"
+              >
+                <Link href="/login">Log in</Link>
+              </Button>
+              <Button asChild className="font-bold">
+                <Link href="/signup">Get started</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <button
@@ -92,20 +104,30 @@ export function LandingNav() {
             </a>
           ))}
           <div className="mt-2 flex flex-col gap-2">
-            <Button
-              asChild
-              variant="outline"
-              className="w-full border-[#C9D2E3] font-semibold text-navy"
-            >
-              <Link href="/login" onClick={() => setOpen(false)}>
-                Log in
-              </Link>
-            </Button>
-            <Button asChild className="w-full font-bold">
-              <Link href="/signup" onClick={() => setOpen(false)}>
-                Get started
-              </Link>
-            </Button>
+            {isAuthed ? (
+              <Button asChild className="w-full font-bold">
+                <Link href="/dashboard" onClick={() => setOpen(false)}>
+                  Go to dashboard
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-[#C9D2E3] font-semibold text-navy"
+                >
+                  <Link href="/login" onClick={() => setOpen(false)}>
+                    Log in
+                  </Link>
+                </Button>
+                <Button asChild className="w-full font-bold">
+                  <Link href="/signup" onClick={() => setOpen(false)}>
+                    Get started
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
