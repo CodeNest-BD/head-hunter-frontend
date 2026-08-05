@@ -6,6 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { HttpStatusCode } from "@/shared/libs/apiClient";
 import { isApiError } from "@/shared/libs/errorHandler";
+import { cn } from "@/shared/libs/shadCnConfig";
+import { Button } from "@/shared/ui-components/controls/button";
+import { Input } from "@/shared/ui-components/controls/input";
+import { Label } from "@/shared/ui-components/controls/label";
 import { signInSchema, type SignInFormData } from "../schemas";
 import { signIn } from "../api/auth";
 import { useAuth } from "../hooks/useAuth";
@@ -43,72 +47,68 @@ export function SignInForm() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex w-full max-w-sm flex-col gap-5 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm"
-    >
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-foreground">
           Welcome back
         </h1>
-        <p className="text-sm text-zinc-500">Sign in to your account.</p>
+        <p className="text-sm text-muted-foreground">
+          Sign in to your HeadHunter account.
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="email" className="text-sm font-medium text-zinc-900">
-          Email
-        </label>
-        <input
+        <Label htmlFor="email">Email</Label>
+        <Input
           id="email"
           type="email"
           autoComplete="email"
+          aria-invalid={errors.email ? true : undefined}
           {...register("email")}
-          className="h-10 rounded-md border border-zinc-200 px-3 text-sm outline-none focus:border-zinc-900"
+          className={cn("h-11", errors.email && "border-destructive")}
           placeholder="you@example.com"
         />
         {errors.email && (
-          <p className="text-xs text-red-500">{errors.email.message}</p>
+          <p className="text-xs text-destructive">{errors.email.message}</p>
         )}
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="password" className="text-sm font-medium text-zinc-900">
-          Password
-        </label>
-        <input
+        <Label htmlFor="password">Password</Label>
+        <Input
           id="password"
           type="password"
           autoComplete="current-password"
+          aria-invalid={errors.password ? true : undefined}
           {...register("password")}
-          className="h-10 rounded-md border border-zinc-200 px-3 text-sm outline-none focus:border-zinc-900"
+          className={cn("h-11", errors.password && "border-destructive")}
           placeholder="••••••••"
         />
         {errors.password && (
-          <p className="text-xs text-red-500">{errors.password.message}</p>
+          <p className="text-xs text-destructive">{errors.password.message}</p>
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="h-10 rounded-md bg-zinc-900 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60"
-      >
+      <Button type="submit" size="lg" disabled={isSubmitting} className="h-11">
         {isSubmitting ? "Signing in…" : "Sign in"}
-      </button>
+      </Button>
 
       <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-zinc-200" />
-        <span className="text-xs uppercase tracking-wide text-zinc-400">
-          or
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          or continue with
         </span>
-        <span className="h-px flex-1 bg-zinc-200" />
+        <span className="h-px flex-1 bg-border" />
       </div>
 
       <GoogleAuthButton />
 
-      <p className="text-center text-sm text-zinc-600">
+      <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="font-medium text-zinc-900 underline">
+        <Link
+          href="/signup"
+          className="rounded-sm font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           Sign up
         </Link>
       </p>

@@ -59,7 +59,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
         <Label htmlFor="companyName">Company name</Label>
         <Input id="companyName" {...register("companyName")} />
         {errors.companyName && (
-          <p className="text-sm text-destructive">
+          <p className="text-xs text-destructive">
             {errors.companyName.message}
           </p>
         )}
@@ -73,7 +73,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           {...register("website")}
         />
         {errors.website && (
-          <p className="text-sm text-destructive">{errors.website.message}</p>
+          <p className="text-xs text-destructive">{errors.website.message}</p>
         )}
       </div>
 
@@ -88,7 +88,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
       </div>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium">
+        <legend className="mb-2 text-sm font-medium text-foreground">
           Recruiter commission range
         </legend>
         <p className="mb-2 text-sm text-muted-foreground">
@@ -113,7 +113,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               {...register("commissionMax")}
             />
             {errors.commissionMax && (
-              <p className="text-sm text-destructive">
+              <p className="text-xs text-destructive">
                 {errors.commissionMax.message}
               </p>
             )}

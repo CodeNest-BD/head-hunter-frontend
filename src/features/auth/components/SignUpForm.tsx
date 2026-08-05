@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import { isApiError } from "@/shared/libs/errorHandler";
+import { cn } from "@/shared/libs/shadCnConfig";
+import { Button } from "@/shared/ui-components/controls/button";
+import { Input } from "@/shared/ui-components/controls/input";
+import { Label } from "@/shared/ui-components/controls/label";
 import {
   signUpSchema,
   toSignUpPayload,
@@ -27,13 +32,13 @@ const ROLE_OPTIONS: ReadonlyArray<{
   { value: "recruiter", label: "Recruiter", hint: "Find placements" },
 ];
 
-const inputClass =
-  "h-10 w-full rounded-md border border-zinc-200 px-3 text-sm outline-none focus:border-zinc-900";
-const labelClass = "text-sm font-medium text-zinc-900";
+const optionalHint = (
+  <span className="font-normal text-muted-foreground">(optional)</span>
+);
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs text-red-500">{message}</p>;
+  return <p className="text-xs text-destructive">{message}</p>;
 }
 
 const EMPTY_REFERENCE = { name: "", company: "", title: "", phone: "" };
@@ -98,15 +103,12 @@ export function SignUpForm() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex w-full max-w-md flex-col gap-5 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm"
-    >
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-foreground">
           Create your account
         </h1>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           Join the HeadHunter marketplace.
         </p>
       </div>
@@ -115,9 +117,11 @@ export function SignUpForm() {
         control={control}
         name="role"
         render={({ field }) => (
-          <div className="flex flex-col gap-2">
-            <span className={labelClass}>I am a…</span>
-            <div className="grid grid-cols-2 gap-2">
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-medium leading-none text-foreground">
+              I am a…
+            </legend>
+            <div className="grid grid-cols-2 gap-3">
               {ROLE_OPTIONS.map((option) => {
                 const active = field.value === option.value;
                 return (
@@ -126,16 +130,22 @@ export function SignUpForm() {
                     type="button"
                     onClick={() => field.onChange(option.value)}
                     aria-pressed={active}
-                    className={`flex flex-col rounded-md border px-3 py-2 text-left transition ${
+                    className={cn(
+                      "flex flex-col rounded-lg border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       active
-                        ? "border-zinc-900 bg-zinc-900 text-white"
-                        : "border-zinc-200 bg-white text-zinc-900 hover:border-zinc-400"
-                    }`}
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-accent",
+                    )}
                   >
-                    <span className="text-sm font-medium">{option.label}</span>
                     <span
-                      className={`text-xs ${active ? "text-zinc-300" : "text-zinc-500"}`}
+                      className={cn(
+                        "text-sm font-semibold",
+                        active && "text-primary",
+                      )}
                     >
+                      {option.label}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
                       {option.hint}
                     </span>
                   </button>
@@ -143,35 +153,33 @@ export function SignUpForm() {
               })}
             </div>
             <FieldError message={errors.role?.message} />
-          </div>
+          </fieldset>
         )}
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
-          <label htmlFor="firstName" className={labelClass}>
-            First name
-          </label>
-          <input
+          <Label htmlFor="firstName">First name</Label>
+          <Input
             id="firstName"
             type="text"
             autoComplete="given-name"
+            aria-invalid={errors.firstName ? true : undefined}
             {...register("firstName")}
-            className={inputClass}
+            className={cn("h-11", errors.firstName && "border-destructive")}
             placeholder="Jane"
           />
           <FieldError message={errors.firstName?.message} />
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="lastName" className={labelClass}>
-            Last name
-          </label>
-          <input
+          <Label htmlFor="lastName">Last name</Label>
+          <Input
             id="lastName"
             type="text"
             autoComplete="family-name"
+            aria-invalid={errors.lastName ? true : undefined}
             {...register("lastName")}
-            className={inputClass}
+            className={cn("h-11", errors.lastName && "border-destructive")}
             placeholder="Doe"
           />
           <FieldError message={errors.lastName?.message} />
@@ -179,60 +187,56 @@ export function SignUpForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="username" className={labelClass}>
-          Username
-        </label>
-        <input
+        <Label htmlFor="username">Username</Label>
+        <Input
           id="username"
           type="text"
           autoComplete="username"
+          aria-invalid={errors.username ? true : undefined}
           {...register("username")}
-          className={inputClass}
+          className={cn("h-11", errors.username && "border-destructive")}
           placeholder="jane_doe"
         />
         <FieldError message={errors.username?.message} />
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="email" className={labelClass}>
-          Email
-        </label>
-        <input
+        <Label htmlFor="email">Email</Label>
+        <Input
           id="email"
           type="email"
           autoComplete="email"
+          aria-invalid={errors.email ? true : undefined}
           {...register("email")}
-          className={inputClass}
+          className={cn("h-11", errors.email && "border-destructive")}
           placeholder="you@example.com"
         />
         <FieldError message={errors.email?.message} />
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="password" className={labelClass}>
-          Password
-        </label>
-        <input
+        <Label htmlFor="password">Password</Label>
+        <Input
           id="password"
           type="password"
           autoComplete="new-password"
+          aria-invalid={errors.password ? true : undefined}
           {...register("password")}
-          className={inputClass}
+          className={cn("h-11", errors.password && "border-destructive")}
           placeholder="At least 8 characters"
         />
         <FieldError message={errors.password?.message} />
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="phone" className={labelClass}>
-          Phone <span className="font-normal text-zinc-400">(optional)</span>
-        </label>
-        <input
+        <Label htmlFor="phone">Phone {optionalHint}</Label>
+        <Input
           id="phone"
           type="tel"
           autoComplete="tel"
+          aria-invalid={errors.phone ? true : undefined}
           {...register("phone")}
-          className={inputClass}
+          className={cn("h-11", errors.phone && "border-destructive")}
           placeholder="+1-202-555-0100"
         />
         <FieldError message={errors.phone?.message} />
@@ -240,15 +244,14 @@ export function SignUpForm() {
 
       {selectedRole === "company" && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="companyName" className={labelClass}>
-            Company name
-          </label>
-          <input
+          <Label htmlFor="companyName">Company name</Label>
+          <Input
             id="companyName"
             type="text"
             autoComplete="organization"
+            aria-invalid={errors.companyName ? true : undefined}
             {...register("companyName")}
-            className={inputClass}
+            className={cn("h-11", errors.companyName && "border-destructive")}
             placeholder="Acme Inc."
           />
           <FieldError message={errors.companyName?.message} />
@@ -258,16 +261,19 @@ export function SignUpForm() {
       {selectedRole === "recruiter" && (
         <>
           <div className="flex flex-col gap-2">
-            <label htmlFor="yearsExperience" className={labelClass}>
-              Years of experience{" "}
-              <span className="font-normal text-zinc-400">(optional)</span>
-            </label>
-            <input
+            <Label htmlFor="yearsExperience">
+              Years of experience {optionalHint}
+            </Label>
+            <Input
               id="yearsExperience"
               type="text"
               inputMode="numeric"
+              aria-invalid={errors.yearsExperience ? true : undefined}
               {...register("yearsExperience")}
-              className={inputClass}
+              className={cn(
+                "h-11",
+                errors.yearsExperience && "border-destructive",
+              )}
               placeholder="5"
             />
             <FieldError message={errors.yearsExperience?.message} />
@@ -277,10 +283,9 @@ export function SignUpForm() {
             control={control}
             name="specializations"
             render={({ field }) => (
-              <div className="flex flex-col gap-2">
-                <span className={labelClass}>
-                  Specializations{" "}
-                  <span className="font-normal text-zinc-400">(optional)</span>
+              <div className="flex flex-col gap-2.5">
+                <span className="text-sm font-medium leading-none text-foreground">
+                  Specializations {optionalHint}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {RECRUITER_SPECIALIZATIONS.map((specialization) => {
@@ -297,11 +302,12 @@ export function SignUpForm() {
                           )
                         }
                         aria-pressed={active}
-                        className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                        className={cn(
+                          "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                           active
-                            ? "border-zinc-900 bg-zinc-900 text-white"
-                            : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400"
-                        }`}
+                            ? "border-primary bg-primary/15 text-primary"
+                            : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground",
+                        )}
                       >
                         {RECRUITER_SPECIALIZATION_LABELS[specialization]}
                       </button>
@@ -314,114 +320,115 @@ export function SignUpForm() {
           />
 
           <div className="flex flex-col gap-3">
-            <span className={labelClass}>
+            <span className="text-sm font-medium leading-none text-foreground">
               References{" "}
-              <span className="font-normal text-zinc-400">
+              <span className="font-normal text-muted-foreground">
                 (optional, up to {MAX_SIGNUP_REFERENCES})
               </span>
             </span>
             {referenceFields.map((referenceField, index) => (
               <div
                 key={referenceField.id}
-                className="flex flex-col gap-2 rounded-md border border-zinc-200 p-3"
+                className="flex flex-col gap-2.5 rounded-lg border border-border/70 bg-card/50 p-4"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Reference {index + 1}
                   </span>
                   <button
                     type="button"
                     onClick={() => removeReference(index)}
-                    className="text-xs font-medium text-zinc-500 underline hover:text-zinc-900"
+                    className="inline-flex items-center gap-1 rounded-sm text-xs font-medium text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
                     Remove
                   </button>
                 </div>
-                <input
+                <Input
                   type="text"
                   {...register(`references.${index}.name`)}
-                  className={inputClass}
+                  className="h-11"
                   placeholder="Full name"
                   aria-label={`Reference ${index + 1} name`}
                 />
                 <FieldError
                   message={errors.references?.[index]?.name?.message}
                 />
-                <div className="grid grid-cols-2 gap-2">
-                  <input
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Input
                     type="text"
                     {...register(`references.${index}.company`)}
-                    className={inputClass}
+                    className="h-11"
                     placeholder="Company"
                     aria-label={`Reference ${index + 1} company`}
                   />
-                  <input
+                  <Input
                     type="text"
                     {...register(`references.${index}.title`)}
-                    className={inputClass}
+                    className="h-11"
                     placeholder="Job title"
                     aria-label={`Reference ${index + 1} title`}
                   />
                 </div>
-                <input
+                <Input
                   type="tel"
                   {...register(`references.${index}.phone`)}
-                  className={inputClass}
+                  className="h-11"
                   placeholder="Phone"
                   aria-label={`Reference ${index + 1} phone`}
                 />
               </div>
             ))}
             {referenceFields.length < MAX_SIGNUP_REFERENCES && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => appendReference(EMPTY_REFERENCE)}
-                className="h-9 rounded-md border border-dashed border-zinc-300 text-sm font-medium text-zinc-600 transition hover:border-zinc-500 hover:text-zinc-900"
+                className="h-11 border-dashed"
               >
                 + Add reference
-              </button>
+              </Button>
             )}
           </div>
         </>
       )}
 
       <div className="flex flex-col gap-3">
-        <span className={labelClass}>
-          Mailing address{" "}
-          <span className="font-normal text-zinc-400">(optional)</span>
+        <span className="text-sm font-medium leading-none text-foreground">
+          Mailing address {optionalHint}
         </span>
-        <input
+        <Input
           type="text"
           autoComplete="street-address"
           {...register("addressLine")}
-          className={inputClass}
+          className="h-11"
           placeholder="Street address"
           aria-label="Street address"
         />
         <FieldError message={errors.addressLine?.message} />
-        <div className="grid grid-cols-[2fr_1fr_1fr] gap-2">
-          <input
+        <div className="grid grid-cols-[2fr_1fr_1fr] gap-2.5">
+          <Input
             type="text"
             autoComplete="address-level2"
             {...register("city")}
-            className={inputClass}
+            className="h-11"
             placeholder="City"
             aria-label="City"
           />
-          <input
+          <Input
             type="text"
             autoComplete="address-level1"
             maxLength={2}
             {...register("state")}
-            className={inputClass}
+            className="h-11 uppercase"
             placeholder="State"
             aria-label="State"
           />
-          <input
+          <Input
             type="text"
             autoComplete="postal-code"
             {...register("zip")}
-            className={inputClass}
+            className="h-11"
             placeholder="ZIP"
             aria-label="ZIP code"
           />
@@ -431,20 +438,16 @@ export function SignUpForm() {
         <FieldError message={errors.zip?.message} />
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="h-10 rounded-md bg-zinc-900 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60"
-      >
+      <Button type="submit" size="lg" disabled={isSubmitting} className="h-11">
         {isSubmitting ? "Creating account…" : "Create account"}
-      </button>
+      </Button>
 
       <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-zinc-200" />
-        <span className="text-xs uppercase tracking-wide text-zinc-400">
-          or
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          or continue with
         </span>
-        <span className="h-px flex-1 bg-zinc-200" />
+        <span className="h-px flex-1 bg-border" />
       </div>
 
       {/* Google signup carries the chosen role + name so the backend can
@@ -454,9 +457,12 @@ export function SignUpForm() {
         name={enteredName === "" ? undefined : enteredName}
       />
 
-      <p className="text-center text-sm text-zinc-600">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-zinc-900 underline">
+        <Link
+          href="/login"
+          className="rounded-sm font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           Sign in
         </Link>
       </p>

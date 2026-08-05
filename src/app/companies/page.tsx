@@ -1,27 +1,25 @@
 "use client";
 
 import { RequireRole } from "@/features/auth";
-import Link from "next/link";
 import { CompanyList } from "@/features/companies";
+import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 export default function CompaniesPage() {
   return (
     <RequireRole role="recruiter">
-      <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 px-6 py-16">
-        <div className="flex flex-col gap-1">
-          <Link
-            href="/dashboard"
-            className="text-sm text-muted-foreground underline"
-          >
-            Back to dashboard
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Companies</h1>
-          <p className="text-sm text-muted-foreground">
-            Follow a company to be notified when it posts a job.
-          </p>
+      <DashboardLayout>
+        <div className="flex flex-col gap-8">
+          <header className="flex flex-col gap-1.5">
+            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Companies
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Follow a company to be notified when it posts a job.
+            </p>
+          </header>
+          <CompanyList />
         </div>
-        <CompanyList />
-      </main>
+      </DashboardLayout>
     </RequireRole>
   );
 }

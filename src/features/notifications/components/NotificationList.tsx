@@ -1,6 +1,9 @@
 "use client";
 
+import { AlertCircle, BellOff, Check, CheckCheck } from "lucide-react";
+
 import { Button } from "@/shared/ui-components/controls/button";
+import { cn } from "@/shared/libs/shadCnConfig";
 import {
   useMarkAllRead,
   useMarkRead,
@@ -13,37 +16,61 @@ const formatWhen = (date: Date): string =>
     timeStyle: "short",
   }).format(date);
 
+function ListSkeleton() {
+  return (
+    <ul className="flex flex-col gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <li
+          key={i}
+          className="h-20 w-full animate-pulse rounded-xl border border-border/70 bg-muted"
+        />
+      ))}
+    </ul>
+  );
+}
+
 export function NotificationList() {
   const { data, isPending, isError, refetch } = useNotifications({ limit: 50 });
   const markRead = useMarkRead();
   const markAllRead = useMarkAllRead();
 
   if (isPending) {
-    return (
-      <p className="text-sm text-muted-foreground">Loading notifications…</p>
-    );
+    return <ListSkeleton />;
   }
 
   if (isError) {
     return (
-      <p className="text-sm text-destructive">
-        Could not load notifications.{" "}
+      <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="flex items-center gap-2 font-medium">
+          <AlertCircle className="h-[18px] w-[18px]" />
+          Could not load notifications.
+        </div>
         <button
           type="button"
-          className="underline"
+          className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
           onClick={() => void refetch()}
         >
           Retry
         </button>
-      </p>
+      </div>
     );
   }
 
   if (data.data.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Nothing yet. Follow a company and you will hear when it posts a job.
-      </p>
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/70 bg-card/50 px-6 py-14 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <BellOff className="h-6 w-6" />
+        </span>
+        <div className="flex flex-col gap-1">
+          <p className="font-heading text-base font-semibold text-foreground">
+            Nothing yet
+          </p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Follow a company and you will hear when it posts a job.
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -54,7 +81,7 @@ export function NotificationList() {
   return (
     <div className="flex flex-col gap-4">
       {hasUnread && (
-        <div>
+        <div className="flex justify-end">
           <Button
             type="button"
             variant="outline"
@@ -62,6 +89,7 @@ export function NotificationList() {
             disabled={markAllRead.isPending}
             onClick={() => markAllRead.mutate()}
           >
+            <CheckCheck className="h-4 w-4" />
             Mark all read
           </Button>
         </div>
@@ -73,12 +101,26 @@ export function NotificationList() {
           return (
             <li
               key={notification.id}
-              className={`flex items-start justify-between gap-4 rounded-lg border p-4 ${
-                unread ? "border-zinc-300 bg-white" : "bg-muted/30"
-              }`}
+              className={cn(
+                "relative flex items-start justify-between gap-4 rounded-xl border p-4 shadow-sm transition-colors",
+                unread
+                  ? "border-primary/40 bg-primary/5"
+                  : "border-border/70 bg-card",
+              )}
             >
+              {unread && (
+                <span
+                  aria-hidden="true"
+                  className="absolute left-0 top-4 h-8 w-1 rounded-r-full bg-primary"
+                />
+              )}
               <div className="flex flex-col gap-1">
-                <p className={unread ? "font-semibold" : "font-medium"}>
+                <p
+                  className={cn(
+                    "text-foreground",
+                    unread ? "font-semibold" : "font-medium",
+                  )}
+                >
                   {notification.title}
                 </p>
                 {notification.body && (
@@ -86,7 +128,7 @@ export function NotificationList() {
                     {notification.body}
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs tabular-nums text-muted-foreground">
                   {formatWhen(notification.createdAt)}
                 </p>
               </div>
@@ -98,6 +140,7 @@ export function NotificationList() {
                   disabled={markRead.isPending}
                   onClick={() => markRead.mutate(notification.id)}
                 >
+                  <Check className="h-4 w-4" />
                   Mark read
                 </Button>
               )}

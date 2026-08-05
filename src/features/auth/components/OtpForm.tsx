@@ -5,6 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { isApiError } from "@/shared/libs/errorHandler";
+import { cn } from "@/shared/libs/shadCnConfig";
+import { Button } from "@/shared/ui-components/controls/button";
+import { Input } from "@/shared/ui-components/controls/input";
+import { Label } from "@/shared/ui-components/controls/label";
 import { otpSchema, type OtpFormData } from "../schemas";
 import { verifyOtp, resendOtp } from "../api/auth";
 import { useAuth } from "../hooks/useAuth";
@@ -54,54 +58,53 @@ export function OtpForm({ email }: OtpFormProps) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex w-full max-w-sm flex-col gap-5 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm"
-    >
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-foreground">
           Verify your email
         </h1>
-        <p className="text-sm text-zinc-500">
-          Enter the code we sent to <span className="font-medium">{email}</span>
-          .
+        <p className="text-sm text-muted-foreground">
+          Enter the 6-digit code we sent to{" "}
+          <span className="font-medium text-foreground">{email}</span>.
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="otp" className="text-sm font-medium text-zinc-900">
-          Verification code
-        </label>
-        <input
+        <Label htmlFor="otp">Verification code</Label>
+        <Input
           id="otp"
           type="text"
           inputMode="numeric"
+          maxLength={6}
           autoComplete="one-time-code"
+          aria-invalid={errors.otp ? true : undefined}
           {...register("otp")}
-          className="h-10 rounded-md border border-zinc-200 px-3 text-sm tracking-widest outline-none focus:border-zinc-900"
-          placeholder="123456"
+          className={cn(
+            "h-14 text-center font-heading text-2xl font-bold tracking-[0.5em] tabular-nums placeholder:tracking-[0.5em] placeholder:font-normal placeholder:text-muted-foreground/50",
+            errors.otp && "border-destructive",
+          )}
+          placeholder="——————"
         />
         {errors.otp && (
-          <p className="text-xs text-red-500">{errors.otp.message}</p>
+          <p className="text-xs text-destructive">{errors.otp.message}</p>
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="h-10 rounded-md bg-zinc-900 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60"
-      >
+      <Button type="submit" size="lg" disabled={isSubmitting} className="h-11">
         {isSubmitting ? "Verifying…" : "Verify"}
-      </button>
+      </Button>
 
-      <button
-        type="button"
-        onClick={onResend}
-        disabled={resending}
-        className="text-sm text-zinc-600 underline disabled:opacity-60"
-      >
-        {resending ? "Sending…" : "Resend code"}
-      </button>
+      <p className="text-center text-sm text-muted-foreground">
+        Didn&apos;t get a code?{" "}
+        <button
+          type="button"
+          onClick={onResend}
+          disabled={resending}
+          className="rounded-sm font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+        >
+          {resending ? "Sending…" : "Resend code"}
+        </button>
+      </p>
     </form>
   );
 }
