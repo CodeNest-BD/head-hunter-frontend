@@ -21,8 +21,8 @@ import type { LucideIcon } from "lucide-react";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
-  published: "bg-emerald-500/15 text-emerald-300",
-  paused: "bg-amber-500/15 text-amber-300",
+  published: "text-[#17734E] bg-[#E7F4EC]",
+  paused: "text-[#92610C] bg-[#FBF3DF]",
   filled: "bg-primary/15 text-primary",
   closed: "bg-muted text-muted-foreground",
 };

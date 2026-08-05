@@ -59,11 +59,13 @@ const PLOTTED_CITIES: readonly PlottedCity[] = US_CITIES.flatMap((city) => {
 
 /** Fill intensity for a state, scaled by its open-role count. */
 function stateFill(count: number, maxCount: number, isActive: boolean): string {
-  if (isActive) return "hsl(217 91% 60%)"; // primary blue
-  if (count === 0 || maxCount === 0) return "hsl(215 40% 16%)"; // muted navy
+  if (isActive) return "#2050E0"; // primary blue
+  if (count === 0 || maxCount === 0) return "#E3E6EC"; // light grey-blue (empty)
+  // Light grey-blue → blue as role count climbs. Lightness runs high→low so
+  // busier states read darker/bluer on the white canvas.
   const t = Math.min(1, count / maxCount);
-  const lightness = 20 + t * 22; // 20% -> 42%
-  return `hsl(217 60% ${lightness}%)`;
+  const lightness = 86 - t * 34; // 86% -> 52%
+  return `hsl(222 68% ${lightness}%)`;
 }
 
 const ZOOM_STEP = 1.5;
@@ -181,14 +183,14 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         )}
       </div>
 
-      <div className="relative overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
-        {/* Soft brand glow behind the map. */}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+        {/* Faint blue tint behind the map — keeps the canvas light. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-70"
+          className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(60% 60% at 50% 40%, rgba(37,99,235,0.12), transparent 70%)",
+              "radial-gradient(60% 60% at 50% 40%, rgba(32,80,224,0.04), transparent 70%)",
           }}
         />
 
@@ -254,22 +256,20 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                   onMouseLeave={() => setHoveredState(null)}
                   onFocus={() => setHoveredState(geo.code)}
                   onBlur={() => setHoveredState(null)}
-                  fill={stateFill(count, maxCount, isActive)}
-                  stroke={
-                    isActive
-                      ? "hsl(213 94% 78%)"
-                      : isHovered
-                        ? "hsl(217 91% 60%)"
-                        : "hsl(215 30% 30%)"
+                  fill={
+                    isHovered && !isActive
+                      ? "#1740B8"
+                      : stateFill(count, maxCount, isActive)
                   }
-                  strokeWidth={isActive ? 1.2 : 0.6}
-                  className="cursor-pointer outline-none transition-[fill,stroke] duration-200 focus-visible:stroke-[hsl(213_94%_78%)]"
+                  stroke={
+                    isActive ? "#1740B8" : isHovered ? "#2050E0" : "#FFFFFF"
+                  }
+                  strokeWidth={isActive ? 1.2 : 0.8}
+                  className="cursor-pointer outline-none transition-[fill,stroke] duration-200 focus-visible:stroke-[#2050E0]"
                   style={{
                     filter: isActive
-                      ? "drop-shadow(0 0 6px rgba(37,99,235,0.55))"
-                      : isHovered
-                        ? "brightness(1.25)"
-                        : undefined,
+                      ? "drop-shadow(0 2px 6px rgba(32,80,224,0.35))"
+                      : undefined,
                   }}
                 >
                   <title>{`${name} — ${count} open ${
@@ -316,18 +316,18 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                     }}
                     fill={
                       isSelectedCity
-                        ? "hsl(213 94% 82%)"
+                        ? "#1740B8"
                         : emphasized
-                          ? "hsl(213 94% 74%)"
-                          : "hsl(213 60% 60%)"
+                          ? "#2050E0"
+                          : "#5B8AF0"
                     }
-                    stroke={isSelectedCity ? "#fff" : "hsl(222 47% 11%)"}
-                    strokeWidth={isSelectedCity ? 1.2 : 0.6}
+                    stroke="#FFFFFF"
+                    strokeWidth={isSelectedCity ? 1.4 : 0.8}
                     className="cursor-pointer outline-none transition-all duration-200"
                     style={{
-                      opacity: selectedState && !emphasized ? 0.35 : 0.9,
+                      opacity: selectedState && !emphasized ? 0.4 : 0.95,
                       filter: isSelectedCity
-                        ? "drop-shadow(0 0 5px rgba(96,165,250,0.9))"
+                        ? "drop-shadow(0 1px 4px rgba(32,80,224,0.5))"
                         : undefined,
                     }}
                   />
@@ -337,9 +337,9 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                       y={city.y + 3}
                       className="pointer-events-none select-none"
                       fontSize={isSelectedCity ? 11 : 9}
-                      fill="hsl(213 94% 88%)"
+                      fill="#14213D"
                       style={{ paintOrder: "stroke", fontWeight: 600 }}
-                      stroke="hsl(222 47% 8%)"
+                      stroke="#FFFFFF"
                       strokeWidth={2.5}
                     >
                       {city.name}
@@ -352,18 +352,18 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         </svg>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 border-t border-border/60 px-4 py-3 text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Open roles</span>
+        <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-3 text-xs text-muted-foreground">
+          <span className="font-medium text-navy">Open roles</span>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-[hsl(215_40%_16%)]" />
+            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#E3E6EC]" />
             None
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-[hsl(217_60%_28%)]" />
+            <span className="h-3 w-3 rounded-[3px] bg-[hsl(222_68%_78%)]" />
             Few
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-[hsl(217_60%_42%)]" />
+            <span className="h-3 w-3 rounded-[3px] bg-[hsl(222_68%_58%)]" />
             Many
           </div>
           <div className="flex items-center gap-1.5">
@@ -371,7 +371,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
             Selected
           </div>
           <div className="ml-auto flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-[hsl(213_60%_60%)]" />
+            <span className="inline-block h-2 w-2 rounded-full bg-[#5B8AF0]" />
             City
           </div>
         </div>
@@ -449,7 +449,7 @@ function CityCombobox({
           id={listId}
           align="start"
           sideOffset={6}
-          className="z-50 w-64 overflow-hidden rounded-md border border-border/70 bg-popover p-0 text-popover-foreground shadow-lg shadow-black/40 outline-none"
+          className="z-50 w-64 overflow-hidden rounded-lg border border-border bg-popover p-0 text-popover-foreground shadow-card outline-none"
         >
           <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />

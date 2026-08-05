@@ -27,9 +27,9 @@ export function SubscriptionCard({ profile }: SubscriptionCardProps) {
 
   if (profile.hasMarketplaceAccess) {
     return (
-      <Card className="border-emerald-500/40 bg-emerald-500/5">
+      <Card className="border-[#CDE7D8] bg-[#E7F4EC]">
         <CardHeader className="flex-row items-center gap-3 space-y-0">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-300">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-[#17734E]">
             <CheckCircle2 className="h-[18px] w-[18px]" />
           </span>
           <div className="flex flex-col gap-1">
@@ -46,9 +46,9 @@ export function SubscriptionCard({ profile }: SubscriptionCardProps) {
   }
 
   return (
-    <Card className="border-amber-500/40 bg-amber-500/5">
+    <Card className="border-[#F0E2B8] bg-[#FBF3DF]">
       <CardHeader className="flex-row items-start gap-3 space-y-0">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-300">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-[#92610C]">
           <Lock className="h-[18px] w-[18px]" />
         </span>
         <div className="flex flex-col gap-1">

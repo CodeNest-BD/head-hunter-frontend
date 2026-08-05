@@ -14,9 +14,9 @@ import {
 
 import { useAuth, type Role } from "@/features/auth";
 import { useUnreadCount } from "@/features/notifications";
-import { BrandGlow, Eyebrow, GradientRule } from "@/shared/ui-components/brand";
+import { BrandGlow, Eyebrow } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
-import { cn } from "@/shared/libs/shadCnConfig";
+import { Logo } from "@/shared/ui-components/layout/Logo";
 
 interface DashboardLink {
   href: string;
@@ -103,26 +103,28 @@ function DashboardContent() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Branded hero — the mock's glow, eyebrow pill, and heavy headline. */}
-      <header className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-6 shadow-sm [animation:hh-rise_.6s_cubic-bezier(.22,1,.36,1)_both] sm:p-8">
+      {/* Navy hero card — the mock's premium dark hero: glow, on-dark eyebrow,
+          and a heavy white headline. */}
+      <header className="relative overflow-hidden rounded-2xl bg-navy p-6 shadow-card [animation:hh-rise_.6s_cubic-bezier(.22,1,.36,1)_both] sm:p-8">
         <BrandGlow variant="hero" />
         <div className="relative flex flex-col">
-          <Eyebrow>Welcome back</Eyebrow>
-          <h1 className="mt-5 font-heading text-3xl font-extrabold tracking-[-0.02em] text-white sm:text-4xl">
+          <Logo tone="onDark" />
+          <div className="mt-6">
+            <Eyebrow tone="onDark">Overview</Eyebrow>
+          </div>
+          <h1 className="mt-3 font-heading text-3xl font-extrabold tracking-[-0.02em] text-white sm:text-4xl">
             Hey {user.firstName}.
           </h1>
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="mt-3 text-sm text-[#B6C1D6]">
             Signed in as {user.firstName} {user.lastName} ({user.email}) ·{" "}
             <span className="capitalize">{user.role}</span>
           </p>
-          <GradientRule className="mt-5 max-w-[min(100%,320px)] opacity-80" />
         </div>
       </header>
 
       {links.length === 0 && (
-        <div className="relative overflow-hidden rounded-xl border border-border/70 bg-card p-8 text-center">
-          <BrandGlow variant="hero" />
-          <div className="relative flex flex-col items-center gap-3">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-card">
+          <div className="flex flex-col items-center gap-3">
             <Eyebrow>No console</Eyebrow>
             <p className="text-sm text-muted-foreground">
               There is no admin console yet.
@@ -139,7 +141,7 @@ function DashboardContent() {
             <Link
               key={link.href}
               href={link.href}
-              className="group relative flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-card transition hover:-translate-y-0.5 hover:border-[#C9D2E3] hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div className="flex items-center justify-between">
                 <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
@@ -165,11 +167,7 @@ function DashboardContent() {
       </div>
 
       {!user.emailVerified && (
-        <div
-          className={cn(
-            "rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200",
-          )}
-        >
+        <div className="rounded-xl border border-[#F0E2B8] bg-[#FBF3DF] p-4 text-sm text-[#92610C]">
           Your email is not verified yet. Some actions may be unavailable.
         </div>
       )}

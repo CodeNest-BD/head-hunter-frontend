@@ -14,8 +14,8 @@ import {
 
 const STATUS_STYLES: Record<SubmissionStatus, string> = {
   submitted: "bg-primary/15 text-primary",
-  under_review: "bg-amber-500/15 text-amber-300",
-  advanced: "bg-emerald-500/15 text-emerald-300",
+  under_review: "text-[#92610C] bg-[#FBF3DF]",
+  advanced: "text-[#17734E] bg-[#E7F4EC]",
   rejected: "bg-muted text-muted-foreground",
   withdrawn: "bg-muted text-muted-foreground",
 };
@@ -76,7 +76,7 @@ export function InboxTable({ status, jobId }: InboxTableProps) {
 
   if (submissions.data.data.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/70 bg-card/50 px-6 py-14 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-[#C9D2E3] bg-card px-6 py-14 text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
           <Inbox className="h-6 w-6" />
         </span>
