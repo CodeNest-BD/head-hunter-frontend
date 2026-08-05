@@ -4,6 +4,7 @@ import { AlertCircle } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
 import { CompanyProfileForm, useMyCompanyProfile } from "@/features/companies";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -54,14 +55,11 @@ export default function CompanyProfilePage() {
     <RequireRole role="company">
       <DashboardLayout>
         <div className="flex flex-col gap-8">
-          <header className="flex flex-col gap-1.5">
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Company profile
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              This is what recruiters see when they browse companies.
-            </p>
-          </header>
+          <PageHeader
+            eyebrow="Company"
+            title="Company profile"
+            subtitle="This is what recruiters see when they browse companies."
+          />
           <CompanyProfileContent />
         </div>
       </DashboardLayout>

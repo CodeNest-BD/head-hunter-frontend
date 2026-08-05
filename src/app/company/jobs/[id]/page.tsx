@@ -6,6 +6,7 @@ import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
 import { JobForm, useJob, usePublishJob, useUpdateJob } from "@/features/jobs";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -119,14 +120,12 @@ export default function EditJobPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to jobs
           </Link>
-          <header className="flex flex-col gap-1.5">
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Edit job
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Update the details, then publish when you are ready.
-            </p>
-          </header>
+          <PageHeader
+            eyebrow="Job"
+            title="Edit job"
+            subtitle="Update the details, then publish when you are ready."
+            className="mb-0"
+          />
           <EditJobContent jobId={params.id} />
         </div>
       </DashboardLayout>

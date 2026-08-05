@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
 import { JobForm, useCreateJob } from "@/features/jobs";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 export default function NewJobPage() {
@@ -21,15 +22,12 @@ export default function NewJobPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to jobs
           </Link>
-          <header className="flex flex-col gap-1.5">
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              New job
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Saved as a draft. You publish it from the job page, which is when
-              followers are notified.
-            </p>
-          </header>
+          <PageHeader
+            eyebrow="New job"
+            title="New job"
+            subtitle="Saved as a draft. You publish it from the job page, which is when followers are notified."
+            className="mb-0"
+          />
           <div className="rounded-xl border border-border/70 bg-card p-6 shadow-sm">
             <JobForm
               onSubmit={(input) => create.mutate(input)}

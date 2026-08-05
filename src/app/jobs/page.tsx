@@ -18,6 +18,7 @@ import {
   type MapSelection,
 } from "@/features/jobs/components/UsJobMap";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import { BrandGlow, Eyebrow, PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
@@ -164,14 +165,18 @@ function JobsList({ filters }: { filters: Filters }) {
 
   if (jobs.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-xl border border-border/70 bg-card px-6 py-12 text-center">
-        <SearchX className="h-8 w-8 text-muted-foreground" />
-        <p className="font-heading text-base font-semibold">
-          No jobs match those filters
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Try a different state, city, or category.
-        </p>
+      <div className="relative overflow-hidden rounded-xl border border-border/70 bg-card px-6 py-12 text-center">
+        <BrandGlow variant="hero" />
+        <div className="relative flex flex-col items-center gap-3">
+          <Eyebrow>No matches</Eyebrow>
+          <SearchX className="h-8 w-8 text-muted-foreground" />
+          <p className="font-heading text-base font-semibold">
+            No jobs match those filters
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Try a different state, city, or category.
+          </p>
+        </div>
       </div>
     );
   }

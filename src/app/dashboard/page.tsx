@@ -14,6 +14,7 @@ import {
 
 import { useAuth, type Role } from "@/features/auth";
 import { useUnreadCount } from "@/features/notifications";
+import { BrandGlow, Eyebrow, GradientRule } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { cn } from "@/shared/libs/shadCnConfig";
 
@@ -102,29 +103,31 @@ function DashboardContent() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Hero header with a soft brand glow. */}
-      <header className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-6 shadow-sm sm:p-8">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl"
-        />
-        <div className="relative flex flex-col gap-1.5">
-          <p className="text-sm font-medium text-primary">
-            Welcome back, {user.firstName}
-          </p>
-          <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground">
-            Dashboard
+      {/* Branded hero — the mock's glow, eyebrow pill, and heavy headline. */}
+      <header className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-6 shadow-sm [animation:hh-rise_.6s_cubic-bezier(.22,1,.36,1)_both] sm:p-8">
+        <BrandGlow variant="hero" />
+        <div className="relative flex flex-col">
+          <Eyebrow>Welcome back</Eyebrow>
+          <h1 className="mt-5 font-heading text-3xl font-extrabold tracking-[-0.02em] text-white sm:text-4xl">
+            Hey {user.firstName}.
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-3 text-sm text-muted-foreground">
             Signed in as {user.firstName} {user.lastName} ({user.email}) ·{" "}
             <span className="capitalize">{user.role}</span>
           </p>
+          <GradientRule className="mt-5 max-w-[min(100%,320px)] opacity-80" />
         </div>
       </header>
 
       {links.length === 0 && (
-        <div className="rounded-xl border border-border/70 bg-card p-8 text-center text-sm text-muted-foreground">
-          There is no admin console yet.
+        <div className="relative overflow-hidden rounded-xl border border-border/70 bg-card p-8 text-center">
+          <BrandGlow variant="hero" />
+          <div className="relative flex flex-col items-center gap-3">
+            <Eyebrow>No console</Eyebrow>
+            <p className="text-sm text-muted-foreground">
+              There is no admin console yet.
+            </p>
+          </div>
         </div>
       )}
 

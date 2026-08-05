@@ -13,6 +13,7 @@ import {
   useUpdateSubmissionStatus,
   type SubmissionStatus,
 } from "@/features/submissions";
+import { BrandGlow, Eyebrow, PageHeader } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -82,16 +83,20 @@ function CandidateSection({ submissionId }: { submissionId: string }) {
   }
   if (data.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border/70 bg-card/50 px-6 py-12 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <UserRound className="h-6 w-6" />
-        </span>
-        <p className="font-heading text-base font-semibold text-foreground">
-          No candidates yet
-        </p>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          This submission has no candidates on it yet.
-        </p>
+      <div className="relative overflow-hidden rounded-xl border border-dashed border-border/70 bg-card/50 px-6 py-12 text-center">
+        <BrandGlow variant="hero" />
+        <div className="relative flex flex-col items-center gap-3">
+          <Eyebrow>No candidates</Eyebrow>
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <UserRound className="h-6 w-6" />
+          </span>
+          <p className="font-heading text-base font-semibold text-foreground">
+            No candidates yet
+          </p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            This submission has no candidates on it yet.
+          </p>
+        </div>
       </div>
     );
   }
@@ -203,14 +208,11 @@ export default function SubmissionReviewPage() {
     <RequireRole role="company">
       <DashboardLayout>
         <div className="flex max-w-2xl flex-col gap-6">
-          <header className="flex flex-col gap-1.5">
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Review submission
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              The recruiter, their note, and every candidate on this submission.
-            </p>
-          </header>
+          <PageHeader
+            eyebrow="Submission"
+            title="Review submission"
+            subtitle="The recruiter, their note, and every candidate on this submission."
+          />
 
           <SubmissionHeader submissionId={params.id} />
           <CandidateSection submissionId={params.id} />

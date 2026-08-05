@@ -9,6 +9,7 @@ import {
   SubscriptionCard,
   useMyRecruiterProfile,
 } from "@/features/recruiters";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -71,14 +72,11 @@ export default function RecruiterProfilePage() {
     <RequireRole role="recruiter">
       <DashboardLayout>
         <div className="flex max-w-2xl flex-col gap-8">
-          <header className="flex flex-col gap-1.5">
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Recruiter profile
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Your details, specializations and references.
-            </p>
-          </header>
+          <PageHeader
+            eyebrow="Your account"
+            title="Recruiter profile"
+            subtitle="Your details, specializations and references."
+          />
           <RecruiterProfileContent />
         </div>
       </DashboardLayout>

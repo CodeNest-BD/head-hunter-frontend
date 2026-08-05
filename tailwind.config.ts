@@ -81,15 +81,26 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
-        // Landing-specific font utilities (font-heading, font-body)
-        // Uses CSS variable injected by next/font/google in (landing)/layout.tsx
-        heading: [
-          "var(--font-plus-jakarta-sans)",
-          '"Plus Jakarta Sans"',
+        // The "Under Development" mock uses a single system sans; weight and
+        // tracking carry the headings. Inter is our high-quality system-ui
+        // equivalent, so headings and body share one family (as in the mock).
+        sans: [
+          "var(--font-inter)",
+          "Inter",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
           "sans-serif",
         ],
-        body: ["Inter", "sans-serif"],
+        heading: [
+          "var(--font-inter)",
+          "Inter",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "sans-serif",
+        ],
+        body: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
