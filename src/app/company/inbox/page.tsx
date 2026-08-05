@@ -9,6 +9,7 @@ import {
   SUBMISSION_STATUS_LABELS,
   type SubmissionStatus,
 } from "@/features/submissions";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { Label } from "@/shared/ui-components/controls/label";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -19,14 +20,11 @@ export default function CompanyInboxPage() {
     <RequireRole role="company">
       <DashboardLayout>
         <div className="flex flex-col gap-8">
-          <header className="flex flex-col gap-1.5">
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Inbox
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Candidates recruiters have submitted to your jobs.
-            </p>
-          </header>
+          <PageHeader
+            eyebrow="Candidate inbox"
+            title="Inbox"
+            subtitle="Candidates recruiters have submitted to your jobs."
+          />
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="status" className="text-foreground">

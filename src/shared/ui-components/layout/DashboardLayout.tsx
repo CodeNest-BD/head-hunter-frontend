@@ -20,6 +20,7 @@ import {
 import { useAuth, type Role } from "@/features/auth";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { BrandGlow } from "@/shared/ui-components/brand/BrandGlow";
 import { Logo } from "./Logo";
 
 interface NavItem {
@@ -79,12 +80,18 @@ function NavLink({
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+        "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         active
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
           : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
       )}
     >
+      {active && (
+        <span
+          aria-hidden="true"
+          className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary"
+        />
+      )}
       <Icon
         className={cn(
           "h-[18px] w-[18px] shrink-0 transition-colors",
@@ -220,8 +227,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Content */}
       <div className="lg:pl-64">
-        <main className="min-h-screen px-4 pb-16 pt-24 sm:px-6 lg:px-10">
-          <div className="mx-auto w-full max-w-6xl">{children}</div>
+        <main className="relative min-h-screen overflow-hidden px-4 pb-16 pt-24 sm:px-6 lg:px-10">
+          {/* Ambient brand glow behind every dashboard page. */}
+          <BrandGlow variant="ambient" className="opacity-70" />
+          <div className="relative z-[1] mx-auto w-full max-w-6xl">
+            {children}
+          </div>
         </main>
       </div>
     </div>

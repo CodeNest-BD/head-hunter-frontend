@@ -13,6 +13,7 @@ import {
 
 import { RequireRole } from "@/features/auth";
 import { ROLE_CATEGORY_LABELS, useJob } from "@/features/jobs";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -188,15 +189,12 @@ export default function JobDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to job map
           </Link>
-          <header className="flex flex-col gap-1.5">
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              Job detail
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              The fee, the role, and everything you need before you submit a
-              candidate.
-            </p>
-          </header>
+          <PageHeader
+            eyebrow="Role"
+            title="Job detail"
+            subtitle="The fee, the role, and everything you need before you submit a candidate."
+            className="mb-0"
+          />
           <JobDetailContent jobId={params.id} />
         </div>
       </DashboardLayout>
