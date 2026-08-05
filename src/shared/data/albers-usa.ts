@@ -105,17 +105,23 @@ export function projectAlbersUsa(
   lat: number,
 ): ProjectedPoint | null {
   const lower = lower48(lng, lat);
-  if (inBox(lower, TX - 0.455 * S, TY - 0.238 * S, TX + 0.455 * S, TY + 0.238 * S)) {
+  if (
+    inBox(lower, TX - 0.455 * S, TY - 0.238 * S, TX + 0.455 * S, TY + 0.238 * S)
+  ) {
     return lower;
   }
 
   const ak = alaska(lng, lat);
-  if (inBox(ak, TX - 0.425 * S, TY + 0.12 * S, TX - 0.214 * S, TY + 0.234 * S)) {
+  if (
+    inBox(ak, TX - 0.425 * S, TY + 0.12 * S, TX - 0.214 * S, TY + 0.234 * S)
+  ) {
     return ak;
   }
 
   const hi = hawaii(lng, lat);
-  if (inBox(hi, TX - 0.214 * S, TY + 0.166 * S, TX - 0.115 * S, TY + 0.234 * S)) {
+  if (
+    inBox(hi, TX - 0.214 * S, TY + 0.166 * S, TX - 0.115 * S, TY + 0.234 * S)
+  ) {
     return hi;
   }
 

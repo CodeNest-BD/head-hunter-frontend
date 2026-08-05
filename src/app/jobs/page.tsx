@@ -80,7 +80,10 @@ function JobMapPanel({
   });
 
   const stats = useMemo(() => {
-    const map = new Map<string, { openRoles: number; averageFeeMinor: number }>();
+    const map = new Map<
+      string,
+      { openRoles: number; averageFeeMinor: number }
+    >();
     for (const entry of data ?? []) {
       map.set(entry.locationState, {
         openRoles: entry.openRoles,
@@ -100,11 +103,7 @@ function JobMapPanel({
   }
 
   return (
-    <UsJobMap
-      stats={stats}
-      selection={filters.selection}
-      onSelect={onSelect}
-    />
+    <UsJobMap stats={stats} selection={filters.selection} onSelect={onSelect} />
   );
 }
 
@@ -134,7 +133,10 @@ function JobsList({ filters }: { filters: Filters }) {
   // The jobs API supports locationState but not locationCity, so a city
   // selection is applied to the returned rows here on the client.
   const jobs = useMemo(
-    () => (data?.data ?? []).filter((job) => matchesSelection(job, filters.selection)),
+    () =>
+      (data?.data ?? []).filter((job) =>
+        matchesSelection(job, filters.selection),
+      ),
     [data, filters.selection],
   );
 

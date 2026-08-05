@@ -197,7 +197,7 @@ export const US_CITIES: readonly UsCity[] = [
   // VA
   { name: "Virginia Beach", state: "VA", lat: 36.8529, lng: -75.978 },
   { name: "Richmond", state: "VA", lat: 37.5407, lng: -77.436 },
-  { name: "Arlington", state: "VA", lat: 38.8816, lng: -77.0910 },
+  { name: "Arlington", state: "VA", lat: 38.8816, lng: -77.091 },
   // WA
   { name: "Seattle", state: "WA", lat: 47.6062, lng: -122.3321 },
   { name: "Spokane", state: "WA", lat: 47.6588, lng: -117.426 },
