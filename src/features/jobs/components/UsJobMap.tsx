@@ -1,6 +1,13 @@
 "use client";
 
-import { useId, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import * as Popover from "@radix-ui/react-popover";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
 import {
@@ -57,20 +64,61 @@ const PLOTTED_CITIES: readonly PlottedCity[] = US_CITIES.flatMap((city) => {
   return point ? [{ ...city, x: point.x, y: point.y }] : [];
 });
 
-/** Fill intensity for a state, scaled by its open-role count. */
-function stateFill(count: number, maxCount: number, isActive: boolean): string {
-  if (isActive) return "#2050E0"; // primary blue
-  if (count === 0 || maxCount === 0) return "#E3E6EC"; // light grey-blue (empty)
-  // Light grey-blue → blue as role count climbs. Lightness runs high→low so
-  // busier states read darker/bluer on the white canvas.
-  const t = Math.min(1, count / maxCount);
-  const lightness = 86 - t * 34; // 86% -> 52%
-  return `hsl(222 68% ${lightness}%)`;
+// State fills copied from the mock: a sky-blue selected fill with a blue
+// border, a slightly-blue tone for states that have roles, and a neutral tone
+// for empty ones. Role volume is conveyed by the centroid bubbles, not fill.
+const FILL_SELECTED = "#DBE6FA"; // sky blue (selected)
+const FILL_HAS_ROLES = "#E4EAF3";
+const FILL_EMPTY = "#ECEEF2";
+const FILL_HOVER = "#D6E2FA"; // subtle hover tint
+
+function stateFill(
+  count: number,
+  isActive: boolean,
+  isHovered: boolean,
+): string {
+  if (isActive) return FILL_SELECTED;
+  if (isHovered) return FILL_HOVER;
+  return count > 0 ? FILL_HAS_ROLES : FILL_EMPTY;
 }
 
 const ZOOM_STEP = 1.5;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 6;
+
+/** Floating details card shown while hovering a state (the mock's popup). */
+function StatePopup({
+  code,
+  stats,
+  pointer,
+}: {
+  code: string | null;
+  stats: ReadonlyMap<string, StateStat>;
+  pointer: { x: number; y: number } | null;
+}) {
+  if (!code || !pointer) return null;
+  const name = US_STATE_NAME_BY_CODE[code] ?? code;
+  const stat = stats.get(code);
+  const count = stat?.openRoles ?? 0;
+  return (
+    <div
+      className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full"
+      style={{ left: pointer.x, top: pointer.y - 14 }}
+    >
+      <div className="whitespace-nowrap rounded-lg border border-border bg-white px-3 py-2 shadow-card-lg">
+        <p className="text-[13px] font-bold text-navy">{name}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {count > 0
+            ? `${count} open role${count === 1 ? "" : "s"}`
+            : "No open roles"}
+          {count > 0 && stat
+            ? ` · avg ${formatMinor(stat.averageFeeMinor)}`
+            : ""}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
   const titleId = useId();
@@ -80,12 +128,24 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
   // A single scale drives an SVG-space transform; pan is centered on the
   // active state so zooming keeps the selection in view without a drag lib.
   const [zoom, setZoom] = useState(MIN_ZOOM);
+  // Hover popup position, relative to the map container.
+  const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
-  const maxCount = useMemo(() => {
-    let max = 0;
-    for (const stat of stats.values()) max = Math.max(max, stat.openRoles);
-    return max;
-  }, [stats]);
+  // Mouse-wheel zoom. Attached natively with { passive: false } so we can
+  // preventDefault and stop the page from scrolling while zooming the map.
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? ZOOM_STEP ** 0.5 : 1 / ZOOM_STEP ** 0.5;
+      setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z * factor)));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   const selectedState = selection.kind === "none" ? null : selection.state;
   const selectedCity = selection.kind === "city" ? selection.city : null;
@@ -183,7 +243,10 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         )}
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <div
+        ref={wrapRef}
+        className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+      >
         {/* Faint blue tint behind the map — keeps the canvas light. */}
         <div
           aria-hidden="true"
@@ -193,6 +256,9 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
               "radial-gradient(60% 60% at 50% 40%, rgba(32,80,224,0.04), transparent 70%)",
           }}
         />
+
+        {/* Details popup — follows the cursor while hovering a state. */}
+        <StatePopup code={hoveredState} stats={stats} pointer={pointer} />
 
         {/* Zoom controls. */}
         <div className="absolute right-3 top-3 z-10 flex flex-col gap-1">
@@ -213,11 +279,24 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         </div>
 
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
-          className="relative block h-auto w-full"
+          className="relative block h-auto w-full touch-none"
           role="group"
           aria-labelledby={titleId}
           preserveAspectRatio="xMidYMid meet"
+          onMouseMove={(event) => {
+            const rect = wrapRef.current?.getBoundingClientRect();
+            if (!rect) return;
+            setPointer({
+              x: event.clientX - rect.left,
+              y: event.clientY - rect.top,
+            });
+          }}
+          onMouseLeave={() => {
+            setPointer(null);
+            setHoveredState(null);
+          }}
         >
           <title id={titleId}>Interactive map of open roles by US state</title>
           <g
@@ -256,19 +335,15 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                   onMouseLeave={() => setHoveredState(null)}
                   onFocus={() => setHoveredState(geo.code)}
                   onBlur={() => setHoveredState(null)}
-                  fill={
-                    isHovered && !isActive
-                      ? "#1740B8"
-                      : stateFill(count, maxCount, isActive)
-                  }
+                  fill={stateFill(count, isActive, isHovered)}
                   stroke={
-                    isActive ? "#1740B8" : isHovered ? "#2050E0" : "#FFFFFF"
+                    isActive ? "#2050E0" : isHovered ? "#2050E0" : "#FFFFFF"
                   }
-                  strokeWidth={isActive ? 1.2 : 0.8}
-                  className="cursor-pointer outline-none transition-[fill,stroke] duration-200 focus-visible:stroke-[#2050E0]"
+                  strokeWidth={isActive ? 1.6 : isHovered ? 1.2 : 1}
+                  className="cursor-pointer outline-none transition-[fill,stroke] duration-150 focus-visible:stroke-[#2050E0]"
                   style={{
                     filter: isActive
-                      ? "drop-shadow(0 2px 6px rgba(32,80,224,0.35))"
+                      ? "drop-shadow(0 2px 6px rgba(32,80,224,0.28))"
                       : undefined,
                   }}
                 >
@@ -355,19 +430,15 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-3 text-xs text-muted-foreground">
           <span className="font-medium text-navy">Open roles</span>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#E3E6EC]" />
+            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#ECEEF2]" />
             None
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-[hsl(222_68%_78%)]" />
-            Few
+            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#E4EAF3]" />
+            Has roles
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-[hsl(222_68%_58%)]" />
-            Many
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] bg-primary" />
+            <span className="h-3 w-3 rounded-[3px] border border-[#2050E0] bg-[#DBE6FA]" />
             Selected
           </div>
           <div className="ml-auto flex items-center gap-1.5">
