@@ -3,7 +3,15 @@
 import { useId, useMemo, useState, type ReactNode } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
-import { Check, ChevronsUpDown, MapPin, Minus, Plus, Search, X } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  MapPin,
+  Minus,
+  Plus,
+  Search,
+  X,
+} from "lucide-react";
 
 import { projectAlbersUsa } from "@/shared/data/albers-usa";
 import { US_CITIES, type UsCity } from "@/shared/data/us-cities";
@@ -77,8 +85,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
     return max;
   }, [stats]);
 
-  const selectedState =
-    selection.kind === "none" ? null : selection.state;
+  const selectedState = selection.kind === "none" ? null : selection.state;
   const selectedCity = selection.kind === "city" ? selection.city : null;
 
   const { width, height } = US_VIEWBOX;
@@ -87,9 +94,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
   const focus = useMemo(() => {
     if (!selectedState) return { cx: width / 2, cy: height / 2 };
     const geo = US_STATES.find((s) => s.code === selectedState);
-    return geo
-      ? { cx: geo.cx, cy: geo.cy }
-      : { cx: width / 2, cy: height / 2 };
+    return geo ? { cx: geo.cx, cy: geo.cy } : { cx: width / 2, cy: height / 2 };
   }, [selectedState, width, height]);
 
   const tx = width / 2 - focus.cx * zoom;
@@ -128,7 +133,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
     selection.kind === "city"
       ? `${selection.city}, ${selection.state}`
       : selection.kind === "state"
-        ? US_STATE_NAME_BY_CODE[selection.state] ?? selection.state
+        ? (US_STATE_NAME_BY_CODE[selection.state] ?? selection.state)
         : "All states";
 
   return (
@@ -295,7 +300,9 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                     role={emphasized ? "button" : undefined}
                     tabIndex={emphasized ? 0 : undefined}
                     aria-hidden={emphasized ? undefined : true}
-                    aria-label={emphasized ? `${city.name}, ${city.state}` : undefined}
+                    aria-label={
+                      emphasized ? `${city.name}, ${city.state}` : undefined
+                    }
                     aria-pressed={emphasized ? isSelectedCity : undefined}
                     onClick={(event) => {
                       event.stopPropagation();
