@@ -1,20 +1,18 @@
 import { cn } from "@/shared/libs/shadCnConfig";
 
 interface BrandGlowProps {
-  /** Softer, app-wide ambient glow vs. the fuller hero treatment. */
+  /** Kept for API compatibility; both render the same subtle navy-panel glow. */
   variant?: "ambient" | "hero";
   className?: string;
 }
 
 /**
- * The mock's signature: two slowly drifting blue radial glows (top-right +
- * bottom-left). Absolutely positioned and non-interactive — drop it as the
- * first child of any `relative`/`overflow-hidden` container to give a surface
- * the brand's ambient depth. Colors/curves are lifted verbatim from
- * `Under Development.html`.
+ * A subtle blue radial depth for the navy hero/auth panels (the mock's dark
+ * sections). Non-interactive; drop as the first child of a `relative
+ * overflow-hidden` navy container. On light surfaces it's effectively invisible,
+ * so it's safe to leave in place but is meant for navy panels.
  */
-export function BrandGlow({ variant = "ambient", className }: BrandGlowProps) {
-  const strong = variant === "hero";
+export function BrandGlow({ className }: BrandGlowProps) {
   return (
     <div
       aria-hidden="true"
@@ -24,19 +22,17 @@ export function BrandGlow({ variant = "ambient", className }: BrandGlowProps) {
       )}
     >
       <div
-        className="absolute -right-36 -top-44 h-[520px] w-[520px] rounded-full [animation:hh-drift_14s_ease-in-out_infinite]"
+        className="absolute -right-32 -top-40 h-[440px] w-[440px] rounded-full"
         style={{
-          background: `radial-gradient(circle, rgba(37,99,235,${
-            strong ? 0.22 : 0.14
-          }), transparent 65%)`,
+          background:
+            "radial-gradient(circle, rgba(91,138,240,0.18), transparent 70%)",
         }}
       />
       <div
-        className="absolute -bottom-52 -left-40 h-[560px] w-[560px] rounded-full [animation:hh-drift2_18s_ease-in-out_infinite]"
+        className="absolute -bottom-44 -left-32 h-[400px] w-[400px] rounded-full"
         style={{
-          background: `radial-gradient(circle, rgba(37,99,235,${
-            strong ? 0.14 : 0.08
-          }), transparent 65%)`,
+          background:
+            "radial-gradient(circle, rgba(41,102,232,0.14), transparent 70%)",
         }}
       />
     </div>

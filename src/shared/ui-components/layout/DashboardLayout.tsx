@@ -20,7 +20,6 @@ import {
 import { useAuth, type Role } from "@/features/auth";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
-import { BrandGlow } from "@/shared/ui-components/brand/BrandGlow";
 import { Logo } from "./Logo";
 
 interface NavItem {
@@ -227,12 +226,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
 
       {/* Content */}
       <div className="lg:pl-64">
-        <main className="relative min-h-screen overflow-hidden px-4 pb-16 pt-24 sm:px-6 lg:px-10">
-          {/* Ambient brand glow behind every dashboard page. */}
-          <BrandGlow variant="ambient" className="opacity-70" />
-          <div className="relative z-[1] mx-auto w-full max-w-6xl">
-            {children}
-          </div>
+        <main className="min-h-screen px-4 pb-16 pt-24 sm:px-6 lg:px-10">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>
     </div>

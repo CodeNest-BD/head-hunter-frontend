@@ -58,7 +58,7 @@ export function NotificationList() {
 
   if (data.data.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/70 bg-card/50 px-6 py-14 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-[#C9D2E3] bg-card px-6 py-14 text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <BellOff className="h-6 w-6" />
         </span>

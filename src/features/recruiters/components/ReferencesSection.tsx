@@ -62,7 +62,7 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
       </div>
 
       {references.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border/70 bg-card/50 px-6 py-10 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[#C9D2E3] bg-card px-6 py-10 text-center">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <UserRound className="h-5 w-5" />
           </span>

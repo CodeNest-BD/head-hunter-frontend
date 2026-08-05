@@ -83,7 +83,7 @@ export function CompanyList() {
       )}
 
       {data && data.data.length === 0 && (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/70 bg-card/50 px-6 py-14 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-[#C9D2E3] bg-card px-6 py-14 text-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <Building2 className="h-6 w-6" />
           </span>
@@ -105,7 +105,7 @@ export function CompanyList() {
           const range = commissionRange(company);
           return (
             <li key={company.id}>
-              <Card className="border-border/70 transition hover:border-primary/50 hover:shadow-black/20">
+              <Card className="border-border shadow-card transition hover:border-[#C9D2E3] hover:shadow-card-hover">
                 <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
                   <div className="flex items-start gap-3">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">

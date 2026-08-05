@@ -1,25 +1,23 @@
 import type { ReactNode } from "react";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Eyebrow } from "./Eyebrow";
-import { GradientRule } from "./GradientRule";
 
 interface PageHeaderProps {
-  /** Optional uppercase eyebrow label (rendered in the brand pill). */
+  /** Optional uppercase eyebrow label. */
   eyebrow?: string;
   title: ReactNode;
   subtitle?: ReactNode;
   /** Right-aligned actions (e.g. a primary button). */
   actions?: ReactNode;
-  /** Extra content under the header (e.g. filters), inside the rise animation. */
+  /** Extra content under the header (e.g. filters). */
   children?: ReactNode;
   className?: string;
 }
 
 /**
- * Standard page header carrying the mock's identity: the eyebrow pill, a heavy
- * tightly-tracked headline, a muted subtitle, and the blue gradient rule — with
- * the mock's subtle entrance rise. Used on every authenticated page so the app
- * reads as one product with the landing.
+ * Standard page header in the HeadHunter Platform style: a small eyebrow, a
+ * heavy navy headline, a muted subtitle, and a clean hairline — with the mock's
+ * subtle fade-up entrance.
  */
 export function PageHeader({
   eyebrow,
@@ -30,20 +28,15 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <header
-      className={cn(
-        "mb-8 [animation:hh-rise_.6s_cubic-bezier(.22,1,.36,1)_both]",
-        className,
-      )}
-    >
+    <header className={cn("mb-8 [animation:fadeUp_.4s_ease_both]", className)}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           {eyebrow && (
-            <div className="mb-4">
+            <div className="mb-2">
               <Eyebrow>{eyebrow}</Eyebrow>
             </div>
           )}
-          <h1 className="font-heading text-2xl font-extrabold tracking-[-0.02em] text-foreground sm:text-3xl">
+          <h1 className="font-heading text-2xl font-extrabold tracking-[-0.01em] text-navy sm:text-[30px]">
             {title}
           </h1>
           {subtitle && (
@@ -56,7 +49,7 @@ export function PageHeader({
           <div className="flex shrink-0 items-center gap-3">{actions}</div>
         )}
       </div>
-      <GradientRule className="mt-5 max-w-[min(100%,320px)] opacity-80" />
+      <div className="mt-5 h-px w-full bg-border" />
       {children}
     </header>
   );

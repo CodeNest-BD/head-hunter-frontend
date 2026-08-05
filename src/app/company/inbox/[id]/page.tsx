@@ -13,14 +13,14 @@ import {
   useUpdateSubmissionStatus,
   type SubmissionStatus,
 } from "@/features/submissions";
-import { BrandGlow, Eyebrow, PageHeader } from "@/shared/ui-components/brand";
+import { Eyebrow, PageHeader } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 const STATUS_STYLES: Record<SubmissionStatus, string> = {
   submitted: "bg-primary/15 text-primary",
-  under_review: "bg-amber-500/15 text-amber-300",
-  advanced: "bg-emerald-500/15 text-emerald-300",
+  under_review: "text-[#92610C] bg-[#FBF3DF]",
+  advanced: "text-[#17734E] bg-[#E7F4EC]",
   rejected: "bg-muted text-muted-foreground",
   withdrawn: "bg-muted text-muted-foreground",
 };
@@ -83,14 +83,13 @@ function CandidateSection({ submissionId }: { submissionId: string }) {
   }
   if (data.length === 0) {
     return (
-      <div className="relative overflow-hidden rounded-xl border border-dashed border-border/70 bg-card/50 px-6 py-12 text-center">
-        <BrandGlow variant="hero" />
-        <div className="relative flex flex-col items-center gap-3">
+      <div className="rounded-2xl border border-dashed border-[#C9D2E3] bg-card px-6 py-12 text-center shadow-card">
+        <div className="flex flex-col items-center gap-3">
           <Eyebrow>No candidates</Eyebrow>
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <UserRound className="h-6 w-6" />
           </span>
-          <p className="font-heading text-base font-semibold text-foreground">
+          <p className="font-heading text-base font-semibold text-navy">
             No candidates yet
           </p>
           <p className="max-w-sm text-sm text-muted-foreground">

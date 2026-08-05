@@ -18,7 +18,7 @@ import {
   type MapSelection,
 } from "@/features/jobs/components/UsJobMap";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
-import { BrandGlow, Eyebrow, PageHeader } from "@/shared/ui-components/brand";
+import { Eyebrow, PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
@@ -165,12 +165,11 @@ function JobsList({ filters }: { filters: Filters }) {
 
   if (jobs.length === 0) {
     return (
-      <div className="relative overflow-hidden rounded-xl border border-border/70 bg-card px-6 py-12 text-center">
-        <BrandGlow variant="hero" />
-        <div className="relative flex flex-col items-center gap-3">
+      <div className="rounded-2xl border border-border bg-card px-6 py-12 text-center shadow-card">
+        <div className="flex flex-col items-center gap-3">
           <Eyebrow>No matches</Eyebrow>
           <SearchX className="h-8 w-8 text-muted-foreground" />
-          <p className="font-heading text-base font-semibold">
+          <p className="font-heading text-base font-semibold text-navy">
             No jobs match those filters
           </p>
           <p className="text-sm text-muted-foreground">
@@ -187,7 +186,7 @@ function JobsList({ filters }: { filters: Filters }) {
         <li key={job.id}>
           <Link
             href={`/jobs/${job.id}`}
-            className="group block rounded-xl border border-border/70 bg-card p-4 shadow-sm transition hover:border-primary/50 hover:shadow-black/20"
+            className="group block rounded-2xl border border-border bg-card p-4 shadow-card transition hover:border-[#C9D2E3] hover:shadow-card-hover"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -240,16 +239,16 @@ export default function JobsPage() {
     <RequireRole role="recruiter">
       <DashboardLayout>
         <div className="flex flex-col gap-8">
-          <header className="flex flex-col gap-1">
-            <h1 className="flex items-center gap-2 font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              <MapPinned className="h-6 w-6 text-primary" />
-              Job map
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Explore open roles across the US. Pick a state or city to filter
-              the roles below.
-            </p>
-          </header>
+          <PageHeader
+            eyebrow="Job map"
+            title={
+              <span className="flex items-center gap-2">
+                <MapPinned className="h-6 w-6 text-primary" />
+                Job map
+              </span>
+            }
+            subtitle="Explore open roles across the US. Pick a state or city to filter the roles below."
+          />
 
           {/* Search + category filters */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

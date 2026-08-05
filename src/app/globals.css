@@ -3,64 +3,66 @@
 @tailwind utilities;
 
 /*
- * HeadHunter dark theme — aligned to the "Under Development" brand mock:
- * deep navy base (#0b1526), lighter navy surfaces, and a blue accent
- * (#2563eb / #3b82f6 / #60a5fa). All shadcn tokens are defined on :root as the
- * single (dark) theme, so every token-based component adopts it automatically.
+ * HeadHunter light theme — copied from the "HeadHunter Platform v2" mock:
+ * a light grey-blue canvas (#F1F3F7), white cards, navy ink (#14213D / #1B2434),
+ * a blue primary (#2050E0, hover #1740B8), and soft navy-tinted shadows. All
+ * shadcn tokens are defined on :root so token-based components adopt it.
  */
 @layer base {
   :root {
-    /* Base canvas ≈ #0b1526 */
-    --background: 216 56% 10%;
-    --foreground: 210 40% 98%;
+    /* Canvas #F1F3F7 / ink #1B2434 */
+    --background: 220 27% 96%;
+    --foreground: 220 32% 15%;
 
-    /* Elevated surfaces (cards, popovers) ≈ #101d33 / #13233d */
-    --card: 216 45% 14%;
-    --card-foreground: 210 40% 98%;
-    --popover: 216 46% 13%;
-    --popover-foreground: 210 40% 98%;
+    /* White surfaces; navy heading ink #14213D */
+    --card: 0 0% 100%;
+    --card-foreground: 222 51% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 51% 16%;
 
-    /* Brand blue — primary actions. #2563eb */
-    --primary: 221 83% 53%;
+    /* Brand blue #2050E0 */
+    --primary: 225 75% 50%;
     --primary-foreground: 0 0% 100%;
 
-    /* Muted navy surface for secondary controls */
-    --secondary: 216 34% 18%;
-    --secondary-foreground: 210 40% 98%;
+    /* Soft grey secondary surface #EEF0F4 */
+    --secondary: 220 21% 95%;
+    --secondary-foreground: 222 51% 16%;
 
-    --muted: 216 32% 17%;
-    /* Secondary body text ≈ #aab8cc */
-    --muted-foreground: 214 22% 74%;
+    --muted: 220 21% 95%;
+    /* Secondary text #68707E */
+    --muted-foreground: 219 10% 45%;
 
-    --accent: 216 38% 20%;
-    --accent-foreground: 210 40% 98%;
+    /* Blue tint #E8F0FE for accent fills */
+    --accent: 219 92% 95%;
+    --accent-foreground: 225 75% 42%;
 
-    --destructive: 0 72% 51%;
+    /* Danger #B3261E on #FDEBE8 */
+    --destructive: 3 71% 41%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Hairline borders / inputs — subtle on navy */
-    --border: 215 30% 22%;
-    --input: 215 30% 24%;
-    --ring: 217 91% 60%;
+    /* Hairlines: border #E3E6EC, input #D8DDE6 */
+    --border: 220 20% 91%;
+    --input: 220 19% 87%;
+    --ring: 225 75% 50%;
 
-    --radius: 0.625rem;
+    /* 8px base radius (buttons/inputs); cards use rounded-xl/2xl explicitly. */
+    --radius: 0.5rem;
 
-    /* Charts — blue-forward sequence with supporting hues */
-    --chart-1: 221 83% 53%;
+    --chart-1: 225 75% 50%;
     --chart-2: 199 89% 48%;
-    --chart-3: 262 83% 68%;
-    --chart-4: 160 60% 45%;
-    --chart-5: 43 96% 56%;
+    --chart-3: 152 42% 32%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 262 60% 55%;
 
-    /* Sidebar — a shade deeper than the canvas for separation */
-    --sidebar-background: 217 55% 8%;
-    --sidebar-foreground: 214 22% 74%;
-    --sidebar-primary: 221 83% 53%;
+    /* Sidebar — white with a blue-tint active state and navy ink. */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 219 10% 45%;
+    --sidebar-primary: 225 75% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 216 40% 16%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 30% 18%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 219 92% 95%;
+    --sidebar-accent-foreground: 222 51% 16%;
+    --sidebar-border: 220 20% 91%;
+    --sidebar-ring: 225 75% 50%;
   }
 }
 
@@ -75,92 +77,65 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
-  /* Blue-tinted text selection */
   ::selection {
-    background-color: hsl(221 83% 53% / 0.32);
+    background-color: hsl(225 75% 50% / 0.18);
   }
 }
 
-/*
- * Brand motifs lifted verbatim from the "Under Development" mock so the whole
- * app shares its identity: drifting blue glows, a pulsing eyebrow dot, an
- * entrance rise, and the transparent→blue→light-blue accent sweep.
- */
-@keyframes hh-drift {
-  0%,
-  100% {
-    transform: translate(0, 0);
+@layer utilities {
+  /* Brand navy — for hero/nav panels and heading ink where a token isn't apt. */
+  .text-navy {
+    color: #14213d;
   }
-  50% {
-    transform: translate(30px, -40px);
+  .bg-navy {
+    background-color: #14213d;
   }
-}
-@keyframes hh-drift2 {
-  0%,
-  100% {
-    transform: translate(0, 0);
+  /* Soft elevation copied from the mock's cards. */
+  .shadow-card {
+    box-shadow: 0 14px 40px rgba(20, 33, 61, 0.07);
   }
-  50% {
-    transform: translate(-40px, 30px);
+  .shadow-card-lg {
+    box-shadow: 0 14px 40px rgba(20, 33, 61, 0.1);
   }
-}
-@keyframes hh-pulse {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.25);
-  }
-}
-@keyframes hh-rise {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-@keyframes hh-bar {
-  0% {
-    transform: translateX(-100%);
-  }
-  60%,
-  100% {
-    transform: translateX(160%);
+  .shadow-card-hover {
+    box-shadow: 0 12px 34px rgba(20, 33, 61, 0.12);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  [class*="hh-drift"],
-  [class*="hh-pulse"],
-  [class*="hh-bar"],
-  [class*="hh-rise"] {
-    animation: none !important;
-  }
-}
-
-/* Themed, slim scrollbars that read as part of the dark UI */
+/* Light, slim scrollbars */
 @layer utilities {
   .scrollbar-navy {
     scrollbar-width: thin;
-    scrollbar-color: hsl(215 30% 30%) transparent;
+    scrollbar-color: hsl(220 15% 78%) transparent;
   }
   .scrollbar-navy::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   .scrollbar-navy::-webkit-scrollbar-thumb {
-    background-color: hsl(215 30% 26%);
+    background-color: hsl(220 15% 80%);
     border-radius: 9999px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
   .scrollbar-navy::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(215 30% 34%);
+    background-color: hsl(220 15% 70%);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="fadeUp"],
+  [class*="hh-"] {
+    animation: none !important;
   }
 }
