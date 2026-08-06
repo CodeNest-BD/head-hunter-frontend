@@ -3,54 +3,13 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Bell,
-  Briefcase,
-  Building2,
-  Inbox,
-  LayoutDashboard,
-  LogOut,
-  type LucideIcon,
-  Map,
-  Menu,
-  UserRound,
-  X,
-} from "lucide-react";
+import { LogOut, Menu, UserRound, X } from "lucide-react";
 
-import { useAuth, type Role } from "@/features/auth";
+import { useAuth } from "@/features/auth";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { NAV_BY_ROLE, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  /** Show the unread-notifications badge on this item. */
-  badge?: "notifications";
-}
-
-const NAV_BY_ROLE: Record<Role, NavItem[]> = {
-  company: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/company/jobs", label: "Jobs", icon: Briefcase },
-    { href: "/company/inbox", label: "Inbox", icon: Inbox },
-    { href: "/company/profile", label: "Company profile", icon: Building2 },
-  ],
-  recruiter: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/jobs", label: "Job map", icon: Map },
-    { href: "/companies", label: "Companies", icon: Building2 },
-    {
-      href: "/notifications",
-      label: "Notifications",
-      icon: Bell,
-      badge: "notifications",
-    },
-    { href: "/recruiter/profile", label: "My profile", icon: UserRound },
-  ],
-  admin: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
-};
 
 /** Recruiter-only unread pill; renders nothing for other roles or zero count. */
 function UnreadBadge() {

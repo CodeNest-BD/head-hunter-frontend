@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { Logo } from "@/shared/ui-components/layout/Logo";
+import { UserMenu } from "@/shared/ui-components/layout/UserMenu";
+import { NAV_BY_ROLE } from "@/shared/ui-components/layout/dashboardNav";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
 
@@ -27,8 +29,9 @@ const NAV_LINKS: readonly NavLink[] = [
  */
 export function LandingNav() {
   const [open, setOpen] = useState(false);
-  const { status } = useAuth();
-  const isAuthed = status === "authenticated";
+  const { status, user, logout } = useAuth();
+  const isAuthed = status === "authenticated" && user !== null;
+  const navItems = user ? NAV_BY_ROLE[user.role] : [];
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#E7EAF0] bg-white/95 backdrop-blur">
@@ -56,9 +59,7 @@ export function LandingNav() {
 
         <div className="hidden items-center gap-3 md:flex">
           {isAuthed ? (
-            <Button asChild className="font-bold">
-              <Link href="/dashboard">Go to dashboard</Link>
-            </Button>
+            <UserMenu />
           ) : (
             <>
               <Button
@@ -103,13 +104,45 @@ export function LandingNav() {
               {link.label}
             </a>
           ))}
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="mt-2 flex flex-col gap-1">
             {isAuthed ? (
-              <Button asChild className="w-full font-bold">
-                <Link href="/dashboard" onClick={() => setOpen(false)}>
-                  Go to dashboard
-                </Link>
-              </Button>
+              <>
+                {user && (
+                  <div className="mb-1 px-2 py-1.5">
+                    <p className="truncate text-sm font-bold text-navy">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="truncate text-xs capitalize text-muted-foreground">
+                      {user.role}
+                    </p>
+                  </div>
+                )}
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-[#3A4351] hover:bg-accent hover:text-primary"
+                    >
+                      <Icon className="h-[18px] w-[18px] text-muted-foreground" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    void logout();
+                  }}
+                  className="mt-1 flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10"
+                >
+                  <LogOut className="h-[18px] w-[18px]" />
+                  Log out
+                </button>
+              </>
             ) : (
               <>
                 <Button
