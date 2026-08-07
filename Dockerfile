@@ -32,7 +32,15 @@ COPY . .
 # ARG NODE_ENV=production
 # ENV NODE_ENV=${NODE_ENV}
 
-ARG NEXT_PUBLIC_API_URL=NEXT_PUBLIC_API_URL
+# NEXT_PUBLIC_* values are inlined into the client bundle at build time, so a
+# missing/placeholder value silently ships a broken bundle to production (every
+# API call would hit /NEXT_PUBLIC_API_URL/...). Require the arg and FAIL THE
+# BUILD if the deploy forgot to pass it, instead of baking in the literal name.
+ARG NEXT_PUBLIC_API_URL
+RUN test -n "$NEXT_PUBLIC_API_URL" || { \
+  echo "ERROR: NEXT_PUBLIC_API_URL build-arg is required. Pass --build-arg NEXT_PUBLIC_API_URL=<backend base url>."; \
+  exit 1; \
+}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 RUN npm run build
