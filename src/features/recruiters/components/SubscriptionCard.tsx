@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CheckCircle2, Lock } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
@@ -19,11 +20,12 @@ interface SubscriptionCardProps {
 
 /**
  * Explains the paywall rather than letting the recruiter discover it as a 403
- * on the job map. The activate button is a temporary stand-in for Stripe
- * Checkout and disappears with the backend endpoint.
+ * on the job map. Subscribing happens on the subscription page (Stripe
+ * Checkout); the dev-activate shortcut remains for local work without Stripe.
  */
 export function SubscriptionCard({ profile }: SubscriptionCardProps) {
   const activate = useDevActivateSubscription();
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   if (profile.hasMarketplaceAccess) {
     return (
@@ -66,17 +68,25 @@ export function SubscriptionCard({ profile }: SubscriptionCardProps) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <p className="text-sm text-muted-foreground">
-          Card payment is not wired up yet. Until it is, you can activate a
-          development subscription to try the marketplace.
+          Subscribe with a card on the subscription page — access unlocks as
+          soon as Stripe confirms the payment.
         </p>
-        <div>
-          <Button
-            type="button"
-            disabled={activate.isPending}
-            onClick={() => activate.mutate()}
-          >
-            {activate.isPending ? "Activating…" : "Activate (development only)"}
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link href="/recruiter/subscription">Go to subscription</Link>
           </Button>
+          {isDevelopment && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={activate.isPending}
+              onClick={() => activate.mutate()}
+            >
+              {activate.isPending
+                ? "Activating…"
+                : "Activate (development only)"}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
