@@ -15,7 +15,7 @@ interface PageHeaderProps {
 }
 
 /**
- * Standard page header in the HeadHunter Platform style: a small eyebrow, a
+ * Standard page header in the Head-Hunters Platform style: a small eyebrow, a
  * heavy navy headline, a muted subtitle, and a clean hairline — with the mock's
  * subtle fade-up entrance.
  */

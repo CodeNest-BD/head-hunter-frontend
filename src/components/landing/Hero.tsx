@@ -49,7 +49,7 @@ export function Hero() {
               asChild
               className="h-auto rounded-[10px] border border-[#3A4A6B] bg-transparent px-6 py-4 text-base font-semibold text-white hover:border-[#5B8AF0] hover:bg-transparent"
             >
-              <Link href="/signup">Recruit on HeadHunter</Link>
+              <Link href="/signup">Recruit on Head-Hunters</Link>
             </Button>
           </div>
           <dl className="flex flex-wrap gap-10">

@@ -109,7 +109,7 @@ export function SignUpForm() {
           Create your account
         </h1>
         <p className="text-sm text-muted-foreground">
-          Join the HeadHunter marketplace.
+          Join the Head-Hunters marketplace.
         </p>
       </div>
 

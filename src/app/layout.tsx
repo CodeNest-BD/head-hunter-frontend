@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HeadHunter",
+  title: "Head-Hunters",
   description:
     "The recruitment marketplace connecting companies and recruiters.",
 };

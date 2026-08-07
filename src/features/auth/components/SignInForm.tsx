@@ -53,7 +53,7 @@ export function SignInForm() {
           Welcome back
         </h1>
         <p className="text-sm text-muted-foreground">
-          Sign in to your HeadHunter account.
+          Sign in to your Head-Hunters account.
         </p>
       </div>
 

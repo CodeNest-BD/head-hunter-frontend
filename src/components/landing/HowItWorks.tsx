@@ -13,7 +13,7 @@ export function HowItWorks() {
       className="scroll-mt-20 bg-background px-5 py-20 text-center md:px-10 md:py-24"
     >
       <h2 className="font-heading text-4xl font-extrabold tracking-[-0.02em] text-navy sm:text-5xl">
-        Welcome to HeadHunter.com
+        Welcome to Head-Hunters.com
       </h2>
       <p className="mt-3.5 text-2xl font-medium tracking-[-0.01em] text-[#7A8290] sm:text-[31px]">
         Set Your Price. Hire the Right Talent.

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
- * HeadHunter light theme — copied from the "HeadHunter Platform v2" mock:
+ * Head-Hunters light theme — copied from the "HeadHunter Platform v2" mock:
  * a light grey-blue canvas (#F1F3F7), white cards, navy ink (#14213D / #1B2434),
  * a blue primary (#2050E0, hover #1740B8), and soft navy-tinted shadows. All
  * shadcn tokens are defined on :root so token-based components adopt it.
