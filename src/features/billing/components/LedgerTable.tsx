@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Receipt } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
@@ -42,8 +43,17 @@ export function LedgerTable() {
   if (entries.length === 0) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-sm text-muted-foreground">
-          No wallet activity yet. Load funds to get started.
+        <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
+            <Receipt className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-navy">No activity yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Load funds and your top-ups, reservations and refunds will show up
+              here.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
