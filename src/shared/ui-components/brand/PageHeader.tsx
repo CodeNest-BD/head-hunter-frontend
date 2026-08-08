@@ -28,7 +28,9 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <header className={cn("mb-8 [animation:fadeUp_.4s_ease_both]", className)}>
+    // No own bottom margin: every page places this inside a flex column whose
+    // `gap` owns the spacing — a margin here would stack on top of it.
+    <header className={cn("[animation:fadeUp_.4s_ease_both]", className)}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           {eyebrow && (
