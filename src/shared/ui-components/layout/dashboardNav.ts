@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   type LucideIcon,
   Map,
+  Send,
   UserRound,
   Wallet2,
 } from "lucide-react";
@@ -40,6 +41,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       icon: Bell,
       badge: "notifications",
     },
+    { href: "/recruiter/submissions", label: "Submissions", icon: Send },
     {
       href: "/recruiter/subscription",
       label: "Subscription",
