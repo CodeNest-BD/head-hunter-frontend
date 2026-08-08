@@ -64,6 +64,7 @@ export async function presignSubmissionUpload(
   const { data } = await apiClient.post<StagedUpload>(
     `/submissions/${submissionId}/attachments/presign`,
     { fileName: file.name, contentType: file.type },
+    { suppressGlobalErrorToast: true },
   );
   return data;
 }
@@ -92,6 +93,7 @@ export async function createCandidate(
   const { data } = await apiClient.post<unknown>(
     `/submissions/${submissionId}/candidates`,
     { ...input, attachments },
+    { suppressGlobalErrorToast: true },
   );
   return candidateSchema.parse(data);
 }
