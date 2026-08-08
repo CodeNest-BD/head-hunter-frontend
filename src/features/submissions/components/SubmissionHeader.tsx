@@ -5,7 +5,9 @@ import Link from "next/link";
 import { FileText } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { Button } from "@/shared/ui-components/controls/button";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { useUpdateSubmissionStatus } from "../hooks/useSubmissions";
 import {
   SUBMISSION_STATUS_LABELS,
@@ -54,42 +56,22 @@ export function SubmissionHeader({
           >
             {jobTitle}
           </Link>
-          <span
-            className={cn(
-              "inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-              STATUS_STYLES[submission.status],
-            )}
-          >
-            {SUBMISSION_STATUS_LABELS[submission.status]}
-          </span>
+          <StatusBadge
+            label={SUBMISSION_STATUS_LABELS[submission.status]}
+            className={cn("w-fit", STATUS_STYLES[submission.status])}
+          />
         </div>
 
         {canWithdraw &&
           (confirmingWithdraw ? (
-            <div className="flex flex-col items-end gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
-              <p className="text-xs text-destructive">
-                Withdraw this submission? This cannot be undone.
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setConfirmingWithdraw(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  disabled={updateStatus.isPending}
-                  onClick={() => updateStatus.mutate("withdrawn")}
-                >
-                  {updateStatus.isPending ? "Withdrawing…" : "Confirm withdraw"}
-                </Button>
-              </div>
-            </div>
+            <ConfirmAction
+              message="Withdraw this submission? This cannot be undone."
+              confirmLabel="Confirm withdraw"
+              busyLabel="Withdrawing…"
+              busy={updateStatus.isPending}
+              onCancel={() => setConfirmingWithdraw(false)}
+              onConfirm={() => updateStatus.mutate("withdrawn")}
+            />
           ) : (
             <Button
               type="button"
