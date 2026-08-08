@@ -1,6 +1,8 @@
 "use client";
 
+export { CandidateAttachments } from "./components/CandidateAttachments";
 export { CandidateCard } from "./components/CandidateCard";
+export { CandidateFields } from "./components/CandidateFields";
 export { CandidateForm } from "./components/CandidateForm";
 export {
   useAttachments,
