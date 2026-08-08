@@ -153,9 +153,7 @@ function CandidateItem({
   candidate: Candidate;
   submissionId: string;
 }) {
-  const [mode, setMode] = useState<"view" | "edit" | "confirm-remove">(
-    "view",
-  );
+  const [mode, setMode] = useState<"view" | "edit" | "confirm-remove">("view");
   const deleteCandidate = useDeleteCandidate(submissionId);
 
   if (mode === "edit") {
@@ -210,9 +208,7 @@ function CandidateItem({
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
         {candidate.currentCompany && (
           <div>
-            <dt className="text-xs text-muted-foreground">
-              Current company
-            </dt>
+            <dt className="text-xs text-muted-foreground">Current company</dt>
             <dd className="text-foreground">{candidate.currentCompany}</dd>
           </div>
         )}
@@ -226,9 +222,7 @@ function CandidateItem({
         )}
         {candidate.expectedSalaryMinor !== null && (
           <div>
-            <dt className="text-xs text-muted-foreground">
-              Expected salary
-            </dt>
+            <dt className="text-xs text-muted-foreground">Expected salary</dt>
             <dd className="text-foreground">
               {formatMinor(candidate.expectedSalaryMinor)}
             </dd>
@@ -449,8 +443,12 @@ function SubmissionDetailBody({ submission }: { submission: Submission }) {
 }
 
 function SubmissionDetailContent({ submissionId }: { submissionId: string }) {
-  const { data: submission, isPending, isError, refetch } =
-    useSubmission(submissionId);
+  const {
+    data: submission,
+    isPending,
+    isError,
+    refetch,
+  } = useSubmission(submissionId);
 
   if (isPending) {
     return <CardSkeleton />;

@@ -31,7 +31,10 @@ interface SubmissionHeaderProps {
  * still live — a Withdraw action gated behind an inline confirmation, since
  * withdrawing cannot be undone.
  */
-export function SubmissionHeader({ submission, jobTitle }: SubmissionHeaderProps) {
+export function SubmissionHeader({
+  submission,
+  jobTitle,
+}: SubmissionHeaderProps) {
   const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
   const updateStatus = useUpdateSubmissionStatus(submission.id);
 

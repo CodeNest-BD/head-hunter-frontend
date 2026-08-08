@@ -43,9 +43,7 @@ describe("SubmissionHeader", () => {
     await user.click(screen.getByRole("button", { name: /^withdraw$/i }));
     expect(mutateMock).not.toHaveBeenCalled();
 
-    await user.click(
-      screen.getByRole("button", { name: /confirm withdraw/i }),
-    );
+    await user.click(screen.getByRole("button", { name: /confirm withdraw/i }));
     expect(mutateMock).toHaveBeenCalledWith("withdrawn");
   });
 
