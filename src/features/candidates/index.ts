@@ -4,6 +4,9 @@ export { CandidateCard } from "./components/CandidateCard";
 export {
   useAttachments,
   useCandidates,
+  useDeleteCandidate,
+  useSubmitCandidate,
+  useUpdateCandidate,
   useUpdateCandidateStatus,
 } from "./hooks/useCandidates";
 export { candidateKeys } from "./keys";

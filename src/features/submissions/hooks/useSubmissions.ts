@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { toast } from "sonner";
 import {
+  createSubmission,
   fetchSubmission,
   fetchSubmissions,
   updateSubmissionStatus,
@@ -32,6 +34,36 @@ export function useUpdateSubmissionStatus(id: string) {
       queryClient.setQueryData(submissionKeys.detail(id), submission);
       void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
       toast.success("Submission updated");
+    },
+  });
+}
+
+/**
+ * Submitting to a job the recruiter has already submitted to returns a 409;
+ * that is not an error from the caller's perspective, so this resolves to
+ * the pre-existing submission instead of throwing.
+ */
+export function useCreateOrOpenSubmission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ jobId, note }: { jobId: string; note?: string }) => {
+      try {
+        return await createSubmission(jobId, note);
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 409) {
+          const existing = await fetchSubmissions({ jobId, page: 1 });
+          const submission = existing.data[0];
+          if (submission) return submission;
+        }
+        throw error;
+      }
+    },
+    onSuccess: (submission) => {
+      void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
+      queryClient.setQueryData(
+        submissionKeys.detail(submission.id),
+        submission,
+      );
     },
   });
 }

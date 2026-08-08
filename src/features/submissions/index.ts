@@ -2,6 +2,7 @@
 
 export { InboxTable } from "./components/InboxTable";
 export {
+  useCreateOrOpenSubmission,
   useSubmission,
   useSubmissions,
   useUpdateSubmissionStatus,
