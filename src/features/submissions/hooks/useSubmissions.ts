@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { toast } from "sonner";
 import { isApiError } from "@/shared/libs/errorHandler";
 import {
@@ -51,7 +50,7 @@ export function useCreateOrOpenSubmission() {
       try {
         return await createSubmission(jobId, note);
       } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 409) {
+        if (isApiError(error) && error.statusCode === 409) {
           const existing = await fetchSubmissions({ jobId, page: 1 });
           const submission = existing.data[0];
           if (submission) return submission;

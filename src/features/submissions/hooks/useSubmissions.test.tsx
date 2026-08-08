@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
-import { AxiosError, AxiosHeaders } from "axios";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/shared/libs/errorHandler";
 import type { Submission } from "../schemas";
 import { useCreateOrOpenSubmission } from "./useSubmissions";
 
@@ -26,38 +26,19 @@ const submission: Submission = {
   updatedAt: new Date("2026-01-01"),
 };
 
-function conflictError(): AxiosError {
-  const config = { headers: new AxiosHeaders() };
-  return new AxiosError(
-    "Conflict",
-    AxiosError.ERR_BAD_REQUEST,
-    config,
-    undefined,
-    {
-      data: undefined,
-      status: 409,
-      statusText: "Conflict",
-      headers: new AxiosHeaders(),
-      config,
-    },
-  );
+// apiClient's response interceptor always converts a rejected request into an
+// ApiError before a caller ever sees it (see errorHandler.ts), so these mocks
+// mirror that production shape rather than a raw AxiosError.
+function conflictError(): ApiError {
+  return new ApiError("You already have a submission on this job", {
+    statusCode: 409,
+  });
 }
 
-function serverError(): AxiosError {
-  const config = { headers: new AxiosHeaders() };
-  return new AxiosError(
-    "Internal Server Error",
-    AxiosError.ERR_BAD_RESPONSE,
-    config,
-    undefined,
-    {
-      data: undefined,
-      status: 500,
-      statusText: "Internal Server Error",
-      headers: new AxiosHeaders(),
-      config,
-    },
-  );
+function serverError(): ApiError {
+  return new ApiError("Could not create the submission", {
+    statusCode: 500,
+  });
 }
 
 function wrapper({ children }: { children: ReactNode }) {
