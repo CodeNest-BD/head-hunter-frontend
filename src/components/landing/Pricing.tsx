@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Button } from "@/shared/ui-components/controls/button";
+import { LandingCta } from "./LandingCta";
 
 /**
  * Pricing section copied from the v2 mock: "Simple, honest pricing." with a
@@ -31,12 +30,13 @@ export function Pricing() {
               Post unlimited jobs at no cost. You choose the recruiter fee for
               each role — that&apos;s the only money you ever spend.
             </p>
-            <Button
-              asChild
+            <LandingCta
+              role="company"
+              authedHref="/company/jobs/new"
               className="h-auto w-full rounded-[10px] bg-navy py-3.5 text-[15px] font-bold text-white hover:bg-navy/90"
             >
-              <Link href="/signup">Create a company account</Link>
-            </Button>
+              Create a company account
+            </LandingCta>
           </article>
 
           <article className="rounded-2xl bg-navy p-9 text-white shadow-card-lg">
@@ -54,12 +54,13 @@ export function Pricing() {
               Full access to the job map, unlimited candidate submissions, and
               guaranteed escrow-backed payouts. Cancel anytime.
             </p>
-            <Button
-              asChild
+            <LandingCta
+              role="recruiter"
+              authedHref="/recruiter/subscription"
               className="h-auto w-full rounded-[10px] py-3.5 text-[15px] font-bold"
             >
-              <Link href="/signup">Start recruiting</Link>
-            </Button>
+              Start recruiting
+            </LandingCta>
           </article>
         </div>
       </div>

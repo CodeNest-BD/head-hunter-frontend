@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   Bell,
   Briefcase,
   Building2,
@@ -7,6 +8,7 @@ import {
   type LucideIcon,
   Map,
   UserRound,
+  Wallet2,
 } from "lucide-react";
 
 import type { Role } from "@/features/auth";
@@ -25,6 +27,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/company/jobs", label: "Jobs", icon: Briefcase },
     { href: "/company/inbox", label: "Inbox", icon: Inbox },
+    { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
     { href: "/company/profile", label: "Company profile", icon: Building2 },
   ],
   recruiter: [
@@ -36,6 +39,11 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       label: "Notifications",
       icon: Bell,
       badge: "notifications",
+    },
+    {
+      href: "/recruiter/subscription",
+      label: "Subscription",
+      icon: BadgeCheck,
     },
     { href: "/recruiter/profile", label: "My profile", icon: UserRound },
   ],
