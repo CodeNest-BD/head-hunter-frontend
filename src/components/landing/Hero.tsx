@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { Eyebrow } from "@/shared/ui-components/brand/Eyebrow";
 import { BrandGlow } from "@/shared/ui-components/brand/BrandGlow";
-import { Button } from "@/shared/ui-components/controls/button";
+import { LandingCta } from "./LandingCta";
 
 interface Stat {
   value: string;
@@ -39,18 +38,20 @@ export function Hero() {
             guarantee.
           </p>
           <div className="mb-11 flex flex-col gap-3.5 sm:flex-row">
-            <Button
-              asChild
+            <LandingCta
+              role="company"
+              authedHref="/company/jobs/new"
               className="h-auto rounded-[10px] px-6 py-4 text-base font-bold"
             >
-              <Link href="/signup">Post a job — it&apos;s free</Link>
-            </Button>
-            <Button
-              asChild
+              Post a job — it&apos;s free
+            </LandingCta>
+            <LandingCta
+              role="recruiter"
+              authedHref="/jobs"
               className="h-auto rounded-[10px] border border-[#3A4A6B] bg-transparent px-6 py-4 text-base font-semibold text-white hover:border-[#5B8AF0] hover:bg-transparent"
             >
-              <Link href="/signup">Recruit on Head-Hunters</Link>
-            </Button>
+              Recruit on Head-Hunters
+            </LandingCta>
           </div>
           <dl className="flex flex-wrap gap-10">
             {STATS.map((stat) => (

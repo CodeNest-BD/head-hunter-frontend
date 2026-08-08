@@ -1,15 +1,15 @@
 "use client";
 
-import { BadgeCheck, CreditCard, Lock } from "lucide-react";
-
-import { Button } from "@/shared/ui-components/controls/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui-components/controls/card";
+  AlertTriangle,
+  BadgeCheck,
+  Check,
+  CreditCard,
+  Lock,
+} from "lucide-react";
+
+import { cn } from "@/shared/libs/shadCnConfig";
+import { Button } from "@/shared/ui-components/controls/button";
 import {
   useOpenSubscriptionPortal,
   useStartSubscriptionCheckout,
@@ -17,33 +17,40 @@ import {
 } from "../hooks/useBilling";
 import type { SubscriptionStatus } from "../schemas";
 
-const STATUS_COPY: Record<
-  SubscriptionStatus["status"],
-  { title: string; body: string }
-> = {
-  none: {
-    title: "No subscription yet",
-    body: "Subscribe to unlock the job map and start submitting candidates.",
-  },
-  incomplete: {
-    title: "Payment incomplete",
-    body: "Your last checkout didn't finish. Start again to activate your access.",
-  },
-  active: {
-    title: "Subscription active",
-    body: "You have full access to the marketplace.",
-  },
-  past_due: {
-    title: "Payment past due",
-    body: "Your last payment failed. Update your card to keep your access.",
-  },
-  canceled: {
-    title: "Subscription canceled",
-    body: "Resubscribe any time to regain access to the marketplace.",
-  },
+// Display copy only — Stripe is the source of truth for the actual charge.
+const PLAN_NAME = "Recruiter membership";
+const PLAN_PRICE = "$199";
+const PLAN_INTERVAL = "month";
+const PLAN_FEATURES: readonly string[] = [
+  "Full access to the 50-state job map",
+  "Unlimited candidate submissions",
+  "Escrow-backed, guaranteed payouts",
+  "Cancel anytime",
+];
+
+type Status = SubscriptionStatus["status"];
+
+interface StatusMeta {
+  label: string;
+  tone: "active" | "warning" | "neutral";
+  icon: typeof BadgeCheck;
+}
+
+const STATUS_META: Record<Status, StatusMeta> = {
+  active: { label: "Active", tone: "active", icon: BadgeCheck },
+  past_due: { label: "Payment past due", tone: "warning", icon: AlertTriangle },
+  incomplete: { label: "Incomplete", tone: "warning", icon: AlertTriangle },
+  canceled: { label: "Canceled", tone: "neutral", icon: Lock },
+  none: { label: "Not subscribed", tone: "neutral", icon: Lock },
 };
 
-function periodEndLabel(iso: string | null): string | null {
+const TONE_STYLES: Record<StatusMeta["tone"], string> = {
+  active: "bg-[#E7F4EC] text-[#17734E] border-[#CDE7D8]",
+  warning: "bg-[#FBF3DF] text-[#92610C] border-[#F0E2B8]",
+  neutral: "bg-muted text-muted-foreground border-border",
+};
+
+function formatDate(iso: string | null): string | null {
   if (!iso) return null;
   return new Date(iso).toLocaleDateString("en-US", {
     month: "long",
@@ -52,7 +59,31 @@ function periodEndLabel(iso: string | null): string | null {
   });
 }
 
-/** Subscription state + the two Stripe actions: subscribe and manage. */
+/** One-line summary shown beside the status pill. */
+function statusLine(status: Status, periodEnd: string | null): string {
+  const date = formatDate(periodEnd);
+  switch (status) {
+    case "active":
+      return date ? `Renews on ${date}.` : "You have full marketplace access.";
+    case "past_due":
+      return "Your last payment failed — update your card to keep access.";
+    case "incomplete":
+      return "Your last checkout didn't finish.";
+    case "canceled":
+      return date
+        ? `Your access ended on ${date}.`
+        : "Your subscription has ended.";
+    case "none":
+      return "Subscribe to unlock the job map and submit candidates.";
+  }
+}
+
+/**
+ * Recruiter billing: a status strip plus the plan card. The plan card always
+ * states what the membership includes and its price; the primary action adapts
+ * to the current status (subscribe / resubscribe / fix payment), while an
+ * active member manages their card and cancellation from the status strip.
+ */
 export function SubscriptionPanel() {
   const { data, isLoading } = useSubscription();
   const checkout = useStartSubscriptionCheckout();
@@ -60,79 +91,142 @@ export function SubscriptionPanel() {
 
   if (isLoading || !data) {
     return (
-      <Card>
-        <CardContent className="p-8 text-center text-sm text-muted-foreground">
-          Loading subscription…
-        </CardContent>
-      </Card>
+      <div className="h-40 animate-pulse rounded-2xl border border-border bg-card" />
     );
   }
 
-  const copy = STATUS_COPY[data.status];
-  const isActive = data.status === "active";
-  const renewsOn = periodEndLabel(data.currentPeriodEnd);
+  const status = data.status;
+  const meta = STATUS_META[status];
+  const StatusIcon = meta.icon;
+  const isActive = status === "active";
+  // A Stripe customer exists once any checkout has happened, so the portal is
+  // reachable for every status except a never-subscribed recruiter.
+  const canManageBilling = status !== "none";
+  const busy = checkout.isPending || portal.isPending;
+
+  const planAction = (() => {
+    switch (status) {
+      case "active":
+        return null;
+      case "past_due":
+        return {
+          label: portal.isPending ? "Opening…" : "Update payment method",
+          run: () => portal.mutate(),
+        };
+      case "incomplete":
+        return {
+          label: checkout.isPending ? "Redirecting…" : "Complete subscription",
+          run: () => checkout.mutate(),
+        };
+      case "canceled":
+        return {
+          label: checkout.isPending ? "Redirecting…" : "Resubscribe",
+          run: () => checkout.mutate(),
+        };
+      case "none":
+        return {
+          label: checkout.isPending ? "Redirecting…" : "Subscribe",
+          run: () => checkout.mutate(),
+        };
+    }
+  })();
 
   return (
-    <Card
-      className={
-        isActive ? "border-[#CDE7D8] bg-[#E7F4EC]" : "border-border bg-card"
-      }
-    >
-      <CardHeader className="flex-row items-start gap-3 space-y-0">
-        <span
-          className={
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg " +
-            (isActive ? "bg-white text-[#17734E]" : "bg-accent text-primary")
-          }
-        >
-          {isActive ? (
-            <BadgeCheck className="h-[18px] w-[18px]" />
-          ) : (
-            <Lock className="h-[18px] w-[18px]" />
-          )}
-        </span>
-        <div className="flex flex-col gap-1">
-          <CardTitle className="font-heading tracking-tight">
-            {copy.title}
-          </CardTitle>
-          <CardDescription>
-            {copy.body}
-            {isActive && renewsOn && (
-              <>
-                {" "}
-                Renews on{" "}
-                <span className="font-medium text-foreground">{renewsOn}</span>.
-              </>
+    <div className="flex flex-col gap-6">
+      {/* Status strip */}
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
+              TONE_STYLES[meta.tone],
             )}
-          </CardDescription>
+          >
+            <StatusIcon className="h-[18px] w-[18px]" />
+          </span>
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-navy">Status</span>
+              <span
+                className={cn(
+                  "rounded-full border px-2 py-0.5 text-xs font-semibold",
+                  TONE_STYLES[meta.tone],
+                )}
+              >
+                {meta.label}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {statusLine(status, data.currentPeriodEnd)}
+            </p>
+          </div>
         </div>
-      </CardHeader>
-      <CardContent className="flex flex-wrap gap-3">
-        {isActive || data.status === "past_due" ? (
+        {canManageBilling && (
           <Button
             type="button"
-            variant={isActive ? "outline" : "default"}
-            disabled={portal.isPending}
+            variant="outline"
+            disabled={busy}
             onClick={() => portal.mutate()}
           >
             <CreditCard className="h-[18px] w-[18px]" />
             {portal.isPending ? "Opening…" : "Manage billing"}
           </Button>
-        ) : (
-          <Button
-            type="button"
-            disabled={checkout.isPending}
-            onClick={() => checkout.mutate()}
-          >
-            {checkout.isPending ? "Redirecting…" : "Subscribe"}
-          </Button>
         )}
-        {(checkout.isError || portal.isError) && (
-          <p className="w-full text-sm text-destructive">
-            Something went wrong talking to Stripe. Please try again.
-          </p>
+      </div>
+
+      {/* Plan card */}
+      <article className="overflow-hidden rounded-2xl bg-navy text-white shadow-card-lg">
+        <div className="flex items-start justify-between gap-4 p-8 pb-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#8FB0F5]">
+              {PLAN_NAME}
+            </p>
+            <p className="mt-2 font-heading text-[44px] font-extrabold leading-none">
+              {PLAN_PRICE}
+              <span className="text-[17px] font-semibold text-[#7D89A3]">
+                {" "}
+                / {PLAN_INTERVAL}
+              </span>
+            </p>
+          </div>
+          {isActive && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1E4620] px-3 py-1 text-xs font-semibold text-[#7BE0A0]">
+              <BadgeCheck className="h-3.5 w-3.5" />
+              Current plan
+            </span>
+          )}
+        </div>
+
+        <ul className="flex flex-col gap-3 px-8 pb-2">
+          {PLAN_FEATURES.map((feature) => (
+            <li key={feature} className="flex items-center gap-3 text-[15px]">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#22345A] text-[#7BE0A0]">
+                <Check className="h-3 w-3" />
+              </span>
+              <span className="text-[#DCE3F0]">{feature}</span>
+            </li>
+          ))}
+        </ul>
+
+        {planAction && (
+          <div className="p-8 pt-6">
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={planAction.run}
+              className="h-auto w-full rounded-[10px] py-3.5 text-[15px] font-bold sm:w-auto sm:px-8"
+            >
+              {planAction.label}
+            </Button>
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </article>
+
+      {(checkout.isError || portal.isError) && (
+        <p className="text-sm text-destructive">
+          Something went wrong talking to Stripe. Please try again.
+        </p>
+      )}
+    </div>
   );
 }
