@@ -1,6 +1,8 @@
 "use client";
 
 export { InboxTable } from "./components/InboxTable";
+export { SubmissionHeader } from "./components/SubmissionHeader";
+export { SubmissionList } from "./components/SubmissionList";
 export {
   useCreateOrOpenSubmission,
   useSubmission,

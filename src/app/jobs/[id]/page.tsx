@@ -1,19 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
   Banknote,
   Briefcase,
   MapPin,
+  Send,
   Wallet,
 } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
 import { ROLE_CATEGORY_LABELS, useJob } from "@/features/jobs";
+import { useCreateOrOpenSubmission } from "@/features/submissions";
 import { PageHeader } from "@/shared/ui-components/brand";
+import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -67,6 +70,30 @@ function FormSkeleton() {
   );
 }
 
+function SubmitCandidatesButton({ jobId }: { jobId: string }) {
+  const router = useRouter();
+  const createOrOpenSubmission = useCreateOrOpenSubmission();
+
+  return (
+    <Button
+      type="button"
+      disabled={createOrOpenSubmission.isPending}
+      onClick={() =>
+        createOrOpenSubmission.mutate(
+          { jobId },
+          {
+            onSuccess: (submission) =>
+              router.push(`/recruiter/submissions/${submission.id}`),
+          },
+        )
+      }
+    >
+      <Send className="h-[18px] w-[18px]" />
+      {createOrOpenSubmission.isPending ? "Opening…" : "Submit candidates"}
+    </Button>
+  );
+}
+
 function JobDetailContent({ jobId }: { jobId: string }) {
   const { data: job, isPending, isError, error, refetch } = useJob(jobId);
 
@@ -116,6 +143,10 @@ function JobDetailContent({ jobId }: { jobId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-end">
+        <SubmitCandidatesButton jobId={jobId} />
+      </div>
+
       {/* Recruiter fee hero — the headline number, with a soft brand glow. */}
       <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-card p-6 shadow-sm">
         <div
