@@ -1,6 +1,7 @@
 "use client";
 
 export { CandidateCard } from "./components/CandidateCard";
+export { CandidateForm } from "./components/CandidateForm";
 export {
   useAttachments,
   useCandidates,

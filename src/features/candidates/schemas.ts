@@ -45,6 +45,53 @@ export const candidateSchema = z.object({
 });
 export type Candidate = z.infer<typeof candidateSchema>;
 
+/**
+ * Candidate submit/edit form. Strings throughout; converted to the wire shape
+ * (numbers, cents, null-for-cleared) at the submit boundary — mirrors
+ * recruiterProfileFormSchema / companyProfileFormSchema.
+ */
+export const candidateFormSchema = z.object({
+  fullName: z.string().trim().min(1, "Full name is required"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  phone: z.string().trim(),
+  overview: z.string().trim(),
+  linkedinUrl: z
+    .string()
+    .trim()
+    .url("Enter a full URL, including https://")
+    .or(z.literal("")),
+  yearsOfExperience: z
+    .string()
+    .trim()
+    .refine(
+      (v) =>
+        v === "" ||
+        (Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 60),
+      { message: "Enter a whole number of years between 0 and 60" },
+    ),
+  currentCompany: z.string().trim(),
+  expectedSalary: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0), {
+      message: "Enter an amount of 0 or more",
+    }),
+  noticePeriodDays: z
+    .string()
+    .trim()
+    .refine(
+      (v) =>
+        v === "" ||
+        (Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 365),
+      { message: "Enter a whole number of days between 0 and 365" },
+    ),
+});
+export type CandidateFormValues = z.infer<typeof candidateFormSchema>;
+
 export const attachmentSchema = z.object({
   id: z.string(),
   fileName: z.string(),
