@@ -28,6 +28,12 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/company/jobs", label: "Jobs", icon: Briefcase },
     { href: "/company/inbox", label: "Inbox", icon: Inbox },
+    {
+      href: "/notifications",
+      label: "Notifications",
+      icon: Bell,
+      badge: "notifications",
+    },
     { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
     { href: "/company/profile", label: "Company profile", icon: Building2 },
   ],
