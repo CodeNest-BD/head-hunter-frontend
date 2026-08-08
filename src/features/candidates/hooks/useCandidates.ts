@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { toast } from "sonner";
+import { isApiError } from "@/shared/libs/errorHandler";
 import {
   createCandidate,
   deleteCandidate,
@@ -73,6 +75,22 @@ export function useSubmitCandidate(submissionId: string) {
         queryKey: candidateKeys.forSubmission(submissionId),
       });
       toast.success("Candidate submitted");
+    },
+    onError: (error) => {
+      // uploadToPresignedUrl PUTs straight to S3 with plain axios, so a raw
+      // AxiosError (as opposed to apiClient's parsed ApiError) means that leg
+      // failed rather than the presign or create call.
+      if (axios.isAxiosError(error)) {
+        toast.error(
+          "Could not upload the CV — check your connection and try again",
+        );
+        return;
+      }
+      toast.error(
+        isApiError(error)
+          ? error.message
+          : "Could not submit this candidate. Please try again.",
+      );
     },
   });
 }

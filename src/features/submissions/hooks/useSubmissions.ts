@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
+import { isApiError } from "@/shared/libs/errorHandler";
 import {
   createSubmission,
   fetchSubmission,
@@ -63,6 +64,13 @@ export function useCreateOrOpenSubmission() {
       queryClient.setQueryData(
         submissionKeys.detail(submission.id),
         submission,
+      );
+    },
+    onError: (error) => {
+      toast.error(
+        isApiError(error)
+          ? error.message
+          : "Could not submit candidates for this job. Please try again.",
       );
     },
   });

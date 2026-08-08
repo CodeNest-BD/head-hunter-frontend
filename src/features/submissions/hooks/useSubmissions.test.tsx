@@ -43,6 +43,23 @@ function conflictError(): AxiosError {
   );
 }
 
+function serverError(): AxiosError {
+  const config = { headers: new AxiosHeaders() };
+  return new AxiosError(
+    "Internal Server Error",
+    AxiosError.ERR_BAD_RESPONSE,
+    config,
+    undefined,
+    {
+      data: undefined,
+      status: 500,
+      statusText: "Internal Server Error",
+      headers: new AxiosHeaders(),
+      config,
+    },
+  );
+}
+
 function wrapper({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -88,5 +105,40 @@ describe("useCreateOrOpenSubmission", () => {
       jobId: "job-1",
       page: 1,
     });
+  });
+
+  it("errors with the original 409 when no existing submission is found (e.g. the job is paused or filled)", async () => {
+    const conflict = conflictError();
+    createSubmissionMock.mockRejectedValue(conflict);
+    fetchSubmissionsMock.mockResolvedValue({
+      data: [],
+      meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
+    });
+
+    const { result } = renderHook(() => useCreateOrOpenSubmission(), {
+      wrapper,
+    });
+    result.current.mutate({ jobId: "job-1" });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBe(conflict);
+    expect(fetchSubmissionsMock).toHaveBeenCalledWith({
+      jobId: "job-1",
+      page: 1,
+    });
+  });
+
+  it("rethrows a non-409 error without checking for an existing submission", async () => {
+    const failure = serverError();
+    createSubmissionMock.mockRejectedValue(failure);
+
+    const { result } = renderHook(() => useCreateOrOpenSubmission(), {
+      wrapper,
+    });
+    result.current.mutate({ jobId: "job-1" });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBe(failure);
+    expect(fetchSubmissionsMock).not.toHaveBeenCalled();
   });
 });
