@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, FileText, Paperclip } from "lucide-react";
 
+import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -91,6 +92,45 @@ export function CandidateCard({ candidate, submissionId }: CandidateCardProps) {
             {candidate.overview}
           </p>
         )}
+
+        <div className="flex flex-col gap-2 text-sm">
+          {candidate.linkedinUrl && (
+            <div>
+              <a
+                href={candidate.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline-offset-2 hover:underline"
+              >
+                LinkedIn Profile
+              </a>
+            </div>
+          )}
+
+          {candidate.yearsOfExperience !== null && (
+            <div className="text-muted-foreground">
+              {candidate.yearsOfExperience} yrs experience
+            </div>
+          )}
+
+          {candidate.currentCompany && (
+            <div className="text-muted-foreground">
+              {candidate.currentCompany}
+            </div>
+          )}
+
+          {candidate.expectedSalaryMinor !== null && (
+            <div className="text-muted-foreground">
+              {formatMinor(candidate.expectedSalaryMinor)} expected salary
+            </div>
+          )}
+
+          {candidate.noticePeriodDays !== null && (
+            <div className="text-muted-foreground">
+              {candidate.noticePeriodDays}-day notice
+            </div>
+          )}
+        </div>
 
         <div>
           <Button

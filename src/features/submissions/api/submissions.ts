@@ -43,3 +43,16 @@ export async function updateSubmissionStatus(
   });
   return submissionSchema.parse(data);
 }
+
+/** POST /v1/submissions — 409 when one already exists for this job. */
+export async function createSubmission(
+  jobId: string,
+  note?: string,
+): Promise<Submission> {
+  const { data } = await apiClient.post<unknown>(
+    "/submissions",
+    { jobId, ...(note ? { note } : {}) },
+    { suppressGlobalErrorToast: true },
+  );
+  return submissionSchema.parse(data);
+}
