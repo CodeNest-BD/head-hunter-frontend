@@ -14,3 +14,4 @@ export {
 } from "./schemas";
 export { recruiterDisplayName } from "./schemas";
 export type { RecruiterSummary, Submission, SubmissionStatus } from "./schemas";
+export { createSubmission } from "./api/submissions";

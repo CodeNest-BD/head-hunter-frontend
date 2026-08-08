@@ -20,6 +20,14 @@ export const CANDIDATE_STATUS_LABELS: Record<CandidateStatus, string> = {
   passed: "Passed",
 };
 
+export const CV_ACCEPT = ".pdf,.doc,.docx";
+export const CV_CONTENT_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+] as const;
+export const MAX_CV_BYTES = 10 * 1024 * 1024;
+
 export const candidateSchema = z.object({
   id: z.string(),
   submissionId: z.string(),
@@ -27,6 +35,11 @@ export const candidateSchema = z.object({
   email: z.string(),
   phone: z.string().nullable(),
   overview: z.string().nullable(),
+  linkedinUrl: z.string().nullable(),
+  yearsOfExperience: z.number().nullable(),
+  currentCompany: z.string().nullable(),
+  expectedSalaryMinor: z.number().nullable(),
+  noticePeriodDays: z.number().nullable(),
   status: candidateStatusSchema,
   createdAt: z.coerce.date(),
 });
