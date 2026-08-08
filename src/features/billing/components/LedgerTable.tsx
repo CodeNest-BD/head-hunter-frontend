@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Receipt } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
@@ -13,16 +14,6 @@ import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
 /** Credits grow the spendable pot; reserves/holds shrink it. */
 const isInflow = (type: LedgerEntry["entryType"]): boolean =>
   type === "credit" || type === "release_reserve" || type === "refund";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 /** The wallet's append-only history, newest first. */
 export function LedgerTable() {
@@ -82,7 +73,7 @@ export function LedgerTable() {
                   className="border-b border-border/60 last:border-0"
                 >
                   <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                    {formatDate(entry.createdAt)}
+                    {formatDateTime(entry.createdAt)}
                   </td>
                   <td className="px-5 py-3">
                     <p className="font-medium text-navy">

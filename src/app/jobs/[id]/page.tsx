@@ -17,6 +17,7 @@ import { ROLE_CATEGORY_LABELS, useJob } from "@/features/jobs";
 import { useCreateOrOpenSubmission } from "@/features/submissions";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -181,14 +182,13 @@ function JobDetailContent({ jobId }: { jobId: string }) {
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
             Status
           </span>
-          <span
+          <StatusBadge
+            label={job.status}
             className={cn(
-              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
               STATUS_STYLES[job.status] ?? "bg-muted text-muted-foreground",
+              "capitalize",
             )}
-          >
-            {job.status}
-          </span>
+          />
         </div>
       </div>
 

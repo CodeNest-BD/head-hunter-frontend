@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { formatDate } from "@/shared/utils/formatDate";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   useOpenSubscriptionPortal,
@@ -50,18 +51,9 @@ const TONE_STYLES: Record<StatusMeta["tone"], string> = {
   neutral: "bg-muted text-muted-foreground border-border",
 };
 
-function formatDate(iso: string | null): string | null {
-  if (!iso) return null;
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 /** One-line summary shown beside the status pill. */
 function statusLine(status: Status, periodEnd: string | null): string {
-  const date = formatDate(periodEnd);
+  const date = periodEnd ? formatDate(periodEnd) : null;
   switch (status) {
     case "active":
       return date ? `Renews on ${date}.` : "You have full marketplace access.";

@@ -4,7 +4,10 @@ import Link from "next/link";
 import { AlertCircle, ArrowRight, Inbox } from "lucide-react";
 
 import { useJobs } from "@/features/jobs";
-import { cn } from "@/shared/libs/shadCnConfig";
+import { Button } from "@/shared/ui-components/controls/button";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import { formatDate } from "@/shared/utils/formatDate";
 import { useSubmissions } from "../hooks/useSubmissions";
 import {
   SUBMISSION_STATUS_LABELS,
@@ -23,24 +26,6 @@ const STATUS_STYLES: Record<SubmissionStatus, string> = {
 interface InboxTableProps {
   status?: SubmissionStatus;
   jobId?: string;
-}
-
-function TableSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-xl border border-border/70">
-      <div className="h-11 w-full animate-pulse bg-muted/50" />
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-4 border-t border-border/60 px-4 py-3.5"
-        >
-          <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-          <div className="h-4 w-1/4 animate-pulse rounded bg-muted" />
-          <div className="ml-auto h-5 w-20 animate-pulse rounded-full bg-muted" />
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export function InboxTable({ status, jobId }: InboxTableProps) {
@@ -63,13 +48,15 @@ export function InboxTable({ status, jobId }: InboxTableProps) {
           <AlertCircle className="h-[18px] w-[18px]" />
           Could not load submissions.
         </div>
-        <button
+        <Button
           type="button"
-          className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
+          variant="outline"
+          size="sm"
+          className="self-start"
           onClick={() => void submissions.refetch()}
         >
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -130,17 +117,13 @@ export function InboxTable({ status, jobId }: InboxTableProps) {
                   )}
               </td>
               <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                {submission.createdAt.toLocaleDateString()}
+                {formatDate(submission.createdAt)}
               </td>
               <td className="px-4 py-3">
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-                    STATUS_STYLES[submission.status],
-                  )}
-                >
-                  {SUBMISSION_STATUS_LABELS[submission.status]}
-                </span>
+                <StatusBadge
+                  label={SUBMISSION_STATUS_LABELS[submission.status]}
+                  className={STATUS_STYLES[submission.status]}
+                />
               </td>
               <td className="px-4 py-3 text-right">
                 <Link
