@@ -14,7 +14,7 @@ import {
   type SubmissionStatus,
 } from "@/features/submissions";
 import { Eyebrow, PageHeader } from "@/shared/ui-components/brand";
-import { cn } from "@/shared/libs/shadCnConfig";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 const STATUS_STYLES: Record<SubmissionStatus, string> = {
@@ -24,19 +24,6 @@ const STATUS_STYLES: Record<SubmissionStatus, string> = {
   rejected: "bg-muted text-muted-foreground",
   withdrawn: "bg-muted text-muted-foreground",
 };
-
-function StatusPill({ status }: { status: SubmissionStatus }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        STATUS_STYLES[status],
-      )}
-    >
-      {SUBMISSION_STATUS_LABELS[status]}
-    </span>
-  );
-}
 
 function CardSkeleton() {
   return (
@@ -146,7 +133,10 @@ function SubmissionHeader({ submissionId }: { submissionId: string }) {
                 </p>
               )}
             <div className="mt-2">
-              <StatusPill status={data.status} />
+              <StatusBadge
+                label={SUBMISSION_STATUS_LABELS[data.status]}
+                className={STATUS_STYLES[data.status]}
+              />
             </div>
           </div>
         </div>

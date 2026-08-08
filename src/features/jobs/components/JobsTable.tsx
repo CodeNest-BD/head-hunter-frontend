@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { AlertCircle, Briefcase, Plus } from "lucide-react";
 
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { ROLE_CATEGORY_LABELS } from "../schemas";
@@ -15,24 +17,6 @@ const STATUS_STYLES: Record<string, string> = {
   filled: "bg-primary/15 text-primary",
   closed: "bg-muted text-muted-foreground",
 };
-
-function TableSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-xl border border-border/70">
-      <div className="h-11 w-full animate-pulse bg-muted/50" />
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-4 border-t border-border/60 px-4 py-3.5"
-        >
-          <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-          <div className="h-4 w-1/4 animate-pulse rounded bg-muted" />
-          <div className="ml-auto h-5 w-16 animate-pulse rounded-full bg-muted" />
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export function JobsTable() {
   const { data, isPending, isError, refetch } = useJobs({ limit: 50 });
@@ -116,15 +100,14 @@ export function JobsTable() {
                 {formatMinor(job.recruiterFeeMinor)}
               </td>
               <td className="px-4 py-3">
-                <span
+                <StatusBadge
+                  label={job.status}
                   className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
                     STATUS_STYLES[job.status] ??
                       "bg-muted text-muted-foreground",
+                    "capitalize",
                   )}
-                >
-                  {job.status}
-                </span>
+                />
               </td>
             </tr>
           ))}

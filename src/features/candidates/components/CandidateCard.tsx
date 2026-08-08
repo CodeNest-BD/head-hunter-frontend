@@ -1,9 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp, FileText, Paperclip } from "lucide-react";
-
-import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
   CardContent,
@@ -11,10 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
-import {
-  useAttachments,
-  useUpdateCandidateStatus,
-} from "../hooks/useCandidates";
+import { CandidateAttachments } from "./CandidateAttachments";
+import { CandidateFields } from "./CandidateFields";
+import { useUpdateCandidateStatus } from "../hooks/useCandidates";
 import {
   CANDIDATE_STATUSES,
   CANDIDATE_STATUS_LABELS,
@@ -27,16 +22,7 @@ interface CandidateCardProps {
   submissionId: string;
 }
 
-function formatSize(bytes: number | null): string {
-  if (bytes === null) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 export function CandidateCard({ candidate, submissionId }: CandidateCardProps) {
-  const [showFiles, setShowFiles] = useState(false);
-  const attachments = useAttachments(candidate.id, showFiles);
   const updateStatus = useUpdateCandidateStatus(submissionId);
 
   return (
@@ -86,61 +72,9 @@ export function CandidateCard({ candidate, submissionId }: CandidateCardProps) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
-        {candidate.overview && (
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-            {candidate.overview}
-          </p>
-        )}
+        <CandidateFields candidate={candidate} />
 
-        <div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFiles((open) => !open)}
-          >
-            <Paperclip className="h-4 w-4" />
-            {showFiles ? "Hide attachments" : "Show attachments"}
-            {showFiles ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-
-        {showFiles && (
-          <div className="rounded-lg border border-border/60 bg-background/50 p-3 text-sm">
-            {attachments.isPending && (
-              <p className="text-muted-foreground">Loading attachments…</p>
-            )}
-            {attachments.isError && (
-              <p className="text-destructive">Could not load attachments.</p>
-            )}
-            {attachments.data?.length === 0 && (
-              <p className="text-muted-foreground">No attachments.</p>
-            )}
-            <ul className="flex flex-col gap-1.5">
-              {attachments.data?.map((file) => (
-                <li key={file.id} className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  {/* Presigned link, valid ~15 minutes from this fetch. */}
-                  <a
-                    href={file.downloadUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary underline-offset-2 hover:underline"
-                  >
-                    {file.fileName}
-                  </a>
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {formatSize(file.sizeBytes)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <CandidateAttachments candidateId={candidate.id} />
       </CardContent>
     </Card>
   );

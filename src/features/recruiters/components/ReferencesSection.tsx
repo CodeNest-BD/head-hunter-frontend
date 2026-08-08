@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Trash2, UserRound } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
+import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import {
@@ -26,6 +28,7 @@ interface ReferencesSectionProps {
 export function ReferencesSection({ references }: ReferencesSectionProps) {
   const add = useAddReference();
   const remove = useRemoveReference();
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const atCapacity = references.length >= MAX_REFERENCES;
 
   const {
@@ -70,35 +73,52 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
         </div>
       ) : (
         <ul className="flex flex-col gap-2">
-          {references.map((reference) => (
-            <li
-              key={reference.id}
-              className="flex items-start justify-between gap-4 rounded-xl border border-border/70 bg-card p-4 shadow-sm"
-            >
-              <div className="text-sm">
-                <p className="font-medium text-foreground">{reference.name}</p>
-                <p className="text-muted-foreground">
-                  {[reference.title, reference.company]
-                    .filter(Boolean)
-                    .join(" · ") || "—"}
-                </p>
-                {reference.phone && (
-                  <p className="text-muted-foreground">{reference.phone}</p>
-                )}
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={remove.isPending}
-                onClick={() => remove.mutate(reference.id)}
-                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          {references.map((reference) =>
+            confirmingId === reference.id ? (
+              <li
+                key={reference.id}
+                className="rounded-xl border border-border/70 bg-card p-4 shadow-sm"
               >
-                <Trash2 className="h-4 w-4" />
-                Remove
-              </Button>
-            </li>
-          ))}
+                <ConfirmAction
+                  message="Remove this reference? This cannot be undone."
+                  confirmLabel="Confirm remove"
+                  busyLabel="Removing…"
+                  busy={remove.isPending}
+                  onCancel={() => setConfirmingId(null)}
+                  onConfirm={() => remove.mutate(reference.id)}
+                />
+              </li>
+            ) : (
+              <li
+                key={reference.id}
+                className="flex items-start justify-between gap-4 rounded-xl border border-border/70 bg-card p-4 shadow-sm"
+              >
+                <div className="text-sm">
+                  <p className="font-medium text-foreground">
+                    {reference.name}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {[reference.title, reference.company]
+                      .filter(Boolean)
+                      .join(" · ") || "—"}
+                  </p>
+                  {reference.phone && (
+                    <p className="text-muted-foreground">{reference.phone}</p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setConfirmingId(reference.id)}
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Remove
+                </Button>
+              </li>
+            ),
+          )}
         </ul>
       )}
 

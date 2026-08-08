@@ -8,6 +8,7 @@ import { RequireRole } from "@/features/auth";
 import { JobForm, useJob, usePublishJob, useUpdateJob } from "@/features/jobs";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -70,14 +71,14 @@ function EditJobContent({ jobId }: { jobId: string }) {
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Status
           </p>
-          <span
+          <StatusBadge
+            label={job.status}
             className={cn(
-              "inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+              "w-fit",
               STATUS_STYLES[job.status] ?? "bg-muted text-muted-foreground",
+              "capitalize",
             )}
-          >
-            {job.status}
-          </span>
+          />
         </div>
         {isDraft ? (
           <Button type="button" disabled={isPublishing} onClick={publish}>
