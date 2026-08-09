@@ -2,8 +2,14 @@
 
 import { Search } from "lucide-react";
 
-import { cn } from "@/shared/libs/shadCnConfig";
 import { Input } from "@/shared/ui-components/controls/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui-components/controls/select";
 
 export interface FilterOption {
   value: string;
@@ -22,7 +28,11 @@ interface ListToolbarProps {
   };
 }
 
-/** Search box + optional status filter shared by the admin directory tables. */
+// Radix Select forbids an empty-string item value, so "all" is the sentinel for
+// "no filter" and maps to/from the empty string the query state uses.
+const ALL = "all";
+
+/** Search box + optional status filter (dropdown) for the admin tables. */
 export function ListToolbar({
   query,
   onQueryChange,
@@ -42,48 +52,23 @@ export function ListToolbar({
         />
       </div>
       {filter && (
-        <div className="flex flex-wrap gap-1.5">
-          <FilterChip
-            active={filter.value === ""}
-            label={filter.allLabel}
-            onClick={() => filter.onChange("")}
-          />
-          {filter.options.map((option) => (
-            <FilterChip
-              key={option.value}
-              active={filter.value === option.value}
-              label={option.label}
-              onClick={() => filter.onChange(option.value)}
-            />
-          ))}
-        </div>
+        <Select
+          value={filter.value === "" ? ALL : filter.value}
+          onValueChange={(next) => filter.onChange(next === ALL ? "" : next)}
+        >
+          <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filter">
+            <SelectValue placeholder={filter.allLabel} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>{filter.allLabel}</SelectItem>
+            {filter.options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
     </div>
-  );
-}
-
-function FilterChip({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        "inline-flex h-9 items-center rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        active
-          ? "border-primary bg-primary/5 text-primary"
-          : "border-input text-muted-foreground hover:border-primary hover:text-primary",
-      )}
-    >
-      {label}
-    </button>
   );
 }

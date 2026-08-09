@@ -6,6 +6,7 @@ export interface AdminListParams {
 
 export const adminKeys = {
   all: ["admin"] as const,
+  stats: ["admin", "stats"] as const,
   recruiters: (params: AdminListParams) =>
     ["admin", "recruiters", params] as const,
   recruiter: (userId: string) => ["admin", "recruiter", userId] as const,

@@ -3,6 +3,7 @@ import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import type { AdminListParams } from "../keys";
 import {
   accountStatusResponseSchema,
+  adminStatsSchema,
   companyDetailSchema,
   companyListItemSchema,
   conversationListItemSchema,
@@ -13,6 +14,7 @@ import {
   type CompanyDetail,
   type CompanyListItem,
   type ConversationListItem,
+  type AdminStats,
   type ConversationThread,
   type RecruiterDetail,
   type RecruiterListItem,
@@ -27,6 +29,12 @@ function listParams(params: AdminListParams): Record<string, unknown> {
     ...(params.q ? { q: params.q } : {}),
     ...(params.status ? { status: params.status } : {}),
   };
+}
+
+/** GET /v1/admin/stats */
+export async function fetchAdminStats(): Promise<AdminStats> {
+  const { data } = await apiClient.get<unknown>("/admin/stats");
+  return adminStatsSchema.parse(data);
 }
 
 /** GET /v1/admin/recruiters */

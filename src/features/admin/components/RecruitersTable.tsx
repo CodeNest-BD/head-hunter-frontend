@@ -45,7 +45,7 @@ export function RecruitersTable() {
         filter={{
           value: status,
           onChange: changeStatus,
-          allLabel: "All",
+          allLabel: "All statuses",
           options: [
             { value: "active", label: "Active" },
             { value: "suspended", label: "Held" },
