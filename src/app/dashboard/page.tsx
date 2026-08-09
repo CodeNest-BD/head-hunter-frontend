@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { useAuth, type Role } from "@/features/auth";
+import { AdminOverview } from "@/features/admin";
 import { useUnreadCount } from "@/features/notifications";
 import { BrandGlow, Eyebrow } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -120,6 +121,7 @@ function DashboardContent() {
 
   const links = LINKS_BY_ROLE[user.role];
   const isRecruiter = user.role === "recruiter";
+  const isAdmin = user.role === "admin";
 
   return (
     <div className="flex flex-col gap-8">
@@ -141,6 +143,8 @@ function DashboardContent() {
           </p>
         </div>
       </header>
+
+      {isAdmin && <AdminOverview />}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {links.map((link) => {

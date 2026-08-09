@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  fetchAdminStats,
   fetchCompanies,
   fetchCompany,
   fetchConversation,
@@ -16,6 +17,10 @@ import {
   suspendAccount,
 } from "../api/admin";
 import { adminKeys, type AdminListParams } from "../keys";
+
+export function useAdminStats() {
+  return useQuery({ queryKey: adminKeys.stats, queryFn: fetchAdminStats });
+}
 
 export function useAdminRecruiters(params: AdminListParams) {
   return useQuery({

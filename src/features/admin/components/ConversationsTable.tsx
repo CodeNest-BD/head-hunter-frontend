@@ -41,7 +41,7 @@ export function ConversationsTable() {
         filter={{
           value: status,
           onChange: changeStatus,
-          allLabel: "All",
+          allLabel: "All statuses",
           options: [
             { value: "submitted", label: "Submitted" },
             { value: "under_review", label: "Under review" },

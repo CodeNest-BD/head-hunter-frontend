@@ -135,3 +135,27 @@ export const SUBMISSION_LABELS: Record<SubmissionStatus, string> = {
   rejected: "Rejected",
   withdrawn: "Withdrawn",
 };
+
+export const adminStatsSchema = z.object({
+  recruiters: z.object({
+    total: z.number(),
+    active: z.number(),
+    held: z.number(),
+    subscribed: z.number(),
+  }),
+  companies: z.object({
+    total: z.number(),
+    active: z.number(),
+    held: z.number(),
+  }),
+  conversations: z.number(),
+  walletTotalMinor: z.number(),
+  signups: z.array(
+    z.object({
+      month: z.string(),
+      recruiters: z.number(),
+      companies: z.number(),
+    }),
+  ),
+});
+export type AdminStats = z.infer<typeof adminStatsSchema>;

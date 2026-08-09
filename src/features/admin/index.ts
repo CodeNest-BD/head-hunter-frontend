@@ -1,6 +1,7 @@
 "use client";
 
 // The barrel is a client boundary: it re-exports client-only components/hooks.
+export { AdminOverview } from "./components/AdminOverview";
 export { RecruitersTable } from "./components/RecruitersTable";
 export { CompaniesTable } from "./components/CompaniesTable";
 export { ConversationsTable } from "./components/ConversationsTable";

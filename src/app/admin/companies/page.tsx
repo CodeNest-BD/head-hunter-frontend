@@ -9,7 +9,7 @@ export default function AdminCompaniesPage() {
   return (
     <RequireRole role="admin">
       <DashboardLayout>
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+        <div className="flex flex-col gap-8">
           <PageHeader
             eyebrow="Admin"
             title="Companies"
