@@ -11,7 +11,14 @@ export default function AdminRecruiterDetailPage({
 }) {
   return (
     <RequireRole role="admin">
-      <DashboardLayout>
+      <DashboardLayout
+        wide
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Recruiters", href: "/admin/recruiters" },
+          { label: "Profile" },
+        ]}
+      >
         <RecruiterDetail userId={params.id} />
       </DashboardLayout>
     </RequireRole>

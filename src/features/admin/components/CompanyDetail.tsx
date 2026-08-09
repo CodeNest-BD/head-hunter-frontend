@@ -3,7 +3,6 @@
 import { AlertCircle } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
-import { Breadcrumb } from "@/shared/ui-components/layout/Breadcrumb";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
@@ -73,15 +72,7 @@ export function CompanyDetail({ userId }: { userId: string }) {
   const location = [data.city, data.state].filter(Boolean).join(", ") || "—";
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Companies", href: "/admin/companies" },
-          { label: data.companyName },
-        ]}
-      />
-
+    <div className="flex w-full max-w-5xl flex-col gap-6">
       <Card>
         <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>

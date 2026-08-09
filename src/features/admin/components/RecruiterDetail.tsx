@@ -3,7 +3,6 @@
 import { AlertCircle } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
-import { Breadcrumb } from "@/shared/ui-components/layout/Breadcrumb";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -52,15 +51,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
   const location = [data.city, data.state].filter(Boolean).join(", ") || "—";
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Recruiters", href: "/admin/recruiters" },
-          { label: name },
-        ]}
-      />
-
+    <div className="flex w-full max-w-5xl flex-col gap-6">
       <Card>
         <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">

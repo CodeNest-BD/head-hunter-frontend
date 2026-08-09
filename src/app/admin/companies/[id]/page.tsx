@@ -11,7 +11,14 @@ export default function AdminCompanyDetailPage({
 }) {
   return (
     <RequireRole role="admin">
-      <DashboardLayout>
+      <DashboardLayout
+        wide
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Companies", href: "/admin/companies" },
+          { label: "Profile" },
+        ]}
+      >
         <CompanyDetail userId={params.id} />
       </DashboardLayout>
     </RequireRole>

@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
-import { Breadcrumb } from "@/shared/ui-components/layout/Breadcrumb";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
@@ -77,15 +76,7 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Conversations", href: "/admin/conversations" },
-          { label: `${data.company.name} ↔ ${data.recruiter.name}` },
-        ]}
-      />
-
+    <div className="flex w-full max-w-5xl flex-col gap-6">
       <Card>
         <CardContent className="flex flex-col gap-4 p-6">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
