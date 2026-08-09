@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { Breadcrumb } from "@/shared/ui-components/layout/Breadcrumb";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -53,12 +53,13 @@ export function RecruiterDetail({ userId }: { userId: string }) {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <Link
-        href="/admin/recruiters"
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" /> All recruiters
-      </Link>
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Recruiters", href: "/admin/recruiters" },
+          { label: name },
+        ]}
+      />
 
       <Card>
         <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
