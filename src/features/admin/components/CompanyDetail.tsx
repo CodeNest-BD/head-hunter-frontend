@@ -1,0 +1,133 @@
+"use client";
+
+import Link from "next/link";
+import { AlertCircle, ArrowLeft } from "lucide-react";
+
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { formatMinor } from "@/shared/utils/money";
+import { Button } from "@/shared/ui-components/controls/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
+import { useAdminCompany } from "../hooks/useAdmin";
+import { HoldButton } from "./HoldButton";
+import { DetailField, DetailSkeleton } from "./DetailPrimitives";
+import { ACCOUNT_STATUS_LABELS, ACCOUNT_STATUS_STYLES } from "./statusStyles";
+
+function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function WalletStat({ label, minor }: { label: string; minor: number }) {
+  return (
+    <div className="flex-1 p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1.5 font-heading text-2xl font-extrabold text-navy">
+        {formatMinor(minor)}
+      </p>
+    </div>
+  );
+}
+
+export function CompanyDetail({ userId }: { userId: string }) {
+  const { data, isPending, isError, refetch } = useAdminCompany(userId);
+
+  if (isPending) return <DetailSkeleton />;
+  if (isError) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
+          <AlertCircle className="h-6 w-6" />
+          Could not load this company.
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const location = [data.city, data.state].filter(Boolean).join(", ") || "—";
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Link
+        href="/admin/companies"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"
+      >
+        <ArrowLeft className="h-4 w-4" /> All companies
+      </Link>
+
+      <Card>
+        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="font-heading text-xl font-bold text-navy">
+                {data.companyName}
+              </h2>
+              <StatusBadge
+                label={ACCOUNT_STATUS_LABELS[data.status]}
+                className={ACCOUNT_STATUS_STYLES[data.status]}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">{data.email}</p>
+          </div>
+          <HoldButton
+            userId={data.userId}
+            status={data.status}
+            subjectName={data.companyName}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <CardContent className="flex flex-col divide-y divide-border p-0 sm:flex-row sm:divide-x sm:divide-y-0">
+          <WalletStat label="Balance" minor={data.balanceMinor} />
+          <WalletStat label="Reserved" minor={data.reservedMinor} />
+          <WalletStat label="Available" minor={data.availableMinor} />
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <DetailField label="Phone" value={data.phone} />
+            <DetailField label="Location" value={location} />
+            <DetailField label="Website" value={data.website} />
+            <DetailField label="Joined" value={formatDate(data.joinedAt)} />
+            <div className="col-span-2">
+              <DetailField label="Description" value={data.description} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Activity</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <DetailField label="Jobs posted" value={String(data.jobCount)} />
+            <DetailField label="Open jobs" value={String(data.openJobCount)} />
+            <DetailField
+              label="Last login"
+              value={formatDate(data.lastLoginAt)}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
