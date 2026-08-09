@@ -52,7 +52,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
   const location = [data.city, data.state].filter(Boolean).join(", ") || "—";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <Link
         href="/admin/recruiters"
         className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"
@@ -92,7 +92,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
           <CardHeader>
             <CardTitle className="text-base">Contact</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DetailField label="Phone" value={data.phone} />
             <DetailField label="Location" value={location} />
             <DetailField label="Address" value={data.addressLine} />
@@ -104,7 +104,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
           <CardHeader>
             <CardTitle className="text-base">Marketplace</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Subscription
@@ -153,7 +153,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
           <CardHeader>
             <CardTitle className="text-base">Account</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DetailField label="Joined" value={formatDate(data.joinedAt)} />
             <DetailField
               label="Last login"

@@ -42,6 +42,12 @@ const ACTOR_MARKER: Record<string, string> = {
   system: "bg-muted text-muted-foreground",
 };
 
+const ACTOR_TEXT: Record<string, string> = {
+  company: "text-navy",
+  recruiter: "text-primary",
+  system: "text-muted-foreground",
+};
+
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
     month: "short",
@@ -72,7 +78,7 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <Link
         href="/admin/conversations"
         className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"
@@ -102,6 +108,16 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
             Role:{" "}
             <span className="font-medium text-navy">{data.job.title}</span>
           </p>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-navy" />
+              Company
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+              Recruiter
+            </span>
+          </div>
         </CardContent>
       </Card>
 
@@ -132,7 +148,12 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
                       <p className="text-sm font-semibold text-navy">
                         {event.title}
                       </p>
-                      <span className="text-xs font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                      <span
+                        className={cn(
+                          "text-xs font-semibold uppercase tracking-[0.06em]",
+                          ACTOR_TEXT[actor] ?? "text-muted-foreground",
+                        )}
+                      >
                         {ACTOR_LABEL[actor] ?? "System"}
                       </span>
                     </div>
@@ -140,7 +161,7 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
                       {formatDateTime(event.at)}
                     </p>
                     {event.body && (
-                      <p className="mt-2 rounded-lg bg-muted/60 px-3 py-2 text-sm text-[#3A4351]">
+                      <p className="mt-2 rounded-lg bg-muted/60 px-3 py-2 text-sm text-foreground">
                         {event.body}
                       </p>
                     )}

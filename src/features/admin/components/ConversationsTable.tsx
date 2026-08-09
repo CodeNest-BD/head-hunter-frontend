@@ -85,35 +85,52 @@ export function ConversationsTable() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                    <th className="px-5 py-3 font-semibold">Company</th>
-                    <th className="px-5 py-3 font-semibold">Recruiter</th>
-                    <th className="px-5 py-3 font-semibold">Job</th>
-                    <th className="px-5 py-3 text-center font-semibold">
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Company
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Recruiter
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Job
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-center font-semibold"
+                    >
                       Candidates
                     </th>
-                    <th className="px-5 py-3 font-semibold">Status</th>
-                    <th className="px-5 py-3 font-semibold">Last activity</th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Status
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Last activity
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.data.map((c) => (
                     <tr
                       key={c.submissionId}
-                      className="cursor-pointer border-b border-border/60 last:border-0 hover:bg-accent/40"
+                      className="relative border-b border-border/60 last:border-0 hover:bg-accent/40"
                     >
                       <td className="px-5 py-3">
                         <Link
                           href={`/admin/conversations/${c.submissionId}`}
-                          className="font-medium text-navy hover:text-primary hover:underline"
+                          className="font-medium text-navy after:absolute after:inset-0 hover:text-primary focus-visible:underline focus-visible:outline-none"
                         >
                           {c.companyName}
                         </Link>
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">
-                        {c.recruiterName}
+                        <span className="block max-w-[200px] truncate">
+                          {c.recruiterName}
+                        </span>
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">
-                        {c.jobTitle}
+                        <span className="block max-w-[220px] truncate">
+                          {c.jobTitle}
+                        </span>
                       </td>
                       <td className="px-5 py-3 text-center tabular-nums text-navy">
                         {c.candidateCount}
