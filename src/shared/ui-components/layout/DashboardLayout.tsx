@@ -127,7 +127,15 @@ function SidebarContent({ onNavigate }: { onNavigate: () => void }) {
  * a slim top bar showing only the logo. The sidebar collapses to a slide-over
  * on small screens, toggled from the top bar.
  */
-export function DashboardLayout({ children }: { children: ReactNode }) {
+export function DashboardLayout({
+  children,
+  wide = false,
+}: {
+  children: ReactNode;
+  /** Let content use the full width (data tables) instead of the reading-width
+   * column most pages use. */
+  wide?: boolean;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
 
@@ -188,7 +196,11 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Content */}
       <div className="lg:pl-64">
         <main className="min-h-screen px-4 pb-16 pt-24 sm:px-6 lg:px-10">
-          <div className="mx-auto w-full max-w-6xl">{children}</div>
+          <div
+            className={cn("mx-auto w-full", wide ? "max-w-none" : "max-w-6xl")}
+          >
+            {children}
+          </div>
         </main>
       </div>
     </div>

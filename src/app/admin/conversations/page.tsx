@@ -8,7 +8,7 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 export default function AdminConversationsPage() {
   return (
     <RequireRole role="admin">
-      <DashboardLayout>
+      <DashboardLayout wide>
         <div className="flex flex-col gap-8">
           <PageHeader
             eyebrow="Admin"
