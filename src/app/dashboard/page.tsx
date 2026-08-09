@@ -8,6 +8,8 @@ import {
   Building2,
   Inbox,
   Map,
+  MessagesSquare,
+  Users,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -74,9 +76,27 @@ const LINKS_BY_ROLE: Record<Role, DashboardLink[]> = {
       icon: UserRound,
     },
   ],
-  // No admin surface yet; an admin still gets a working dashboard rather than
-  // a crash.
-  admin: [],
+  admin: [
+    {
+      href: "/admin/recruiters",
+      title: "Recruiters",
+      description: "Manage recruiter accounts, view profiles and hold access.",
+      icon: Users,
+    },
+    {
+      href: "/admin/companies",
+      title: "Companies",
+      description: "Manage company accounts, wallets and hold access.",
+      icon: Building2,
+    },
+    {
+      href: "/admin/conversations",
+      title: "Conversations",
+      description:
+        "Review company↔recruiter interactions on every submission.",
+      icon: MessagesSquare,
+    },
+  ],
 };
 
 /** Recruiter-only: the count endpoint is not rendered for a company. */
@@ -121,17 +141,6 @@ function DashboardContent() {
           </p>
         </div>
       </header>
-
-      {links.length === 0 && (
-        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-card">
-          <div className="flex flex-col items-center gap-3">
-            <Eyebrow>No console</Eyebrow>
-            <p className="text-sm text-muted-foreground">
-              There is no admin console yet.
-            </p>
-          </div>
-        </div>
-      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {links.map((link) => {

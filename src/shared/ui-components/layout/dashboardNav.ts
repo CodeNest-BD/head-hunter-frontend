@@ -7,7 +7,9 @@ import {
   LayoutDashboard,
   type LucideIcon,
   Map,
+  MessagesSquare,
   Send,
+  Users,
   UserRound,
   Wallet2,
 } from "lucide-react";
@@ -55,5 +57,14 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     },
     { href: "/recruiter/profile", label: "My profile", icon: UserRound },
   ],
-  admin: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
+  admin: [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/recruiters", label: "Recruiters", icon: Users },
+    { href: "/admin/companies", label: "Companies", icon: Building2 },
+    {
+      href: "/admin/conversations",
+      label: "Conversations",
+      icon: MessagesSquare,
+    },
+  ],
 };
