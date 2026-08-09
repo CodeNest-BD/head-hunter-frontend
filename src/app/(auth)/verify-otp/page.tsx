@@ -5,7 +5,7 @@ import { OtpForm } from "@/features/auth";
 const emailParamSchema = z.string().email();
 
 interface VerifyOtpPageProps {
-  searchParams: { email?: string };
+  searchParams: { email?: string; resend?: string };
 }
 
 export default function VerifyOtpPage({ searchParams }: VerifyOtpPageProps) {
@@ -13,5 +13,9 @@ export default function VerifyOtpPage({ searchParams }: VerifyOtpPageProps) {
   // malformed value has nothing to confirm, so send the user back to sign up.
   const parsed = emailParamSchema.safeParse(searchParams.email);
   if (!parsed.success) redirect("/signup");
-  return <OtpForm email={parsed.data} />;
+  // `resend=1` is set when arriving from a blocked sign-in, so a fresh code is
+  // sent on arrival rather than making the user click "Resend".
+  return (
+    <OtpForm email={parsed.data} autoResend={searchParams.resend === "1"} />
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -15,9 +15,12 @@ import { useAuth } from "../hooks/useAuth";
 
 interface OtpFormProps {
   email: string;
+  /** Send a fresh code as soon as the screen opens (e.g. arriving from a
+   * blocked sign-in, where the original code is likely stale). */
+  autoResend?: boolean;
 }
 
-export function OtpForm({ email }: OtpFormProps) {
+export function OtpForm({ email, autoResend = false }: OtpFormProps) {
   const { establishSession } = useAuth();
   const [resending, setResending] = useState(false);
   const {
@@ -39,7 +42,7 @@ export function OtpForm({ email }: OtpFormProps) {
     }
   };
 
-  const onResend = async (): Promise<void> => {
+  const onResend = useCallback(async (): Promise<void> => {
     setResending(true);
     try {
       await resendOtp(email);
@@ -55,7 +58,17 @@ export function OtpForm({ email }: OtpFormProps) {
     } finally {
       setResending(false);
     }
-  };
+  }, [email]);
+
+  // Fire the auto-resend exactly once per mount — the ref guards against
+  // React StrictMode's double-invoked effects in development.
+  const autoResentRef = useRef(false);
+  useEffect(() => {
+    if (autoResend && !autoResentRef.current) {
+      autoResentRef.current = true;
+      void onResend();
+    }
+  }, [autoResend, onResend]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
