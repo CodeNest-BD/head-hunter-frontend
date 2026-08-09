@@ -8,6 +8,7 @@ import { LogOut, Menu, UserRound, X } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { Breadcrumb, type Crumb } from "./Breadcrumb";
 import { NAV_BY_ROLE, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
 
@@ -130,11 +131,14 @@ function SidebarContent({ onNavigate }: { onNavigate: () => void }) {
 export function DashboardLayout({
   children,
   wide = false,
+  breadcrumbs,
 }: {
   children: ReactNode;
   /** Let content use the full width (data tables) instead of the reading-width
    * column most pages use. */
   wide?: boolean;
+  /** Trail shown in the top bar, aligned with the content column. */
+  breadcrumbs?: Crumb[];
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
@@ -142,7 +146,7 @@ export function DashboardLayout({
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar — logo only, plus the mobile menu toggle. */}
-      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-border/70 bg-background/80 px-4 backdrop-blur-md lg:pl-[17rem]">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-border/70 bg-background/80 px-4 backdrop-blur-md sm:px-6 lg:pl-[18.5rem] lg:pr-10">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
@@ -154,6 +158,13 @@ export function DashboardLayout({
         <Link href="/temp" aria-label="HeadHunter home" className="lg:hidden">
           <Logo />
         </Link>
+        {breadcrumbs && breadcrumbs.length > 0 && (
+          // Aligned with the content column (sidebar 16rem + the content's
+          // lg:px-10). Hidden on mobile, where the bar shows the logo instead.
+          <div className="hidden min-w-0 lg:block">
+            <Breadcrumb items={breadcrumbs} />
+          </div>
+        )}
       </header>
 
       {/* Fixed sidebar (desktop) */}

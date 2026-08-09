@@ -11,7 +11,14 @@ export default function AdminConversationThreadPage({
 }) {
   return (
     <RequireRole role="admin">
-      <DashboardLayout>
+      <DashboardLayout
+        wide
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Conversations", href: "/admin/conversations" },
+          { label: "Thread" },
+        ]}
+      >
         <ConversationThread submissionId={params.id} />
       </DashboardLayout>
     </RequireRole>
