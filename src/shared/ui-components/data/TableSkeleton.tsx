@@ -7,7 +7,7 @@ interface TableSkeletonProps {
  * rows of two text bars and a trailing badge-shaped bar. */
 export function TableSkeleton({ rows = 4 }: TableSkeletonProps) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border/70">
+    <div className="overflow-hidden rounded-2xl border border-border shadow-card">
       <div className="h-11 w-full animate-pulse bg-muted/50" />
       {Array.from({ length: rows }).map((_, i) => (
         <div

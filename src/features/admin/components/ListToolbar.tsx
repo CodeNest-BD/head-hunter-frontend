@@ -77,7 +77,7 @@ function FilterChip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+        "inline-flex h-9 items-center rounded-lg border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         active
           ? "border-primary bg-primary/5 text-primary"
           : "border-input text-muted-foreground hover:border-primary hover:text-primary",

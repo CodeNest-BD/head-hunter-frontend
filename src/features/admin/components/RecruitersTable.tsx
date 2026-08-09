@@ -86,12 +86,25 @@ export function RecruitersTable() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                    <th className="px-5 py-3 font-semibold">Recruiter</th>
-                    <th className="px-5 py-3 font-semibold">Subscription</th>
-                    <th className="px-5 py-3 font-semibold">Location</th>
-                    <th className="px-5 py-3 font-semibold">Joined</th>
-                    <th className="px-5 py-3 font-semibold">Status</th>
-                    <th className="px-5 py-3 text-right font-semibold">
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Recruiter
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Subscription
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Location
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Joined
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-right font-semibold"
+                    >
                       Actions
                     </th>
                   </tr>
@@ -100,16 +113,19 @@ export function RecruitersTable() {
                   {data.data.map((r) => (
                     <tr
                       key={r.userId}
-                      className="border-b border-border/60 last:border-0"
+                      className="border-b border-border/60 last:border-0 hover:bg-accent/40"
                     >
                       <td className="px-5 py-3">
                         <Link
                           href={`/admin/recruiters/${r.userId}`}
-                          className="font-medium text-navy hover:text-primary hover:underline"
+                          className="font-medium text-navy hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
                         >
                           {r.firstName} {r.lastName}
                         </Link>
-                        <p className="text-xs text-muted-foreground">
+                        <p
+                          className="max-w-[240px] truncate text-xs text-muted-foreground"
+                          title={r.email}
+                        >
                           {r.email}
                         </p>
                       </td>

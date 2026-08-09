@@ -82,13 +82,25 @@ export function CompaniesTable() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                    <th className="px-5 py-3 font-semibold">Company</th>
-                    <th className="px-5 py-3 text-right font-semibold">
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Company
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-right font-semibold"
+                    >
                       Wallet
                     </th>
-                    <th className="px-5 py-3 font-semibold">Joined</th>
-                    <th className="px-5 py-3 font-semibold">Status</th>
-                    <th className="px-5 py-3 text-right font-semibold">
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Joined
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-right font-semibold"
+                    >
                       Actions
                     </th>
                   </tr>
@@ -97,16 +109,19 @@ export function CompaniesTable() {
                   {data.data.map((c) => (
                     <tr
                       key={c.userId}
-                      className="border-b border-border/60 last:border-0"
+                      className="border-b border-border/60 last:border-0 hover:bg-accent/40"
                     >
                       <td className="px-5 py-3">
                         <Link
                           href={`/admin/companies/${c.userId}`}
-                          className="font-medium text-navy hover:text-primary hover:underline"
+                          className="font-medium text-navy hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
                         >
                           {c.companyName}
                         </Link>
-                        <p className="text-xs text-muted-foreground">
+                        <p
+                          className="max-w-[240px] truncate text-xs text-muted-foreground"
+                          title={c.email}
+                        >
                           {c.email}
                         </p>
                       </td>

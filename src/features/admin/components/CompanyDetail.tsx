@@ -26,13 +26,26 @@ function formatDate(iso: string | null): string {
   });
 }
 
-function WalletStat({ label, minor }: { label: string; minor: number }) {
+function WalletStat({
+  label,
+  minor,
+  primary = false,
+}: {
+  label: string;
+  minor: number;
+  primary?: boolean;
+}) {
   return (
-    <div className="flex-1 p-5">
+    <div className="flex-1 p-6">
       <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1.5 font-heading text-2xl font-extrabold text-navy">
+      <p
+        className={
+          "mt-2 font-heading font-extrabold leading-none " +
+          (primary ? "text-4xl text-primary" : "text-[26px] text-navy")
+        }
+      >
         {formatMinor(minor)}
       </p>
     </div>
@@ -60,7 +73,7 @@ export function CompanyDetail({ userId }: { userId: string }) {
   const location = [data.city, data.state].filter(Boolean).join(", ") || "—";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <Link
         href="/admin/companies"
         className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"
@@ -92,9 +105,9 @@ export function CompanyDetail({ userId }: { userId: string }) {
 
       <Card className="overflow-hidden">
         <CardContent className="flex flex-col divide-y divide-border p-0 sm:flex-row sm:divide-x sm:divide-y-0">
+          <WalletStat label="Available" minor={data.availableMinor} primary />
           <WalletStat label="Balance" minor={data.balanceMinor} />
           <WalletStat label="Reserved" minor={data.reservedMinor} />
-          <WalletStat label="Available" minor={data.availableMinor} />
         </CardContent>
       </Card>
 
@@ -103,7 +116,7 @@ export function CompanyDetail({ userId }: { userId: string }) {
           <CardHeader>
             <CardTitle className="text-base">Profile</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DetailField label="Phone" value={data.phone} />
             <DetailField label="Location" value={location} />
             <DetailField label="Website" value={data.website} />
@@ -118,7 +131,7 @@ export function CompanyDetail({ userId }: { userId: string }) {
           <CardHeader>
             <CardTitle className="text-base">Activity</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DetailField label="Jobs posted" value={String(data.jobCount)} />
             <DetailField label="Open jobs" value={String(data.openJobCount)} />
             <DetailField
