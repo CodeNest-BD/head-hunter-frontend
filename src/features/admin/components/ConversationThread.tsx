@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import {
   AlertCircle,
-  ArrowLeft,
   ArrowLeftRight,
   CalendarClock,
   CheckCircle2,
@@ -14,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { Breadcrumb } from "@/shared/ui-components/layout/Breadcrumb";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
@@ -79,12 +78,13 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <Link
-        href="/admin/conversations"
-        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" /> All conversations
-      </Link>
+      <Breadcrumb
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Conversations", href: "/admin/conversations" },
+          { label: `${data.company.name} ↔ ${data.recruiter.name}` },
+        ]}
+      />
 
       <Card>
         <CardContent className="flex flex-col gap-4 p-6">
