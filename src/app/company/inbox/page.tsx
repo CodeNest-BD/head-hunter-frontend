@@ -22,8 +22,8 @@ export default function CompanyInboxPage() {
         <div className="flex flex-col gap-8">
           <PageHeader
             eyebrow="Candidate inbox"
-            title="Inbox"
-            subtitle="Candidates recruiters have submitted to your jobs."
+            title="Inbox & messages"
+            subtitle="Candidates recruiters have submitted to your jobs, and the conversations you're having with them about each one."
           />
 
           <div className="flex flex-col gap-2">

@@ -38,8 +38,9 @@ const LINKS_BY_ROLE: Record<Role, DashboardLink[]> = {
     },
     {
       href: "/company/inbox",
-      title: "Inbox",
-      description: "Candidates recruiters have submitted to your jobs.",
+      title: "Inbox & messages",
+      description:
+        "Candidates recruiters have submitted to your jobs, and your conversations with them.",
       icon: Inbox,
     },
     {

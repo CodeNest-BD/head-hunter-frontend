@@ -8,6 +8,7 @@ import {
   Banknote,
   Briefcase,
   MapPin,
+  MessagesSquare,
   Send,
   Wallet,
 } from "lucide-react";
@@ -95,6 +96,37 @@ function SubmitCandidatesButton({ jobId }: { jobId: string }) {
   );
 }
 
+/**
+ * Opens the same submission-scoped thread `SubmitCandidatesButton` does —
+ * `useCreateOrOpenSubmission` needs only a `jobId`, so a recruiter can start
+ * talking to the company before submitting anyone. Quieter `outline` variant
+ * keeps submitting candidates the primary action on this page.
+ */
+function MessageCompanyButton({ jobId }: { jobId: string }) {
+  const router = useRouter();
+  const createOrOpenSubmission = useCreateOrOpenSubmission();
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      disabled={createOrOpenSubmission.isPending}
+      onClick={() =>
+        createOrOpenSubmission.mutate(
+          { jobId },
+          {
+            onSuccess: (submission) =>
+              router.push(`/recruiter/submissions/${submission.id}`),
+          },
+        )
+      }
+    >
+      <MessagesSquare className="h-[18px] w-[18px]" />
+      {createOrOpenSubmission.isPending ? "Opening…" : "Message company"}
+    </Button>
+  );
+}
+
 function JobDetailContent({ jobId }: { jobId: string }) {
   const { data: job, isPending, isError, error, refetch } = useJob(jobId);
 
@@ -144,7 +176,8 @@ function JobDetailContent({ jobId }: { jobId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
+        <MessageCompanyButton jobId={jobId} />
         <SubmitCandidatesButton jobId={jobId} />
       </div>
 

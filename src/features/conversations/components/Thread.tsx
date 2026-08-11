@@ -107,12 +107,25 @@ export function Thread({ submissionId }: ThreadProps) {
     );
   }
 
-  const candidates = data.pages[0]?.candidates ?? [];
+  const threadHeader = data.pages[0];
+  const candidates = threadHeader?.candidates ?? [];
   const events = orderedEvents(data.pages);
   const selectedCandidate = candidates.find((c) => c.id === candidateId);
+  // The counterparty is whoever the viewer isn't — a recruiter talks with the
+  // company, and vice versa.
+  const counterpartyName =
+    viewerParty === "recruiter"
+      ? threadHeader?.company.name
+      : threadHeader?.recruiter.name;
 
   return (
     <div className="flex flex-col gap-4">
+      {threadHeader && (
+        <h2 className="font-heading text-lg font-semibold text-foreground">
+          Conversation with {counterpartyName} about {threadHeader.job.title}
+        </h2>
+      )}
+
       <CandidateFilterChips
         candidates={candidates}
         selectedCandidateId={candidateId}
@@ -135,7 +148,8 @@ export function Thread({ submissionId }: ThreadProps) {
       <div className="flex flex-col gap-3">
         {events.length === 0 && (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            No activity yet.
+            No messages yet — start the conversation about this role. You
+            don&apos;t need to submit a candidate first.
           </p>
         )}
         {events.map((event) =>
