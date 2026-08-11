@@ -74,6 +74,23 @@ export const conversationEventSchema = z.object({
           "unknown",
         ),
       }),
+      z.object({
+        kind: z.literal("offer"),
+        offerId: z.string(),
+        offerStatus: tolerantEnum(
+          ["sent", "accepted", "declined", "countered", "superseded", "unknown"],
+          "unknown",
+        ),
+        // The recruiter's commission — display only, never editable from this
+        // feed; the amount a client could edit is exactly the escrow-inflation
+        // the backend's server-side-only `amountMinor` rule prevents.
+        amountMinor: z.number(),
+        salaryMinor: z.number().nullable(),
+        jobTitle: z.string().nullable(),
+        startDate: z.string().nullable(),
+        previousOfferId: z.string().nullable(),
+        createdBy: z.enum(["company", "recruiter"]),
+      }),
     ])
     // A payload kind this build does not know about degrades to null rather
     // than failing the whole thread parse — slice C adds an `offer` variant.

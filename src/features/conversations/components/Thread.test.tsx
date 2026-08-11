@@ -46,6 +46,35 @@ vi.mock("@/features/interviews", () => ({
   ProposeSlotsForm: () => null,
 }));
 
+// Same reasoning as the interviews mock above, for OfferCard's offer-event
+// branch — mocked even though neither scenario below includes an offer event.
+vi.mock("@/features/offers", () => ({
+  useAcceptOffer: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+    isError: false,
+    error: null,
+  }),
+  useDeclineOffer: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+    isError: false,
+    error: null,
+  }),
+  useCounterOffer: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+    isError: false,
+    error: null,
+  }),
+  useWithdrawOffer: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
 const candidates = [
   { id: "cand1", fullName: "J. Rivera" },
   { id: "cand2", fullName: "A. Kim" },
@@ -81,6 +110,38 @@ const cand2Message = {
   body: "Great fit for cand2.",
   candidateId: "cand2",
   messageId: "m2",
+  data: null,
+};
+
+const offerEvent = {
+  type: "offer" as const,
+  at: "2026-08-11T09:10:00.000Z",
+  actor: "company" as const,
+  title: "Offer sent — $5,000 for J. Rivera",
+  body: null,
+  candidateId: "cand1",
+  messageId: null,
+  data: {
+    kind: "offer" as const,
+    offerId: "offer-1",
+    offerStatus: "sent" as const,
+    amountMinor: 500000,
+    salaryMinor: 13000000,
+    jobTitle: "Staff Engineer",
+    startDate: "2026-09-01",
+    previousOfferId: null,
+    createdBy: "company" as const,
+  },
+};
+
+const droppedFutureEvent = {
+  type: "offer" as const,
+  at: "2026-08-11T09:15:00.000Z",
+  actor: "company" as const,
+  title: "Offer sent — $5,000 for A. Kim",
+  body: null,
+  candidateId: "cand2",
+  messageId: null,
   data: null,
 };
 
@@ -147,5 +208,40 @@ describe("Thread", () => {
     });
     expect(screen.getByText("Strong fit for cand1.")).toBeInTheDocument();
     expect(screen.getByText("Candidates submitted")).toBeInTheDocument();
+  });
+
+  it("renders an offer event as an OfferCard rather than plain text", async () => {
+    // The offer was created by the company, so only the recruiter — the
+    // party who did not create it — sees Accept/Decline/Counter.
+    useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
+    fetchConversationThreadMock.mockResolvedValue(
+      threadResponse([systemEvent, offerEvent]),
+    );
+
+    renderWithProviders(<Thread submissionId="submission-1" />);
+
+    await screen.findByText("Candidates submitted");
+    // OfferCard renders the negotiated salary and a Counter action for the
+    // recruiter — neither of which the raw event title (which names the
+    // commission, not the salary) would ever produce.
+    expect(screen.getByText("$130,000")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^counter$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Offer sent — $5,000 for J. Rivera"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("falls back to plain rendering for an offer event with unrecognised data", async () => {
+    fetchConversationThreadMock.mockResolvedValue(
+      threadResponse([systemEvent, droppedFutureEvent]),
+    );
+
+    renderWithProviders(<Thread submissionId="submission-1" />);
+
+    expect(
+      await screen.findByText("Offer sent — $5,000 for A. Kim"),
+    ).toBeInTheDocument();
   });
 });

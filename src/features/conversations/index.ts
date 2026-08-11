@@ -4,6 +4,8 @@
 // client-only React APIs, so a Server Component importing this file must not
 // pull them into the server graph.
 /** Public surface of the conversations feature. */
+export { OfferCard } from "./components/OfferCard";
+export type { OfferEventData } from "./components/OfferCard";
 export { ProposalCard } from "./components/ProposalCard";
 export type { ProposalEventData } from "./components/ProposalCard";
 export { Thread } from "./components/Thread";

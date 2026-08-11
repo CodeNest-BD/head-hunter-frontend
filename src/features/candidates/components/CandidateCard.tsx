@@ -1,5 +1,6 @@
 "use client";
 
+import { SendOfferForm } from "@/features/offers";
 import {
   Card,
   CardContent,
@@ -73,6 +74,7 @@ export function CandidateCard({ candidate, submissionId }: CandidateCardProps) {
           </div>
 
           <ScheduleInterviewAction candidateId={candidate.id} />
+          <SendOfferForm candidateId={candidate.id} />
         </div>
       </CardHeader>
 

@@ -14,6 +14,7 @@ import type { ConversationEvent, ConversationThread } from "../schemas";
 import { CandidateFilterChips } from "./CandidateFilterChips";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
+import { OfferCard } from "./OfferCard";
 import { ProposalCard } from "./ProposalCard";
 import { SystemEvent } from "./SystemEvent";
 
@@ -164,10 +165,10 @@ export function Thread({ submissionId }: ThreadProps) {
               />
             );
           }
-          // A proposal event with no recognised `data.kind` — null today,
-          // possibly an `offer` variant this client predates tomorrow —
-          // falls through to the plain SystemEvent rendering below rather
-          // than crashing or being dropped from the thread.
+          // A proposal event with no recognised `data.kind` — null, or a
+          // kind this client predates — falls through to the plain
+          // SystemEvent rendering below rather than crashing or being
+          // dropped from the thread.
           if (event.type === "proposal" && event.data?.kind === "proposal") {
             return (
               <ProposalCard
@@ -177,6 +178,14 @@ export function Thread({ submissionId }: ThreadProps) {
                 data={event.data}
                 viewerParty={viewerParty}
               />
+            );
+          }
+          // Same fallback reasoning as the proposal branch above: an offer
+          // event with `data` null or of an unrecognised kind renders plainly
+          // instead of being dropped.
+          if (event.type === "offer" && event.data?.kind === "offer") {
+            return (
+              <OfferCard key={key} data={event.data} viewerParty={viewerParty} />
             );
           }
           return <SystemEvent key={key} event={event} />;

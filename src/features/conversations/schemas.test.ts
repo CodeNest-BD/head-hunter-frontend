@@ -105,6 +105,80 @@ describe("conversationThreadSchema", () => {
     expect(event.data?.kind === "proposal" && event.data.slots).toHaveLength(1);
   });
 
+  it("parses an offer event with its salary and status", () => {
+    const parsed = conversationThreadSchema.parse({
+      ...thread,
+      events: {
+        ...thread.events,
+        data: [
+          {
+            ...thread.events.data[0],
+            type: "offer",
+            data: {
+              kind: "offer",
+              offerId: "offer1",
+              offerStatus: "sent",
+              amountMinor: 500000,
+              salaryMinor: 13000000,
+              jobTitle: "Staff Engineer",
+              startDate: "2026-09-01",
+              previousOfferId: null,
+              createdBy: "company",
+            },
+          },
+        ],
+      },
+    });
+    const event = parsed.events.data[0];
+    expect(event.type).toBe("offer");
+    expect(event.data?.kind).toBe("offer");
+    expect(event.data?.kind === "offer" && event.data.salaryMinor).toBe(
+      13000000,
+    );
+    expect(event.data?.kind === "offer" && event.data.offerStatus).toBe(
+      "sent",
+    );
+  });
+
+  it("parses an offer event with a null salary", () => {
+    const parsed = conversationThreadSchema.parse({
+      ...thread,
+      events: {
+        ...thread.events,
+        data: [
+          {
+            ...thread.events.data[0],
+            type: "offer",
+            data: {
+              kind: "offer",
+              offerId: "offer1",
+              offerStatus: "countered",
+              amountMinor: 500000,
+              salaryMinor: null,
+              jobTitle: null,
+              startDate: null,
+              previousOfferId: "offer0",
+              createdBy: "recruiter",
+            },
+          },
+        ],
+      },
+    });
+    const event = parsed.events.data[0];
+    expect(event.data?.kind === "offer" && event.data.salaryMinor).toBeNull();
+  });
+
+  it("does not degrade the offer event type to unknown", () => {
+    const parsed = conversationThreadSchema.parse({
+      ...thread,
+      events: {
+        ...thread.events,
+        data: [{ ...thread.events.data[0], type: "offer", data: null }],
+      },
+    });
+    expect(parsed.events.data[0].type).toBe("offer");
+  });
+
   it("parses an event with no actionable payload", () => {
     const parsed = conversationThreadSchema.parse({
       ...thread,
