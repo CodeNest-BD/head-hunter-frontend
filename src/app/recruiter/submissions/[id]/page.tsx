@@ -15,6 +15,7 @@ import {
   type Candidate,
   type CandidateStatus,
 } from "@/features/candidates";
+import { Thread } from "@/features/conversations";
 import { useJob } from "@/features/jobs";
 import {
   SubmissionHeader,
@@ -303,6 +304,7 @@ function SubmissionDetailBody({ submission }: { submission: Submission }) {
         submissionId={submission.id}
         submissionStatus={submission.status}
       />
+      <Thread submissionId={submission.id} />
     </div>
   );
 }

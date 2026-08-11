@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { LogOut, Menu, UserRound, X } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { useMessageUnreadCount } from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Breadcrumb, type Crumb } from "./Breadcrumb";
@@ -15,6 +16,18 @@ import { Logo } from "./Logo";
 /** Recruiter-only unread pill; renders nothing for other roles or zero count. */
 function UnreadBadge() {
   const { data } = useUnreadCount();
+  if (!data) return null;
+  return (
+    <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+      {data > 99 ? "99+" : data}
+    </span>
+  );
+}
+
+/** Unread-messages pill for the Inbox (company) / Submissions (recruiter)
+ * nav items; renders nothing with no unread messages. */
+function UnreadMessagesBadge() {
+  const { data } = useMessageUnreadCount();
   if (!data) return null;
   return (
     <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
@@ -61,6 +74,7 @@ function NavLink({
       />
       <span className="truncate">{item.label}</span>
       {item.badge === "notifications" && <UnreadBadge />}
+      {item.badge === "messages" && <UnreadMessagesBadge />}
     </Link>
   );
 }

@@ -20,8 +20,8 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Show the unread-notifications badge on this item. */
-  badge?: "notifications";
+  /** Show the unread-notifications, or unread-messages, badge on this item. */
+  badge?: "notifications" | "messages";
 }
 
 /** Role-based primary navigation, shared by the sidebar and the user menu. */
@@ -29,7 +29,12 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   company: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/company/jobs", label: "Jobs", icon: Briefcase },
-    { href: "/company/inbox", label: "Inbox", icon: Inbox },
+    {
+      href: "/company/inbox",
+      label: "Inbox",
+      icon: Inbox,
+      badge: "messages",
+    },
     {
       href: "/notifications",
       label: "Notifications",
@@ -49,7 +54,12 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       icon: Bell,
       badge: "notifications",
     },
-    { href: "/recruiter/submissions", label: "Submissions", icon: Send },
+    {
+      href: "/recruiter/submissions",
+      label: "Submissions",
+      icon: Send,
+      badge: "messages",
+    },
     {
       href: "/recruiter/subscription",
       label: "Subscription",

@@ -5,6 +5,7 @@ import { AlertCircle, FileText, UserRound } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
 import { CandidateCard, useCandidates } from "@/features/candidates";
+import { Thread } from "@/features/conversations";
 import {
   COMPANY_SETTABLE_STATUSES,
   SUBMISSION_STATUS_LABELS,
@@ -205,6 +206,7 @@ export default function SubmissionReviewPage() {
 
           <SubmissionHeader submissionId={params.id} />
           <CandidateSection submissionId={params.id} />
+          <Thread submissionId={params.id} />
         </div>
       </DashboardLayout>
     </RequireRole>
