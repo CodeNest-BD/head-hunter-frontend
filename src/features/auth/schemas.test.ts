@@ -55,10 +55,49 @@ describe("signUpSchema", () => {
     expect(errorPaths({ lastName: " " })).toContain("lastName");
   });
 
+  it("rejects a first name containing digits", () => {
+    expect(errorPaths({ firstName: "Jane123" })).toContain("firstName");
+  });
+
+  it("rejects a last name containing special symbols", () => {
+    expect(errorPaths({ lastName: "%#67890" })).toContain("lastName");
+  });
+
+  it("rejects a name that starts with a hyphen", () => {
+    expect(errorPaths({ firstName: "-Jane" })).toContain("firstName");
+  });
+
+  it("accepts real names with apostrophes, hyphens and accents", () => {
+    for (const name of ["O'Brien", "Jean-Luc", "José", "van der Berg", "Ng"]) {
+      expect(errorPaths({ lastName: name })).toEqual([]);
+    }
+  });
+
   it("accepts an empty state, otherwise requires a two-letter code", () => {
     expect(errorPaths({ state: "" })).toEqual([]);
     expect(errorPaths({ state: "ca" })).toEqual([]);
     expect(errorPaths({ state: "Cal" })).toContain("state");
+  });
+
+  it("rejects a zip containing letters", () => {
+    expect(errorPaths({ zip: "ABCDEF" })).toContain("zip");
+  });
+
+  it("accepts a 5-digit zip, a ZIP+4, and an empty zip", () => {
+    expect(errorPaths({ zip: "94103" })).toEqual([]);
+    expect(errorPaths({ zip: "94103-1234" })).toEqual([]);
+    expect(errorPaths({ zip: "" })).toEqual([]);
+  });
+
+  it("rejects passwords missing a character class", () => {
+    for (const password of [
+      "s3cure@ssw0rd",
+      "S3CURE@SSW0RD",
+      "SecureP@ssword",
+      "S3curePassw0rd",
+    ]) {
+      expect(errorPaths({ password })).toContain("password");
+    }
   });
 
   it("accepts years of experience between 0 and 80, or empty", () => {
@@ -86,6 +125,17 @@ describe("signUpSchema", () => {
         references: [{ ...reference, name: "" }],
       }),
     ).toContain("references.0.name");
+  });
+});
+
+describe("signInSchema", () => {
+  it("does not enforce complexity, so existing weak passwords can still sign in", async () => {
+    const { signInSchema } = await import("./schemas");
+    const result = signInSchema.safeParse({
+      email: "jane@acme.com",
+      password: "password",
+    });
+    expect(result.success).toBe(true);
   });
 });
 

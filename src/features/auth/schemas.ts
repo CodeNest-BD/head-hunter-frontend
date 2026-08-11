@@ -36,6 +36,45 @@ export const RECRUITER_SPECIALIZATION_LABELS: Record<
   medical: "Medical",
 };
 
+export interface PasswordRequirement {
+  readonly key: "length" | "uppercase" | "lowercase" | "number" | "special";
+  readonly label: string;
+  readonly test: (password: string) => boolean;
+}
+
+/**
+ * The single source of truth for password complexity, shared by the sign-up
+ * schema's validation and the SignUpForm's live checklist so the two can't
+ * drift into different rules.
+ */
+export const PASSWORD_REQUIREMENTS: readonly PasswordRequirement[] = [
+  {
+    key: "length",
+    label: "At least 8 characters",
+    test: (password) => password.length >= 8,
+  },
+  {
+    key: "uppercase",
+    label: "An uppercase letter",
+    test: (password) => /\p{Lu}/u.test(password),
+  },
+  {
+    key: "lowercase",
+    label: "A lowercase letter",
+    test: (password) => /\p{Ll}/u.test(password),
+  },
+  {
+    key: "number",
+    label: "A number",
+    test: (password) => /\d/u.test(password),
+  },
+  {
+    key: "special",
+    label: "A special character",
+    test: (password) => /[^\p{L}\p{N}]/u.test(password),
+  },
+];
+
 export const MAX_SIGNUP_REFERENCES = 3;
 
 const signUpReferenceSchema = z.object({
@@ -63,12 +102,20 @@ export const signUpSchema = z
       .string()
       .trim()
       .min(1, "First name is required")
-      .max(80, "Keep it under 80 characters"),
+      .max(80, "Keep it under 80 characters")
+      .regex(
+        /^[\p{L}\p{M}][\p{L}\p{M}'\-. ]*$/u,
+        "Use letters, spaces, hyphens, apostrophes and periods only",
+      ),
     lastName: z
       .string()
       .trim()
       .min(1, "Last name is required")
-      .max(80, "Keep it under 80 characters"),
+      .max(80, "Keep it under 80 characters")
+      .regex(
+        /^[\p{L}\p{M}][\p{L}\p{M}'\-. ]*$/u,
+        "Use letters, spaces, hyphens, apostrophes and periods only",
+      ),
     username: z
       .string()
       .trim()
@@ -79,7 +126,15 @@ export const signUpSchema = z
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
-      .max(72, "Password must be at most 72 characters"),
+      .max(72, "Password must be at most 72 characters")
+      .refine(
+        (password) =>
+          PASSWORD_REQUIREMENTS.every((requirement) => requirement.test(password)),
+        {
+          message:
+            "Include an uppercase letter, a lowercase letter, a number and a special character",
+        },
+      ),
     phone: z.string().trim().max(32, "Keep it under 32 characters"),
     companyName: z.string().trim().max(160, "Keep it under 160 characters"),
     yearsExperience: z
@@ -99,7 +154,11 @@ export const signUpSchema = z
       .trim()
       .regex(/^[A-Za-z]{2}$/, "Use the two-letter state code")
       .or(z.literal("")),
-    zip: z.string().trim().max(20, "Keep it under 20 characters"),
+    zip: z
+      .string()
+      .trim()
+      .regex(/^\d{5}(-\d{4})?$/, "Enter a 5-digit ZIP or ZIP+4, e.g. 94103")
+      .or(z.literal("")),
   })
   .superRefine((values, ctx) => {
     if (values.role === "company" && values.companyName === "") {
