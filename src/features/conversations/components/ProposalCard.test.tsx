@@ -6,12 +6,10 @@ import { ProposalCard, type ProposalEventData } from "./ProposalCard";
 
 const useConfirmSlotMock = vi.fn();
 const useCounterRequestMock = vi.fn();
-const useInterviewMock = vi.fn();
 
 vi.mock("@/features/interviews", () => ({
   useConfirmSlot: (...args: unknown[]) => useConfirmSlotMock(...args),
   useCounterRequest: (...args: unknown[]) => useCounterRequestMock(...args),
-  useInterview: (...args: unknown[]) => useInterviewMock(...args),
   ProposeSlotsForm: () => <div>Propose slots form</div>,
 }));
 
@@ -36,6 +34,9 @@ function proposalData(
     interviewId: "interview-1",
     availabilityProposalId: "proposal-1",
     proposalStatus: "proposed",
+    interviewStatus: "proposed",
+    confirmedSlotStart: null,
+    confirmedSlotEnd: null,
     slots,
     ...overrides,
   };
@@ -45,7 +46,6 @@ describe("ProposalCard", () => {
   beforeEach(() => {
     useConfirmSlotMock.mockReset();
     useCounterRequestMock.mockReset();
-    useInterviewMock.mockReset();
     useConfirmSlotMock.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
@@ -57,11 +57,6 @@ describe("ProposalCard", () => {
       isPending: false,
       isError: false,
       error: null,
-    });
-    useInterviewMock.mockReturnValue({
-      data: undefined,
-      isPending: true,
-      isError: false,
     });
   });
 
@@ -125,30 +120,16 @@ describe("ProposalCard", () => {
   });
 
   it("shows the agreed time and no action buttons once the proposal is confirmed", () => {
-    useInterviewMock.mockReturnValue({
-      data: {
-        id: "interview-1",
-        jobId: "job-1",
-        candidateId: "cand-1",
-        interviewType: "video",
-        status: "scheduled",
-        round: 1,
-        confirmedSlotStart: "2026-09-01T16:00:00.000Z",
-        confirmedSlotEnd: "2026-09-01T17:00:00.000Z",
-        meetingJoinUrl: null,
-        outcome: null,
-        passFeedback: null,
-        createdAt: "2026-08-01T00:00:00.000Z",
-      },
-      isPending: false,
-      isError: false,
-    });
-
     renderWithProviders(
       <ProposalCard
         title="Interview time confirmed"
         note={null}
-        data={proposalData({ proposalStatus: "confirmed" })}
+        data={proposalData({
+          proposalStatus: "confirmed",
+          interviewStatus: "scheduled",
+          confirmedSlotStart: "2026-09-01T16:00:00.000Z",
+          confirmedSlotEnd: "2026-09-01T17:00:00.000Z",
+        })}
         viewerParty="company"
       />,
     );
@@ -158,6 +139,39 @@ describe("ProposalCard", () => {
         exact: false,
       }),
     ).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("offers no action buttons on an open proposal once the interview is canceled", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Availability proposed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "proposed",
+          interviewStatus: "canceled",
+        })}
+        viewerParty="recruiter"
+      />,
+    );
+
+    expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("offers no action buttons on a counter-requested proposal once the interview is completed", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="New times requested"
+        note="Mornings only, please."
+        data={proposalData({
+          proposalStatus: "counter_requested",
+          interviewStatus: "completed",
+        })}
+        viewerParty="company"
+      />,
+    );
+
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 

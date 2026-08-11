@@ -85,6 +85,9 @@ describe("conversationThreadSchema", () => {
               interviewId: "int1",
               availabilityProposalId: "prop1",
               proposalStatus: "proposed",
+              interviewStatus: "proposed",
+              confirmedSlotStart: null,
+              confirmedSlotEnd: null,
               slots: [
                 {
                   id: "slot1",

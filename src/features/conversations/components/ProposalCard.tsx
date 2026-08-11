@@ -8,7 +8,6 @@ import {
   ProposeSlotsForm,
   useConfirmSlot,
   useCounterRequest,
-  useInterview,
 } from "@/features/interviews";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -65,27 +64,16 @@ interface SlotOption {
   endAt: string;
 }
 
-/** The agreed time lives on the interview row (`confirmedSlotStart`/`End`),
- * not on the proposal event itself — slots are never deleted once proposed,
- * so `data.slots` alone can't say which one was picked. Reads the interview
- * live via `useInterview` rather than guessing from the event payload. */
-function ConfirmedTime({ interviewId }: { interviewId: string }) {
-  const { data: interview, isPending, isError } = useInterview(interviewId);
-
-  if (isPending) {
-    return (
-      <p className="text-sm text-muted-foreground">Loading the agreed time…</p>
-    );
-  }
-  if (isError || !interview.confirmedSlotStart || !interview.confirmedSlotEnd) {
-    return null;
-  }
-
+/** The agreed time is carried on the event payload itself
+ * (`confirmedSlotStart`/`End`), not fetched from the interview — slots are
+ * never deleted once proposed, so `data.slots` alone can't say which one was
+ * picked, but the backend now names it directly rather than the card needing
+ * a second request. */
+function ConfirmedTime({ start, end }: { start: string; end: string }) {
   return (
     <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
       <CalendarClock className="h-4 w-4 text-primary" aria-hidden="true" />
-      {formatDateTime(interview.confirmedSlotStart)} –{" "}
-      {formatDateTime(interview.confirmedSlotEnd)}
+      {formatDateTime(start)} – {formatDateTime(end)}
     </p>
   );
 }
@@ -152,13 +140,21 @@ function SlotRadioGroup({ slots, selectedSlotId, onSelect }: SlotRadioGroupProps
 
 /**
  * The actionable meeting-invite entry in a job's conversation thread. State —
- * which actions are available — comes entirely from `data.proposalStatus`;
- * there is no local "was this confirmed" flag, so a mutation that fails
- * leaves the card exactly where the server says the proposal actually is
- * once the thread refetches.
+ * which actions are available — comes entirely from `data.proposalStatus`
+ * and `data.interviewStatus`; there is no local "was this confirmed" flag, so
+ * a mutation that fails leaves the card exactly where the server says the
+ * proposal actually is once the thread refetches.
  */
 export function ProposalCard({ title, note, data, viewerParty }: ProposalCardProps) {
-  const { interviewId, availabilityProposalId, proposalStatus, slots } = data;
+  const {
+    interviewId,
+    availabilityProposalId,
+    proposalStatus,
+    interviewStatus,
+    confirmedSlotStart,
+    confirmedSlotEnd,
+    slots,
+  } = data;
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [counterNote, setCounterNote] = useState("");
@@ -171,12 +167,19 @@ export function ProposalCard({ title, note, data, viewerParty }: ProposalCardPro
   const isOpen = proposalStatus === "proposed";
   const isCounterRequested = proposalStatus === "counter_requested";
   const isConfirmed = proposalStatus === "confirmed";
+  // A batch can stay "proposed" or "counter_requested" right up to the moment
+  // the interview around it is canceled or completed — the proposal status
+  // alone doesn't say that, so every action below also checks this.
+  const isDeadInterview =
+    interviewStatus === "canceled" || interviewStatus === "completed";
+  const canAct = !isDeadInterview;
   // Proposing a fresh batch only fails once the interview itself has left
   // "awaiting a time" — which happens the moment a slot is confirmed, not
   // when the recruiter merely asks for other times — so the company can
   // still propose again from either open proposal state.
   const companyCanProposeAgain =
-    viewerParty === "company" && (isOpen || isCounterRequested);
+    viewerParty === "company" && (isOpen || isCounterRequested) && canAct;
+  const recruiterCanRespond = viewerParty === "recruiter" && isOpen && canAct;
 
   if (showProposeForm) {
     return (
@@ -209,8 +212,10 @@ export function ProposalCard({ title, note, data, viewerParty }: ProposalCardPro
       </div>
 
       {isConfirmed ? (
-        <ConfirmedTime interviewId={interviewId} />
-      ) : isCounterRequested ? null : viewerParty === "recruiter" && isOpen ? (
+        confirmedSlotStart && confirmedSlotEnd ? (
+          <ConfirmedTime start={confirmedSlotStart} end={confirmedSlotEnd} />
+        ) : null
+      ) : isCounterRequested ? null : recruiterCanRespond ? (
         <SlotRadioGroup
           slots={slots}
           selectedSlotId={selectedSlotId}
@@ -220,7 +225,7 @@ export function ProposalCard({ title, note, data, viewerParty }: ProposalCardPro
         <ReadOnlySlots slots={slots} />
       )}
 
-      {viewerParty === "recruiter" && isOpen && (
+      {recruiterCanRespond && (
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -243,7 +248,7 @@ export function ProposalCard({ title, note, data, viewerParty }: ProposalCardPro
         </div>
       )}
 
-      {viewerParty === "recruiter" && isOpen && showCounterForm && (
+      {recruiterCanRespond && showCounterForm && (
         <div className="flex flex-col gap-2">
           <p id={counterNoteHintId} className="text-xs text-muted-foreground">
             Tells the company what would work better instead.

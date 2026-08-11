@@ -24,6 +24,7 @@ export const conversationEventSchema = z.object({
       "submission",
       "candidate",
       "proposal",
+      "interview",
       "hire_response",
       "offer",
       "message",
@@ -47,6 +48,20 @@ export const conversationEventSchema = z.object({
           ["proposed", "counter_requested", "confirmed", "expired", "unknown"],
           "unknown",
         ),
+        // The interview's own status, carried next to the proposal's because
+        // the two can disagree: a batch stays "proposed" right up to the
+        // moment the interview around it is canceled or completed, and a card
+        // that knew only the proposal status would keep offering Confirm on
+        // a dead interview.
+        interviewStatus: tolerantEnum(
+          ["proposed", "scheduled", "completed", "canceled", "unknown"],
+          "unknown",
+        ),
+        // The agreed time, non-null once a slot won — the slot list never
+        // says which one it was, so the card renders directly from these
+        // instead of fetching the interview just to name the confirmed time.
+        confirmedSlotStart: z.string().nullable(),
+        confirmedSlotEnd: z.string().nullable(),
         slots: z.array(
           z.object({ id: z.string(), startAt: z.string(), endAt: z.string() }),
         ),

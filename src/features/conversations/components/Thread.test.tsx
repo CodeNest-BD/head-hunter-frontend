@@ -43,7 +43,6 @@ vi.mock("@/features/interviews", () => ({
     isError: false,
     error: null,
   }),
-  useInterview: () => ({ data: undefined, isPending: true, isError: false }),
   ProposeSlotsForm: () => null,
 }));
 

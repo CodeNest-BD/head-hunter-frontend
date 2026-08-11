@@ -28,6 +28,10 @@ const EVENT_ICON: Record<ConversationEvent["type"], LucideIcon> = {
   submission: Send,
   candidate: UserPlus,
   proposal: CalendarClock,
+  // Same scheduling icon as `proposal`: an `interview` entry is the same
+  // scheduling thread reaching its end (canceled or completed), not a
+  // separate concern.
+  interview: CalendarClock,
   hire_response: CheckCircle2,
   offer: FileText,
   // Same neutral icon as `submission`: neither is tied to a specific outcome.
