@@ -1,5 +1,6 @@
 import {
   keepPreviousData,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -60,10 +61,23 @@ export function useAdminConversations(params: AdminListParams) {
   });
 }
 
+const FIRST_PAGE = 1;
+
+/**
+ * Admin pages through the same `{ data, meta }` envelope the participant
+ * thread does (`useConversationThread`), so this is an infinite query too:
+ * each fetched page lands in TanStack Query's own page cache and "load
+ * older" asks for the next-older page.
+ */
 export function useAdminConversation(submissionId: string) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: adminKeys.conversation(submissionId),
-    queryFn: () => fetchConversation(submissionId),
+    queryFn: ({ pageParam }) => fetchConversation(submissionId, pageParam),
+    initialPageParam: FIRST_PAGE,
+    getNextPageParam: (lastPage) =>
+      lastPage.events.meta.page < lastPage.events.meta.totalPages
+        ? lastPage.events.meta.page + 1
+        : undefined,
   });
 }
 

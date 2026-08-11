@@ -16,7 +16,11 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminConversation } from "../hooks/useAdmin";
-import { SUBMISSION_LABELS, type ConversationEvent } from "../schemas";
+import {
+  SUBMISSION_LABELS,
+  type ConversationEvent,
+  type ConversationThread as ConversationThreadPage,
+} from "../schemas";
 import { DetailSkeleton } from "./DetailPrimitives";
 import { SUBMISSION_STATUS_STYLES } from "./statusStyles";
 
@@ -59,9 +63,28 @@ function formatDateTime(iso: string): string {
   });
 }
 
+/**
+ * Pages arrive newest-first (same default as the participant thread).
+ * Reversing the concatenation of every fetched page renders oldest-at-top
+ * with the newest entry at the bottom, and each additional ("older") page
+ * fetched via "Load older" lands above what is already on screen.
+ */
+function orderedEvents(
+  pages: ConversationThreadPage[],
+): ConversationEvent[] {
+  return pages.flatMap((page) => page.events.data).reverse();
+}
+
 export function ConversationThread({ submissionId }: { submissionId: string }) {
-  const { data, isPending, isError, refetch } =
-    useAdminConversation(submissionId);
+  const {
+    data,
+    isPending,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAdminConversation(submissionId);
 
   if (isPending) return <DetailSkeleton />;
   if (isError) {
@@ -78,29 +101,32 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
     );
   }
 
+  const header = data.pages[0];
+  const events = orderedEvents(data.pages);
+
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
       <Card>
         <CardContent className="flex flex-col gap-4 p-6">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <span className="font-heading text-lg font-bold text-navy">
-              {data.company.name}
+              {header.company.name}
             </span>
             <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
             <span className="font-heading text-lg font-bold text-navy">
-              {data.recruiter.name}
+              {header.recruiter.name}
             </span>
             <StatusBadge
-              label={SUBMISSION_LABELS[data.status] ?? data.status}
+              label={SUBMISSION_LABELS[header.status] ?? header.status}
               className={
-                SUBMISSION_STATUS_STYLES[data.status] ??
+                SUBMISSION_STATUS_STYLES[header.status] ??
                 "bg-muted text-muted-foreground"
               }
             />
           </div>
           <p className="text-sm text-muted-foreground">
             Role:{" "}
-            <span className="font-medium text-navy">{data.job.title}</span>
+            <span className="font-medium text-navy">{header.job.title}</span>
           </p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
@@ -115,17 +141,33 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
         </CardContent>
       </Card>
 
+      {hasNextPage && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="self-center"
+          disabled={isFetchingNextPage}
+          onClick={() => void fetchNextPage()}
+        >
+          {isFetchingNextPage ? "Loading…" : "Load older"}
+        </Button>
+      )}
+
       <Card>
         <CardContent className="p-6">
           <ol className="flex flex-col">
-            {data.events.map((event, index) => {
+            {events.map((event, index) => {
               // Fall back to the neutral icon rather than throwing on a type
               // this map doesn't (yet) know about.
               const Icon = EVENT_ICON[event.type] ?? Send;
               const actor = event.actor ?? "system";
-              const isLast = index === data.events.length - 1;
+              const isLast = index === events.length - 1;
+              const key =
+                event.messageId ??
+                `${event.type}-${event.at}-${event.candidateId ?? "none"}`;
               return (
-                <li key={index} className="flex gap-4">
+                <li key={key} className="flex gap-4">
                   <div className="flex flex-col items-center">
                     <span
                       className={cn(

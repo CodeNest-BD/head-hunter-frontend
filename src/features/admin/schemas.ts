@@ -10,6 +10,7 @@ import {
   conversationThreadHeaderSchema,
   type ConversationEvent,
 } from "@/features/conversations/schemas";
+import { paginatedSchema } from "@/shared/libs/pagination";
 import { tolerantEnum } from "@/shared/libs/zodTolerantEnum";
 
 export { conversationEventSchema };
@@ -106,13 +107,16 @@ export const conversationListItemSchema = z.object({
 export type ConversationListItem = z.infer<typeof conversationListItemSchema>;
 
 /**
- * Admin's view of a thread: the header shared with the participant thread
- * schema, plus a bare array of events — admin reads the whole history in one
- * response rather than paging through it. Admin's endpoint does not return
- * `candidates`, so unlike the participant schema this does not add it.
+ * Admin's view of a thread: the header and one page of events, both shared
+ * with the participant thread schema (`conversationThreadHeaderSchema` and
+ * `paginatedSchema(conversationEventSchema)`, imported rather than
+ * redeclared) — admin now pages through the same `{ data, meta }` envelope
+ * as the participant view instead of loading the whole history at once.
+ * The backend's header includes `candidates` too, but no admin UI reads
+ * them, so this schema does not declare the field; zod strips it silently.
  */
 export const conversationThreadSchema = conversationThreadHeaderSchema.extend({
-  events: z.array(conversationEventSchema),
+  events: paginatedSchema(conversationEventSchema),
 });
 export type ConversationThread = z.infer<typeof conversationThreadSchema>;
 

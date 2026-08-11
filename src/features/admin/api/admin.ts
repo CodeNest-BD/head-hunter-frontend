@@ -79,12 +79,14 @@ export async function fetchConversations(
   return paginatedSchema(conversationListItemSchema).parse(data);
 }
 
-/** GET /v1/admin/conversations/:submissionId */
+/** GET /v1/admin/conversations/:submissionId — one page of the thread, paged by the hook. */
 export async function fetchConversation(
   submissionId: string,
+  page: number,
 ): Promise<ConversationThread> {
   const { data } = await apiClient.get<unknown>(
     `/admin/conversations/${submissionId}`,
+    { params: { page, limit: PAGE_SIZE } },
   );
   return conversationThreadSchema.parse(data);
 }
