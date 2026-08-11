@@ -26,6 +26,9 @@ const EVENT_ICON: Record<ConversationEvent["type"], LucideIcon> = {
   proposal: CalendarClock,
   hire_response: CheckCircle2,
   offer: FileText,
+  // Same neutral icon as `submission`: neither is tied to a specific outcome.
+  message: Send,
+  unknown: Send,
 };
 
 const ACTOR_LABEL: Record<string, string> = {
@@ -116,7 +119,9 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
         <CardContent className="p-6">
           <ol className="flex flex-col">
             {data.events.map((event, index) => {
-              const Icon = EVENT_ICON[event.type];
+              // Fall back to the neutral icon rather than throwing on a type
+              // this map doesn't (yet) know about.
+              const Icon = EVENT_ICON[event.type] ?? Send;
               const actor = event.actor ?? "system";
               const isLast = index === data.events.length - 1;
               return (

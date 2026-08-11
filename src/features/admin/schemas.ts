@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+// Imported from the conversations feature's schemas module directly, not its
+// barrel: the barrel also re-exports Thread and its hooks, which pull in
+// features/conversations' API client — this file only needs the
+// dependency-free event schema (schemas.ts imports nothing but zod and other
+// dependency-free schema modules).
+import {
+  conversationEventSchema,
+  type ConversationEvent,
+} from "@/features/conversations/schemas";
+
+export { conversationEventSchema };
+export type { ConversationEvent };
+
 export const accountStatusSchema = z.enum(["active", "suspended"]);
 export type AccountStatus = z.infer<typeof accountStatusSchema>;
 
@@ -89,21 +102,6 @@ export const conversationListItemSchema = z.object({
   lastActivityAt: z.string(),
 });
 export type ConversationListItem = z.infer<typeof conversationListItemSchema>;
-
-export const conversationEventSchema = z.object({
-  type: z.enum([
-    "submission",
-    "candidate",
-    "proposal",
-    "hire_response",
-    "offer",
-  ]),
-  at: z.string(),
-  actor: z.enum(["company", "recruiter", "system"]).nullable(),
-  title: z.string(),
-  body: z.string().nullable(),
-});
-export type ConversationEvent = z.infer<typeof conversationEventSchema>;
 
 export const conversationThreadSchema = z.object({
   submissionId: z.string(),
