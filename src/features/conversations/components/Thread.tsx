@@ -14,6 +14,7 @@ import type { ConversationEvent, ConversationThread } from "../schemas";
 import { CandidateFilterChips } from "./CandidateFilterChips";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
+import { ProposalCard } from "./ProposalCard";
 import { SystemEvent } from "./SystemEvent";
 
 export interface ThreadProps {
@@ -152,20 +153,34 @@ export function Thread({ submissionId }: ThreadProps) {
             don&apos;t need to submit a candidate first.
           </p>
         )}
-        {events.map((event) =>
-          event.type === "message" ? (
-            <MessageBubble
-              key={event.messageId ?? `${event.type}-${event.at}`}
-              event={event}
-              viewerParty={viewerParty}
-            />
-          ) : (
-            <SystemEvent
-              key={`${event.type}-${event.at}-${event.candidateId ?? "none"}`}
-              event={event}
-            />
-          ),
-        )}
+        {events.map((event) => {
+          const key = `${event.type}-${event.at}-${event.candidateId ?? "none"}`;
+          if (event.type === "message") {
+            return (
+              <MessageBubble
+                key={event.messageId ?? key}
+                event={event}
+                viewerParty={viewerParty}
+              />
+            );
+          }
+          // A proposal event with no recognised `data.kind` — null today,
+          // possibly an `offer` variant this client predates tomorrow —
+          // falls through to the plain SystemEvent rendering below rather
+          // than crashing or being dropped from the thread.
+          if (event.type === "proposal" && event.data?.kind === "proposal") {
+            return (
+              <ProposalCard
+                key={key}
+                title={event.title}
+                note={event.body}
+                data={event.data}
+                viewerParty={viewerParty}
+              />
+            );
+          }
+          return <SystemEvent key={key} event={event} />;
+        })}
       </div>
 
       <MessageComposer

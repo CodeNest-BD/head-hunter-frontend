@@ -37,6 +37,33 @@ export const conversationEventSchema = z.object({
   body: z.string().nullable(),
   candidateId: z.string().nullable(),
   messageId: z.string().nullable(),
+  data: z
+    .discriminatedUnion("kind", [
+      z.object({
+        kind: z.literal("proposal"),
+        interviewId: z.string(),
+        availabilityProposalId: z.string(),
+        proposalStatus: tolerantEnum(
+          ["proposed", "counter_requested", "confirmed", "expired", "unknown"],
+          "unknown",
+        ),
+        slots: z.array(
+          z.object({ id: z.string(), startAt: z.string(), endAt: z.string() }),
+        ),
+      }),
+      z.object({
+        kind: z.literal("interview"),
+        interviewId: z.string(),
+        interviewStatus: tolerantEnum(
+          ["proposed", "scheduled", "completed", "canceled", "unknown"],
+          "unknown",
+        ),
+      }),
+    ])
+    // A payload kind this build does not know about degrades to null rather
+    // than failing the whole thread parse — slice C adds an `offer` variant.
+    .nullable()
+    .catch(null),
 });
 export type ConversationEvent = z.infer<typeof conversationEventSchema>;
 

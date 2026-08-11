@@ -26,6 +26,27 @@ vi.mock("@/features/auth", () => ({
   useAuth: () => useAuthMock(),
 }));
 
+// Thread renders ProposalCard for "proposal" events, which pulls in the
+// interviews feature's real API client (and its NEXT_PUBLIC_API_URL check)
+// through its hooks — mocked out here the same way ProposalCard's own test
+// does, even though neither scenario below includes a proposal event.
+vi.mock("@/features/interviews", () => ({
+  useConfirmSlot: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+    isError: false,
+    error: null,
+  }),
+  useCounterRequest: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+    isError: false,
+    error: null,
+  }),
+  useInterview: () => ({ data: undefined, isPending: true, isError: false }),
+  ProposeSlotsForm: () => null,
+}));
+
 const candidates = [
   { id: "cand1", fullName: "J. Rivera" },
   { id: "cand2", fullName: "A. Kim" },
@@ -39,6 +60,7 @@ const systemEvent = {
   body: null,
   candidateId: null,
   messageId: null,
+  data: null,
 };
 
 const cand1Message = {
@@ -49,6 +71,7 @@ const cand1Message = {
   body: "Strong fit for cand1.",
   candidateId: "cand1",
   messageId: "m1",
+  data: null,
 };
 
 const cand2Message = {
@@ -59,6 +82,7 @@ const cand2Message = {
   body: "Great fit for cand2.",
   candidateId: "cand2",
   messageId: "m2",
+  data: null,
 };
 
 function threadResponse(

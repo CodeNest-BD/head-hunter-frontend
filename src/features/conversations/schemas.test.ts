@@ -70,4 +70,62 @@ describe("conversationThreadSchema", () => {
     });
     expect(parsed.events.data[0].messageId).toBeNull();
   });
+
+  it("parses a proposal event with its slots", () => {
+    const parsed = conversationThreadSchema.parse({
+      ...thread,
+      events: {
+        ...thread.events,
+        data: [
+          {
+            ...thread.events.data[0],
+            type: "proposal",
+            data: {
+              kind: "proposal",
+              interviewId: "int1",
+              availabilityProposalId: "prop1",
+              proposalStatus: "proposed",
+              slots: [
+                {
+                  id: "slot1",
+                  startAt: "2026-09-01T16:00:00.000Z",
+                  endAt: "2026-09-01T17:00:00.000Z",
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+    const event = parsed.events.data[0];
+    expect(event.data?.kind).toBe("proposal");
+    expect(event.data?.kind === "proposal" && event.data.slots).toHaveLength(1);
+  });
+
+  it("parses an event with no actionable payload", () => {
+    const parsed = conversationThreadSchema.parse({
+      ...thread,
+      events: {
+        ...thread.events,
+        data: [{ ...thread.events.data[0], data: null }],
+      },
+    });
+    expect(parsed.events.data[0].data).toBeNull();
+  });
+
+  it("degrades an unrecognised data.kind to null instead of throwing", () => {
+    const parsed = conversationThreadSchema.parse({
+      ...thread,
+      events: {
+        ...thread.events,
+        data: [
+          {
+            ...thread.events.data[0],
+            data: { kind: "offer", interviewId: "int1" },
+          },
+        ],
+      },
+    });
+    expect(parsed.events.data[0].data).toBeNull();
+  });
 });
