@@ -10,30 +10,21 @@ import { useMessageUnreadCount } from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Breadcrumb, type Crumb } from "./Breadcrumb";
+import { CountBadge } from "./CountBadge";
 import { NAV_BY_ROLE, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
 
 /** Recruiter-only unread pill; renders nothing for other roles or zero count. */
 function UnreadBadge() {
   const { data } = useUnreadCount();
-  if (!data) return null;
-  return (
-    <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
-      {data > 99 ? "99+" : data}
-    </span>
-  );
+  return <CountBadge count={data} />;
 }
 
 /** Unread-messages pill for the Inbox (company) / Submissions (recruiter)
  * nav items; renders nothing with no unread messages. */
 function UnreadMessagesBadge() {
   const { data } = useMessageUnreadCount();
-  if (!data) return null;
-  return (
-    <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
-      {data > 99 ? "99+" : data}
-    </span>
-  );
+  return <CountBadge count={data} />;
 }
 
 function NavLink({

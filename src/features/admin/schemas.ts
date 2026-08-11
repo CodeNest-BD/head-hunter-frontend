@@ -7,8 +7,10 @@ import { z } from "zod";
 // dependency-free schema modules).
 import {
   conversationEventSchema,
+  conversationThreadHeaderSchema,
   type ConversationEvent,
 } from "@/features/conversations/schemas";
+import { tolerantEnum } from "@/shared/libs/zodTolerantEnum";
 
 export { conversationEventSchema };
 export type { ConversationEvent };
@@ -80,13 +82,13 @@ export const companyDetailSchema = companyListItemSchema.extend({
 });
 export type CompanyDetail = z.infer<typeof companyDetailSchema>;
 
-export const submissionStatusSchema = z.enum([
-  "submitted",
-  "under_review",
-  "advanced",
-  "rejected",
-  "withdrawn",
-]);
+// Same forward tolerance as the conversations feature's own status field
+// (`conversationThreadHeaderSchema`, below) — a status this map doesn't know
+// about yet should degrade the admin view too, not throw it.
+export const submissionStatusSchema = tolerantEnum(
+  ["submitted", "under_review", "advanced", "rejected", "withdrawn", "unknown"],
+  "unknown",
+);
 export type SubmissionStatus = z.infer<typeof submissionStatusSchema>;
 
 export const conversationListItemSchema = z.object({
@@ -103,12 +105,13 @@ export const conversationListItemSchema = z.object({
 });
 export type ConversationListItem = z.infer<typeof conversationListItemSchema>;
 
-export const conversationThreadSchema = z.object({
-  submissionId: z.string(),
-  status: submissionStatusSchema,
-  company: z.object({ profileId: z.string(), name: z.string() }),
-  recruiter: z.object({ profileId: z.string(), name: z.string() }),
-  job: z.object({ id: z.string(), title: z.string() }),
+/**
+ * Admin's view of a thread: the header shared with the participant thread
+ * schema, plus a bare array of events — admin reads the whole history in one
+ * response rather than paging through it. Admin's endpoint does not return
+ * `candidates`, so unlike the participant schema this does not add it.
+ */
+export const conversationThreadSchema = conversationThreadHeaderSchema.extend({
   events: z.array(conversationEventSchema),
 });
 export type ConversationThread = z.infer<typeof conversationThreadSchema>;
@@ -132,6 +135,7 @@ export const SUBMISSION_LABELS: Record<SubmissionStatus, string> = {
   advanced: "Advanced",
   rejected: "Rejected",
   withdrawn: "Withdrawn",
+  unknown: "Unknown",
 };
 
 export const adminStatsSchema = z.object({

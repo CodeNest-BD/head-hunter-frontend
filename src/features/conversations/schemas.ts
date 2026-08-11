@@ -6,6 +6,7 @@ import { z } from "zod";
 // status list (schemas.ts imports nothing but zod).
 import { SUBMISSION_STATUSES } from "@/features/submissions/schemas";
 import { paginatedSchema } from "@/shared/libs/pagination";
+import { tolerantEnum } from "@/shared/libs/zodTolerantEnum";
 
 /**
  * Shared by this feature's participant thread and the admin conversation
@@ -18,8 +19,8 @@ import { paginatedSchema } from "@/shared/libs/pagination";
  * Same rationale as the notifications feature's permissive `type`.
  */
 export const conversationEventSchema = z.object({
-  type: z
-    .enum([
+  type: tolerantEnum(
+    [
       "submission",
       "candidate",
       "proposal",
@@ -27,8 +28,9 @@ export const conversationEventSchema = z.object({
       "offer",
       "message",
       "unknown",
-    ])
-    .catch("unknown"),
+    ],
+    "unknown",
+  ),
   at: z.string(),
   actor: z.enum(["company", "recruiter", "system"]).nullable(),
   title: z.string(),
@@ -47,20 +49,32 @@ export type ConversationCandidateRef = z.infer<
 >;
 
 /**
- * A participant's view of a thread: the shared header (company, recruiter,
- * job, candidates) plus one page of its entries. `events` is the API's
- * `{ data, meta }` envelope, not a bare array — the same envelope every other
- * paginated list endpoint returns — so `useConversationThread` can page
- * through history with `paginatedSchema` rather than a bespoke shape.
+ * Everything that describes a thread itself rather than its entries —
+ * mirrors the backend's `ConversationThreadHeaderDto`, which both
+ * `ConversationThreadDto` (admin) and `ParticipantThreadDto` (this feature)
+ * extend. Shared here the same way so the header can never drift between the
+ * two views; only how many entries come back (and whether `candidates` is
+ * present) differs per caller.
  */
-export const conversationThreadSchema = z.object({
+export const conversationThreadHeaderSchema = z.object({
   submissionId: z.string(),
   // Same forward tolerance as `type` above: a sixth submission status added
   // server-side should degrade this one field, not fail the whole thread.
-  status: z.enum([...SUBMISSION_STATUSES, "unknown"] as const).catch("unknown"),
+  status: tolerantEnum([...SUBMISSION_STATUSES, "unknown"] as const, "unknown"),
   company: z.object({ profileId: z.string(), name: z.string() }),
   recruiter: z.object({ profileId: z.string(), name: z.string() }),
   job: z.object({ id: z.string(), title: z.string() }),
+});
+
+/**
+ * A participant's view of a thread: the shared header plus the candidates in
+ * this submission (for the filter chips) and one page of entries. `events`
+ * is the API's `{ data, meta }` envelope, not a bare array — the same
+ * envelope every other paginated list endpoint returns — so
+ * `useConversationThread` can page through history with `paginatedSchema`
+ * rather than a bespoke shape.
+ */
+export const conversationThreadSchema = conversationThreadHeaderSchema.extend({
   candidates: z.array(conversationCandidateRefSchema),
   events: paginatedSchema(conversationEventSchema),
 });
@@ -77,14 +91,19 @@ export type RealtimeToken = z.infer<typeof realtimeTokenSchema>;
 
 export const markReadResponseSchema = z.object({ updated: z.number() });
 
-/** The stored message the send endpoint returns. Only the fields the UI reads. */
+/**
+ * The stored message the send endpoint returns. Only the fields the UI reads
+ * — the composer only clears itself on success, nothing consumes `readAt` or
+ * `createdAt` as a `Date`, so they stay `z.string()` like every other
+ * timestamp in this file rather than mixing in a second coercion convention.
+ */
 export const messageSchema = z.object({
   id: z.string(),
   submissionId: z.string(),
   candidateId: z.string().nullable(),
   senderParty: z.enum(["company", "recruiter"]),
   body: z.string().nullable(),
-  readAt: z.coerce.date().nullable(),
-  createdAt: z.coerce.date(),
+  readAt: z.string().nullable(),
+  createdAt: z.string(),
 });
 export type Message = z.infer<typeof messageSchema>;

@@ -6,10 +6,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { conversationKeys } from "../keys";
 
-const { getSupabaseClientMock, fetchRealtimeTokenMock } = vi.hoisted(() => ({
-  getSupabaseClientMock: vi.fn(),
-  fetchRealtimeTokenMock: vi.fn(),
-}));
+const { getSupabaseClientMock, fetchRealtimeTokenMock, useAuthMock } =
+  vi.hoisted(() => ({
+    getSupabaseClientMock: vi.fn(),
+    fetchRealtimeTokenMock: vi.fn(),
+    useAuthMock: vi.fn(),
+  }));
 
 vi.mock("@/lib/supabase", () => ({
   getSupabaseClient: getSupabaseClientMock,
@@ -19,10 +21,22 @@ vi.mock("../api/conversations", () => ({
   fetchRealtimeToken: fetchRealtimeTokenMock,
 }));
 
+// The hook reads the current user's id from auth state to tell a
+// self-authored INSERT echo apart from a counterparty's.
+vi.mock("@/features/auth", () => ({
+  useAuth: useAuthMock,
+}));
+
 // Imported after the mocks above so the hook picks up the mocked modules.
 import { useConversationRealtime } from "./useConversationRealtime";
 
-type PostgresChangesCallback = () => void;
+const CURRENT_USER_ID = "user-me";
+const COUNTERPARTY_USER_ID = "user-them";
+
+interface InsertPayload {
+  new: { sender_user_id: string };
+}
+type PostgresChangesCallback = (payload: InsertPayload) => void;
 type SubscribeCallback = (status: REALTIME_SUBSCRIBE_STATES) => void;
 
 interface FakeChannel {
@@ -49,10 +63,16 @@ function createFakeSupabaseClient() {
     channel: vi.fn((topic: string) => {
       const fakeChannel: FakeChannel = {
         topic,
-        on: vi.fn((_event: string, _filter: unknown, callback: PostgresChangesCallback) => {
-          onInsert = callback;
-          return fakeChannel;
-        }),
+        on: vi.fn(
+          (
+            _event: string,
+            _filter: unknown,
+            callback: PostgresChangesCallback,
+          ) => {
+            onInsert = callback;
+            return fakeChannel;
+          },
+        ),
         subscribe: vi.fn((callback: SubscribeCallback) => {
           onSubscribe = callback;
           return fakeChannel;
@@ -70,7 +90,10 @@ function createFakeSupabaseClient() {
     get channel(): FakeChannel {
       return channels[0];
     },
-    emitInsert: () => onInsert?.(),
+    // Defaults to a counterparty-authored row: most tests only care that an
+    // INSERT triggers an invalidation, not who sent it.
+    emitInsert: (senderUserId: string = COUNTERPARTY_USER_ID) =>
+      onInsert?.({ new: { sender_user_id: senderUserId } }),
     emitSubscribeStatus: (status: REALTIME_SUBSCRIBE_STATES) =>
       onSubscribe?.(status),
   };
@@ -93,6 +116,8 @@ describe("useConversationRealtime", () => {
   beforeEach(() => {
     getSupabaseClientMock.mockReset();
     fetchRealtimeTokenMock.mockReset();
+    useAuthMock.mockReset();
+    useAuthMock.mockReturnValue({ user: { id: CURRENT_USER_ID } });
   });
 
   it("reports polling immediately when the client is unconfigured", () => {
@@ -107,7 +132,10 @@ describe("useConversationRealtime", () => {
   it("authenticates the realtime client with the fetched token before subscribing", async () => {
     const fake = createFakeSupabaseClient();
     getSupabaseClientMock.mockReturnValue(fake.client);
-    fetchRealtimeTokenMock.mockResolvedValue({ token: "tok-123", expiresIn: 900 });
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
 
     const { result } = renderRealtimeHook("submission-1");
 
@@ -116,7 +144,8 @@ describe("useConversationRealtime", () => {
     );
     expect(fake.channel.subscribe).toHaveBeenCalled();
 
-    const setAuthOrder = fake.client.realtime.setAuth.mock.invocationCallOrder[0];
+    const setAuthOrder =
+      fake.client.realtime.setAuth.mock.invocationCallOrder[0];
     const subscribeOrder = fake.channel.subscribe.mock.invocationCallOrder[0];
     expect(setAuthOrder).toBeLessThan(subscribeOrder);
 
@@ -127,14 +156,17 @@ describe("useConversationRealtime", () => {
   it("invalidates the thread query on an INSERT event instead of writing the row into the cache", async () => {
     const fake = createFakeSupabaseClient();
     getSupabaseClientMock.mockReturnValue(fake.client);
-    fetchRealtimeTokenMock.mockResolvedValue({ token: "tok-123", expiresIn: 900 });
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
 
     const { queryClient } = renderRealtimeHook("submission-1");
     const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
     const setQueryDataSpy = vi.spyOn(queryClient, "setQueryData");
 
     await waitFor(() => expect(fake.channel.on).toHaveBeenCalled());
-    fake.emitInsert();
+    fake.emitInsert(COUNTERPARTY_USER_ID);
 
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: conversationKeys.all,
@@ -142,10 +174,52 @@ describe("useConversationRealtime", () => {
     expect(setQueryDataSpy).not.toHaveBeenCalled();
   });
 
+  it("skips the invalidation when the INSERT was authored by the current user", async () => {
+    const fake = createFakeSupabaseClient();
+    getSupabaseClientMock.mockReturnValue(fake.client);
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
+
+    const { queryClient } = renderRealtimeHook("submission-1");
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+    await waitFor(() => expect(fake.channel.on).toHaveBeenCalled());
+    fake.emitInsert(CURRENT_USER_ID);
+
+    expect(invalidateSpy).not.toHaveBeenCalled();
+  });
+
+  it("still invalidates when the current user's id is unavailable, rather than risk a missed message", async () => {
+    useAuthMock.mockReturnValue({ user: null });
+    const fake = createFakeSupabaseClient();
+    getSupabaseClientMock.mockReturnValue(fake.client);
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
+
+    const { queryClient } = renderRealtimeHook("submission-1");
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+    await waitFor(() => expect(fake.channel.on).toHaveBeenCalled());
+    // Even though this row happens to carry what would be a self-match, the
+    // viewer's own id can't be confirmed, so it must still invalidate.
+    fake.emitInsert(CURRENT_USER_ID);
+
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: conversationKeys.all,
+    });
+  });
+
   it("removes the channel on unmount so no subscription is leaked", async () => {
     const fake = createFakeSupabaseClient();
     getSupabaseClientMock.mockReturnValue(fake.client);
-    fetchRealtimeTokenMock.mockResolvedValue({ token: "tok-123", expiresIn: 900 });
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
 
     const { unmount } = renderRealtimeHook("submission-1");
     await waitFor(() => expect(fake.channel.subscribe).toHaveBeenCalled());
@@ -158,15 +232,22 @@ describe("useConversationRealtime", () => {
   it("falls back to polling after a resubscribe attempt also errors", async () => {
     const fake = createFakeSupabaseClient();
     getSupabaseClientMock.mockReturnValue(fake.client);
-    fetchRealtimeTokenMock.mockResolvedValue({ token: "tok-123", expiresIn: 900 });
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
 
     const { result } = renderRealtimeHook("submission-1");
     await waitFor(() => expect(fake.channel.subscribe).toHaveBeenCalled());
 
-    act(() => fake.emitSubscribeStatus(REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR));
+    act(() =>
+      fake.emitSubscribeStatus(REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR),
+    );
     await waitFor(() => expect(fake.client.channel).toHaveBeenCalledTimes(2));
 
-    act(() => fake.emitSubscribeStatus(REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR));
+    act(() =>
+      fake.emitSubscribeStatus(REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR),
+    );
 
     await waitFor(() => expect(result.current.status).toBe("polling"));
     // Bounded to one retry per failure episode: two failures mint at most
@@ -177,7 +258,10 @@ describe("useConversationRealtime", () => {
   it("falls back to polling after a resubscribe attempt also times out or closes", async () => {
     const fake = createFakeSupabaseClient();
     getSupabaseClientMock.mockReturnValue(fake.client);
-    fetchRealtimeTokenMock.mockResolvedValue({ token: "tok-123", expiresIn: 900 });
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
 
     const { result } = renderRealtimeHook("submission-1");
     await waitFor(() => expect(fake.channel.subscribe).toHaveBeenCalled());
@@ -196,7 +280,10 @@ describe("useConversationRealtime", () => {
   it("tears down the old channel and subscribes to the new one when submissionId changes", async () => {
     const fake = createFakeSupabaseClient();
     getSupabaseClientMock.mockReturnValue(fake.client);
-    fetchRealtimeTokenMock.mockResolvedValue({ token: "tok-123", expiresIn: 900 });
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
 
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },

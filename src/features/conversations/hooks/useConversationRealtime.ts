@@ -3,8 +3,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   REALTIME_SUBSCRIBE_STATES,
   type RealtimeChannel,
+  type RealtimePostgresInsertPayload,
 } from "@supabase/supabase-js";
 
+import { useAuth } from "@/features/auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { fetchRealtimeToken } from "../api/conversations";
 import { conversationKeys } from "../keys";
@@ -13,6 +15,18 @@ export type ConversationRealtimeStatus = "live" | "polling";
 
 export interface ConversationRealtimeState {
   status: ConversationRealtimeStatus;
+}
+
+/**
+ * The one column this hook reads off the INSERT payload. The table is
+ * `REPLICA IDENTITY FULL`, so `payload.new` carries every column,
+ * snake_case as Postgres names them — the index signature is only there to
+ * satisfy the Realtime client's generic constraint; this is not the full
+ * row shape.
+ */
+interface MessageRow {
+  [column: string]: unknown;
+  sender_user_id: string;
 }
 
 // The token is short-lived (`expiresIn` seconds, ~15 minutes today) and
@@ -32,6 +46,8 @@ export function useConversationRealtime(
   submissionId: string,
 ): ConversationRealtimeState {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const currentUserId = user?.id;
   const [status, setStatus] = useState<ConversationRealtimeStatus>("polling");
 
   useEffect(() => {
@@ -64,6 +80,19 @@ export function useConversationRealtime(
       }
     };
 
+    // A dropped connection — network blip, idle timeout, or an explicit
+    // error — gets exactly one re-mint-and-resubscribe attempt per episode;
+    // a second failure in the same episode gives up. One place to edit here
+    // when a backoff is added later, instead of two.
+    const retryOnceThenFallback = (): void => {
+      if (hasRetriedThisEpisode) {
+        setStatus("polling");
+        return;
+      }
+      hasRetriedThisEpisode = true;
+      void connect();
+    };
+
     const connect = async (): Promise<void> => {
       try {
         const { token, expiresIn } = await fetchRealtimeToken();
@@ -90,7 +119,18 @@ export function useConversationRealtime(
               table: "messages",
               filter: `submission_id=eq.${submissionId}`,
             },
-            () => {
+            (payload: RealtimePostgresInsertPayload<MessageRow>) => {
+              // The sender's own subscription echoes their own INSERT back —
+              // the send mutation already invalidated for it, so skip the
+              // second refetch. Only skip when we can positively confirm it
+              // was us; an unavailable current-user id falls back to
+              // invalidating, since a redundant refetch is far cheaper than a
+              // missed message.
+              const authoredBySelf =
+                currentUserId !== undefined &&
+                payload.new.sender_user_id === currentUserId;
+              if (authoredBySelf) return;
+
               // Invalidate rather than append: TanStack Query stays the source of truth,
               // so a missed or out-of-order event self-heals on the next fetch instead
               // of leaving the thread permanently wrong.
@@ -117,12 +157,7 @@ export function useConversationRealtime(
               subscribeStatus === REALTIME_SUBSCRIBE_STATES.CLOSED
             ) {
               teardownChannel();
-              if (hasRetriedThisEpisode) {
-                setStatus("polling");
-                return;
-              }
-              hasRetriedThisEpisode = true;
-              void connect();
+              retryOnceThenFallback();
             }
           });
 
@@ -137,12 +172,7 @@ export function useConversationRealtime(
         }, refreshDelayMs);
       } catch {
         if (cancelled) return;
-        if (hasRetriedThisEpisode) {
-          setStatus("polling");
-          return;
-        }
-        hasRetriedThisEpisode = true;
-        void connect();
+        retryOnceThenFallback();
       }
     };
 
@@ -152,7 +182,7 @@ export function useConversationRealtime(
       cancelled = true;
       teardownChannel();
     };
-  }, [submissionId, queryClient]);
+  }, [submissionId, queryClient, currentUserId]);
 
   return { status };
 }

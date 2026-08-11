@@ -3,7 +3,13 @@
 import { useId } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  useWatch,
+  Controller,
+  type Control,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Check, X } from "lucide-react";
@@ -44,11 +50,14 @@ function FieldError({ message }: { message?: string }) {
 }
 
 interface PasswordChecklistProps {
-  password: string;
+  control: Control<SignUpFormData>;
   id: string;
 }
 
-function PasswordChecklist({ password, id }: PasswordChecklistProps) {
+/** Reads `password` via `useWatch` rather than the form's own `watch`, so a
+ * keystroke re-renders only this checklist instead of the whole form. */
+function PasswordChecklist({ control, id }: PasswordChecklistProps) {
+  const password = useWatch({ control, name: "password" });
   return (
     <ul id={id} className="flex flex-col gap-1">
       {PASSWORD_REQUIREMENTS.map((requirement) => {
@@ -265,10 +274,7 @@ export function SignUpForm() {
           className={cn("h-11", errors.password && "border-destructive")}
           placeholder="At least 8 characters"
         />
-        <PasswordChecklist
-          id={passwordRequirementsId}
-          password={watch("password")}
-        />
+        <PasswordChecklist id={passwordRequirementsId} control={control} />
         <FieldError message={errors.password?.message} />
       </div>
 
