@@ -30,14 +30,15 @@ export interface OfferCardProps {
   viewerParty: "company" | "recruiter";
 }
 
-const OFFER_EVENT_STATUS_LABELS: Record<OfferEventData["offerStatus"], string> = {
-  sent: "Awaiting response",
-  accepted: "Accepted",
-  declined: "Declined",
-  countered: "Countered",
-  superseded: "Superseded",
-  unknown: "Status unknown",
-};
+const OFFER_EVENT_STATUS_LABELS: Record<OfferEventData["offerStatus"], string> =
+  {
+    sent: "Awaiting response",
+    accepted: "Accepted",
+    declined: "Declined",
+    countered: "Countered",
+    superseded: "Superseded",
+    unknown: "Status unknown",
+  };
 
 /**
  * 403 (wrong party, or trying to act on your own offer), 404 (an offer id

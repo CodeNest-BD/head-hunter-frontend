@@ -12,21 +12,21 @@ const base = {
 
 describe("conversationEventSchema", () => {
   it("parses the event types the backend emits today", () => {
-    expect(conversationEventSchema.parse({ ...base, type: "proposal" }).type).toBe(
-      "proposal",
-    );
+    expect(
+      conversationEventSchema.parse({ ...base, type: "proposal" }).type,
+    ).toBe("proposal");
   });
 
   it("parses a message event", () => {
-    expect(conversationEventSchema.parse({ ...base, type: "message" }).type).toBe(
-      "message",
-    );
+    expect(
+      conversationEventSchema.parse({ ...base, type: "message" }).type,
+    ).toBe("message");
   });
 
   it("degrades an unrecognised type to unknown rather than throwing", () => {
-    expect(conversationEventSchema.parse({ ...base, type: "placement" }).type).toBe(
-      "unknown",
-    );
+    expect(
+      conversationEventSchema.parse({ ...base, type: "placement" }).type,
+    ).toBe("unknown");
   });
 });
 

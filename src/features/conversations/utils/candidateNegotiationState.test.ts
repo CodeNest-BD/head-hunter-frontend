@@ -44,8 +44,18 @@ describe("candidateNegotiationState", () => {
 
   it("reports the latest interview when a candidate has several rounds", () => {
     const interviews = [
-      interview({ id: "int-1", candidateId: "cand-1", round: 1, status: "canceled" }),
-      interview({ id: "int-2", candidateId: "cand-1", round: 2, status: "proposed" }),
+      interview({
+        id: "int-1",
+        candidateId: "cand-1",
+        round: 1,
+        status: "canceled",
+      }),
+      interview({
+        id: "int-2",
+        candidateId: "cand-1",
+        round: 2,
+        status: "proposed",
+      }),
     ];
 
     const state = candidateNegotiationState(interviews, []);
@@ -113,7 +123,12 @@ describe("candidateNegotiationState", () => {
 
   it("returns a map keyed by candidate id so a card does no searching", () => {
     const interviews = [
-      interview({ id: "int-1", candidateId: "cand-1", round: 1, status: "proposed" }),
+      interview({
+        id: "int-1",
+        candidateId: "cand-1",
+        round: 1,
+        status: "proposed",
+      }),
     ];
     const offers = [
       offer({ id: "offer-1", candidateId: "cand-2", status: "sent" }),

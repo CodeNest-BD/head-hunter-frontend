@@ -76,10 +76,10 @@ function toInterviewBadge(interview: Interview): InterviewBadge {
             confirmedSlotStart: interview.confirmedSlotStart,
             confirmedSlotEnd: interview.confirmedSlotEnd,
           }
-        // Defensive only: `scheduled` is reached by confirming a slot, which
-        // always sets both fields — this falls back rather than lying about
-        // a time that isn't there.
-        : { kind: "awaiting_time" };
+        : // Defensive only: `scheduled` is reached by confirming a slot, which
+          // always sets both fields — this falls back rather than lying about
+          // a time that isn't there.
+          { kind: "awaiting_time" };
     case "completed":
       return { kind: "completed" };
     case "canceled":

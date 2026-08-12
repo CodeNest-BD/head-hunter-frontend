@@ -17,7 +17,10 @@ export interface NegotiationStateBadgesProps {
  * just applied to a third, separate fact.
  */
 const TONE_STYLES = {
-  neutral: { dot: "bg-muted-foreground/50", pill: "bg-muted text-muted-foreground" },
+  neutral: {
+    dot: "bg-muted-foreground/50",
+    pill: "bg-muted text-muted-foreground",
+  },
   pending: { dot: "bg-[#92610C]", pill: "text-[#92610C] bg-[#FBF3DF]" },
   positive: { dot: "bg-[#17734E]", pill: "text-[#17734E] bg-[#E7F4EC]" },
   active: { dot: "bg-primary", pill: "bg-primary/15 text-primary" },
@@ -48,7 +51,8 @@ function describeInterview(interview: InterviewBadge | null): BadgeContent {
 
 function describeOffer(offer: OfferBadge | null): BadgeContent {
   if (!offer) return { phrase: "none yet", tone: "neutral" };
-  const salary = offer.salaryMinor !== null ? ` · ${formatMinor(offer.salaryMinor)}` : "";
+  const salary =
+    offer.salaryMinor !== null ? ` · ${formatMinor(offer.salaryMinor)}` : "";
   switch (offer.kind) {
     case "sent":
       return { phrase: `offer sent${salary}`, tone: "pending" };
@@ -75,7 +79,10 @@ function NegotiationBadge({ label, content }: NegotiationBadgeProps) {
         tone.pill,
       )}
     >
-      <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", tone.dot)} aria-hidden="true" />
+      <span
+        className={cn("h-1.5 w-1.5 shrink-0 rounded-full", tone.dot)}
+        aria-hidden="true"
+      />
       {label}: <span className="font-normal">{content.phrase}</span>
     </span>
   );
@@ -94,7 +101,10 @@ export function NegotiationStateBadges({
 }: NegotiationStateBadgesProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <NegotiationBadge label="Interview" content={describeInterview(interview)} />
+      <NegotiationBadge
+        label="Interview"
+        content={describeInterview(interview)}
+      />
       <NegotiationBadge label="Offer" content={describeOffer(offer)} />
     </div>
   );

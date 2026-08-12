@@ -129,7 +129,9 @@ export const signUpSchema = z
       .max(72, "Password must be at most 72 characters")
       .refine(
         (password) =>
-          PASSWORD_REQUIREMENTS.every((requirement) => requirement.test(password)),
+          PASSWORD_REQUIREMENTS.every((requirement) =>
+            requirement.test(password),
+          ),
         {
           message:
             "Include an uppercase letter, a lowercase letter, a number and a special character",

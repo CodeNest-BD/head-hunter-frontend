@@ -78,7 +78,14 @@ export const conversationEventSchema = z.object({
         kind: z.literal("offer"),
         offerId: z.string(),
         offerStatus: tolerantEnum(
-          ["sent", "accepted", "declined", "countered", "superseded", "unknown"],
+          [
+            "sent",
+            "accepted",
+            "declined",
+            "countered",
+            "superseded",
+            "unknown",
+          ],
           "unknown",
         ),
         // The recruiter's commission — display only, never editable from this

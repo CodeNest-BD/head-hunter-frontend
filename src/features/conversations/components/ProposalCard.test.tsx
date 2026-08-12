@@ -216,9 +216,7 @@ describe("ProposalCard", () => {
       screen.getByText(/cancels the interview and cannot be undone/i),
     ).toBeInTheDocument();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /confirm withdraw/i }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /confirm withdraw/i }));
     expect(cancelMutate).toHaveBeenCalled();
   });
 
@@ -299,15 +297,11 @@ describe("ProposalCard", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
-    fireEvent.click(
-      screen.getByRole("button", { name: /confirm withdraw/i }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /confirm withdraw/i }));
 
     expect(
       screen.getByRole("button", { name: /confirm withdraw/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/no longer be withdrawn/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/no longer be withdrawn/i)).toBeInTheDocument();
   });
 });

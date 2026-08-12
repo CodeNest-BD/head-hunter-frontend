@@ -242,8 +242,7 @@ describe("useConversationRealtime", () => {
       queryClient.getQueryState(conversationKeys.unreadCount)?.isInvalidated,
     ).toBe(true);
     expect(
-      queryClient.getQueryState(submissionKeys.list(listParams))
-        ?.isInvalidated,
+      queryClient.getQueryState(submissionKeys.list(listParams))?.isInvalidated,
     ).toBe(true);
   });
 
@@ -270,8 +269,7 @@ describe("useConversationRealtime", () => {
       queryClient.getQueryState(conversationKeys.unreadCount)?.isInvalidated,
     ).toBe(false);
     expect(
-      queryClient.getQueryState(submissionKeys.list(listParams))
-        ?.isInvalidated,
+      queryClient.getQueryState(submissionKeys.list(listParams))?.isInvalidated,
     ).toBe(false);
   });
 

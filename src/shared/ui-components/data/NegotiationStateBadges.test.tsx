@@ -8,7 +8,9 @@ describe("NegotiationStateBadges", () => {
   it("shows an explicit empty state for both rows when nothing has happened yet", () => {
     render(<NegotiationStateBadges interview={null} offer={null} />);
 
-    expect(screen.getByText(/Interview:/)).toHaveTextContent("Interview: none yet");
+    expect(screen.getByText(/Interview:/)).toHaveTextContent(
+      "Interview: none yet",
+    );
     expect(screen.getByText(/Offer:/)).toHaveTextContent("Offer: none yet");
   });
 

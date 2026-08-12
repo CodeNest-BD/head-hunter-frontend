@@ -179,7 +179,9 @@ function SubmissionInfoHeader({ submission }: { submission: Submission }) {
                 ? submission.status
                 : ""
             }
-            disabled={updateStatus.isPending || submission.status === "withdrawn"}
+            disabled={
+              updateStatus.isPending || submission.status === "withdrawn"
+            }
             onChange={(event) =>
               updateStatus.mutate(event.target.value as SubmissionStatus)
             }

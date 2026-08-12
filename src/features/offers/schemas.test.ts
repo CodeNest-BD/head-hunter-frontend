@@ -34,9 +34,7 @@ describe("offerSchema", () => {
         notes: "Relocation covered.",
       },
     });
-    expect(parsed.previousOfferId).toBe(
-      "11111111-1111-4111-8111-111111111111",
-    );
+    expect(parsed.previousOfferId).toBe("11111111-1111-4111-8111-111111111111");
     expect(parsed.placementDetails?.salaryMinor).toBe(13000000);
   });
 

@@ -73,9 +73,7 @@ function formatDateTime(iso: string): string {
  * with the newest entry at the bottom, and each additional ("older") page
  * fetched via "Load older" lands above what is already on screen.
  */
-function orderedEvents(
-  pages: ConversationThreadPage[],
-): ConversationEvent[] {
+function orderedEvents(pages: ConversationThreadPage[]): ConversationEvent[] {
   return pages.flatMap((page) => page.events.data).reverse();
 }
 

@@ -126,7 +126,11 @@ interface SlotRadioGroupProps {
  * of several mutually exclusive options, so it is built from native radios
  * (not styled toggle buttons) for the "n of m" announcement a screen reader
  * gives that grouping for free. */
-function SlotRadioGroup({ slots, selectedSlotId, onSelect }: SlotRadioGroupProps) {
+function SlotRadioGroup({
+  slots,
+  selectedSlotId,
+  onSelect,
+}: SlotRadioGroupProps) {
   const groupName = useId();
   return (
     <fieldset className="flex flex-col gap-2">
@@ -167,7 +171,12 @@ function SlotRadioGroup({ slots, selectedSlotId, onSelect }: SlotRadioGroupProps
  * a mutation that fails leaves the card exactly where the server says the
  * proposal actually is once the thread refetches.
  */
-export function ProposalCard({ title, note, data, viewerParty }: ProposalCardProps) {
+export function ProposalCard({
+  title,
+  note,
+  data,
+  viewerParty,
+}: ProposalCardProps) {
   const {
     interviewId,
     availabilityProposalId,
@@ -312,30 +321,31 @@ export function ProposalCard({ title, note, data, viewerParty }: ProposalCardPro
         </div>
       )}
 
-      {(companyCanProposeAgain || companyCanWithdraw) && !confirmingWithdraw && (
-        <div className="flex flex-wrap items-center gap-2">
-          {companyCanProposeAgain && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowProposeForm(true)}
-            >
-              Propose new times
-            </Button>
-          )}
-          {companyCanWithdraw && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setConfirmingWithdraw(true)}
-            >
-              Withdraw
-            </Button>
-          )}
-        </div>
-      )}
+      {(companyCanProposeAgain || companyCanWithdraw) &&
+        !confirmingWithdraw && (
+          <div className="flex flex-wrap items-center gap-2">
+            {companyCanProposeAgain && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowProposeForm(true)}
+              >
+                Propose new times
+              </Button>
+            )}
+            {companyCanWithdraw && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmingWithdraw(true)}
+              >
+                Withdraw
+              </Button>
+            )}
+          </div>
+        )}
 
       {companyCanWithdraw && confirmingWithdraw && (
         <ConfirmAction
@@ -348,7 +358,9 @@ export function ProposalCard({ title, note, data, viewerParty }: ProposalCardPro
         />
       )}
 
-      {(confirmSlot.isError || counterRequest.isError || cancelInterview.isError) && (
+      {(confirmSlot.isError ||
+        counterRequest.isError ||
+        cancelInterview.isError) && (
         <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {cancelInterview.isError

@@ -131,9 +131,7 @@ describe("OfferCard", () => {
     expect(screen.getByText(/show as declined/i)).toBeInTheDocument();
     expect(withdrawMutate).not.toHaveBeenCalled();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: /confirm withdraw/i }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /confirm withdraw/i }));
     expect(withdrawMutate).toHaveBeenCalled();
   });
 
@@ -180,9 +178,7 @@ describe("OfferCard", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
-    fireEvent.click(
-      screen.getByRole("button", { name: /confirm withdraw/i }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /confirm withdraw/i }));
 
     expect(
       screen.getByRole("button", { name: /confirm withdraw/i }),

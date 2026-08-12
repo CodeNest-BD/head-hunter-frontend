@@ -135,9 +135,7 @@ describe("conversationThreadSchema", () => {
     expect(event.data?.kind === "offer" && event.data.salaryMinor).toBe(
       13000000,
     );
-    expect(event.data?.kind === "offer" && event.data.offerStatus).toBe(
-      "sent",
-    );
+    expect(event.data?.kind === "offer" && event.data.offerStatus).toBe("sent");
   });
 
   it("parses an offer event with a null salary", () => {

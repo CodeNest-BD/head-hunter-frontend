@@ -48,7 +48,10 @@ function proposeSlotsErrorMessage(error: unknown): string {
 /** 1-5 candidate windows for one interview. Used both by the company's
  * scheduling entry point (the first batch) and `ProposalCard`'s "Propose new
  * times" (every batch after). */
-export function ProposeSlotsForm({ interviewId, onDone }: ProposeSlotsFormProps) {
+export function ProposeSlotsForm({
+  interviewId,
+  onDone,
+}: ProposeSlotsFormProps) {
   const proposeSlots = useProposeSlots(interviewId);
   const {
     control,
