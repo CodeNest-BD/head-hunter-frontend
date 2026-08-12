@@ -28,6 +28,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
+import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDetailLayout";
 import { RequireRole } from "@/features/auth";
 
 const MAX_CANDIDATES = 5;
@@ -44,6 +45,25 @@ const CANDIDATE_STATUS_STYLES: Record<CandidateStatus, string> = {
 function CardSkeleton() {
   return (
     <div className="h-40 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
+  );
+}
+
+/**
+ * Matches the shape of the loaded left column (header block, then candidate
+ * cards) so the page doesn't reflow when the submission and candidates
+ * queries resolve — one combined skeleton rather than the header and the
+ * candidate list popping in independently at different times.
+ */
+function LeftColumnSkeleton() {
+  return (
+    <>
+      <div className="h-32 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
+      <div className="flex flex-col gap-4">
+        <div className="h-6 w-40 animate-pulse rounded bg-muted" />
+        <CardSkeleton />
+        <CardSkeleton />
+      </div>
+    </>
   );
 }
 
@@ -226,39 +246,22 @@ function AddCandidateSection({
   );
 }
 
-function CandidateSection({
+function CandidateListSection({
   submissionId,
   submissionStatus,
+  candidates,
 }: {
   submissionId: string;
   submissionStatus: SubmissionStatus;
+  candidates: Candidate[];
 }) {
-  const { data, isPending, isError, refetch } = useCandidates(submissionId);
-
-  if (isPending) {
-    return (
-      <div className="flex flex-col gap-4">
-        <CardSkeleton />
-        <CardSkeleton />
-      </div>
-    );
-  }
-  if (isError) {
-    return (
-      <ErrorCallout
-        message="Could not load candidates."
-        onRetry={() => void refetch()}
-      />
-    );
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <h2 className="font-heading text-lg font-semibold text-foreground">
-        Candidates ({data.length}/{MAX_CANDIDATES})
+        Candidates ({candidates.length}/{MAX_CANDIDATES})
       </h2>
 
-      {data.length === 0 && (
+      {candidates.length === 0 && (
         <div className="rounded-2xl border border-dashed border-[#C9D2E3] bg-card px-6 py-12 text-center shadow-card">
           <div className="flex flex-col items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -274,7 +277,7 @@ function CandidateSection({
         </div>
       )}
 
-      {data.map((candidate) => (
+      {candidates.map((candidate) => (
         <CandidateItem
           key={candidate.id}
           candidate={candidate}
@@ -284,7 +287,7 @@ function CandidateSection({
 
       <AddCandidateSection
         submissionId={submissionId}
-        candidateCount={data.length}
+        candidateCount={candidates.length}
         submissionStatus={submissionStatus}
       />
     </div>
@@ -293,43 +296,57 @@ function CandidateSection({
 
 /** Only mounts once the submission has loaded, so it is safe to call
  * `useJob` unconditionally here. */
-function SubmissionDetailBody({ submission }: { submission: Submission }) {
+function SubmissionDetailHeader({ submission }: { submission: Submission }) {
   const job = useJob(submission.jobId);
   const jobTitle = job.data?.title ?? (job.isPending ? "Loading…" : "—");
 
-  return (
-    <div className="flex flex-col gap-6">
-      <SubmissionHeader submission={submission} jobTitle={jobTitle} />
-      <CandidateSection
-        submissionId={submission.id}
-        submissionStatus={submission.status}
-      />
-      <Thread submissionId={submission.id} />
-    </div>
-  );
+  return <SubmissionHeader submission={submission} jobTitle={jobTitle} />;
 }
 
-function SubmissionDetailContent({ submissionId }: { submissionId: string }) {
-  const {
-    data: submission,
-    isPending,
-    isError,
-    refetch,
-  } = useSubmission(submissionId);
+/**
+ * The left column's info: submission header and candidate list. Fetches
+ * both in parallel and gates on a single combined pending/error state, so
+ * the two — which read as one grouped "job & candidates" panel — never
+ * show one loaded while the other is still a skeleton.
+ */
+function SubmissionDetailLeftColumn({
+  submissionId,
+}: {
+  submissionId: string;
+}) {
+  const submissionQuery = useSubmission(submissionId);
+  const candidatesQuery = useCandidates(submissionId);
 
-  if (isPending) {
-    return <CardSkeleton />;
+  if (submissionQuery.isPending || candidatesQuery.isPending) {
+    return <LeftColumnSkeleton />;
   }
-  if (isError) {
+  if (submissionQuery.isError) {
     return (
       <ErrorCallout
         message="Could not load this submission."
-        onRetry={() => void refetch()}
+        onRetry={() => void submissionQuery.refetch()}
+      />
+    );
+  }
+  if (candidatesQuery.isError) {
+    return (
+      <ErrorCallout
+        message="Could not load candidates."
+        onRetry={() => void candidatesQuery.refetch()}
       />
     );
   }
 
-  return <SubmissionDetailBody submission={submission} />;
+  return (
+    <>
+      <SubmissionDetailHeader submission={submissionQuery.data} />
+      <CandidateListSection
+        submissionId={submissionId}
+        submissionStatus={submissionQuery.data.status}
+        candidates={candidatesQuery.data}
+      />
+    </>
+  );
 }
 
 export default function SubmissionDetailPage() {
@@ -338,7 +355,7 @@ export default function SubmissionDetailPage() {
   return (
     <RequireRole role="recruiter">
       <DashboardLayout>
-        <div className="flex max-w-3xl flex-col gap-6">
+        <div className="flex w-full flex-col gap-6">
           <Link
             href="/recruiter/submissions"
             className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -352,7 +369,10 @@ export default function SubmissionDetailPage() {
             subtitle="Track your candidates and the job you submitted them to."
             className="mb-0"
           />
-          <SubmissionDetailContent submissionId={params.id} />
+          <TwoColumnDetailLayout
+            left={<SubmissionDetailLeftColumn submissionId={params.id} />}
+            right={<Thread submissionId={params.id} />}
+          />
         </div>
       </DashboardLayout>
     </RequireRole>

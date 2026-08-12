@@ -12,8 +12,8 @@ export default function RecruiterSubmissionsPage() {
         <div className="flex flex-col gap-8">
           <PageHeader
             eyebrow="Your submissions"
-            title="Submissions & messages"
-            subtitle="Every candidate you've submitted, where each one stands, and your conversation with the company about each role."
+            title="Submissions"
+            subtitle="Every candidate you've submitted, and where each one stands."
           />
           <SubmissionList />
         </div>

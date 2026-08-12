@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   useConversationThread,
@@ -22,15 +23,37 @@ export interface ThreadProps {
   submissionId: string;
 }
 
+/**
+ * Fixed-height card so the thread scrolls independently of whatever sits
+ * beside or above it, instead of growing with every message and pushing the
+ * rest of the page down. `lg:h-[calc(100vh-10rem)]` mirrors
+ * `DashboardLayout`'s own `pt-24`/`pb-16` main padding (6rem + 4rem), so the
+ * panel fills the space between the fixed header and the bottom of the
+ * viewport when this column is sticky. The fixed `h-[32rem]` fallback keeps
+ * the same "usefully tall" scroll area on narrow screens, where the column
+ * stacks rather than stays sticky.
+ */
+const THREAD_PANEL_CLASSNAME =
+  "flex h-[32rem] flex-col gap-4 rounded-xl border border-border/70 bg-card p-5 shadow-sm lg:h-[calc(100vh-10rem)]";
+
 function ThreadSkeleton() {
   return (
-    <div className="flex flex-col gap-3">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div
-          key={i}
-          className="h-16 w-2/3 animate-pulse rounded-2xl bg-muted"
-        />
-      ))}
+    <div className={THREAD_PANEL_CLASSNAME}>
+      <div className="h-5 w-2/3 animate-pulse rounded bg-muted" />
+      <div className="flex gap-2">
+        <div className="h-6 w-12 animate-pulse rounded-full bg-muted" />
+        <div className="h-6 w-20 animate-pulse rounded-full bg-muted" />
+        <div className="h-6 w-16 animate-pulse rounded-full bg-muted" />
+      </div>
+      <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-16 w-2/3 animate-pulse rounded-2xl bg-muted"
+          />
+        ))}
+      </div>
+      <div className="h-20 w-full animate-pulse rounded-md bg-muted" />
     </div>
   );
 }
@@ -91,20 +114,26 @@ export function Thread({ submissionId }: ThreadProps) {
 
   if (isError) {
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-        <div className="flex items-center gap-2 font-medium">
-          <AlertCircle className="h-[18px] w-[18px]" />
-          Could not load this conversation.
+      <div
+        className={cn(
+          THREAD_PANEL_CLASSNAME,
+          "items-center justify-center border-destructive/40 bg-destructive/10 text-sm text-destructive",
+        )}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2 font-medium">
+            <AlertCircle className="h-[18px] w-[18px]" />
+            Could not load this conversation.
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void refetch()}
+          >
+            Retry
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={() => void refetch()}
-        >
-          Retry
-        </Button>
       </div>
     );
   }
@@ -121,7 +150,7 @@ export function Thread({ submissionId }: ThreadProps) {
       : threadHeader?.recruiter.name;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={THREAD_PANEL_CLASSNAME}>
       {threadHeader && (
         <h2 className="font-heading text-lg font-semibold text-foreground">
           Conversation with {counterpartyName} about {threadHeader.job.title}
@@ -147,7 +176,10 @@ export function Thread({ submissionId }: ThreadProps) {
         </Button>
       )}
 
-      <div className="flex flex-col gap-3">
+      {/* The only child allowed to shrink (`min-h-0`) inside the fixed-height
+       * panel, so this is what scrolls — the header, chips, "load older" and
+       * composer above/below stay in place. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-navy pr-1">
         {events.length === 0 && (
           <p className="py-6 text-center text-sm text-muted-foreground">
             No messages yet — start the conversation about this role. You

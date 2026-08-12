@@ -31,7 +31,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/company/jobs", label: "Jobs", icon: Briefcase },
     {
       href: "/company/inbox",
-      label: "Inbox & messages",
+      label: "Inbox",
       icon: Inbox,
       badge: "messages",
     },
@@ -56,7 +56,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     },
     {
       href: "/recruiter/submissions",
-      label: "Submissions & messages",
+      label: "Submissions",
       icon: Send,
       badge: "messages",
     },
