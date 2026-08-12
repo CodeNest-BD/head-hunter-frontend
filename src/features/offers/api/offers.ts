@@ -6,6 +6,7 @@ export interface OfferListParams {
   page?: number;
   limit?: number;
   candidateId?: string;
+  submissionId?: string;
 }
 
 /**
@@ -56,7 +57,7 @@ export async function fetchOffer(id: string): Promise<Offer> {
   return offerSchema.parse(data);
 }
 
-/** GET /v1/offers?candidateId= — both parties, paginated. */
+/** GET /v1/offers?candidateId=&submissionId= — both parties, paginated. */
 export async function fetchOffers(
   params: OfferListParams,
 ): Promise<Paginated<Offer>> {

@@ -13,6 +13,7 @@ export interface InterviewListParams {
   page?: number;
   limit?: number;
   candidateId?: string;
+  submissionId?: string;
 }
 
 export interface CreateInterviewInput {
@@ -58,7 +59,7 @@ export async function fetchInterview(id: string): Promise<Interview> {
   return interviewSchema.parse(data);
 }
 
-/** GET /v1/interviews?candidateId= — both parties, paginated. */
+/** GET /v1/interviews?candidateId=&submissionId= — both parties, paginated. */
 export async function fetchInterviews(
   params: InterviewListParams,
 ): Promise<Paginated<Interview>> {
