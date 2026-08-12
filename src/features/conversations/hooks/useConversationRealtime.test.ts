@@ -4,6 +4,8 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { submissionKeys } from "@/features/submissions/keys";
+
 import { conversationKeys } from "../keys";
 
 const { getSupabaseClientMock, fetchRealtimeTokenMock, useAuthMock } =
@@ -211,6 +213,66 @@ describe("useConversationRealtime", () => {
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: conversationKeys.all,
     });
+  });
+
+  it("invalidates the unread-count and submissions-list queries on a counterparty INSERT, not only the thread key", async () => {
+    const fake = createFakeSupabaseClient();
+    getSupabaseClientMock.mockReturnValue(fake.client);
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
+
+    const { queryClient } = renderRealtimeHook("submission-1");
+    // Seed both queries so `invalidateQueries` has an existing cache entry to
+    // mark stale — a key with no observer and no prior fetch has nothing to
+    // flag, so this is what makes the assertion below meaningful rather than
+    // vacuously true.
+    queryClient.setQueryData(conversationKeys.unreadCount, 0);
+    const listParams = { page: 1, limit: 20 };
+    queryClient.setQueryData(submissionKeys.list(listParams), {
+      data: [],
+      meta: { page: 1, totalPages: 1 },
+    });
+
+    await waitFor(() => expect(fake.channel.on).toHaveBeenCalled());
+    fake.emitInsert(COUNTERPARTY_USER_ID);
+
+    expect(
+      queryClient.getQueryState(conversationKeys.unreadCount)?.isInvalidated,
+    ).toBe(true);
+    expect(
+      queryClient.getQueryState(submissionKeys.list(listParams))
+        ?.isInvalidated,
+    ).toBe(true);
+  });
+
+  it("does not invalidate the unread-count or submissions-list queries when the INSERT is self-authored", async () => {
+    const fake = createFakeSupabaseClient();
+    getSupabaseClientMock.mockReturnValue(fake.client);
+    fetchRealtimeTokenMock.mockResolvedValue({
+      token: "tok-123",
+      expiresIn: 900,
+    });
+
+    const { queryClient } = renderRealtimeHook("submission-1");
+    queryClient.setQueryData(conversationKeys.unreadCount, 0);
+    const listParams = { page: 1, limit: 20 };
+    queryClient.setQueryData(submissionKeys.list(listParams), {
+      data: [],
+      meta: { page: 1, totalPages: 1 },
+    });
+
+    await waitFor(() => expect(fake.channel.on).toHaveBeenCalled());
+    fake.emitInsert(CURRENT_USER_ID);
+
+    expect(
+      queryClient.getQueryState(conversationKeys.unreadCount)?.isInvalidated,
+    ).toBe(false);
+    expect(
+      queryClient.getQueryState(submissionKeys.list(listParams))
+        ?.isInvalidated,
+    ).toBe(false);
   });
 
   it("removes the channel on unmount so no subscription is leaked", async () => {

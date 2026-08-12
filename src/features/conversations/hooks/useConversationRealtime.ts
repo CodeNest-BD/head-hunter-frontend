@@ -7,6 +7,11 @@ import {
 } from "@supabase/supabase-js";
 
 import { useAuth } from "@/features/auth";
+// Imported from the keys module directly, not the feature barrel, for the
+// same reason `useConversation.ts` does: the barrel also re-exports
+// components that would drag unrelated UI into every module that merely
+// wants to invalidate the inbox/submissions list.
+import { submissionKeys } from "@/features/submissions/keys";
 import { getSupabaseClient } from "@/lib/supabase";
 import { fetchRealtimeToken } from "../api/conversations";
 import { conversationKeys } from "../keys";
@@ -134,8 +139,19 @@ export function useConversationRealtime(
               // Invalidate rather than append: TanStack Query stays the source of truth,
               // so a missed or out-of-order event self-heals on the next fetch instead
               // of leaving the thread permanently wrong.
+              //
+              // `conversationKeys.all` is `["conversations"]`, a prefix of
+              // `conversationKeys.unreadCount`, so this one call already
+              // covers the thread *and* the sidebar unread pill by default
+              // partial-key matching. The inbox/submissions list lives under
+              // its own `submissionKeys` namespace, so it needs its own call
+              // to reach it — that's the piece this subscription didn't
+              // cover before.
               void queryClient.invalidateQueries({
                 queryKey: conversationKeys.all,
+              });
+              void queryClient.invalidateQueries({
+                queryKey: submissionKeys.all,
               });
             },
           )
