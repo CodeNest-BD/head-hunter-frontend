@@ -90,22 +90,39 @@ export const MIN_PROPOSAL_SLOTS = 1;
 export const MAX_PROPOSAL_SLOTS = 5;
 
 /**
- * Propose-slots form values as `datetime-local` strings; converted to ISO at
- * the mutation boundary. Only `endAt > startAt` is checked client-side — the
- * "starts in the future" and "does not overlap another slot in this batch"
- * rules stay server-side and surface through `proposeSlots`'s 400 message,
- * since duplicating a pairwise-overlap check here would drift from
- * `SlotsDoNotOverlapConstraint` the moment either side changes.
+ * How long a proposed window lasts. A closed set of interview lengths (rather
+ * than a free end time) is what makes "ends before it starts" unrepresentable
+ * in the form — the end is derived, never typed.
  */
-const proposeSlotFormSchema = z
-  .object({
-    startAt: z.string().min(1, "Start time is required"),
-    endAt: z.string().min(1, "End time is required"),
-  })
-  .refine((slot) => Date.parse(slot.endAt) > Date.parse(slot.startAt), {
-    message: "End time must be after the start time",
-    path: ["endAt"],
-  });
+const slotDurationSchema = z.union([
+  z.literal(30),
+  z.literal(45),
+  z.literal(60),
+  z.literal(90),
+]);
+export type SlotDurationMinutes = z.infer<typeof slotDurationSchema>;
+export const SLOT_DURATION_OPTIONS: readonly SlotDurationMinutes[] = [
+  30, 45, 60, 90,
+];
+
+/** The granularity of the start-time list — every calendar tool's default. */
+export const SLOT_TIME_STEP_MINUTES = 15;
+
+/**
+ * One proposed window as the form holds it: a calendar day the company picked,
+ * a wall-clock start, and a length. `toSlotRange` turns that into the ISO
+ * instants the API stores. The "starts in the future" and "does not overlap
+ * another slot in this batch" rules stay server-side and surface through
+ * `proposeSlots`'s 400 message, since duplicating a pairwise-overlap check
+ * here would drift from `SlotsDoNotOverlapConstraint` the moment either side
+ * changes.
+ */
+const proposeSlotFormSchema = z.object({
+  day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a day"),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, "Pick a start time"),
+  durationMinutes: slotDurationSchema,
+});
+export type ProposeSlotFormValues = z.infer<typeof proposeSlotFormSchema>;
 
 export const proposeSlotsFormSchema = z.object({
   slots: z

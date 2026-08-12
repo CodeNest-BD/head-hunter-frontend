@@ -4,6 +4,7 @@
 // client-only React APIs, so a Server Component importing this file must not
 // pull them into the server graph.
 /** Public surface of the interviews feature. */
+export { OpenInterviewActions } from "./components/OpenInterviewActions";
 export { ProposeSlotsForm } from "./components/ProposeSlotsForm";
 export {
   useCancelInterview,
@@ -24,6 +25,11 @@ export {
   MAX_PROPOSAL_SLOTS,
   MIN_PROPOSAL_SLOTS,
 } from "./schemas";
+export {
+  createInterviewErrorMessage,
+  withdrawInterviewErrorMessage,
+} from "./utils/interviewErrorMessages";
+export type { OpenInterviewPanel } from "./components/OpenInterviewActions";
 export type {
   Interview,
   InterviewOutcome,

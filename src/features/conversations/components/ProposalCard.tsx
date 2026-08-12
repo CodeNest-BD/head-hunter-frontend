@@ -9,6 +9,7 @@ import {
   useCancelInterview,
   useConfirmSlot,
   useCounterRequest,
+  withdrawInterviewErrorMessage,
 } from "@/features/interviews";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -55,26 +56,6 @@ function schedulingErrorMessage(error: unknown): string {
       return "This time is no longer part of the proposal — refresh and try again.";
     case HttpStatusCode.Conflict:
       return "This proposal is no longer open.";
-    default:
-      return error.message;
-  }
-}
-
-/**
- * 409 (the interview already moved past "awaiting a time" — a slot was just
- * confirmed, or it was already canceled) is reachable even though the button
- * is gated on `interviewStatus === "proposed"`, because that gate is read
- * from a snapshot that can be stale by the time the request lands.
- */
-function withdrawInterviewErrorMessage(error: unknown): string {
-  if (!isApiError(error)) {
-    return "Something went wrong. Please try again.";
-  }
-  switch (error.statusCode) {
-    case HttpStatusCode.Conflict:
-      return "This interview can no longer be withdrawn — it may already be scheduled or canceled.";
-    case HttpStatusCode.NotFound:
-      return "This interview is no longer available — refresh and try again.";
     default:
       return error.message;
   }

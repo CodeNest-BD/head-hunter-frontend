@@ -1,20 +1,28 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { HttpStatusCode } from "axios";
+import { format, startOfToday } from "date-fns";
 import { AlertCircle, X } from "lucide-react";
 
-import { isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Input } from "@/shared/ui-components/controls/input";
+import { Calendar } from "@/shared/ui-components/controls/calendar";
 import { Label } from "@/shared/ui-components/controls/label";
+import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
 import { useProposeSlots } from "../hooks/useInterviews";
 import {
   MAX_PROPOSAL_SLOTS,
   proposeSlotsFormSchema,
+  SLOT_DURATION_OPTIONS,
+  type ProposeSlotFormValues,
   type ProposeSlotsFormValues,
 } from "../schemas";
+import { proposeSlotsErrorMessage } from "../utils/interviewErrorMessages";
+import {
+  formatSlotWindow,
+  SLOT_TIME_OPTIONS,
+  toSlotRange,
+} from "../utils/slotTiming";
 
 export interface ProposeSlotsFormProps {
   interviewId: string;
@@ -23,26 +31,22 @@ export interface ProposeSlotsFormProps {
   onDone: () => void;
 }
 
-const EMPTY_SLOT = { startAt: "", endAt: "" };
+const DAY_FORMAT = "yyyy-MM-dd";
 
-/**
- * 403 (a recruiter calling this company-only endpoint) and 409 (the interview
- * is no longer awaiting a time) are both reachable in normal use, so each
- * gets a specific inline message — the same rationale as
- * `MessageComposer`'s send errors.
- */
-function proposeSlotsErrorMessage(error: unknown): string {
-  if (!isApiError(error)) {
-    return "Could not propose these times. Please try again.";
-  }
-  switch (error.statusCode) {
-    case HttpStatusCode.Forbidden:
-      return "Only the company can propose interview times.";
-    case HttpStatusCode.Conflict:
-      return "This interview is no longer awaiting a time.";
-    default:
-      return error.message;
-  }
+const EMPTY_SLOT: ProposeSlotFormValues = {
+  day: "",
+  startTime: "09:00",
+  durationMinutes: 60,
+};
+
+/** A day string round-trips through the calendar as a local `Date`; an empty
+ * (not-yet-picked) day has no date to select. */
+function toSelectedDate(day: string): Date | undefined {
+  return day ? new Date(`${day}T00:00`) : undefined;
+}
+
+function isCompleteSlot(slot: ProposeSlotFormValues): boolean {
+  return Boolean(slot.day && slot.startTime);
 }
 
 /** 1-5 candidate windows for one interview. Used both by the company's
@@ -56,6 +60,7 @@ export function ProposeSlotsForm({
   const {
     control,
     register,
+    watch,
     handleSubmit,
     formState: { errors },
   } = useForm<ProposeSlotsFormValues>({
@@ -63,71 +68,122 @@ export function ProposeSlotsForm({
     defaultValues: { slots: [EMPTY_SLOT] },
   });
   const { fields, append, remove } = useFieldArray({ control, name: "slots" });
+  const slots = watch("slots");
+  // Past days are off the calendar, but "today at 9am" can still be in the
+  // past — the server owns that rule, so this only stops the obvious half.
+  const firstSelectableDay = startOfToday();
 
   const onSubmit = handleSubmit((values) => {
     proposeSlots.mutate(
+      { slots: values.slots.map(toSlotRange) },
       {
-        slots: values.slots.map((slot) => ({
-          startAt: new Date(slot.startAt).toISOString(),
-          endAt: new Date(slot.endAt).toISOString(),
-        })),
+        onSuccess: onDone,
       },
-      { onSuccess: onDone },
     );
   });
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
-      {fields.map((field, index) => (
-        <div
-          key={field.id}
-          className="flex flex-col gap-2 rounded-lg border border-border/60 p-3"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Time {index + 1}
-            </span>
-            {fields.length > 1 && (
-              <button
-                type="button"
-                onClick={() => remove(index)}
-                className="inline-flex items-center gap-1 rounded-sm text-xs font-medium text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <X className="h-3.5 w-3.5" aria-hidden="true" />
-                Remove
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor={`slots.${index}.startAt`}>Start</Label>
-              <Input
-                id={`slots.${index}.startAt`}
-                type="datetime-local"
-                {...register(`slots.${index}.startAt`)}
-              />
-              {errors.slots?.[index]?.startAt && (
-                <p className="text-xs text-destructive">
-                  {errors.slots[index]?.startAt?.message}
-                </p>
+      {fields.map((field, index) => {
+        const slot = slots?.[index];
+        const slotErrors = errors.slots?.[index];
+        return (
+          <div
+            key={field.id}
+            className="flex flex-col gap-2 rounded-lg border border-border/60 p-3"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">
+                Time {index + 1}
+              </span>
+              {fields.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  className="inline-flex items-center gap-1 rounded-sm text-xs font-medium text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  Remove
+                </button>
               )}
             </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor={`slots.${index}.endAt`}>End</Label>
-              <Input
-                id={`slots.${index}.endAt`}
-                type="datetime-local"
-                {...register(`slots.${index}.endAt`)}
-              />
-              {errors.slots?.[index]?.endAt && (
-                <p className="text-xs text-destructive">
-                  {errors.slots[index]?.endAt?.message}
-                </p>
-              )}
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+              <div className="flex flex-col gap-1">
+                <Controller
+                  control={control}
+                  name={`slots.${index}.day`}
+                  render={({ field: dayField }) => (
+                    <Calendar
+                      mode="single"
+                      selected={toSelectedDate(dayField.value)}
+                      defaultMonth={
+                        toSelectedDate(dayField.value) ?? firstSelectableDay
+                      }
+                      disabled={{ before: firstSelectableDay }}
+                      onSelect={(date) =>
+                        dayField.onChange(date ? format(date, DAY_FORMAT) : "")
+                      }
+                      className="rounded-lg border border-input p-2"
+                      aria-label={`Day for time ${index + 1}`}
+                    />
+                  )}
+                />
+                {slotErrors?.day && (
+                  <p className="text-xs text-destructive">
+                    {slotErrors.day.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-1 flex-col gap-2">
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor={`slots.${index}.startTime`}>Start</Label>
+                  <NativeSelect
+                    id={`slots.${index}.startTime`}
+                    {...register(`slots.${index}.startTime`)}
+                  >
+                    {SLOT_TIME_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  {slotErrors?.startTime && (
+                    <p className="text-xs text-destructive">
+                      {slotErrors.startTime.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor={`slots.${index}.durationMinutes`}>
+                    Length
+                  </Label>
+                  <NativeSelect
+                    id={`slots.${index}.durationMinutes`}
+                    {...register(`slots.${index}.durationMinutes`, {
+                      valueAsNumber: true,
+                    })}
+                  >
+                    {SLOT_DURATION_OPTIONS.map((minutes) => (
+                      <option key={minutes} value={minutes}>
+                        {minutes} min
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </div>
+
+                {slot && isCompleteSlot(slot) && (
+                  <p className="text-xs font-medium text-foreground">
+                    {formatSlotWindow(slot)}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {errors.slots?.message && (
         <p className="text-xs text-destructive">{errors.slots.message}</p>

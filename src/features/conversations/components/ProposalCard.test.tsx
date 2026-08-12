@@ -1,6 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
+import { withdrawInterviewErrorMessage } from "@/features/interviews/utils/interviewErrorMessages";
 import { ApiError } from "@/shared/libs/errorHandler";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { ProposalCard, type ProposalEventData } from "./ProposalCard";
@@ -9,10 +10,14 @@ const useConfirmSlotMock = vi.fn();
 const useCounterRequestMock = vi.fn();
 const useCancelInterviewMock = vi.fn();
 
+// The real error copy is pulled in from its own module — it is shared with the
+// candidate card's withdraw button, and asserting on stubbed wording would let
+// the two drift apart unnoticed.
 vi.mock("@/features/interviews", () => ({
   useConfirmSlot: (...args: unknown[]) => useConfirmSlotMock(...args),
   useCounterRequest: (...args: unknown[]) => useCounterRequestMock(...args),
   useCancelInterview: (...args: unknown[]) => useCancelInterviewMock(...args),
+  withdrawInterviewErrorMessage,
   ProposeSlotsForm: () => <div>Propose slots form</div>,
 }));
 

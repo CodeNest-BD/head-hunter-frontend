@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { interviewSchema, proposalSchema } from "./schemas";
+import {
+  interviewSchema,
+  MAX_PROPOSAL_SLOTS,
+  proposalSchema,
+  proposeSlotsFormSchema,
+} from "./schemas";
 
 const interview = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -71,5 +76,36 @@ describe("proposalSchema", () => {
       slots: [],
     });
     expect(parsed.note).toBe("Mornings only, please.");
+  });
+});
+
+describe("proposeSlotsFormSchema", () => {
+  const slot = { day: "2026-09-01", startTime: "15:00", durationMinutes: 45 };
+
+  it("accepts a day, a start time and a known length", () => {
+    const parsed = proposeSlotsFormSchema.parse({ slots: [slot] });
+    expect(parsed.slots[0].durationMinutes).toBe(45);
+  });
+
+  it("asks for a day until one is picked on the calendar", () => {
+    const result = proposeSlotsFormSchema.safeParse({
+      slots: [{ ...slot, day: "" }],
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe("Pick a day");
+  });
+
+  it("rejects a length that is not one of the offered interview lengths", () => {
+    const result = proposeSlotsFormSchema.safeParse({
+      slots: [{ ...slot, durationMinutes: 25 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a batch longer than the backend's cap", () => {
+    const result = proposeSlotsFormSchema.safeParse({
+      slots: Array.from({ length: MAX_PROPOSAL_SLOTS + 1 }, () => slot),
+    });
+    expect(result.success).toBe(false);
   });
 });
