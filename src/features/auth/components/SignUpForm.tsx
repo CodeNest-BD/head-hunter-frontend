@@ -1,11 +1,18 @@
 "use client";
 
+import { useId } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  useWatch,
+  Controller,
+  type Control,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -15,6 +22,7 @@ import {
   signUpSchema,
   toSignUpPayload,
   MAX_SIGNUP_REFERENCES,
+  PASSWORD_REQUIREMENTS,
   RECRUITER_SPECIALIZATIONS,
   RECRUITER_SPECIALIZATION_LABELS,
   type SignUpFormData,
@@ -41,6 +49,45 @@ function FieldError({ message }: { message?: string }) {
   return <p className="text-xs text-destructive">{message}</p>;
 }
 
+interface PasswordChecklistProps {
+  control: Control<SignUpFormData>;
+  id: string;
+}
+
+/** Reads `password` via `useWatch` rather than the form's own `watch`, so a
+ * keystroke re-renders only this checklist instead of the whole form. */
+function PasswordChecklist({ control, id }: PasswordChecklistProps) {
+  const password = useWatch({ control, name: "password" });
+  return (
+    <ul id={id} className="flex flex-col gap-1">
+      {PASSWORD_REQUIREMENTS.map((requirement) => {
+        const met = requirement.test(password);
+        return (
+          <li
+            key={requirement.key}
+            className={cn(
+              "flex items-center gap-1.5 text-xs",
+              met ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            {met ? (
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : (
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            <span>
+              {requirement.label}
+              <span className="sr-only">
+                {met ? " — met" : " — not met yet"}
+              </span>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 const EMPTY_REFERENCE = { name: "", company: "", title: "", phone: "" };
 
 const DEFAULT_VALUES: SignUpFormData = {
@@ -63,6 +110,7 @@ const DEFAULT_VALUES: SignUpFormData = {
 
 export function SignUpForm() {
   const router = useRouter();
+  const passwordRequirementsId = useId();
   const {
     register,
     handleSubmit,
@@ -221,10 +269,12 @@ export function SignUpForm() {
           type="password"
           autoComplete="new-password"
           aria-invalid={errors.password ? true : undefined}
+          aria-describedby={passwordRequirementsId}
           {...register("password")}
           className={cn("h-11", errors.password && "border-destructive")}
           placeholder="At least 8 characters"
         />
+        <PasswordChecklist id={passwordRequirementsId} control={control} />
         <FieldError message={errors.password?.message} />
       </div>
 

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/shared/ui-components/controls/select";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
+import { US_STATES } from "@/shared/data/usStatesGeo";
 import {
   majorInputToMinor,
   majorToMinor,
@@ -28,6 +29,11 @@ import {
   type JobFormValues,
 } from "../schemas";
 import type { JobWriteInput } from "../api/jobs";
+
+// Radix Select items can't take an empty-string value, so the "clear the
+// state" option needs a sentinel that this form translates to/from "" —
+// the value `locationState` actually holds, since it's optional.
+const NO_STATE_VALUE = "any";
 
 interface JobFormProps {
   job?: Job;
@@ -159,11 +165,29 @@ export function JobForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="locationState">State</Label>
-          <Input
-            id="locationState"
-            maxLength={2}
-            placeholder="CA"
-            {...register("locationState")}
+          <Controller
+            control={control}
+            name="locationState"
+            render={({ field }) => (
+              <Select
+                value={field.value === "" ? NO_STATE_VALUE : field.value}
+                onValueChange={(value) =>
+                  field.onChange(value === NO_STATE_VALUE ? "" : value)
+                }
+              >
+                <SelectTrigger id="locationState">
+                  <SelectValue placeholder="Select a state" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_STATE_VALUE}>Any state</SelectItem>
+                  {US_STATES.map((state) => (
+                    <SelectItem key={state.code} value={state.code}>
+                      {state.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           />
           {errors.locationState && (
             <p className="text-xs text-destructive">

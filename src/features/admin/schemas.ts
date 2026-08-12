@@ -1,5 +1,21 @@
 import { z } from "zod";
 
+// Imported from the conversations feature's schemas module directly, not its
+// barrel: the barrel also re-exports Thread and its hooks, which pull in
+// features/conversations' API client — this file only needs the
+// dependency-free event schema (schemas.ts imports nothing but zod and other
+// dependency-free schema modules).
+import {
+  conversationEventSchema,
+  conversationThreadHeaderSchema,
+  type ConversationEvent,
+} from "@/features/conversations/schemas";
+import { paginatedSchema } from "@/shared/libs/pagination";
+import { tolerantEnum } from "@/shared/libs/zodTolerantEnum";
+
+export { conversationEventSchema };
+export type { ConversationEvent };
+
 export const accountStatusSchema = z.enum(["active", "suspended"]);
 export type AccountStatus = z.infer<typeof accountStatusSchema>;
 
@@ -67,13 +83,13 @@ export const companyDetailSchema = companyListItemSchema.extend({
 });
 export type CompanyDetail = z.infer<typeof companyDetailSchema>;
 
-export const submissionStatusSchema = z.enum([
-  "submitted",
-  "under_review",
-  "advanced",
-  "rejected",
-  "withdrawn",
-]);
+// Same forward tolerance as the conversations feature's own status field
+// (`conversationThreadHeaderSchema`, below) — a status this map doesn't know
+// about yet should degrade the admin view too, not throw it.
+export const submissionStatusSchema = tolerantEnum(
+  ["submitted", "under_review", "advanced", "rejected", "withdrawn", "unknown"],
+  "unknown",
+);
 export type SubmissionStatus = z.infer<typeof submissionStatusSchema>;
 
 export const conversationListItemSchema = z.object({
@@ -90,28 +106,17 @@ export const conversationListItemSchema = z.object({
 });
 export type ConversationListItem = z.infer<typeof conversationListItemSchema>;
 
-export const conversationEventSchema = z.object({
-  type: z.enum([
-    "submission",
-    "candidate",
-    "proposal",
-    "hire_response",
-    "offer",
-  ]),
-  at: z.string(),
-  actor: z.enum(["company", "recruiter", "system"]).nullable(),
-  title: z.string(),
-  body: z.string().nullable(),
-});
-export type ConversationEvent = z.infer<typeof conversationEventSchema>;
-
-export const conversationThreadSchema = z.object({
-  submissionId: z.string(),
-  status: submissionStatusSchema,
-  company: z.object({ profileId: z.string(), name: z.string() }),
-  recruiter: z.object({ profileId: z.string(), name: z.string() }),
-  job: z.object({ id: z.string(), title: z.string() }),
-  events: z.array(conversationEventSchema),
+/**
+ * Admin's view of a thread: the header and one page of events, both shared
+ * with the participant thread schema (`conversationThreadHeaderSchema` and
+ * `paginatedSchema(conversationEventSchema)`, imported rather than
+ * redeclared) — admin now pages through the same `{ data, meta }` envelope
+ * as the participant view instead of loading the whole history at once.
+ * The backend's header includes `candidates` too, but no admin UI reads
+ * them, so this schema does not declare the field; zod strips it silently.
+ */
+export const conversationThreadSchema = conversationThreadHeaderSchema.extend({
+  events: paginatedSchema(conversationEventSchema),
 });
 export type ConversationThread = z.infer<typeof conversationThreadSchema>;
 
@@ -134,6 +139,7 @@ export const SUBMISSION_LABELS: Record<SubmissionStatus, string> = {
   advanced: "Advanced",
   rejected: "Rejected",
   withdrawn: "Withdrawn",
+  unknown: "Unknown",
 };
 
 export const adminStatsSchema = z.object({

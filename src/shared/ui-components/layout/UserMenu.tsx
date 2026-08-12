@@ -5,19 +5,22 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, LogOut, UserRound } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { useMessageUnreadCount } from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { CountBadge } from "./CountBadge";
 import { NAV_BY_ROLE } from "./dashboardNav";
 
 /** Live unread count for the notifications menu item (recruiter only). */
 function UnreadCount() {
   const { data } = useUnreadCount();
-  if (!data) return null;
-  return (
-    <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
-      {data > 99 ? "99+" : data}
-    </span>
-  );
+  return <CountBadge count={data} />;
+}
+
+/** Live unread count for the Inbox / Submissions menu item. */
+function UnreadMessageCount() {
+  const { data } = useMessageUnreadCount();
+  return <CountBadge count={data} />;
 }
 
 /**
@@ -89,6 +92,7 @@ export function UserMenu({ className }: { className?: string }) {
                   <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                   <span className="truncate">{item.label}</span>
                   {item.badge === "notifications" && <UnreadCount />}
+                  {item.badge === "messages" && <UnreadMessageCount />}
                 </Link>
               </DropdownMenu.Item>
             );

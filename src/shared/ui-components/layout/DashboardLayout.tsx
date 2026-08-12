@@ -6,21 +6,25 @@ import { usePathname } from "next/navigation";
 import { LogOut, Menu, UserRound, X } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { useMessageUnreadCount } from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Breadcrumb, type Crumb } from "./Breadcrumb";
+import { CountBadge } from "./CountBadge";
 import { NAV_BY_ROLE, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
 
 /** Recruiter-only unread pill; renders nothing for other roles or zero count. */
 function UnreadBadge() {
   const { data } = useUnreadCount();
-  if (!data) return null;
-  return (
-    <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
-      {data > 99 ? "99+" : data}
-    </span>
-  );
+  return <CountBadge count={data} />;
+}
+
+/** Unread-messages pill for the Inbox (company) / Submissions (recruiter)
+ * nav items; renders nothing with no unread messages. */
+function UnreadMessagesBadge() {
+  const { data } = useMessageUnreadCount();
+  return <CountBadge count={data} />;
 }
 
 function NavLink({
@@ -61,6 +65,7 @@ function NavLink({
       />
       <span className="truncate">{item.label}</span>
       {item.badge === "notifications" && <UnreadBadge />}
+      {item.badge === "messages" && <UnreadMessagesBadge />}
     </Link>
   );
 }
@@ -123,6 +128,30 @@ function SidebarContent({ onNavigate }: { onNavigate: () => void }) {
   );
 }
 
+export interface DashboardLayoutProps {
+  children: ReactNode;
+  /**
+   * Content-column width. `false` (default) uses the standard `max-w-6xl`
+   * reading width most pages use. `true` removes the cap entirely — for
+   * data tables that need the full width. `"detail"` widens it to
+   * `DETAIL_MAX_WIDTH_CLASSNAME` instead: enough for a page with two
+   * columns of real content (e.g. the submission/inbox detail views) to use
+   * the space beside the sidebar, without stretching edge-to-edge like
+   * `true` does on an ultra-wide monitor.
+   */
+  wide?: boolean | "detail";
+  /** Trail shown in the top bar, aligned with the content column. */
+  breadcrumbs?: Crumb[];
+}
+
+/**
+ * Cap for `wide="detail"` pages: most of the space beside the sidebar at a
+ * 1920px viewport (1920 - 256px sidebar - 2 × 40px `lg:px-10` gutter =
+ * 1584px available), while still leaving a proportionate margin on wider
+ * displays instead of growing without bound.
+ */
+const DETAIL_MAX_WIDTH_CLASSNAME = "max-w-[96rem]";
+
 /**
  * App chrome for authenticated pages: a fixed left sidebar (role-based nav) and
  * a slim top bar showing only the logo. The sidebar collapses to a slide-over
@@ -132,14 +161,14 @@ export function DashboardLayout({
   children,
   wide = false,
   breadcrumbs,
-}: {
-  children: ReactNode;
-  /** Let content use the full width (data tables) instead of the reading-width
-   * column most pages use. */
-  wide?: boolean;
-  /** Trail shown in the top bar, aligned with the content column. */
-  breadcrumbs?: Crumb[];
-}) {
+}: DashboardLayoutProps) {
+  const containerMaxWidthClassName =
+    wide === true
+      ? "max-w-none"
+      : wide === "detail"
+        ? DETAIL_MAX_WIDTH_CLASSNAME
+        : "max-w-6xl";
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
 
@@ -206,10 +235,12 @@ export function DashboardLayout({
 
       {/* Content */}
       <div className="lg:pl-64">
-        <main className="min-h-screen px-4 pb-16 pt-24 sm:px-6 lg:px-10">
-          <div
-            className={cn("mx-auto w-full", wide ? "max-w-none" : "max-w-6xl")}
-          >
+        {/* pt-20 clears the fixed h-16 (4rem) top bar plus a 1rem gap — the
+         * previous pt-24 doubled that gap (2rem) for no reason; see
+         * `TwoColumnDetailLayout`'s `PAGE_HEIGHT_CLASSNAME` for the one
+         * other place this padding's value has to be known. */}
+        <main className="min-h-screen px-4 pb-16 pt-20 sm:px-6 lg:px-10">
+          <div className={cn("mx-auto w-full", containerMaxWidthClassName)}>
             {children}
           </div>
         </main>

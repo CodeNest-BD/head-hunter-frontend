@@ -25,4 +25,5 @@ export const SUBMISSION_STATUS_STYLES: Record<SubmissionStatus, string> = {
   advanced: "bg-[#E7F4EC] text-[#17734E]",
   rejected: "bg-[#FBEAEA] text-[#9B3535]",
   withdrawn: "bg-muted text-muted-foreground",
+  unknown: "bg-muted text-muted-foreground",
 };

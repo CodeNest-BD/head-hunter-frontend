@@ -1,3 +1,4 @@
+import type { ThreadSortOrder } from "@/features/conversations/api/conversations";
 import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import type { AdminListParams } from "../keys";
@@ -79,12 +80,20 @@ export async function fetchConversations(
   return paginatedSchema(conversationListItemSchema).parse(data);
 }
 
-/** GET /v1/admin/conversations/:submissionId */
+// Newest-first: `orderedEvents` (ConversationThread.tsx) reverses each fetched
+// page to render oldest-at-top, the same convention the participant thread
+// uses — sent explicitly so that rendering does not silently invert if the
+// backend's own default ever changes.
+const THREAD_SORT_ORDER: ThreadSortOrder = "DESC";
+
+/** GET /v1/admin/conversations/:submissionId — one page of the thread, paged by the hook. */
 export async function fetchConversation(
   submissionId: string,
+  page: number,
 ): Promise<ConversationThread> {
   const { data } = await apiClient.get<unknown>(
     `/admin/conversations/${submissionId}`,
+    { params: { page, limit: PAGE_SIZE, sortOrder: THREAD_SORT_ORDER } },
   );
   return conversationThreadSchema.parse(data);
 }

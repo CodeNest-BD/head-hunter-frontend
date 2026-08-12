@@ -4,18 +4,28 @@ import { useParams } from "next/navigation";
 import { AlertCircle, FileText, UserRound } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
-import { CandidateCard, useCandidates } from "@/features/candidates";
+import {
+  CandidateCard,
+  useCandidates,
+  type Candidate,
+} from "@/features/candidates";
+import { Thread } from "@/features/conversations";
+import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
+import { useInterviews } from "@/features/interviews";
+import { useOffers } from "@/features/offers";
 import {
   COMPANY_SETTABLE_STATUSES,
   SUBMISSION_STATUS_LABELS,
   recruiterDisplayName,
   useSubmission,
   useUpdateSubmissionStatus,
+  type Submission,
   type SubmissionStatus,
 } from "@/features/submissions";
 import { Eyebrow, PageHeader } from "@/shared/ui-components/brand";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
+import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDetailLayout";
 
 const STATUS_STYLES: Record<SubmissionStatus, string> = {
   submitted: "bg-primary/15 text-primary",
@@ -31,44 +41,62 @@ function CardSkeleton() {
   );
 }
 
-function ErrorCallout({ message }: { message: string }) {
+/**
+ * Matches the shape of the loaded left column (header block, then candidate
+ * cards) so the page doesn't reflow when the submission and candidates
+ * queries resolve — one combined skeleton rather than the header and the
+ * candidate list popping in independently at different times.
+ */
+function LeftColumnSkeleton() {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-      <AlertCircle className="h-[18px] w-[18px] shrink-0" />
-      {message}
-    </div>
-  );
-}
-
-function CandidateSection({ submissionId }: { submissionId: string }) {
-  const { data, isPending, isError, refetch } = useCandidates(submissionId);
-
-  if (isPending) {
-    return (
+    <>
+      <div className="h-40 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
       <div className="flex flex-col gap-4">
         <CardSkeleton />
         <CardSkeleton />
       </div>
-    );
-  }
-  if (isError) {
-    return (
-      <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-        <div className="flex items-center gap-2 font-medium">
-          <AlertCircle className="h-[18px] w-[18px]" />
-          Could not load candidates.
-        </div>
-        <button
-          type="button"
-          className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
-          onClick={() => void refetch()}
-        >
-          Retry
-        </button>
+    </>
+  );
+}
+
+function ErrorCallout({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+      <div className="flex items-center gap-2 font-medium">
+        <AlertCircle className="h-[18px] w-[18px] shrink-0" />
+        {message}
       </div>
-    );
-  }
-  if (data.length === 0) {
+      {onRetry && (
+        <div>
+          <button
+            type="button"
+            className="rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
+            onClick={() => void onRetry()}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CandidateListSection({
+  submissionId,
+  candidates,
+  negotiationState,
+}: {
+  submissionId: string;
+  candidates: Candidate[];
+  negotiationState: ReturnType<typeof candidateNegotiationState>;
+}) {
+  if (candidates.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-[#C9D2E3] bg-card px-6 py-12 text-center shadow-card">
         <div className="flex flex-col items-center gap-3">
@@ -89,27 +117,20 @@ function CandidateSection({ submissionId }: { submissionId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {data.map((candidate) => (
+      {candidates.map((candidate) => (
         <CandidateCard
           key={candidate.id}
           candidate={candidate}
           submissionId={submissionId}
+          negotiationState={negotiationState.get(candidate.id) ?? null}
         />
       ))}
     </div>
   );
 }
 
-function SubmissionHeader({ submissionId }: { submissionId: string }) {
-  const { data, isPending, isError } = useSubmission(submissionId);
-  const updateStatus = useUpdateSubmissionStatus(submissionId);
-
-  if (isPending) {
-    return <CardSkeleton />;
-  }
-  if (isError) {
-    return <ErrorCallout message="Could not load this submission." />;
-  }
+function SubmissionInfoHeader({ submission }: { submission: Submission }) {
+  const updateStatus = useUpdateSubmissionStatus(submission.id);
 
   return (
     <div className="flex flex-col gap-5 rounded-xl border border-border/70 bg-card p-5 shadow-sm">
@@ -123,19 +144,19 @@ function SubmissionHeader({ submissionId }: { submissionId: string }) {
               Submitted by
             </p>
             <p className="font-heading text-base font-semibold text-foreground">
-              {recruiterDisplayName(data.recruiter)}
+              {recruiterDisplayName(submission.recruiter)}
             </p>
-            {data.recruiter?.yearsExperience !== null &&
-              data.recruiter !== null && (
+            {submission.recruiter?.yearsExperience !== null &&
+              submission.recruiter !== null && (
                 <p className="text-sm text-muted-foreground">
-                  {data.recruiter.yearsExperience} years of recruiting
+                  {submission.recruiter.yearsExperience} years of recruiting
                   experience
                 </p>
               )}
             <div className="mt-2">
               <StatusBadge
-                label={SUBMISSION_STATUS_LABELS[data.status]}
-                className={STATUS_STYLES[data.status]}
+                label={SUBMISSION_STATUS_LABELS[submission.status]}
+                className={STATUS_STYLES[submission.status]}
               />
             </div>
           </div>
@@ -153,19 +174,23 @@ function SubmissionHeader({ submissionId }: { submissionId: string }) {
             aria-label="Submission status"
             value={
               COMPANY_SETTABLE_STATUSES.includes(
-                data.status as (typeof COMPANY_SETTABLE_STATUSES)[number],
+                submission.status as (typeof COMPANY_SETTABLE_STATUSES)[number],
               )
-                ? data.status
+                ? submission.status
                 : ""
             }
-            disabled={updateStatus.isPending || data.status === "withdrawn"}
+            disabled={
+              updateStatus.isPending || submission.status === "withdrawn"
+            }
             onChange={(event) =>
               updateStatus.mutate(event.target.value as SubmissionStatus)
             }
             className="h-9 rounded-md border border-input bg-card px-3 text-sm text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           >
             {/* `withdrawn` is the recruiter's action, so it is not offered here. */}
-            {data.status === "withdrawn" && <option value="">Withdrawn</option>}
+            {submission.status === "withdrawn" && (
+              <option value="">Withdrawn</option>
+            )}
             {COMPANY_SETTABLE_STATUSES.map((value) => (
               <option key={value} value={value}>
                 {SUBMISSION_STATUS_LABELS[value]}
@@ -175,18 +200,80 @@ function SubmissionHeader({ submissionId }: { submissionId: string }) {
         </div>
       </div>
 
-      {data.note && (
+      {submission.note && (
         <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-background/50 p-4">
           <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
             <FileText className="h-3.5 w-3.5" />
             Recruiter note
           </p>
           <p className="whitespace-pre-wrap text-sm text-foreground">
-            {data.note}
+            {submission.note}
           </p>
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * The left column's info: submission header and candidate list. Fetches
+ * both in parallel and gates on a single combined pending/error state, so
+ * the two — which read as one grouped "job & candidates" panel — never
+ * show one loaded while the other is still a skeleton.
+ *
+ * Also fetches every interview and offer on this submission — two requests
+ * total, scoped by `submissionId` rather than one pair per candidate — and
+ * derives the negotiation-state map once here so each `CandidateCard` below
+ * only does a `Map` lookup. A failure on either of those two is not fatal to
+ * the page: the candidate list and status controls stay usable, so it
+ * degrades to an empty map (every badge reads "none yet") instead of
+ * blocking the whole column the way a failed submission or candidates fetch
+ * does.
+ */
+function SubmissionDetailLeftColumn({
+  submissionId,
+}: {
+  submissionId: string;
+}) {
+  const submissionQuery = useSubmission(submissionId);
+  const candidatesQuery = useCandidates(submissionId);
+  const interviewsQuery = useInterviews({ submissionId });
+  const offersQuery = useOffers({ submissionId });
+
+  if (submissionQuery.isPending || candidatesQuery.isPending) {
+    return <LeftColumnSkeleton />;
+  }
+  if (submissionQuery.isError) {
+    return (
+      <ErrorCallout
+        message="Could not load this submission."
+        onRetry={() => void submissionQuery.refetch()}
+      />
+    );
+  }
+  if (candidatesQuery.isError) {
+    return (
+      <ErrorCallout
+        message="Could not load candidates."
+        onRetry={() => void candidatesQuery.refetch()}
+      />
+    );
+  }
+
+  const negotiationState = candidateNegotiationState(
+    interviewsQuery.data?.data ?? [],
+    offersQuery.data?.data ?? [],
+  );
+
+  return (
+    <>
+      <SubmissionInfoHeader submission={submissionQuery.data} />
+      <CandidateListSection
+        submissionId={submissionId}
+        candidates={candidatesQuery.data}
+        negotiationState={negotiationState}
+      />
+    </>
   );
 }
 
@@ -195,17 +282,18 @@ export default function SubmissionReviewPage() {
 
   return (
     <RequireRole role="company">
-      <DashboardLayout>
-        <div className="flex max-w-2xl flex-col gap-6">
-          <PageHeader
-            eyebrow="Submission"
-            title="Review submission"
-            subtitle="The recruiter, their note, and every candidate on this submission."
-          />
-
-          <SubmissionHeader submissionId={params.id} />
-          <CandidateSection submissionId={params.id} />
-        </div>
+      <DashboardLayout wide="detail">
+        <TwoColumnDetailLayout
+          header={
+            <PageHeader
+              eyebrow="Submission"
+              title="Review submission"
+              subtitle="The recruiter, their note, and every candidate on this submission."
+            />
+          }
+          left={<SubmissionDetailLeftColumn submissionId={params.id} />}
+          right={<Thread submissionId={params.id} />}
+        />
       </DashboardLayout>
     </RequireRole>
   );
