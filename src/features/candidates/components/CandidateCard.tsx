@@ -1,5 +1,6 @@
 "use client";
 
+import type { CandidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import {
   Card,
   CardContent,
@@ -7,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
+import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { CandidateAttachments } from "./CandidateAttachments";
 import { CandidateFields } from "./CandidateFields";
 import { ScheduleInterviewAction } from "./ScheduleInterviewAction";
@@ -22,9 +24,17 @@ import {
 interface CandidateCardProps {
   candidate: Candidate;
   submissionId: string;
+  /** This candidate's entry from `candidateNegotiationState`, or `null` when
+   * the candidate has neither an interview nor an offer yet — the caller
+   * derives the map once per page, never per card. */
+  negotiationState: CandidateNegotiationState | null;
 }
 
-export function CandidateCard({ candidate, submissionId }: CandidateCardProps) {
+export function CandidateCard({
+  candidate,
+  submissionId,
+  negotiationState,
+}: CandidateCardProps) {
   const updateStatus = useUpdateCandidateStatus(submissionId);
 
   return (
@@ -79,6 +89,11 @@ export function CandidateCard({ candidate, submissionId }: CandidateCardProps) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
+        <NegotiationStateBadges
+          interview={negotiationState?.interview ?? null}
+          offer={negotiationState?.offer ?? null}
+        />
+
         <CandidateFields candidate={candidate} />
 
         <CandidateAttachments candidateId={candidate.id} />

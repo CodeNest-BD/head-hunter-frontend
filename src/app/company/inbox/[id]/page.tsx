@@ -10,6 +10,9 @@ import {
   type Candidate,
 } from "@/features/candidates";
 import { Thread } from "@/features/conversations";
+import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
+import { useInterviews } from "@/features/interviews";
+import { useOffers } from "@/features/offers";
 import {
   COMPANY_SETTABLE_STATUSES,
   SUBMISSION_STATUS_LABELS,
@@ -87,9 +90,11 @@ function ErrorCallout({
 function CandidateListSection({
   submissionId,
   candidates,
+  negotiationState,
 }: {
   submissionId: string;
   candidates: Candidate[];
+  negotiationState: ReturnType<typeof candidateNegotiationState>;
 }) {
   if (candidates.length === 0) {
     return (
@@ -117,6 +122,7 @@ function CandidateListSection({
           key={candidate.id}
           candidate={candidate}
           submissionId={submissionId}
+          negotiationState={negotiationState.get(candidate.id) ?? null}
         />
       ))}
     </div>
@@ -212,6 +218,15 @@ function SubmissionInfoHeader({ submission }: { submission: Submission }) {
  * both in parallel and gates on a single combined pending/error state, so
  * the two — which read as one grouped "job & candidates" panel — never
  * show one loaded while the other is still a skeleton.
+ *
+ * Also fetches every interview and offer on this submission — two requests
+ * total, scoped by `submissionId` rather than one pair per candidate — and
+ * derives the negotiation-state map once here so each `CandidateCard` below
+ * only does a `Map` lookup. A failure on either of those two is not fatal to
+ * the page: the candidate list and status controls stay usable, so it
+ * degrades to an empty map (every badge reads "none yet") instead of
+ * blocking the whole column the way a failed submission or candidates fetch
+ * does.
  */
 function SubmissionDetailLeftColumn({
   submissionId,
@@ -220,6 +235,8 @@ function SubmissionDetailLeftColumn({
 }) {
   const submissionQuery = useSubmission(submissionId);
   const candidatesQuery = useCandidates(submissionId);
+  const interviewsQuery = useInterviews({ submissionId });
+  const offersQuery = useOffers({ submissionId });
 
   if (submissionQuery.isPending || candidatesQuery.isPending) {
     return <LeftColumnSkeleton />;
@@ -241,12 +258,18 @@ function SubmissionDetailLeftColumn({
     );
   }
 
+  const negotiationState = candidateNegotiationState(
+    interviewsQuery.data?.data ?? [],
+    offersQuery.data?.data ?? [],
+  );
+
   return (
     <>
       <SubmissionInfoHeader submission={submissionQuery.data} />
       <CandidateListSection
         submissionId={submissionId}
         candidates={candidatesQuery.data}
+        negotiationState={negotiationState}
       />
     </>
   );

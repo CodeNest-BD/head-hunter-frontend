@@ -1,17 +1,24 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
+import { ApiError } from "@/shared/libs/errorHandler";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { ProposalCard, type ProposalEventData } from "./ProposalCard";
 
 const useConfirmSlotMock = vi.fn();
 const useCounterRequestMock = vi.fn();
+const useCancelInterviewMock = vi.fn();
 
 vi.mock("@/features/interviews", () => ({
   useConfirmSlot: (...args: unknown[]) => useConfirmSlotMock(...args),
   useCounterRequest: (...args: unknown[]) => useCounterRequestMock(...args),
+  useCancelInterview: (...args: unknown[]) => useCancelInterviewMock(...args),
   ProposeSlotsForm: () => <div>Propose slots form</div>,
 }));
+
+function mutationStub() {
+  return { mutate: vi.fn(), isPending: false, isError: false, error: null };
+}
 
 const slots = [
   {
@@ -46,18 +53,10 @@ describe("ProposalCard", () => {
   beforeEach(() => {
     useConfirmSlotMock.mockReset();
     useCounterRequestMock.mockReset();
-    useConfirmSlotMock.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
-    useCounterRequestMock.mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-      isError: false,
-      error: null,
-    });
+    useCancelInterviewMock.mockReset();
+    useConfirmSlotMock.mockReturnValue(mutationStub());
+    useCounterRequestMock.mockReturnValue(mutationStub());
+    useCancelInterviewMock.mockReturnValue(mutationStub());
   });
 
   it("renders each proposed slot with a readable local date and time", () => {
@@ -188,6 +187,127 @@ describe("ProposalCard", () => {
     expect(screen.getByText("Mornings only, please.")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /propose new times/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("lets the proposer withdraw an interview still awaiting a time", () => {
+    const cancelMutate = vi.fn();
+    useCancelInterviewMock.mockReturnValue({
+      mutate: cancelMutate,
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderWithProviders(
+      <ProposalCard
+        title="Availability proposed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "proposed",
+          interviewStatus: "proposed",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    expect(
+      screen.getByText(/cancels the interview and cannot be undone/i),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm withdraw/i }),
+    );
+    expect(cancelMutate).toHaveBeenCalled();
+  });
+
+  it("does not offer withdraw to the counterparty", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Availability proposed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "proposed",
+          interviewStatus: "proposed",
+        })}
+        viewerParty="recruiter"
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /withdraw/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not offer withdraw once a slot is confirmed", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Interview time confirmed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "confirmed",
+          interviewStatus: "scheduled",
+          confirmedSlotStart: "2026-09-01T16:00:00.000Z",
+          confirmedSlotEnd: "2026-09-01T17:00:00.000Z",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /withdraw/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not offer withdraw once the interview is canceled", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Availability proposed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "proposed",
+          interviewStatus: "canceled",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /withdraw/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("leaves the withdraw confirmation open and shows an error when cancellation fails", () => {
+    useCancelInterviewMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isError: true,
+      error: new ApiError("Conflict", { statusCode: 409 }),
+    });
+
+    renderWithProviders(
+      <ProposalCard
+        title="Availability proposed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "proposed",
+          interviewStatus: "proposed",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm withdraw/i }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: /confirm withdraw/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/no longer be withdrawn/i),
     ).toBeInTheDocument();
   });
 });

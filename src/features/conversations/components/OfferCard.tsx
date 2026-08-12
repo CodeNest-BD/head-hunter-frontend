@@ -12,6 +12,7 @@ import {
 } from "@/features/offers";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
+import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
@@ -96,6 +97,7 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [counterForm, setCounterForm] =
     useState<CounterFormValues>(EMPTY_COUNTER_FORM);
+  const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
 
   const acceptOffer = useAcceptOffer(offerId);
   const declineOffer = useDeclineOffer(offerId);
@@ -294,17 +296,27 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
         </div>
       )}
 
-      {creatorCanWithdraw && (
+      {creatorCanWithdraw && !confirmingWithdraw && (
         <Button
           type="button"
           variant="outline"
           size="sm"
           className="self-start"
-          disabled={withdrawOffer.isPending}
-          onClick={() => withdrawOffer.mutate()}
+          onClick={() => setConfirmingWithdraw(true)}
         >
-          {withdrawOffer.isPending ? "Withdrawing…" : "Withdraw"}
+          Withdraw
         </Button>
+      )}
+
+      {creatorCanWithdraw && confirmingWithdraw && (
+        <ConfirmAction
+          message="Withdraw this offer? It will show as Declined afterward, since offers don't have a separate withdrawn status. This cannot be undone."
+          confirmLabel="Confirm withdraw"
+          busyLabel="Withdrawing…"
+          busy={withdrawOffer.isPending}
+          onCancel={() => setConfirmingWithdraw(false)}
+          onConfirm={() => withdrawOffer.mutate()}
+        />
       )}
 
       {mutationIsError && (

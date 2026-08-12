@@ -1,6 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
+import { ApiError } from "@/shared/libs/errorHandler";
 import { formatMinor } from "@/shared/utils/money";
 import { OfferCard, type OfferEventData } from "./OfferCard";
 
@@ -108,6 +109,87 @@ describe("OfferCard", () => {
     expect(
       screen.queryByRole("button", { name: /^counter$/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("warns the creator that withdrawing will show as Declined, then withdraws on confirm", () => {
+    const withdrawMutate = vi.fn();
+    useWithdrawOfferMock.mockReturnValue({
+      mutate: withdrawMutate,
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderWithProviders(
+      <OfferCard
+        data={offerData({ createdBy: "company", offerStatus: "sent" })}
+        viewerParty="company"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    expect(screen.getByText(/show as declined/i)).toBeInTheDocument();
+    expect(withdrawMutate).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm withdraw/i }),
+    );
+    expect(withdrawMutate).toHaveBeenCalled();
+  });
+
+  it("cancels the withdraw confirmation without calling the mutation", () => {
+    const withdrawMutate = vi.fn();
+    useWithdrawOfferMock.mockReturnValue({
+      mutate: withdrawMutate,
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderWithProviders(
+      <OfferCard
+        data={offerData({ createdBy: "company", offerStatus: "sent" })}
+        viewerParty="company"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^cancel$/i }));
+
+    expect(withdrawMutate).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: /^withdraw$/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("leaves the withdraw confirmation open and shows an error when withdrawal fails", () => {
+    useWithdrawOfferMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isError: true,
+      error: new ApiError("This offer is no longer awaiting a response.", {
+        statusCode: 409,
+      }),
+    });
+
+    renderWithProviders(
+      <OfferCard
+        data={offerData({ createdBy: "company", offerStatus: "sent" })}
+        viewerParty="company"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /confirm withdraw/i }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: /confirm withdraw/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/no longer awaiting a response/i),
+    ).toBeInTheDocument();
   });
 
   it.each(["accepted", "declined", "countered", "superseded"] as const)(

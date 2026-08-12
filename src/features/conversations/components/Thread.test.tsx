@@ -1,9 +1,62 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactElement } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
 import type { ConversationThread } from "../schemas";
 import { Thread } from "./Thread";
+
+/**
+ * Same defaults as `renderWithProviders`, but keeps a handle on the
+ * `QueryClient` — the scroll tests below simulate "a new message arrived"
+ * the same way the app does (a realtime/poll-triggered `invalidateQueries`),
+ * not by re-mounting the component.
+ */
+function renderWithClient(ui: ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  return {
+    queryClient,
+    ...render(
+      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+    ),
+  };
+}
+
+/**
+ * Overrides `Element.prototype.scrollHeight` with a getter this test
+ * controls, since jsdom never computes real layout. Installed on the
+ * prototype rather than one specific node — a candidate-chip switch or an
+ * error→Retry unmounts and remounts the scroll container as a brand-new
+ * element, and a per-instance override (the previous version of this
+ * helper) would go back to jsdom's default 0 on that fresh node, making
+ * mount-time and remount-time scroll behaviour unobservable. Returns a
+ * restore function; callers must invoke it (an `afterEach` below does this
+ * automatically) so the override never leaks into another test.
+ */
+function mockScrollHeight(getValue: () => number): () => void {
+  const original = Object.getOwnPropertyDescriptor(
+    Element.prototype,
+    "scrollHeight",
+  );
+  Object.defineProperty(Element.prototype, "scrollHeight", {
+    configurable: true,
+    get: getValue,
+  });
+  return () => {
+    if (original) {
+      Object.defineProperty(Element.prototype, "scrollHeight", original);
+    }
+  };
+}
+
+let restoreScrollHeight: (() => void) | null = null;
+afterEach(() => {
+  restoreScrollHeight?.();
+  restoreScrollHeight = null;
+});
 
 const fetchConversationThreadMock = vi.fn();
 const sendMessageMock = vi.fn();
@@ -243,5 +296,157 @@ describe("Thread", () => {
     expect(
       await screen.findByText("Offer sent — $5,000 for A. Kim"),
     ).toBeInTheDocument();
+  });
+
+  it("scrolls to the bottom on first load, and again when a new message arrives", async () => {
+    // Installed *before* rendering — the previous version of this test
+    // installed the override only after the initial mount, which left
+    // `scrollHeight` at jsdom's default 0 during mount and made the
+    // headline behaviour of D5 ("opens scrolled to the top") unobservable.
+    let scrollHeightValue = 400;
+    restoreScrollHeight = mockScrollHeight(() => scrollHeightValue);
+
+    // Newest-first, matching the real API's `sortOrder` — `Thread` reverses
+    // this into oldest-at-top, so `cand1Message` (not `systemEvent`) is the
+    // newest event and the one whose identity the scroll effect tracks.
+    fetchConversationThreadMock.mockResolvedValue(
+      threadResponse([cand1Message, systemEvent]),
+    );
+
+    const { queryClient, container } = renderWithClient(
+      <Thread submissionId="submission-1" />,
+    );
+    await screen.findByText("Strong fit for cand1.");
+
+    const scrollContainer =
+      container.querySelector<HTMLDivElement>(".overflow-y-auto");
+    if (!scrollContainer) throw new Error("scroll container not found");
+    // Proves the mount-time scroll actually fired, not just that a later
+    // effect happened to land on the same value.
+    await waitFor(() => expect(scrollContainer.scrollTop).toBe(400));
+
+    // A message arrives the same way the real app learns about one — a
+    // realtime/poll-triggered invalidation, not a remount — and the
+    // container grows to make room for it.
+    const newMessage = {
+      ...cand1Message,
+      at: "2026-08-11T09:20:00.000Z",
+      messageId: "m3",
+      body: "Follow-up from cand1.",
+    };
+    scrollHeightValue = 900;
+    fetchConversationThreadMock.mockResolvedValue(
+      threadResponse([newMessage, cand1Message, systemEvent]),
+    );
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    });
+    await screen.findByText("Follow-up from cand1.");
+
+    await waitFor(() => expect(scrollContainer.scrollTop).toBe(900));
+  });
+
+  it("scrolls to the bottom after switching candidate filters even when the newest event is unchanged", async () => {
+    // The untagged system event is the newest entry in every filter (it has
+    // no `candidateId`, so it survives narrowing to one candidate) — the
+    // exact shape that makes "did the newest event's identity change" alone
+    // insufficient: it never does across this switch, only the container
+    // does (the skeleton unmounts it while the new filtered query loads).
+    const systemEventLatest = {
+      ...systemEvent,
+      at: "2026-08-11T10:00:00.000Z",
+    };
+    fetchConversationThreadMock.mockResolvedValue(
+      threadResponse([systemEventLatest, cand1Message]),
+    );
+    const scrollHeightValue = 320;
+    restoreScrollHeight = mockScrollHeight(() => scrollHeightValue);
+
+    const { container } = renderWithProviders(
+      <Thread submissionId="submission-1" />,
+    );
+    await screen.findByText("Strong fit for cand1.");
+
+    const initialContainer =
+      container.querySelector<HTMLDivElement>(".overflow-y-auto");
+    if (!initialContainer) throw new Error("scroll container not found");
+    // Simulate the reader having scrolled away from the bottom before
+    // switching filters, so a later match against `scrollHeightValue`
+    // proves the effect actually ran rather than scrollTop having never
+    // moved off it.
+    initialContainer.scrollTop = 0;
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "J. Rivera" }));
+    await screen.findByText("Candidates submitted");
+
+    const filteredContainer =
+      container.querySelector<HTMLDivElement>(".overflow-y-auto");
+    if (!filteredContainer) throw new Error("scroll container not found");
+    // A different element — proof the skeleton actually unmounted the old
+    // one, i.e. this exercises the remount path and not a no-op.
+    expect(filteredContainer).not.toBe(initialContainer);
+    await waitFor(() =>
+      expect(filteredContainer.scrollTop).toBe(scrollHeightValue),
+    );
+  });
+
+  it("does not scroll to the bottom for an older page, and instead preserves the reader's position", async () => {
+    const olderMessage = {
+      type: "message" as const,
+      at: "2026-08-10T09:00:00.000Z",
+      actor: "company" as const,
+      title: "Message",
+      body: "Older history.",
+      candidateId: "cand1",
+      messageId: "m0",
+      data: null,
+    };
+    let scrollHeightValue = 300;
+    restoreScrollHeight = mockScrollHeight(() => scrollHeightValue);
+
+    fetchConversationThreadMock.mockImplementation(
+      async (_submissionId: string, params: { page?: number }) => {
+        if (params.page === 2) {
+          // The older page is about to render above what's already on
+          // screen, growing the scroll container — set here so it's in
+          // place by the time the component's compensation effect reads it.
+          scrollHeightValue = 500;
+          return {
+            ...threadResponse([olderMessage]),
+            events: {
+              data: [olderMessage],
+              meta: { page: 2, limit: 20, total: 2, totalPages: 2 },
+            },
+          };
+        }
+        return {
+          ...threadResponse([cand1Message]),
+          events: {
+            data: [cand1Message],
+            meta: { page: 1, limit: 20, total: 2, totalPages: 2 },
+          },
+        };
+      },
+    );
+
+    const { container } = renderWithProviders(
+      <Thread submissionId="submission-1" />,
+    );
+    await screen.findByText("Strong fit for cand1.");
+
+    const scrollContainer =
+      container.querySelector<HTMLDivElement>(".overflow-y-auto");
+    if (!scrollContainer) throw new Error("scroll container not found");
+    scrollContainer.scrollTop = 250;
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Load older" }));
+    await screen.findByText("Older history.");
+
+    // 250 (where the reader was) + 200 (the height the older page just
+    // added) — never jumps to the new bottom (500), which is what a naive
+    // "scroll on every data change" would have done.
+    expect(scrollContainer.scrollTop).toBe(450);
   });
 });

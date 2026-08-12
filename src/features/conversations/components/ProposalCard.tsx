@@ -6,12 +6,14 @@ import { AlertCircle, CalendarClock } from "lucide-react";
 
 import {
   ProposeSlotsForm,
+  useCancelInterview,
   useConfirmSlot,
   useCounterRequest,
 } from "@/features/interviews";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
+import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import type { ConversationEvent } from "../schemas";
@@ -53,6 +55,26 @@ function schedulingErrorMessage(error: unknown): string {
       return "This time is no longer part of the proposal — refresh and try again.";
     case HttpStatusCode.Conflict:
       return "This proposal is no longer open.";
+    default:
+      return error.message;
+  }
+}
+
+/**
+ * 409 (the interview already moved past "awaiting a time" — a slot was just
+ * confirmed, or it was already canceled) is reachable even though the button
+ * is gated on `interviewStatus === "proposed"`, because that gate is read
+ * from a snapshot that can be stale by the time the request lands.
+ */
+function withdrawInterviewErrorMessage(error: unknown): string {
+  if (!isApiError(error)) {
+    return "Something went wrong. Please try again.";
+  }
+  switch (error.statusCode) {
+    case HttpStatusCode.Conflict:
+      return "This interview can no longer be withdrawn — it may already be scheduled or canceled.";
+    case HttpStatusCode.NotFound:
+      return "This interview is no longer available — refresh and try again.";
     default:
       return error.message;
   }
@@ -159,10 +181,12 @@ export function ProposalCard({ title, note, data, viewerParty }: ProposalCardPro
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [counterNote, setCounterNote] = useState("");
   const [showProposeForm, setShowProposeForm] = useState(false);
+  const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
   const counterNoteHintId = useId();
 
   const confirmSlot = useConfirmSlot(interviewId, availabilityProposalId);
   const counterRequest = useCounterRequest(interviewId, availabilityProposalId);
+  const cancelInterview = useCancelInterview(interviewId);
 
   const isOpen = proposalStatus === "proposed";
   const isCounterRequested = proposalStatus === "counter_requested";
@@ -180,6 +204,12 @@ export function ProposalCard({ title, note, data, viewerParty }: ProposalCardPro
   const companyCanProposeAgain =
     viewerParty === "company" && (isOpen || isCounterRequested) && canAct;
   const recruiterCanRespond = viewerParty === "recruiter" && isOpen && canAct;
+  // Only the company can create an interview, so the company is always the
+  // proposer — withdraw is its way out of the one-open-interview rule, and
+  // it stays offered through a counter-request since the interview is still
+  // "awaiting a time" right up until a slot is confirmed or it is canceled.
+  const companyCanWithdraw =
+    viewerParty === "company" && interviewStatus === "proposed";
 
   if (showProposeForm) {
     return (
@@ -282,22 +312,48 @@ export function ProposalCard({ title, note, data, viewerParty }: ProposalCardPro
         </div>
       )}
 
-      {companyCanProposeAgain && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={() => setShowProposeForm(true)}
-        >
-          Propose new times
-        </Button>
+      {(companyCanProposeAgain || companyCanWithdraw) && !confirmingWithdraw && (
+        <div className="flex flex-wrap items-center gap-2">
+          {companyCanProposeAgain && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowProposeForm(true)}
+            >
+              Propose new times
+            </Button>
+          )}
+          {companyCanWithdraw && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmingWithdraw(true)}
+            >
+              Withdraw
+            </Button>
+          )}
+        </div>
       )}
 
-      {(confirmSlot.isError || counterRequest.isError) && (
+      {companyCanWithdraw && confirmingWithdraw && (
+        <ConfirmAction
+          message="Withdraw this interview proposal? This cancels the interview and cannot be undone."
+          confirmLabel="Confirm withdraw"
+          busyLabel="Withdrawing…"
+          busy={cancelInterview.isPending}
+          onCancel={() => setConfirmingWithdraw(false)}
+          onConfirm={() => cancelInterview.mutate()}
+        />
+      )}
+
+      {(confirmSlot.isError || counterRequest.isError || cancelInterview.isError) && (
         <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          {schedulingErrorMessage(confirmSlot.error ?? counterRequest.error)}
+          {cancelInterview.isError
+            ? withdrawInterviewErrorMessage(cancelInterview.error)
+            : schedulingErrorMessage(confirmSlot.error ?? counterRequest.error)}
         </div>
       )}
     </div>

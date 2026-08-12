@@ -16,7 +16,13 @@ import {
   type CandidateStatus,
 } from "@/features/candidates";
 import { Thread } from "@/features/conversations";
+import {
+  candidateNegotiationState,
+  type CandidateNegotiationState,
+} from "@/features/conversations/utils/candidateNegotiationState";
+import { useInterviews } from "@/features/interviews";
 import { useJob } from "@/features/jobs";
+import { useOffers } from "@/features/offers";
 import {
   SubmissionHeader,
   useSubmission,
@@ -26,6 +32,7 @@ import {
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
+import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDetailLayout";
@@ -99,9 +106,14 @@ function ErrorCallout({
 function CandidateItem({
   candidate,
   submissionId,
+  negotiationState,
 }: {
   candidate: Candidate;
   submissionId: string;
+  /** This candidate's entry from `candidateNegotiationState`, or `null` when
+   * the candidate has neither an interview nor an offer yet — derived once
+   * per page from the two page-level queries, never looked up per card. */
+  negotiationState: CandidateNegotiationState | null;
 }) {
   const [mode, setMode] = useState<"view" | "edit" | "confirm-remove">("view");
   const deleteCandidate = useDeleteCandidate(submissionId);
@@ -150,6 +162,11 @@ function CandidateItem({
           className={CANDIDATE_STATUS_STYLES[candidate.status]}
         />
       </div>
+
+      <NegotiationStateBadges
+        interview={negotiationState?.interview ?? null}
+        offer={negotiationState?.offer ?? null}
+      />
 
       <CandidateFields candidate={candidate} />
 
@@ -250,10 +267,12 @@ function CandidateListSection({
   submissionId,
   submissionStatus,
   candidates,
+  negotiationState,
 }: {
   submissionId: string;
   submissionStatus: SubmissionStatus;
   candidates: Candidate[];
+  negotiationState: ReturnType<typeof candidateNegotiationState>;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -282,6 +301,7 @@ function CandidateListSection({
           key={candidate.id}
           candidate={candidate}
           submissionId={submissionId}
+          negotiationState={negotiationState.get(candidate.id) ?? null}
         />
       ))}
 
@@ -308,6 +328,14 @@ function SubmissionDetailHeader({ submission }: { submission: Submission }) {
  * both in parallel and gates on a single combined pending/error state, so
  * the two — which read as one grouped "job & candidates" panel — never
  * show one loaded while the other is still a skeleton.
+ *
+ * Also fetches every interview and offer on this submission — two requests
+ * total, scoped by `submissionId` rather than one pair per candidate — and
+ * derives the negotiation-state map once here so each `CandidateItem` below
+ * only does a `Map` lookup. A failure on either of those two is not fatal to
+ * the page: the candidate list stays usable, so it degrades to an empty map
+ * (every badge reads "none yet") instead of blocking the whole column the
+ * way a failed submission or candidates fetch does.
  */
 function SubmissionDetailLeftColumn({
   submissionId,
@@ -316,6 +344,8 @@ function SubmissionDetailLeftColumn({
 }) {
   const submissionQuery = useSubmission(submissionId);
   const candidatesQuery = useCandidates(submissionId);
+  const interviewsQuery = useInterviews({ submissionId });
+  const offersQuery = useOffers({ submissionId });
 
   if (submissionQuery.isPending || candidatesQuery.isPending) {
     return <LeftColumnSkeleton />;
@@ -337,6 +367,11 @@ function SubmissionDetailLeftColumn({
     );
   }
 
+  const negotiationState = candidateNegotiationState(
+    interviewsQuery.data?.data ?? [],
+    offersQuery.data?.data ?? [],
+  );
+
   return (
     <>
       <SubmissionDetailHeader submission={submissionQuery.data} />
@@ -344,6 +379,7 @@ function SubmissionDetailLeftColumn({
         submissionId={submissionId}
         submissionStatus={submissionQuery.data.status}
         candidates={candidatesQuery.data}
+        negotiationState={negotiationState}
       />
     </>
   );
