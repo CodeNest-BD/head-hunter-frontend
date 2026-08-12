@@ -257,19 +257,18 @@ export default function SubmissionReviewPage() {
 
   return (
     <RequireRole role="company">
-      <DashboardLayout>
-        <div className="flex w-full flex-col gap-6">
-          <PageHeader
-            eyebrow="Submission"
-            title="Review submission"
-            subtitle="The recruiter, their note, and every candidate on this submission."
-          />
-
-          <TwoColumnDetailLayout
-            left={<SubmissionDetailLeftColumn submissionId={params.id} />}
-            right={<Thread submissionId={params.id} />}
-          />
-        </div>
+      <DashboardLayout wide="detail">
+        <TwoColumnDetailLayout
+          header={
+            <PageHeader
+              eyebrow="Submission"
+              title="Review submission"
+              subtitle="The recruiter, their note, and every candidate on this submission."
+            />
+          }
+          left={<SubmissionDetailLeftColumn submissionId={params.id} />}
+          right={<Thread submissionId={params.id} />}
+        />
       </DashboardLayout>
     </RequireRole>
   );

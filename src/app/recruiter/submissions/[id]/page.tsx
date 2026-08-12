@@ -354,26 +354,27 @@ export default function SubmissionDetailPage() {
 
   return (
     <RequireRole role="recruiter">
-      <DashboardLayout>
-        <div className="flex w-full flex-col gap-6">
-          <Link
-            href="/recruiter/submissions"
-            className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to submissions
-          </Link>
-          <PageHeader
-            eyebrow="Submission"
-            title="Submission detail"
-            subtitle="Track your candidates and the job you submitted them to."
-            className="mb-0"
-          />
-          <TwoColumnDetailLayout
-            left={<SubmissionDetailLeftColumn submissionId={params.id} />}
-            right={<Thread submissionId={params.id} />}
-          />
-        </div>
+      <DashboardLayout wide="detail">
+        <TwoColumnDetailLayout
+          header={
+            <div className="flex flex-col gap-6">
+              <Link
+                href="/recruiter/submissions"
+                className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to submissions
+              </Link>
+              <PageHeader
+                eyebrow="Submission"
+                title="Submission detail"
+                subtitle="Track your candidates and the job you submitted them to."
+              />
+            </div>
+          }
+          left={<SubmissionDetailLeftColumn submissionId={params.id} />}
+          right={<Thread submissionId={params.id} />}
+        />
       </DashboardLayout>
     </RequireRole>
   );

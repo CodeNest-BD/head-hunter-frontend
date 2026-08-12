@@ -26,15 +26,16 @@ export interface ThreadProps {
 /**
  * Fixed-height card so the thread scrolls independently of whatever sits
  * beside or above it, instead of growing with every message and pushing the
- * rest of the page down. `lg:h-[calc(100vh-10rem)]` mirrors
- * `DashboardLayout`'s own `pt-24`/`pb-16` main padding (6rem + 4rem), so the
- * panel fills the space between the fixed header and the bottom of the
- * viewport when this column is sticky. The fixed `h-[32rem]` fallback keeps
- * the same "usefully tall" scroll area on narrow screens, where the column
- * stacks rather than stays sticky.
+ * rest of the page down. `lg:h-full` fills exactly the space
+ * `TwoColumnDetailLayout` computes for this column via flex — that layout
+ * (not a viewport `calc()` guessed here) is what keeps this panel, and its
+ * composer, inside the viewport regardless of how tall the page's own
+ * header block is. The fixed `h-[32rem]` fallback keeps the same "usefully
+ * tall" scroll area on narrow screens, where the column stacks instead of
+ * sitting beside the left column.
  */
 const THREAD_PANEL_CLASSNAME =
-  "flex h-[32rem] flex-col gap-4 rounded-xl border border-border/70 bg-card p-5 shadow-sm lg:h-[calc(100vh-10rem)]";
+  "flex h-[32rem] flex-col gap-4 rounded-xl border border-border/70 bg-card p-5 shadow-sm lg:h-full";
 
 function ThreadSkeleton() {
   return (
