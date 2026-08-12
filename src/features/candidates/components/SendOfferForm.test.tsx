@@ -2,13 +2,13 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
-import type { Offer } from "../schemas";
+import type { Offer } from "@/features/offers/schemas";
 import { SendOfferForm } from "./SendOfferForm";
 
 const fetchOffersMock = vi.fn();
 const createOfferMock = vi.fn();
 
-vi.mock("../api/offers", () => ({
+vi.mock("@/features/offers/api/offers", () => ({
   fetchOffers: (...args: unknown[]) => fetchOffersMock(...args),
   createOffer: (...args: unknown[]) => createOfferMock(...args),
 }));
@@ -50,7 +50,7 @@ describe("SendOfferForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("enables sending an offer when the candidate has no offer awaiting a response", async () => {
+  it("disables sending an offer with a readable reason when the candidate has already been hired", async () => {
     fetchOffersMock.mockResolvedValue({
       data: [offer({ status: "accepted" })],
       meta: { page: 1, limit: 50, total: 1, totalPages: 1 },
@@ -58,14 +58,25 @@ describe("SendOfferForm", () => {
 
     renderWithProviders(<SendOfferForm candidateId="candidate-1" />);
 
-    await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: /send offer/i }),
-      ).toBeEnabled(),
-    );
     expect(
-      screen.queryByText(/already has an offer/i),
-    ).not.toBeInTheDocument();
+      await screen.findByRole("button", { name: /send offer/i }),
+    ).toBeDisabled();
+    expect(screen.getByText(/already been hired/i)).toBeInTheDocument();
+  });
+
+  it("enables sending an offer when the candidate has neither a live nor an accepted offer", async () => {
+    fetchOffersMock.mockResolvedValue({
+      data: [offer({ status: "declined" })],
+      meta: { page: 1, limit: 50, total: 1, totalPages: 1 },
+    });
+
+    renderWithProviders(<SendOfferForm candidateId="candidate-1" />);
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /send offer/i })).toBeEnabled(),
+    );
+    expect(screen.queryByText(/already has an offer/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/already been hired/i)).not.toBeInTheDocument();
   });
 
   it("converts the entered salary to minor units and sends optional fields on submit", async () => {

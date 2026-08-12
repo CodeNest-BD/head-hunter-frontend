@@ -6,35 +6,51 @@ import { useForm } from "react-hook-form";
 import { HttpStatusCode } from "axios";
 import { AlertCircle } from "lucide-react";
 
+import {
+  sendOfferFormSchema,
+  useCreateOffer,
+  useOffers,
+  type OfferStatus,
+  type SendOfferFormValues,
+} from "@/features/offers";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor } from "@/shared/utils/money";
-import { useCreateOffer, useOffers } from "../hooks/useOffers";
-import { sendOfferFormSchema, type SendOfferFormValues } from "../schemas";
 
 export interface SendOfferFormProps {
   candidateId: string;
 }
 
-// At most one offer may be `sent` (awaiting a response) per candidate at a
-// time — the same invariant the backend's create endpoint enforces with a
-// 409, and the same shape as `ScheduleInterviewAction`'s open-interview check.
-const LIVE_OFFER_STATUS = "sent";
+// At most one offer may be `sent` (awaiting a response) or `accepted` (the
+// candidate has already been hired) per candidate at a time — the same
+// invariant the backend's create endpoint enforces with a 409, distinguishing
+// the same two cases, and the same shape as `ScheduleInterviewAction`'s
+// open-interview check.
+const LIVE_OFFER_STATUSES = new Set<OfferStatus>(["sent", "accepted"]);
+
+/** "Awaiting a response" and "already hired" are different situations to the
+ * person reading them, so each gets its own copy rather than one generic
+ * "already has a live offer" message. */
+function liveOfferDisabledReason(status: OfferStatus): string {
+  return status === "accepted"
+    ? "This candidate has already been hired."
+    : "This candidate already has an offer awaiting a response.";
+}
 
 /** 409 (a live offer already exists) and 404 (candidate on another
  * submission) are both reachable in normal use even with the entry point
  * pre-disabled — a second tab, a stale list — so each gets a specific inline
- * message instead of the mutation's raw error. */
+ * message instead of the mutation's raw error. The 409 case reuses the
+ * backend's own message: it already distinguishes "awaiting a response"
+ * from "already been hired", the same way `liveOfferDisabledReason` does. */
 function sendOfferErrorMessage(error: unknown): string {
   if (!isApiError(error)) {
     return "Could not send this offer. Please try again.";
   }
   switch (error.statusCode) {
-    case HttpStatusCode.Conflict:
-      return "This candidate already has an offer awaiting a response.";
     case HttpStatusCode.NotFound:
       return "This candidate could not be found on this submission.";
     default:
@@ -52,7 +68,7 @@ const EMPTY_VALUES: SendOfferFormValues = {
 /**
  * The company's entry point for the first offer on a candidate, alongside
  * `ScheduleInterviewAction` in `CandidateCard` — offering belongs with the
- * other decisions a company makes about a candidate. Detects an already-open
+ * other decisions a company makes about a candidate. Detects an already-live
  * offer by reading this candidate's own offer list (there is no dedicated
  * "has a live offer" endpoint, the same reasoning `ScheduleInterviewAction`
  * documents for interviews) and disables itself with a readable reason
@@ -70,8 +86,8 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
   });
   const createOffer = useCreateOffer();
 
-  const liveOffer = offers?.data.find(
-    (offer) => offer.status === LIVE_OFFER_STATUS,
+  const liveOffer = offers?.data.find((offer) =>
+    LIVE_OFFER_STATUSES.has(offer.status),
   );
 
   const {
@@ -161,7 +177,7 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
   }
 
   const disabledReason = liveOffer
-    ? "This candidate already has an offer awaiting a response."
+    ? liveOfferDisabledReason(liveOffer.status)
     : null;
 
   return (

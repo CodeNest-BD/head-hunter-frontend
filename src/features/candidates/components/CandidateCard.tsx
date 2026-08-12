@@ -1,6 +1,5 @@
 "use client";
 
-import { SendOfferForm } from "@/features/offers";
 import {
   Card,
   CardContent,
@@ -11,6 +10,7 @@ import {
 import { CandidateAttachments } from "./CandidateAttachments";
 import { CandidateFields } from "./CandidateFields";
 import { ScheduleInterviewAction } from "./ScheduleInterviewAction";
+import { SendOfferForm } from "./SendOfferForm";
 import { useUpdateCandidateStatus } from "../hooks/useCandidates";
 import {
   CANDIDATE_STATUSES,
