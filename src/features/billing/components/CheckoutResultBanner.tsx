@@ -8,6 +8,9 @@ interface CheckoutResultBannerProps {
   param: string;
   successMessage: string;
   cancelMessage: string;
+  /** Fired once when the redirect result is read (before the URL is cleaned),
+   * so the page can e.g. start polling for the webhook-driven balance update. */
+  onResult?: (result: "success" | "canceled") => void;
 }
 
 /**
@@ -20,6 +23,7 @@ export function CheckoutResultBanner({
   param,
   successMessage,
   cancelMessage,
+  onResult,
 }: CheckoutResultBannerProps) {
   const [result, setResult] = useState<"success" | "canceled" | null>(null);
 
@@ -28,10 +32,11 @@ export function CheckoutResultBanner({
     const value = url.searchParams.get(param);
     if (value === "success" || value === "canceled") {
       setResult(value);
+      onResult?.(value);
       url.searchParams.delete(param);
       window.history.replaceState(null, "", url.toString());
     }
-  }, [param]);
+  }, [param, onResult]);
 
   if (!result) return null;
 
