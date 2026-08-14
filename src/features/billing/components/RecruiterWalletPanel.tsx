@@ -68,11 +68,6 @@ function WalletSummaryCard({ data }: { data?: RecruiterWalletSummary }) {
           primary
         />
         <Metric
-          label="Paid out"
-          valueMinor={data?.releasedMinor}
-          hint="Commission released to you"
-        />
-        <Metric
           label="In escrow"
           valueMinor={data?.inEscrowMinor}
           hint={
