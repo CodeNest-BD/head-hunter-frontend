@@ -284,12 +284,7 @@ export default function SubmissionReviewPage() {
     <RequireRole role="company">
       <DashboardLayout wide="detail">
         <TwoColumnDetailLayout
-          header={
-            <PageHeader
-              title="Review submission"
-              subtitle="The recruiter, their note, and every candidate on this submission."
-            />
-          }
+          header={<PageHeader title="Review submission" />}
           left={<SubmissionDetailLeftColumn submissionId={params.id} />}
           right={<Thread submissionId={params.id} />}
         />

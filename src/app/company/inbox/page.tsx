@@ -20,10 +20,7 @@ export default function CompanyInboxPage() {
     <RequireRole role="company">
       <DashboardLayout>
         <div className="flex flex-col gap-8">
-          <PageHeader
-            title="Inbox"
-            subtitle="Candidates recruiters have submitted to your jobs."
-          />
+          <PageHeader title="Inbox" />
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="status" className="text-foreground">
