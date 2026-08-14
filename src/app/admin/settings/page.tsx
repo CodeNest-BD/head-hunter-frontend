@@ -16,10 +16,7 @@ export default function AdminSettingsPage() {
         ]}
       >
         <div className="flex flex-col gap-8">
-          <PageHeader
-            title="Settings"
-            subtitle="Recruiter subscription pricing and admin accounts."
-          />
+          <PageHeader title="Settings" />
           <RecruiterPricingCard />
           <AdminManagement />
         </div>

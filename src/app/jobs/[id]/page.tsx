@@ -253,11 +253,7 @@ export default function JobDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to job map
           </Link>
-          <PageHeader
-            title="Job detail"
-            subtitle="The fee, the role, and everything you need before you submit a candidate."
-            className="mb-0"
-          />
+          <PageHeader title="Job detail" className="mb-0" />
           <JobDetailContent jobId={params.id} />
         </div>
       </DashboardLayout>

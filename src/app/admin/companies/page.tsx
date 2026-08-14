@@ -16,10 +16,7 @@ export default function AdminCompaniesPage() {
         ]}
       >
         <div className="flex flex-col gap-8">
-          <PageHeader
-            title="Companies"
-            subtitle="Every company on the platform, their wallet, and account controls."
-          />
+          <PageHeader title="Companies" />
           <CompaniesTable />
         </div>
       </DashboardLayout>

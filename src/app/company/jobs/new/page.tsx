@@ -22,11 +22,7 @@ export default function NewJobPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to jobs
           </Link>
-          <PageHeader
-            title="New job"
-            subtitle="Saved as a draft. You publish it from the job page, which is when followers are notified."
-            className="mb-0"
-          />
+          <PageHeader title="New job" className="mb-0" />
           <div className="rounded-xl border border-border/70 bg-card p-6 shadow-sm">
             <JobForm
               onSubmit={(input) => create.mutate(input)}
