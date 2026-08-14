@@ -10,6 +10,7 @@ import {
   fetchRecruiterWallet,
   fetchSubscription,
   fetchWallet,
+  type PlacementsParams,
 } from "../api/billing";
 import { billingKeys } from "../keys";
 
@@ -47,10 +48,10 @@ export function useRecruiterWallet() {
   });
 }
 
-export function useRecruiterPlacements(page: number) {
+export function useRecruiterPlacements(params: PlacementsParams) {
   return useQuery({
-    queryKey: billingKeys.recruiterPlacements(page),
-    queryFn: () => fetchRecruiterPlacements(page),
+    queryKey: billingKeys.recruiterPlacements(params),
+    queryFn: () => fetchRecruiterPlacements(params),
     placeholderData: keepPreviousData,
   });
 }

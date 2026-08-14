@@ -60,14 +60,26 @@ export async function fetchRecruiterWallet(): Promise<RecruiterWalletSummary> {
   return recruiterWalletSummarySchema.parse(data);
 }
 
+export interface PlacementsParams {
+  page: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
 /** GET /v1/recruiter/wallet/placements — the recruiter's placement history. */
 export async function fetchRecruiterPlacements(
-  page: number,
+  params: PlacementsParams,
 ): Promise<Paginated<RecruiterPlacement>> {
   const { data } = await apiClient.get<unknown>(
     "/recruiter/wallet/placements",
     {
-      params: { page, limit: 20 },
+      params: {
+        page: params.page,
+        limit: params.limit ?? 25,
+        ...(params.sortBy ? { sortBy: params.sortBy } : {}),
+        ...(params.sortOrder ? { sortOrder: params.sortOrder } : {}),
+      },
     },
   );
   return paginatedSchema(recruiterPlacementSchema).parse(data);

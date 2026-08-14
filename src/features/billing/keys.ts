@@ -5,6 +5,10 @@ export const billingKeys = {
   subscription: ["billing", "subscription"] as const,
   recruiterPrice: ["billing", "recruiter-price"] as const,
   recruiterWallet: ["billing", "recruiter-wallet"] as const,
-  recruiterPlacements: (page: number) =>
-    ["billing", "recruiter-placements", page] as const,
+  recruiterPlacements: (params: {
+    page: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+  }) => ["billing", "recruiter-placements", params] as const,
 };

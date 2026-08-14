@@ -1,9 +1,22 @@
 "use client";
 
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
 import { RequireRole } from "@/features/auth";
 import { ConversationsTable } from "@/features/admin";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
+
+function ConversationsContent() {
+  const searchParams = useSearchParams();
+  return (
+    <ConversationsTable
+      jobId={searchParams.get("jobId") ?? undefined}
+      jobTitle={searchParams.get("jobTitle") ?? undefined}
+    />
+  );
+}
 
 export default function AdminConversationsPage() {
   return (
@@ -20,7 +33,9 @@ export default function AdminConversationsPage() {
             title="Conversations"
             subtitle="Company↔recruiter interaction on every submission — candidates, scheduling and offers."
           />
-          <ConversationsTable />
+          <Suspense fallback={null}>
+            <ConversationsContent />
+          </Suspense>
         </div>
       </DashboardLayout>
     </RequireRole>

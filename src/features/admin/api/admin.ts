@@ -43,6 +43,9 @@ function listParams(params: AdminListParams): Record<string, unknown> {
     ...(params.recruiterProfileId
       ? { recruiterProfileId: params.recruiterProfileId }
       : {}),
+    ...(params.jobId ? { jobId: params.jobId } : {}),
+    ...(params.sortBy ? { sortBy: params.sortBy } : {}),
+    ...(params.sortOrder ? { sortOrder: params.sortOrder } : {}),
   };
 }
 

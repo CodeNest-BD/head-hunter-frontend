@@ -1,19 +1,17 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
-import { AlertCircle, MessagesSquare } from "lucide-react";
+import { MessagesSquare, X } from "lucide-react";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
-import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
-import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import { DataTable } from "@/shared/ui-components/data/DataTable";
+import { useServerTableState } from "@/shared/hooks/useServerTableState";
 import { useAdminConversations } from "../hooks/useAdmin";
-import { useListState } from "../hooks/useListState";
-import { SUBMISSION_LABELS } from "../schemas";
-import { ListPager } from "./ListPager";
+import { SUBMISSION_LABELS, type ConversationListItem } from "../schemas";
 import { ListToolbar } from "./ListToolbar";
 import { SUBMISSION_STATUS_STYLES } from "./statusStyles";
-import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -24,34 +22,130 @@ function formatDateTime(iso: string): string {
   });
 }
 
-export function ConversationsTable() {
-  const {
-    page,
-    setPage,
-    qInput,
-    setQInput,
-    q,
-    status,
-    changeStatus,
-    limit,
-    changeLimit,
-  } = useListState();
+function useColumns(): ColumnDef<ConversationListItem, unknown>[] {
+  return useMemo(
+    () => [
+      {
+        id: "companyName",
+        header: "Company",
+        size: 200,
+        cell: ({ row }) => (
+          <Link
+            href={`/admin/conversations/${row.original.submissionId}`}
+            className="font-medium text-navy hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+          >
+            {row.original.companyName}
+          </Link>
+        ),
+      },
+      {
+        id: "recruiterName",
+        header: "Recruiter",
+        size: 180,
+        cell: ({ row }) => (
+          <span className="block max-w-[180px] truncate text-muted-foreground">
+            {row.original.recruiterName}
+          </span>
+        ),
+      },
+      {
+        id: "jobTitle",
+        header: "Job",
+        size: 220,
+        cell: ({ row }) => (
+          <span className="block max-w-[220px] truncate text-muted-foreground">
+            {row.original.jobTitle}
+          </span>
+        ),
+      },
+      {
+        id: "candidates",
+        header: "Candidates",
+        size: 120,
+        cell: ({ row }) => (
+          <span className="tabular-nums text-navy">
+            {row.original.candidateCount}
+          </span>
+        ),
+      },
+      {
+        id: "status",
+        header: "Status",
+        size: 130,
+        cell: ({ row }) => (
+          <StatusBadge
+            label={
+              SUBMISSION_LABELS[row.original.status] ?? row.original.status
+            }
+            className={
+              SUBMISSION_STATUS_STYLES[row.original.status] ??
+              "bg-muted text-muted-foreground"
+            }
+          />
+        ),
+      },
+      {
+        id: "lastActivityAt",
+        header: "Last activity",
+        size: 160,
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap text-muted-foreground">
+            {formatDateTime(row.original.lastActivityAt)}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
+}
+
+interface ConversationsTableProps {
+  /** When set, the list is restricted to one job's submissions (a deep-link). */
+  jobId?: string;
+  jobTitle?: string;
+}
+
+export function ConversationsTable({
+  jobId,
+  jobTitle,
+}: ConversationsTableProps) {
+  const table = useServerTableState({
+    defaultSort: [{ id: "lastActivityAt", desc: true }],
+  });
+  const columns = useColumns();
   const { data, isPending, isError, refetch } = useAdminConversations({
-    page,
-    limit,
-    q: q || undefined,
-    status: status || undefined,
+    page: table.page,
+    limit: table.pageSize,
+    q: table.q || undefined,
+    status: table.status || undefined,
+    jobId: jobId || undefined,
+    sortBy: table.sortBy,
+    sortOrder: table.sortOrder,
   });
 
   return (
     <div className="flex flex-col gap-4">
+      {jobId && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 font-medium text-primary">
+            Job: {jobTitle || "Selected job"}
+            <Link
+              href="/admin/conversations"
+              aria-label="Clear job filter"
+              className="rounded-full p-0.5 hover:bg-primary/10"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Link>
+          </span>
+        </div>
+      )}
       <ListToolbar
-        query={qInput}
-        onQueryChange={setQInput}
+        query={table.qInput}
+        onQueryChange={table.setQInput}
         placeholder="Search by job, company or recruiter…"
         filter={{
-          value: status,
-          onChange: changeStatus,
+          value: table.status,
+          onChange: table.setStatus,
           allLabel: "All statuses",
           options: [
             { value: "submitted", label: "Submitted" },
@@ -62,118 +156,25 @@ export function ConversationsTable() {
           ],
         }}
       />
-
-      {isPending ? (
-        <TableSkeleton />
-      ) : isError ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-            <AlertCircle className="h-6 w-6" />
-            Could not load conversations.
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
-              Retry
-            </Button>
-          </CardContent>
-        </Card>
-      ) : data.data.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
-              <MessagesSquare className="h-6 w-6" />
-            </span>
-            <p className="text-sm font-semibold text-navy">
-              No conversations found
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Conversations appear once a recruiter submits candidates to a job.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className={TABLE_CLASS}>
-                <thead>
-                  <tr className={THEAD_ROW_CLASS}>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Company
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Recruiter
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Job
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-center font-semibold"
-                    >
-                      Candidates
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Status
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Last activity
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.data.map((c) => (
-                    <tr
-                      key={c.submissionId}
-                      className={`relative ${BODY_ROW_CLASS}`}
-                    >
-                      <td className="px-5 py-3">
-                        <Link
-                          href={`/admin/conversations/${c.submissionId}`}
-                          className="font-medium text-navy after:absolute after:inset-0 hover:text-primary focus-visible:underline focus-visible:outline-none"
-                        >
-                          {c.companyName}
-                        </Link>
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        <span className="block max-w-[200px] truncate">
-                          {c.recruiterName}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        <span className="block max-w-[220px] truncate">
-                          {c.jobTitle}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-center tabular-nums text-navy">
-                        {c.candidateCount}
-                      </td>
-                      <td className="px-5 py-3">
-                        <StatusBadge
-                          label={SUBMISSION_LABELS[c.status] ?? c.status}
-                          className={
-                            SUBMISSION_STATUS_STYLES[c.status] ??
-                            "bg-muted text-muted-foreground"
-                          }
-                        />
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                        {formatDateTime(c.lastActivityAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <ListPager
-              page={page}
-              totalPages={data.meta.totalPages}
-              total={data.meta.total}
-              onPage={setPage}
-              pageSize={limit}
-              onPageSize={changeLimit}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <DataTable
+        columns={columns}
+        data={data?.data ?? []}
+        getRowId={(c) => c.submissionId}
+        page={table.page}
+        pageSize={table.pageSize}
+        pageCount={data?.meta.totalPages ?? 0}
+        total={data?.meta.total ?? 0}
+        onPage={table.setPage}
+        onPageSize={table.setPageSize}
+        sorting={table.sorting}
+        onSortingChange={table.setSorting}
+        isLoading={isPending}
+        isError={isError}
+        onRetry={() => void refetch()}
+        emptyIcon={MessagesSquare}
+        emptyTitle="No conversations found"
+        emptyMessage="Conversations appear once a recruiter submits candidates to a job."
+      />
     </div>
   );
 }

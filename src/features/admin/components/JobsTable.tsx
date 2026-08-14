@@ -1,20 +1,18 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
-import { AlertCircle, Briefcase, X } from "lucide-react";
+import { Briefcase, X } from "lucide-react";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
-import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import { DataTable } from "@/shared/ui-components/data/DataTable";
 import { formatMinor } from "@/shared/utils/money";
-import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import { useServerTableState } from "@/shared/hooks/useServerTableState";
 import { useAdminJobs } from "../hooks/useAdmin";
-import { useListState } from "../hooks/useListState";
-import { JOB_STATUS_LABELS } from "../schemas";
-import { ListPager } from "./ListPager";
+import { JOB_STATUS_LABELS, type AdminJobListItem } from "../schemas";
 import { ListToolbar } from "./ListToolbar";
 import { JOB_STATUS_STYLES } from "./statusStyles";
-import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -24,11 +22,101 @@ function formatDate(iso: string): string {
   });
 }
 
+/** Deep-link to the submissions (conversations) for one job. */
+function jobConversationsHref(jobId: string, jobTitle: string): string {
+  return `/admin/conversations?${new URLSearchParams({ jobId, jobTitle }).toString()}`;
+}
+
+function useColumns(): ColumnDef<AdminJobListItem, unknown>[] {
+  return useMemo(
+    () => [
+      {
+        id: "title",
+        header: "Job",
+        size: 260,
+        cell: ({ row }) => (
+          <div>
+            <span className="block max-w-[240px] truncate font-medium text-navy">
+              {row.original.title}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {row.original.locationState || "—"}
+            </span>
+          </div>
+        ),
+      },
+      {
+        id: "company",
+        header: "Company",
+        size: 200,
+        cell: ({ row }) => (
+          <span className="block max-w-[200px] truncate text-muted-foreground">
+            {row.original.companyName}
+          </span>
+        ),
+      },
+      {
+        id: "status",
+        header: "Status",
+        size: 120,
+        cell: ({ row }) => (
+          <StatusBadge
+            label={
+              JOB_STATUS_LABELS[row.original.status] ?? row.original.status
+            }
+            className={
+              JOB_STATUS_STYLES[row.original.status] ??
+              "bg-muted text-muted-foreground"
+            }
+          />
+        ),
+      },
+      {
+        id: "fee",
+        header: "Recruiter fee",
+        size: 130,
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap font-medium text-navy">
+            {formatMinor(row.original.recruiterFeeMinor)}
+          </span>
+        ),
+      },
+      {
+        id: "submissions",
+        header: "Submissions",
+        size: 120,
+        cell: ({ row }) => {
+          const job = row.original;
+          return job.submissionCount > 0 ? (
+            <Link
+              href={jobConversationsHref(job.jobId, job.title)}
+              className="font-medium text-primary tabular-nums hover:underline focus-visible:underline focus-visible:outline-none"
+            >
+              {job.submissionCount}
+            </Link>
+          ) : (
+            <span className="tabular-nums text-muted-foreground">0</span>
+          );
+        },
+      },
+      {
+        id: "createdAt",
+        header: "Posted",
+        size: 120,
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap text-muted-foreground">
+            {formatDate(row.original.createdAt)}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
+}
+
 interface JobsTableProps {
-  /** When set, the list is restricted to one company (a deep-link). */
   companyProfileId?: string;
   companyName?: string;
-  /** Pre-selected status filter (e.g. deep-linking to a company's open jobs). */
   initialStatus?: string;
 }
 
@@ -37,23 +125,19 @@ export function JobsTable({
   companyName,
   initialStatus = "",
 }: JobsTableProps) {
-  const {
-    page,
-    setPage,
-    qInput,
-    setQInput,
-    q,
-    status,
-    changeStatus,
-    limit,
-    changeLimit,
-  } = useListState(initialStatus);
+  const table = useServerTableState({
+    defaultSort: [{ id: "createdAt", desc: true }],
+    initialStatus,
+  });
+  const columns = useColumns();
   const { data, isPending, isError, refetch } = useAdminJobs({
-    page,
-    limit,
-    q: q || undefined,
-    status: status || undefined,
+    page: table.page,
+    limit: table.pageSize,
+    q: table.q || undefined,
+    status: table.status || undefined,
     companyProfileId: companyProfileId || undefined,
+    sortBy: table.sortBy,
+    sortOrder: table.sortOrder,
   });
 
   return (
@@ -72,14 +156,13 @@ export function JobsTable({
           </span>
         </div>
       )}
-
       <ListToolbar
-        query={qInput}
-        onQueryChange={setQInput}
+        query={table.qInput}
+        onQueryChange={table.setQInput}
         placeholder="Search jobs by title…"
         filter={{
-          value: status,
-          onChange: changeStatus,
+          value: table.status,
+          onChange: table.setStatus,
           allLabel: "All statuses",
           options: [
             { value: "published", label: "Published" },
@@ -90,114 +173,24 @@ export function JobsTable({
           ],
         }}
       />
-
-      {isPending ? (
-        <TableSkeleton />
-      ) : isError ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-            <AlertCircle className="h-6 w-6" />
-            Could not load jobs.
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
-              Retry
-            </Button>
-          </CardContent>
-        </Card>
-      ) : data.data.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
-              <Briefcase className="h-6 w-6" />
-            </span>
-            <p className="text-sm font-semibold text-navy">No jobs found</p>
-            <p className="text-sm text-muted-foreground">
-              Try a different search or filter.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className={TABLE_CLASS}>
-                <thead>
-                  <tr className={THEAD_ROW_CLASS}>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Job
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Company
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Status
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-right font-semibold"
-                    >
-                      Recruiter fee
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-center font-semibold"
-                    >
-                      Submissions
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Posted
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.data.map((job) => (
-                    <tr key={job.jobId} className={BODY_ROW_CLASS}>
-                      <td className="px-5 py-3">
-                        <span className="block max-w-[260px] truncate font-medium text-navy">
-                          {job.title}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {job.locationState || "—"}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        <span className="block max-w-[200px] truncate">
-                          {job.companyName}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3">
-                        <StatusBadge
-                          label={JOB_STATUS_LABELS[job.status] ?? job.status}
-                          className={
-                            JOB_STATUS_STYLES[job.status] ??
-                            "bg-muted text-muted-foreground"
-                          }
-                        />
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
-                        {formatMinor(job.recruiterFeeMinor)}
-                      </td>
-                      <td className="px-5 py-3 text-center tabular-nums text-navy">
-                        {job.submissionCount}
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                        {formatDate(job.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <ListPager
-              page={page}
-              totalPages={data.meta.totalPages}
-              total={data.meta.total}
-              onPage={setPage}
-              pageSize={limit}
-              onPageSize={changeLimit}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <DataTable
+        columns={columns}
+        data={data?.data ?? []}
+        getRowId={(j) => j.jobId}
+        page={table.page}
+        pageSize={table.pageSize}
+        pageCount={data?.meta.totalPages ?? 0}
+        total={data?.meta.total ?? 0}
+        onPage={table.setPage}
+        onPageSize={table.setPageSize}
+        sorting={table.sorting}
+        onSortingChange={table.setSorting}
+        isLoading={isPending}
+        isError={isError}
+        onRetry={() => void refetch()}
+        emptyIcon={Briefcase}
+        emptyTitle="No jobs found"
+      />
     </div>
   );
 }

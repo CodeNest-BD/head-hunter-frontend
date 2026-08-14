@@ -8,6 +8,11 @@ export interface AdminListParams {
   companyProfileId?: string;
   /** Restrict a list to one recruiter (its profile id). */
   recruiterProfileId?: string;
+  /** Restrict conversations to one job — used by deep-links. */
+  jobId?: string;
+  /** Whitelisted sort column id (server maps it to a SQL column). */
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
 }
 
 export const adminKeys = {
