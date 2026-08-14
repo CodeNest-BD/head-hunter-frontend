@@ -10,6 +10,7 @@ import { useMessageUnreadCount } from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Breadcrumb, type Crumb } from "./Breadcrumb";
+import { deriveBreadcrumbs } from "./breadcrumbs";
 import { CountBadge } from "./CountBadge";
 import { NAV_BY_ROLE, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
@@ -172,6 +173,11 @@ export function DashboardLayout({
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
 
+  // Pages may pass a curated trail; otherwise derive one from the route so the
+  // breadcrumb shows on every authenticated page, not just the ones that opt in.
+  const pathname = usePathname();
+  const resolvedCrumbs = breadcrumbs ?? deriveBreadcrumbs(pathname);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar — logo only, plus the mobile menu toggle. */}
@@ -187,11 +193,11 @@ export function DashboardLayout({
         <Link href="/temp" aria-label="HeadHunter home" className="lg:hidden">
           <Logo />
         </Link>
-        {breadcrumbs && breadcrumbs.length > 0 && (
+        {resolvedCrumbs.length > 0 && (
           // Aligned with the content column (sidebar 16rem + the content's
           // lg:px-10). Hidden on mobile, where the bar shows the logo instead.
           <div className="hidden min-w-0 lg:block">
-            <Breadcrumb items={breadcrumbs} />
+            <Breadcrumb items={resolvedCrumbs} />
           </div>
         )}
       </header>
