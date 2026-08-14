@@ -14,7 +14,6 @@ export default function NotificationsPage() {
     <DashboardLayout>
       <div className="flex max-w-2xl flex-col gap-8">
         <PageHeader
-          eyebrow="Activity"
           title="Notifications"
           subtitle="Updates on your jobs, submissions and followed companies."
         />

@@ -11,7 +11,6 @@ export default function RecruiterSubscriptionPage() {
       <DashboardLayout>
         <div className="flex max-w-3xl flex-col gap-8">
           <PageHeader
-            eyebrow="Billing"
             title="Subscription"
             subtitle="A monthly subscription unlocks the job map, job list and candidate submissions."
           />

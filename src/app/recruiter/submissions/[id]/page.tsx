@@ -402,7 +402,6 @@ export default function SubmissionDetailPage() {
                 Back to submissions
               </Link>
               <PageHeader
-                eyebrow="Submission"
                 title="Submission detail"
                 subtitle="Track your candidates and the job you submitted them to."
               />

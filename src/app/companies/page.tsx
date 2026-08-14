@@ -11,7 +11,6 @@ export default function CompaniesPage() {
       <DashboardLayout>
         <div className="flex flex-col gap-8">
           <PageHeader
-            eyebrow="Discover"
             title="Companies"
             subtitle="Follow a company to be notified when it posts a job."
           />

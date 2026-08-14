@@ -286,7 +286,6 @@ export default function SubmissionReviewPage() {
         <TwoColumnDetailLayout
           header={
             <PageHeader
-              eyebrow="Submission"
               title="Review submission"
               subtitle="The recruiter, their note, and every candidate on this submission."
             />

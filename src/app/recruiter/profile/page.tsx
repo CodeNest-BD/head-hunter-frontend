@@ -73,7 +73,6 @@ export default function RecruiterProfilePage() {
       <DashboardLayout>
         <div className="flex max-w-2xl flex-col gap-8">
           <PageHeader
-            eyebrow="Your account"
             title="Recruiter profile"
             subtitle="Your details, specializations and references."
           />
