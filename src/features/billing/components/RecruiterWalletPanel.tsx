@@ -62,10 +62,15 @@ function WalletSummaryCard({ data }: { data?: RecruiterWalletSummary }) {
     <Card className="overflow-hidden">
       <CardContent className="flex flex-col divide-y divide-border p-0 sm:flex-row sm:divide-x sm:divide-y-0">
         <Metric
+          label="Total balance"
+          valueMinor={data?.totalMinor}
+          hint="Everything you've earned so far"
+          primary
+        />
+        <Metric
           label="Paid out"
           valueMinor={data?.releasedMinor}
           hint="Commission released to you"
-          primary
         />
         <Metric
           label="In escrow"
