@@ -1,20 +1,14 @@
 "use client";
 
-import { AlertCircle, BellOff, Check, CheckCheck } from "lucide-react";
+import { useState } from "react";
+import { AlertCircle, BellOff, CheckCheck } from "lucide-react";
 
+import { useAuth } from "@/features/auth";
 import { Button } from "@/shared/ui-components/controls/button";
-import { cn } from "@/shared/libs/shadCnConfig";
-import {
-  useMarkAllRead,
-  useMarkRead,
-  useNotifications,
-} from "../hooks/useNotifications";
+import { useMarkAllRead, useNotificationGroups } from "../hooks/useNotifications";
+import { NotificationGroup } from "./NotificationGroup";
 
-const formatWhen = (date: Date): string =>
-  new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
+const PAGE_SIZE = 20;
 
 function ListSkeleton() {
   return (
@@ -30,11 +24,15 @@ function ListSkeleton() {
 }
 
 export function NotificationList() {
-  const { data, isPending, isError, refetch } = useNotifications({ limit: 50 });
-  const markRead = useMarkRead();
+  const [page, setPage] = useState(1);
+  const { user } = useAuth();
+  const { data, isPending, isError, refetch } = useNotificationGroups({
+    page,
+    limit: PAGE_SIZE,
+  });
   const markAllRead = useMarkAllRead();
 
-  if (isPending) {
+  if (isPending || !user) {
     return <ListSkeleton />;
   }
 
@@ -74,9 +72,8 @@ export function NotificationList() {
     );
   }
 
-  const hasUnread = data.data.some(
-    (notification) => notification.readAt === null,
-  );
+  const hasUnread = data.data.some((group) => group.unread > 0);
+  const totalPages = data.meta.totalPages;
 
   return (
     <div className="flex flex-col gap-4">
@@ -96,58 +93,40 @@ export function NotificationList() {
       )}
 
       <ul className="flex flex-col gap-3">
-        {data.data.map((notification) => {
-          const unread = notification.readAt === null;
-          return (
-            <li
-              key={notification.id}
-              className={cn(
-                "relative flex items-start justify-between gap-4 rounded-xl border p-4 shadow-sm transition-colors",
-                unread
-                  ? "border-primary/40 bg-primary/5"
-                  : "border-border/70 bg-card",
-              )}
-            >
-              {unread && (
-                <span
-                  aria-hidden="true"
-                  className="absolute left-0 top-4 h-8 w-1 rounded-r-full bg-primary"
-                />
-              )}
-              <div className="flex flex-col gap-1">
-                <p
-                  className={cn(
-                    "text-foreground",
-                    unread ? "font-semibold" : "font-medium",
-                  )}
-                >
-                  {notification.title}
-                </p>
-                {notification.body && (
-                  <p className="text-sm text-muted-foreground">
-                    {notification.body}
-                  </p>
-                )}
-                <p className="text-xs tabular-nums text-muted-foreground">
-                  {formatWhen(notification.createdAt)}
-                </p>
-              </div>
-              {unread && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={markRead.isPending}
-                  onClick={() => markRead.mutate(notification.id)}
-                >
-                  <Check className="h-4 w-4" />
-                  Mark read
-                </Button>
-              )}
-            </li>
-          );
-        })}
+        {data.data.map((group) => (
+          <li key={group.key}>
+            <NotificationGroup group={group} role={user.role} />
+          </li>
+        ))}
       </ul>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-1 text-sm">
+          <span className="text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((current) => current - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,15 +1,23 @@
 import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
+  notificationGroupSchema,
   notificationSchema,
   unreadCountSchema,
   type Notification,
+  type NotificationGroup,
 } from "../schemas";
 
 export interface NotificationListParams {
   page?: number;
   limit?: number;
   unreadOnly?: boolean;
+  submissionId?: string;
+}
+
+export interface NotificationGroupListParams {
+  page?: number;
+  limit?: number;
 }
 
 /** GET /v1/notifications */
@@ -18,6 +26,16 @@ export async function fetchNotifications(
 ): Promise<Paginated<Notification>> {
   const { data } = await apiClient.get<unknown>("/notifications", { params });
   return paginatedSchema(notificationSchema).parse(data);
+}
+
+/** GET /v1/notifications/grouped — stacked by submission, paginated over groups. */
+export async function fetchNotificationGroups(
+  params: NotificationGroupListParams,
+): Promise<Paginated<NotificationGroup>> {
+  const { data } = await apiClient.get<unknown>("/notifications/grouped", {
+    params,
+  });
+  return paginatedSchema(notificationGroupSchema).parse(data);
 }
 
 /** GET /v1/notifications/unread-count */
