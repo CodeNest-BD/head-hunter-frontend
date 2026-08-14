@@ -3,6 +3,7 @@
 import { AlertCircle } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -14,6 +15,7 @@ import { useAdminRecruiter } from "../hooks/useAdmin";
 import { SUBSCRIPTION_LABELS } from "../schemas";
 import { HoldButton } from "./HoldButton";
 import { DetailField, DetailSkeleton, initials } from "./DetailPrimitives";
+import { RecruiterSubmissions } from "./RecruiterSubmissions";
 import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_STATUS_STYLES,
@@ -121,6 +123,10 @@ export function RecruiterDetail({ userId }: { userId: string }) {
               value={String(data.submissionCount)}
             />
             <DetailField
+              label="Total earnings"
+              value={formatMinor(data.releasedEarningsMinor)}
+            />
+            <DetailField
               label="Experience"
               value={
                 data.yearsExperience !== null
@@ -180,6 +186,8 @@ export function RecruiterDetail({ userId }: { userId: string }) {
           </CardContent>
         </Card>
       </div>
+
+      <RecruiterSubmissions recruiterProfileId={data.recruiterProfileId} />
     </div>
   );
 }

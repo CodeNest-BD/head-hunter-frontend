@@ -7,15 +7,23 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  changeAdminPassword,
+  createAdmin,
+  fetchAdmins,
   fetchAdminStats,
   fetchCompanies,
   fetchCompany,
   fetchConversation,
   fetchConversations,
+  fetchJobs,
   fetchRecruiter,
+  fetchRecruiterPricing,
   fetchRecruiters,
   reinstateAccount,
+  removeAdmin,
   suspendAccount,
+  updateRecruiterPricing,
+  type CreateAdminInput,
 } from "../api/admin";
 import { adminKeys, type AdminListParams } from "../keys";
 
@@ -103,5 +111,61 @@ export function useReinstateAccount() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: adminKeys.all });
     },
+  });
+}
+
+export function useAdminJobs(params: AdminListParams) {
+  return useQuery({
+    queryKey: adminKeys.jobs(params),
+    queryFn: () => fetchJobs(params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useRecruiterPricing() {
+  return useQuery({
+    queryKey: adminKeys.pricing,
+    queryFn: fetchRecruiterPricing,
+  });
+}
+
+export function useUpdateRecruiterPricing() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (amountMinor: number) => updateRecruiterPricing(amountMinor),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminKeys.pricing });
+    },
+  });
+}
+
+export function useAdmins() {
+  return useQuery({ queryKey: adminKeys.admins, queryFn: fetchAdmins });
+}
+
+export function useCreateAdmin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateAdminInput) => createAdmin(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminKeys.admins });
+    },
+  });
+}
+
+export function useRemoveAdmin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => removeAdmin(userId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminKeys.admins });
+    },
+  });
+}
+
+export function useChangeAdminPassword() {
+  return useMutation({
+    mutationFn: ({ userId, password }: { userId: string; password: string }) =>
+      changeAdminPassword(userId, password),
   });
 }

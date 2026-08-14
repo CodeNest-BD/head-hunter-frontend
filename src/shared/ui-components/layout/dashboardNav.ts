@@ -9,6 +9,7 @@ import {
   Map,
   MessagesSquare,
   Send,
+  Settings,
   Users,
   UserRound,
   Wallet2,
@@ -71,10 +72,12 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/recruiters", label: "Recruiters", icon: Users },
     { href: "/admin/companies", label: "Companies", icon: Building2 },
+    { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
     {
       href: "/admin/conversations",
       label: "Conversations",
       icon: MessagesSquare,
     },
+    { href: "/admin/settings", label: "Settings", icon: Settings },
   ],
 };

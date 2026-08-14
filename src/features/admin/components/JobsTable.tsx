@@ -1,30 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, MessagesSquare } from "lucide-react";
+import { AlertCircle, Briefcase, X } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
-import { useAdminConversations } from "../hooks/useAdmin";
+import { useAdminJobs } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
-import { SUBMISSION_LABELS } from "../schemas";
+import { JOB_STATUS_LABELS } from "../schemas";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
-import { SUBMISSION_STATUS_STYLES } from "./statusStyles";
+import { JOB_STATUS_STYLES } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString("en-US", {
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+    year: "numeric",
   });
 }
 
-export function ConversationsTable() {
+interface JobsTableProps {
+  /** When set, the list is restricted to one company (a deep-link). */
+  companyProfileId?: string;
+  companyName?: string;
+  /** Pre-selected status filter (e.g. deep-linking to a company's open jobs). */
+  initialStatus?: string;
+}
+
+export function JobsTable({
+  companyProfileId,
+  companyName,
+  initialStatus = "",
+}: JobsTableProps) {
   const {
     page,
     setPage,
@@ -35,30 +47,46 @@ export function ConversationsTable() {
     changeStatus,
     limit,
     changeLimit,
-  } = useListState();
-  const { data, isPending, isError, refetch } = useAdminConversations({
+  } = useListState(initialStatus);
+  const { data, isPending, isError, refetch } = useAdminJobs({
     page,
     limit,
     q: q || undefined,
     status: status || undefined,
+    companyProfileId: companyProfileId || undefined,
   });
 
   return (
     <div className="flex flex-col gap-4">
+      {companyProfileId && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 font-medium text-primary">
+            Company: {companyName || "Selected company"}
+            <Link
+              href="/admin/jobs"
+              aria-label="Clear company filter"
+              className="rounded-full p-0.5 hover:bg-primary/10"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Link>
+          </span>
+        </div>
+      )}
+
       <ListToolbar
         query={qInput}
         onQueryChange={setQInput}
-        placeholder="Search by job, company or recruiter…"
+        placeholder="Search jobs by title…"
         filter={{
           value: status,
           onChange: changeStatus,
           allLabel: "All statuses",
           options: [
-            { value: "submitted", label: "Submitted" },
-            { value: "under_review", label: "Under review" },
-            { value: "advanced", label: "Advanced" },
-            { value: "rejected", label: "Rejected" },
-            { value: "withdrawn", label: "Withdrawn" },
+            { value: "published", label: "Published" },
+            { value: "draft", label: "Draft" },
+            { value: "paused", label: "Paused" },
+            { value: "filled", label: "Filled" },
+            { value: "closed", label: "Closed" },
           ],
         }}
       />
@@ -69,7 +97,7 @@ export function ConversationsTable() {
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
             <AlertCircle className="h-6 w-6" />
-            Could not load conversations.
+            Could not load jobs.
             <Button variant="outline" size="sm" onClick={() => void refetch()}>
               Retry
             </Button>
@@ -79,13 +107,11 @@ export function ConversationsTable() {
         <Card>
           <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
-              <MessagesSquare className="h-6 w-6" />
+              <Briefcase className="h-6 w-6" />
             </span>
-            <p className="text-sm font-semibold text-navy">
-              No conversations found
-            </p>
+            <p className="text-sm font-semibold text-navy">No jobs found</p>
             <p className="text-sm text-muted-foreground">
-              Conversations appear once a recruiter submits candidates to a job.
+              Try a different search or filter.
             </p>
           </CardContent>
         </Card>
@@ -97,66 +123,64 @@ export function ConversationsTable() {
                 <thead>
                   <tr className={THEAD_ROW_CLASS}>
                     <th scope="col" className="px-5 py-3 font-semibold">
+                      Job
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
                       Company
                     </th>
                     <th scope="col" className="px-5 py-3 font-semibold">
-                      Recruiter
+                      Status
                     </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Job
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-right font-semibold"
+                    >
+                      Recruiter fee
                     </th>
                     <th
                       scope="col"
                       className="px-5 py-3 text-center font-semibold"
                     >
-                      Candidates
+                      Submissions
                     </th>
                     <th scope="col" className="px-5 py-3 font-semibold">
-                      Status
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Last activity
+                      Posted
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.data.map((c) => (
-                    <tr
-                      key={c.submissionId}
-                      className={`relative ${BODY_ROW_CLASS}`}
-                    >
+                  {data.data.map((job) => (
+                    <tr key={job.jobId} className={BODY_ROW_CLASS}>
                       <td className="px-5 py-3">
-                        <Link
-                          href={`/admin/conversations/${c.submissionId}`}
-                          className="font-medium text-navy after:absolute after:inset-0 hover:text-primary focus-visible:underline focus-visible:outline-none"
-                        >
-                          {c.companyName}
-                        </Link>
+                        <span className="block max-w-[260px] truncate font-medium text-navy">
+                          {job.title}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {job.locationState || "—"}
+                        </span>
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">
                         <span className="block max-w-[200px] truncate">
-                          {c.recruiterName}
+                          {job.companyName}
                         </span>
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        <span className="block max-w-[220px] truncate">
-                          {c.jobTitle}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-center tabular-nums text-navy">
-                        {c.candidateCount}
                       </td>
                       <td className="px-5 py-3">
                         <StatusBadge
-                          label={SUBMISSION_LABELS[c.status] ?? c.status}
+                          label={JOB_STATUS_LABELS[job.status] ?? job.status}
                           className={
-                            SUBMISSION_STATUS_STYLES[c.status] ??
+                            JOB_STATUS_STYLES[job.status] ??
                             "bg-muted text-muted-foreground"
                           }
                         />
                       </td>
+                      <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
+                        {formatMinor(job.recruiterFeeMinor)}
+                      </td>
+                      <td className="px-5 py-3 text-center tabular-nums text-navy">
+                        {job.submissionCount}
+                      </td>
                       <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                        {formatDateTime(c.lastActivityAt)}
+                        {formatDate(job.createdAt)}
                       </td>
                     </tr>
                   ))}

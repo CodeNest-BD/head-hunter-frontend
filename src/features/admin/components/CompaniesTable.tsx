@@ -14,6 +14,7 @@ import { HoldButton } from "./HoldButton";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
 import { ACCOUNT_STATUS_LABELS, ACCOUNT_STATUS_STYLES } from "./statusStyles";
+import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -23,11 +24,33 @@ function formatDate(iso: string): string {
   });
 }
 
+/** Deep-link to the jobs list filtered to one company. */
+function companyJobsHref(
+  companyProfileId: string,
+  companyName: string,
+): string {
+  const params = new URLSearchParams({
+    companyProfileId,
+    companyName,
+  });
+  return `/admin/jobs?${params.toString()}`;
+}
+
 export function CompaniesTable() {
-  const { page, setPage, qInput, setQInput, q, status, changeStatus } =
-    useListState();
+  const {
+    page,
+    setPage,
+    qInput,
+    setQInput,
+    q,
+    status,
+    changeStatus,
+    limit,
+    changeLimit,
+  } = useListState();
   const { data, isPending, isError, refetch } = useAdminCompanies({
     page,
+    limit,
     q: q || undefined,
     status: status || undefined,
   });
@@ -79,9 +102,9 @@ export function CompaniesTable() {
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className={TABLE_CLASS}>
                 <thead>
-                  <tr className="border-b border-border text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
+                  <tr className={THEAD_ROW_CLASS}>
                     <th scope="col" className="px-5 py-3 font-semibold">
                       Company
                     </th>
@@ -90,6 +113,12 @@ export function CompaniesTable() {
                       className="px-5 py-3 text-right font-semibold"
                     >
                       Wallet
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-center font-semibold"
+                    >
+                      Jobs
                     </th>
                     <th scope="col" className="px-5 py-3 font-semibold">
                       Joined
@@ -107,10 +136,7 @@ export function CompaniesTable() {
                 </thead>
                 <tbody>
                   {data.data.map((c) => (
-                    <tr
-                      key={c.userId}
-                      className="border-b border-border/60 last:border-0 hover:bg-accent/40"
-                    >
+                    <tr key={c.userId} className={BODY_ROW_CLASS}>
                       <td className="px-5 py-3">
                         <Link
                           href={`/admin/companies/${c.userId}`}
@@ -127,6 +153,21 @@ export function CompaniesTable() {
                       </td>
                       <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
                         {formatMinor(c.balanceMinor)}
+                      </td>
+                      <td className="px-5 py-3 text-center tabular-nums">
+                        {c.jobCount > 0 ? (
+                          <Link
+                            href={companyJobsHref(
+                              c.companyProfileId,
+                              c.companyName,
+                            )}
+                            className="font-medium text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+                          >
+                            {c.jobCount}
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
                         {formatDate(c.joinedAt)}
@@ -162,6 +203,8 @@ export function CompaniesTable() {
               totalPages={data.meta.totalPages}
               total={data.meta.total}
               onPage={setPage}
+              pageSize={limit}
+              onPageSize={changeLimit}
             />
           </CardContent>
         </Card>
