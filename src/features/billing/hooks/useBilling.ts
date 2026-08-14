@@ -1,11 +1,13 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 
 import {
   createSubscriptionCheckout,
   createSubscriptionPortal,
   createTopUpCheckout,
   fetchLedger,
+  fetchRecruiterPlacements,
   fetchRecruiterPrice,
+  fetchRecruiterWallet,
   fetchSubscription,
   fetchWallet,
 } from "../api/billing";
@@ -35,6 +37,21 @@ export function useRecruiterPrice() {
     queryKey: billingKeys.recruiterPrice,
     queryFn: fetchRecruiterPrice,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useRecruiterWallet() {
+  return useQuery({
+    queryKey: billingKeys.recruiterWallet,
+    queryFn: fetchRecruiterWallet,
+  });
+}
+
+export function useRecruiterPlacements(page: number) {
+  return useQuery({
+    queryKey: billingKeys.recruiterPlacements(page),
+    queryFn: () => fetchRecruiterPlacements(page),
+    placeholderData: keepPreviousData,
   });
 }
 

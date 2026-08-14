@@ -66,6 +66,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       label: "Subscription",
       icon: BadgeCheck,
     },
+    { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
     { href: "/recruiter/profile", label: "My profile", icon: UserRound },
   ],
   admin: [

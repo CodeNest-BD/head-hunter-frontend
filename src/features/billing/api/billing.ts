@@ -3,11 +3,15 @@ import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   checkoutUrlSchema,
   ledgerEntrySchema,
+  recruiterPlacementSchema,
   recruiterPriceSchema,
+  recruiterWalletSummarySchema,
   subscriptionStatusSchema,
   walletSummarySchema,
   type LedgerEntry,
+  type RecruiterPlacement,
   type RecruiterPrice,
+  type RecruiterWalletSummary,
   type SubscriptionStatus,
   type WalletSummary,
 } from "../schemas";
@@ -48,6 +52,22 @@ export async function fetchSubscription(): Promise<SubscriptionStatus> {
 export async function fetchRecruiterPrice(): Promise<RecruiterPrice> {
   const { data } = await apiClient.get<unknown>("/billing/recruiter-price");
   return recruiterPriceSchema.parse(data);
+}
+
+/** GET /v1/recruiter/wallet — the recruiter's earnings summary. */
+export async function fetchRecruiterWallet(): Promise<RecruiterWalletSummary> {
+  const { data } = await apiClient.get<unknown>("/recruiter/wallet");
+  return recruiterWalletSummarySchema.parse(data);
+}
+
+/** GET /v1/recruiter/wallet/placements — the recruiter's placement history. */
+export async function fetchRecruiterPlacements(
+  page: number,
+): Promise<Paginated<RecruiterPlacement>> {
+  const { data } = await apiClient.get<unknown>("/recruiter/wallet/placements", {
+    params: { page, limit: 20 },
+  });
+  return paginatedSchema(recruiterPlacementSchema).parse(data);
 }
 
 /** POST /v1/billing/subscription/checkout — returns the Stripe Checkout URL. */

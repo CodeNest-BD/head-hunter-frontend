@@ -44,6 +44,48 @@ export const recruiterPriceSchema = z.object({
 });
 export type RecruiterPrice = z.infer<typeof recruiterPriceSchema>;
 
+export const placementStatusSchema = z.enum([
+  "held",
+  "disputed",
+  "releasing",
+  "released",
+  "refunded",
+]);
+export type PlacementStatus = z.infer<typeof placementStatusSchema>;
+
+export const PLACEMENT_STATUS_LABELS: Record<PlacementStatus, string> = {
+  held: "In escrow",
+  disputed: "In dispute",
+  releasing: "Releasing",
+  released: "Paid out",
+  refunded: "Refunded",
+};
+
+export const recruiterWalletSummarySchema = z.object({
+  releasedMinor: z.number(),
+  inEscrowMinor: z.number(),
+  inDisputeMinor: z.number(),
+  placementsCount: z.number(),
+  nextReleaseAt: z.string().nullable(),
+});
+export type RecruiterWalletSummary = z.infer<
+  typeof recruiterWalletSummarySchema
+>;
+
+export const recruiterPlacementSchema = z.object({
+  placementId: z.string(),
+  companyName: z.string(),
+  jobTitle: z.string(),
+  candidateName: z.string(),
+  amountMinor: z.number(),
+  status: placementStatusSchema,
+  joiningDate: z.string(),
+  holdExpiresAt: z.string(),
+  releasedAt: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type RecruiterPlacement = z.infer<typeof recruiterPlacementSchema>;
+
 export const LEDGER_TYPE_LABELS: Record<LedgerEntry["entryType"], string> = {
   credit: "Funds added",
   debit: "Funds spent",
