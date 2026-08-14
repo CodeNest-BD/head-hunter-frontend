@@ -88,11 +88,9 @@ function NavLink({
 function SidebarContent({
   onNavigate,
   collapsed = false,
-  onToggle,
 }: {
   onNavigate: () => void;
   collapsed?: boolean;
-  onToggle?: () => void;
 }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -111,25 +109,6 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-navy px-3 py-4">
-        {/* Desktop collapse toggle (mobile passes no onToggle). */}
-        {onToggle && (
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-expanded={!collapsed}
-            className={cn(
-              "flex w-full items-center rounded-lg px-3 py-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-              collapsed ? "justify-center" : "justify-end",
-            )}
-          >
-            {collapsed ? (
-              <PanelLeftOpen className="h-[18px] w-[18px]" />
-            ) : (
-              <PanelLeftClose className="h-[18px] w-[18px]" />
-            )}
-          </button>
-        )}
         {!collapsed && (
           <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/50">
             Menu
@@ -284,18 +263,29 @@ export function DashboardLayout({
         <div
           className={cn(
             "flex h-16 items-center border-b border-sidebar-border",
-            collapsed ? "justify-center px-0" : "px-6",
+            collapsed ? "justify-center px-0" : "justify-between px-4",
           )}
         >
-          <Link href="/temp" aria-label="HeadHunter home">
-            <Logo markOnly={collapsed} />
-          </Link>
+          {!collapsed && (
+            <Link href="/temp" aria-label="HeadHunter home">
+              <Logo />
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => setCollapsed((value) => !value)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!collapsed}
+            className="rounded-md p-1.5 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-[18px] w-[18px]" />
+            ) : (
+              <PanelLeftClose className="h-[18px] w-[18px]" />
+            )}
+          </button>
         </div>
-        <SidebarContent
-          onNavigate={close}
-          collapsed={collapsed}
-          onToggle={() => setCollapsed((value) => !value)}
-        />
+        <SidebarContent onNavigate={close} collapsed={collapsed} />
       </aside>
 
       {/* Slide-over sidebar (mobile) — always full width, never collapsed. */}
