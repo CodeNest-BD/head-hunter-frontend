@@ -8,14 +8,16 @@ import type { ProposalEventData } from "../components/ProposalCard";
  * wording is computed client-side instead — keep this map in sync with the
  * backend's by hand.
  */
-const PROPOSAL_CARD_TITLES: Record<ProposalEventData["proposalStatus"], string> =
-  {
-    proposed: "Availability proposed",
-    counter_requested: "New times requested",
-    confirmed: "Interview time confirmed",
-    expired: "Availability expired",
-    unknown: "Availability update",
-  };
+const PROPOSAL_CARD_TITLES: Record<
+  ProposalEventData["proposalStatus"],
+  string
+> = {
+  proposed: "Availability proposed",
+  counter_requested: "New times requested",
+  confirmed: "Interview time confirmed",
+  expired: "Availability expired",
+  unknown: "Availability update",
+};
 
 export function proposalCardTitle(
   proposalStatus: ProposalEventData["proposalStatus"],

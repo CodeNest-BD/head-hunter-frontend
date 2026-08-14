@@ -119,7 +119,10 @@ export function useConversationRealtime(
       // refetch. Only skip when we can positively confirm it was us: an
       // unavailable current-user id falls through to invalidating, because a
       // redundant refetch is far cheaper than a missed message.
-      if (currentUserId !== undefined && payload.senderUserId === currentUserId) {
+      if (
+        currentUserId !== undefined &&
+        payload.senderUserId === currentUserId
+      ) {
         return;
       }
 

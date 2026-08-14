@@ -120,7 +120,9 @@ export function NotificationGroup({ group, role }: NotificationGroupProps) {
       <button
         type="button"
         aria-expanded={isExpanded}
-        aria-label={isExpanded ? "Collapse notifications" : "Expand notifications"}
+        aria-label={
+          isExpanded ? "Collapse notifications" : "Expand notifications"
+        }
         onClick={() => setIsExpanded((current) => !current)}
         className="flex w-full items-center justify-between gap-3 rounded-xl border border-border/70 bg-card p-4 text-left shadow-sm transition-colors hover:bg-accent/40"
       >

@@ -149,9 +149,7 @@ export type ConversationThread = z.infer<typeof conversationThreadSchema>;
 export const unreadCountSchema = z.object({ unread: z.number() });
 
 export const submissionUnreadCountsSchema = z.object({
-  counts: z.array(
-    z.object({ submissionId: z.string(), unread: z.number() }),
-  ),
+  counts: z.array(z.object({ submissionId: z.string(), unread: z.number() })),
 });
 
 export const markReadResponseSchema = z.object({ updated: z.number() });

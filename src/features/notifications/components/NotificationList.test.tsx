@@ -163,7 +163,9 @@ describe("NotificationList", () => {
           submissionId: "sub-1",
           total: 1,
           unread: 1,
-          items: [item({ type: "offer_accepted", data: { submissionId: "sub-1" } })],
+          items: [
+            item({ type: "offer_accepted", data: { submissionId: "sub-1" } }),
+          ],
         }),
       ]),
     );
@@ -179,7 +181,11 @@ describe("NotificationList", () => {
   it("renders an unroutable notification as text rather than a link", async () => {
     fetchNotificationGroupsMock.mockResolvedValue(
       paginated([
-        group({ total: 1, unread: 0, items: [item({ type: "payout_sent", data: null })] }),
+        group({
+          total: 1,
+          unread: 0,
+          items: [item({ type: "payout_sent", data: null })],
+        }),
       ]),
     );
     useAuthMock.mockReturnValue({ user: { id: "u", role: "recruiter" } });

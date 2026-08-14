@@ -5,7 +5,10 @@ import { AlertCircle, BellOff, CheckCheck } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { Button } from "@/shared/ui-components/controls/button";
-import { useMarkAllRead, useNotificationGroups } from "../hooks/useNotifications";
+import {
+  useMarkAllRead,
+  useNotificationGroups,
+} from "../hooks/useNotifications";
 import { NotificationGroup } from "./NotificationGroup";
 
 const PAGE_SIZE = 20;

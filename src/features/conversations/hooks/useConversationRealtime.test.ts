@@ -58,7 +58,13 @@ function createFakeSocket() {
   });
 
   return {
-    socket: { on, off, connect: vi.fn(), disconnect: vi.fn(), connected: false },
+    socket: {
+      on,
+      off,
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      connected: false,
+    },
     on,
     off,
     emitToClient: (event: string, payload?: unknown) => {

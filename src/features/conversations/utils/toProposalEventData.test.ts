@@ -69,9 +69,7 @@ describe("toProposalEventData", () => {
 describe("proposalCardTitle", () => {
   it("matches the backend's PROPOSAL_TITLES wording for each status", () => {
     expect(proposalCardTitle("proposed")).toBe("Availability proposed");
-    expect(proposalCardTitle("counter_requested")).toBe(
-      "New times requested",
-    );
+    expect(proposalCardTitle("counter_requested")).toBe("New times requested");
     expect(proposalCardTitle("confirmed")).toBe("Interview time confirmed");
     expect(proposalCardTitle("expired")).toBe("Availability expired");
   });

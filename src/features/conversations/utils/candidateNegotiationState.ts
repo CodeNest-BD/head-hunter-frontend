@@ -142,7 +142,9 @@ export function candidateNegotiationState(
       candidateInterviews.length > 0
         ? pickLatestInterview(candidateInterviews)
         : null;
-    const interview = latestInterview ? toInterviewBadge(latestInterview) : null;
+    const interview = latestInterview
+      ? toInterviewBadge(latestInterview)
+      : null;
 
     const liveOffer = pickLiveOffer(candidateOffers);
     const offer = liveOffer ? toOfferBadge(liveOffer) : null;
