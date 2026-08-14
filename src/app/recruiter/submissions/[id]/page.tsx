@@ -32,6 +32,7 @@ import {
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
+import { NegotiationActionCards } from "@/shared/ui-components/data/NegotiationActionCards";
 import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -166,6 +167,11 @@ function CandidateItem({
       <NegotiationStateBadges
         interview={negotiationState?.interview ?? null}
         offer={negotiationState?.offer ?? null}
+      />
+
+      <NegotiationActionCards
+        negotiationState={negotiationState}
+        viewerParty="recruiter"
       />
 
       <CandidateFields candidate={candidate} />

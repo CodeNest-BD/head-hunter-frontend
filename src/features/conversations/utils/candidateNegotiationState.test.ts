@@ -17,6 +17,7 @@ function interview(overrides: Partial<Interview> & { id: string }): Interview {
     outcome: null,
     passFeedback: null,
     createdAt: "2026-08-10T09:00:00.000Z",
+    liveProposal: null,
     ...overrides,
   };
 }
@@ -139,11 +140,52 @@ describe("candidateNegotiationState", () => {
     expect(state.get("cand-1")).toEqual({
       interview: { kind: "awaiting_time" },
       offer: null,
+      interviewRecord: interviews[0],
+      offerRecord: null,
     });
     expect(state.get("cand-2")).toEqual({
       interview: null,
       offer: { kind: "sent", salaryMinor: null },
+      interviewRecord: null,
+      offerRecord: offers[0],
     });
     expect(state.get("cand-3")).toBeUndefined();
+  });
+
+  it("carries the live offer record beside its badge", () => {
+    const liveOffer = offer({
+      id: "offer-1",
+      candidateId: "cand-1",
+      status: "countered",
+    });
+    const state = candidateNegotiationState([], [liveOffer]);
+
+    expect(state.get("cand-1")?.offer).toEqual({
+      kind: "countered",
+      salaryMinor: null,
+    });
+    expect(state.get("cand-1")?.offerRecord).toEqual(liveOffer);
+  });
+
+  it("carries the latest interview record beside its badge", () => {
+    const first = interview({
+      id: "int-1",
+      candidateId: "cand-1",
+      round: 1,
+    });
+    const second = interview({
+      id: "int-2",
+      candidateId: "cand-1",
+      round: 2,
+    });
+    const state = candidateNegotiationState([first, second], []);
+
+    expect(state.get("cand-1")?.interviewRecord).toEqual(second);
+  });
+
+  it("leaves both records null when the candidate has neither", () => {
+    const state = candidateNegotiationState([], []);
+
+    expect(state.get("cand-1")).toBeUndefined();
   });
 });

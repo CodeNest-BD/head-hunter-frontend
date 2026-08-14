@@ -2,6 +2,8 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils";
+import type { Interview } from "@/features/interviews";
+import type { Offer } from "@/features/offers";
 import type { Candidate } from "../schemas";
 import { CandidateCard } from "./CandidateCard";
 
@@ -22,6 +24,60 @@ vi.mock("../hooks/useCandidates", () => ({
   }),
   useAttachments: () => ({ data: undefined, isPending: false, isError: false }),
 }));
+// `NegotiationActionCards` (shared with `CandidateItem` on the recruiter
+// page) has its own dedicated test file covering every card-mounting case
+// for both `viewerParty` values; this file only has to prove this card wires
+// its `negotiationState` and `viewerParty="company"` through to it.
+vi.mock("@/shared/ui-components/data/NegotiationActionCards", () => ({
+  NegotiationActionCards: ({
+    negotiationState,
+    viewerParty,
+  }: {
+    negotiationState: {
+      interviewRecord: { id: string } | null;
+      offerRecord: { id: string } | null;
+    } | null;
+    viewerParty: string;
+  }) => (
+    <div>
+      Negotiation action cards ({viewerParty}) — interview:
+      {negotiationState?.interviewRecord?.id ?? "none"} — offer:
+      {negotiationState?.offerRecord?.id ?? "none"}
+    </div>
+  ),
+}));
+
+function interview(overrides: Partial<Interview> & { id: string }): Interview {
+  return {
+    jobId: "job-1",
+    candidateId: "candidate-1",
+    interviewType: "video",
+    status: "proposed",
+    round: 1,
+    confirmedSlotStart: null,
+    confirmedSlotEnd: null,
+    meetingJoinUrl: null,
+    outcome: null,
+    passFeedback: null,
+    createdAt: "2026-08-10T09:00:00.000Z",
+    liveProposal: null,
+    ...overrides,
+  };
+}
+
+function offer(overrides: Partial<Offer> & { id: string }): Offer {
+  return {
+    candidateId: "candidate-1",
+    jobId: "job-1",
+    previousOfferId: null,
+    createdBy: "company",
+    amountMinor: 500000,
+    status: "sent",
+    placementDetails: null,
+    createdAt: "2026-08-10T09:00:00.000Z",
+    ...overrides,
+  };
+}
 
 function candidate(overrides: Partial<Candidate> = {}): Candidate {
   return {
@@ -66,6 +122,8 @@ describe("CandidateCard", () => {
         negotiationState={{
           interview: { kind: "awaiting_time" },
           offer: { kind: "sent", salaryMinor: 13000000 },
+          interviewRecord: null,
+          offerRecord: null,
         }}
       />,
     );
@@ -79,5 +137,26 @@ describe("CandidateCard", () => {
     expect(
       screen.getByRole("combobox", { name: /status for dana lee/i }),
     ).toHaveValue("submitted");
+  });
+
+  it("mounts NegotiationActionCards for the company with this candidate's negotiation records", () => {
+    renderWithProviders(
+      <CandidateCard
+        candidate={candidate()}
+        submissionId="submission-1"
+        negotiationState={{
+          interview: { kind: "awaiting_time" },
+          offer: { kind: "sent", salaryMinor: null },
+          interviewRecord: interview({ id: "interview-1" }),
+          offerRecord: offer({ id: "offer-1" }),
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        /Negotiation action cards \(company\) — interview:interview-1 — offer:offer-1/,
+      ),
+    ).toBeInTheDocument();
   });
 });

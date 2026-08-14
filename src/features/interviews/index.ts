@@ -36,6 +36,7 @@ export type {
   InterviewSlot,
   InterviewStatus,
   InterviewType,
+  LiveProposal,
   Proposal,
   ProposalStatus,
 } from "./schemas";

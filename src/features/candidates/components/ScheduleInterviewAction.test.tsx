@@ -53,6 +53,7 @@ function interview(overrides: Partial<Interview> = {}): Interview {
     outcome: null,
     passFeedback: null,
     createdAt: "2026-08-01T00:00:00.000Z",
+    liveProposal: null,
     ...overrides,
   };
 }

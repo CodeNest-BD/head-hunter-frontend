@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
+import { NegotiationActionCards } from "@/shared/ui-components/data/NegotiationActionCards";
 import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { CandidateAttachments } from "./CandidateAttachments";
 import { CandidateFields } from "./CandidateFields";
@@ -92,6 +93,11 @@ export function CandidateCard({
         <NegotiationStateBadges
           interview={negotiationState?.interview ?? null}
           offer={negotiationState?.offer ?? null}
+        />
+
+        <NegotiationActionCards
+          negotiationState={negotiationState}
+          viewerParty="company"
         />
 
         <CandidateFields candidate={candidate} />

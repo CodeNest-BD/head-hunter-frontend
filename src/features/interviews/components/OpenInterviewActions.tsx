@@ -70,6 +70,17 @@ export function OpenInterviewActions({
     return null;
   }
 
+  // Once a batch is open, `ProposalCard` — mounted directly on the candidate
+  // card alongside this component — owns confirm/counter/propose-again/
+  // withdraw for it. This component keeps only what it uniquely does:
+  // starting a negotiation that has no open batch right now, whether that's
+  // a freshly created interview or one where a counter-request has already
+  // cleared the previous batch. Rendering both here would be two ways to
+  // propose times on one screen.
+  if (interview.liveProposal) {
+    return null;
+  }
+
   if (panel === "proposing") {
     return (
       <div className="flex flex-col gap-2 rounded-lg border border-border/60 p-3">
