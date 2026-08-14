@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "@/features/auth/store/authSlice";
 import { injectStoreIntoApiClient } from "@/shared/libs/apiClient";
 import { injectDepsIntoRefreshClient } from "@/features/auth/lib/refreshClient";
+import { injectTokenReaderIntoSocket } from "@/lib/socket";
 
 export const store = configureStore({
   reducer: {
@@ -21,6 +22,11 @@ injectDepsIntoRefreshClient({
     return { status, user };
   },
 });
+// Same reasoning applies to the socket client: it stays free of a direct
+// store import so that merely importing `@/lib/socket` never eagerly
+// evaluates this module (and, through it, `apiClient`, which throws when
+// `NEXT_PUBLIC_API_URL` is unset).
+injectTokenReaderIntoSocket(() => store.getState().auth.accessToken);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

@@ -79,6 +79,13 @@ vi.mock("@/features/auth", () => ({
   useAuth: () => useAuthMock(),
 }));
 
+// useConversationRealtime subscribes to the access token purely as an effect
+// dependency (see its own test for that behaviour); mocked here so this file
+// doesn't need a real Redux <Provider> just to satisfy that read.
+vi.mock("@/shared/store/hooks", () => ({
+  useAppSelector: () => null,
+}));
+
 // Thread renders ProposalCard for "proposal" events, which pulls in the
 // interviews feature's real API client (and its NEXT_PUBLIC_API_URL check)
 // through its hooks — mocked out here the same way ProposalCard's own test

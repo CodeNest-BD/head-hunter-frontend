@@ -1,19 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  REALTIME_SUBSCRIBE_STATES,
-  type RealtimeChannel,
-  type RealtimePostgresInsertPayload,
-} from "@supabase/supabase-js";
 
 import { useAuth } from "@/features/auth";
-// Imported from the keys module directly, not the feature barrel, for the
-// same reason `useConversation.ts` does: the barrel also re-exports
-// components that would drag unrelated UI into every module that merely
-// wants to invalidate the inbox/submissions list.
+// Imported from the keys module directly, not the feature barrel: the barrel
+// also re-exports components that would drag unrelated UI into every module
+// that merely wants to invalidate the inbox/submissions list.
 import { submissionKeys } from "@/features/submissions/keys";
-import { getSupabaseClient } from "@/lib/supabase";
-import { fetchRealtimeToken } from "../api/conversations";
+import { getConversationSocket } from "@/lib/socket";
+import { useAppSelector } from "@/shared/store/hooks";
 import { conversationKeys } from "../keys";
 
 export type ConversationRealtimeStatus = "live" | "polling";
@@ -22,30 +16,51 @@ export interface ConversationRealtimeState {
   status: ConversationRealtimeStatus;
 }
 
-/**
- * The one column this hook reads off the INSERT payload. The table is
- * `REPLICA IDENTITY FULL`, so `payload.new` carries every column,
- * snake_case as Postgres names them — the index signature is only there to
- * satisfy the Realtime client's generic constraint; this is not the full
- * row shape.
- */
-interface MessageRow {
-  [column: string]: unknown;
-  sender_user_id: string;
+/** Mirrors MessageCreatedPayload in the API's libs/common/src/ws/conversation-events.ts. */
+interface MessageCreatedFrame {
+  submissionId: string;
+  messageId: string;
+  senderUserId: string;
+  createdAt: string;
 }
 
-// The token is short-lived (`expiresIn` seconds, ~15 minutes today) and
-// minting one is rate-limited to 10/minute, so the socket refreshes ahead of
-// expiry on its own schedule instead of waiting to be kicked off by
-// `CHANNEL_ERROR` — expiry is the routine case here, not a failure path.
-const TOKEN_REFRESH_SAFETY_MARGIN_SECONDS = 30;
-const MIN_REFRESH_DELAY_MS = 5_000;
+const MESSAGE_CREATED = "message.created";
+
+const isMessageCreatedFrame = (
+  payload: unknown,
+): payload is MessageCreatedFrame => {
+  if (typeof payload !== "object" || payload === null) {
+    return false;
+  }
+  if (
+    !("submissionId" in payload) ||
+    !("senderUserId" in payload) ||
+    !("messageId" in payload) ||
+    !("createdAt" in payload)
+  ) {
+    return false;
+  }
+  return (
+    typeof payload.submissionId === "string" &&
+    typeof payload.senderUserId === "string" &&
+    typeof payload.messageId === "string" &&
+    typeof payload.createdAt === "string"
+  );
+};
 
 /**
- * Subscribes one conversation thread to Supabase Realtime's `postgres_changes`
- * feed and reports whether the socket is live or the caller should lean on
- * polling. Falls back to `"polling"` immediately when the client is
- * unconfigured, and after a resubscribe attempt also fails — never throws.
+ * Subscribes one thread to the API's conversations gateway and reports whether
+ * the socket is live or the caller should lean on polling. Falls back to
+ * `"polling"` when the socket is unconfigured or drops — never throws.
+ *
+ * The socket carries no message content, so every frame is handled the same way:
+ * invalidate and let TanStack Query refetch through the authorized REST path. A
+ * missed or out-of-order frame therefore self-heals on the next fetch rather than
+ * leaving the thread permanently wrong.
+ *
+ * There is no token-refresh machinery here on purpose: the socket's `auth`
+ * callback re-reads the access token before every reconnect, and socket.io owns
+ * the backoff.
  */
 export function useConversationRealtime(
   submissionId: string,
@@ -54,151 +69,84 @@ export function useConversationRealtime(
   const { user } = useAuth();
   const currentUserId = user?.id;
   const [status, setStatus] = useState<ConversationRealtimeStatus>("polling");
+  // Dependency-only: not read below. A gateway that refuses a stale token's
+  // handshake disconnects with reason "io server disconnect", which
+  // socket.io-client deliberately does not auto-retry, so the effect must
+  // re-run — and reconnect — once the store actually has a fresh token.
+  // Do not remove this as unused; it is what makes that retry happen at all.
+  const accessToken = useAppSelector((s) => s.auth.accessToken);
+  // Ref, not state: recording the last-refused token must not itself trigger
+  // a re-render or re-run this effect — only `accessToken` changing should.
+  const lastRefusedTokenRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
-    const client = getSupabaseClient();
-    setStatus("polling");
-    if (!client) {
+    const socket = getConversationSocket();
+    if (!socket) {
+      setStatus("polling");
       return;
     }
 
-    let cancelled = false;
-    let channel: RealtimeChannel | null = null;
-    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-    // One re-mint-and-resubscribe attempt is allowed per failure episode.
-    // A second failure in the same episode gives up rather than looping, so
-    // a flaky connection cannot storm the 10/minute token-mint endpoint.
-    let hasRetriedThisEpisode = false;
-
-    const clearRefreshTimer = (): void => {
-      if (refreshTimer !== undefined) {
-        clearTimeout(refreshTimer);
-        refreshTimer = undefined;
+    const onConnect = (): void => setStatus("live");
+    const onDisconnect = (reason: string): void => {
+      setStatus("polling");
+      // The gateway refuses a bad handshake with `client.disconnect(true)`,
+      // which reaches the client as this exact reason — the one disconnect
+      // socket.io-client will not retry on its own. But retrying unconditionally
+      // here would bypass socket.io's own reconnection backoff, which is the
+      // only thing bounding handshake attempt rate against the backend (this
+      // endpoint isn't covered by ThrottlerGuard) — a stale token that never
+      // gets refreshed would otherwise retry in a tight loop for as long as the
+      // tab is open. So retry only when the token has changed since the
+      // attempt that was just refused: that is the only condition under which
+      // the refusal's cause could plausibly be gone. Do not remove this guard.
+      if (
+        reason === "io server disconnect" &&
+        accessToken !== lastRefusedTokenRef.current
+      ) {
+        lastRefusedTokenRef.current = accessToken;
+        socket.connect();
       }
     };
 
-    const teardownChannel = (): void => {
-      clearRefreshTimer();
-      if (channel) {
-        void client.removeChannel(channel);
-        channel = null;
-      }
-    };
-
-    // A dropped connection — network blip, idle timeout, or an explicit
-    // error — gets exactly one re-mint-and-resubscribe attempt per episode;
-    // a second failure in the same episode gives up. One place to edit here
-    // when a backoff is added later, instead of two.
-    const retryOnceThenFallback = (): void => {
-      if (hasRetriedThisEpisode) {
-        setStatus("polling");
+    const onMessageCreated = (payload: unknown): void => {
+      if (!isMessageCreatedFrame(payload)) {
         return;
       }
-      hasRetriedThisEpisode = true;
-      void connect();
-    };
-
-    const connect = async (): Promise<void> => {
-      try {
-        const { token, expiresIn } = await fetchRealtimeToken();
-        if (cancelled) return;
-
-        await client.realtime.setAuth(token);
-        if (cancelled) return;
-
-        // Captured by reference so the `.subscribe` callback below can tell a
-        // genuine drop of *this* channel apart from a `CLOSED`/error event
-        // arriving late for a channel this same hook already superseded:
-        // `removeChannel` (used for the proactive refresh and for the retry
-        // below) itself triggers this channel's own callback with `CLOSED`
-        // once the server acks the leave, so without this check every
-        // routine teardown would immediately retrigger a reconnect.
-        const myChannel = client.channel(`conversation-${submissionId}`);
-        channel = myChannel;
-        myChannel
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table: "messages",
-              filter: `submission_id=eq.${submissionId}`,
-            },
-            (payload: RealtimePostgresInsertPayload<MessageRow>) => {
-              // The sender's own subscription echoes their own INSERT back —
-              // the send mutation already invalidated for it, so skip the
-              // second refetch. Only skip when we can positively confirm it
-              // was us; an unavailable current-user id falls back to
-              // invalidating, since a redundant refetch is far cheaper than a
-              // missed message.
-              const authoredBySelf =
-                currentUserId !== undefined &&
-                payload.new.sender_user_id === currentUserId;
-              if (authoredBySelf) return;
-
-              // Invalidate rather than append: TanStack Query stays the source of truth,
-              // so a missed or out-of-order event self-heals on the next fetch instead
-              // of leaving the thread permanently wrong.
-              //
-              // `conversationKeys.all` is `["conversations"]`, a prefix of
-              // `conversationKeys.unreadCount`, so this one call already
-              // covers the thread *and* the sidebar unread pill by default
-              // partial-key matching. The inbox/submissions list lives under
-              // its own `submissionKeys` namespace, so it needs its own call
-              // to reach it — that's the piece this subscription didn't
-              // cover before.
-              void queryClient.invalidateQueries({
-                queryKey: conversationKeys.all,
-              });
-              void queryClient.invalidateQueries({
-                queryKey: submissionKeys.all,
-              });
-            },
-          )
-          .subscribe((subscribeStatus) => {
-            if (cancelled || channel !== myChannel) return;
-
-            if (subscribeStatus === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
-              hasRetriedThisEpisode = false;
-              setStatus("live");
-              return;
-            }
-
-            // A dropped connection can surface as any of these three — a
-            // network blip, an idle timeout, or the socket closing outright
-            // all mean the same thing here: retry once, then fall back.
-            if (
-              subscribeStatus === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR ||
-              subscribeStatus === REALTIME_SUBSCRIBE_STATES.TIMED_OUT ||
-              subscribeStatus === REALTIME_SUBSCRIBE_STATES.CLOSED
-            ) {
-              teardownChannel();
-              retryOnceThenFallback();
-            }
-          });
-
-        const refreshDelayMs = Math.max(
-          (expiresIn - TOKEN_REFRESH_SAFETY_MARGIN_SECONDS) * 1000,
-          MIN_REFRESH_DELAY_MS,
-        );
-        refreshTimer = setTimeout(() => {
-          hasRetriedThisEpisode = false;
-          teardownChannel();
-          void connect();
-        }, refreshDelayMs);
-      } catch {
-        if (cancelled) return;
-        retryOnceThenFallback();
+      if (payload.submissionId !== submissionId) {
+        return;
       }
+      // The sender's own send mutation already invalidated, so skip the second
+      // refetch. Only skip when we can positively confirm it was us: an
+      // unavailable current-user id falls through to invalidating, because a
+      // redundant refetch is far cheaper than a missed message.
+      if (currentUserId !== undefined && payload.senderUserId === currentUserId) {
+        return;
+      }
+
+      // `conversationKeys.all` is `["conversations"]`, a prefix of
+      // `conversationKeys.unreadCount`, so this one call covers the thread and
+      // the sidebar unread pill by partial-key matching. The inbox lives under
+      // its own namespace and needs its own call.
+      void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+      void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
     };
 
-    void connect();
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.on(MESSAGE_CREATED, onMessageCreated);
+    if (socket.connected) {
+      setStatus("live");
+    }
+    socket.connect();
 
     return () => {
-      cancelled = true;
-      teardownChannel();
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.off(MESSAGE_CREATED, onMessageCreated);
+      // The socket is shared app-wide and deliberately left connected; only this
+      // hook's listeners come off.
     };
-  }, [submissionId, queryClient, currentUserId]);
+  }, [submissionId, queryClient, currentUserId, accessToken]);
 
   return { status };
 }

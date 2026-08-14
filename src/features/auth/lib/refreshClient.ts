@@ -1,4 +1,5 @@
 import axios from "axios";
+import { resetConversationSocket } from "@/lib/socket";
 import { callRefresh } from "../api/refresh";
 import { fetchMe } from "../api/me";
 import {
@@ -62,6 +63,7 @@ export async function refreshAccessToken(): Promise<string> {
     .catch((err: unknown) => {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         wired.dispatch(sessionCleared());
+        resetConversationSocket();
       }
       throw err;
     })

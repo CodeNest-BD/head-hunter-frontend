@@ -3,11 +3,9 @@ import {
   conversationThreadSchema,
   markReadResponseSchema,
   messageSchema,
-  realtimeTokenSchema,
   unreadCountSchema,
   type ConversationThread,
   type Message,
-  type RealtimeToken,
 } from "../schemas";
 
 export type ThreadSortOrder = "ASC" | "DESC";
@@ -66,16 +64,4 @@ export async function markThreadRead(submissionId: string): Promise<number> {
 export async function fetchMessageUnreadCount(): Promise<number> {
   const { data } = await apiClient.get<unknown>("/conversations/unread-count");
   return unreadCountSchema.parse(data).unread;
-}
-
-/**
- * POST /v1/conversations/realtime-token — short-lived token for subscribing
- * to Supabase Realtime. Rate-limited to 10/minute, so callers must mint this
- * on a schedule (proactive refresh, bounded retry), never per render or event.
- */
-export async function fetchRealtimeToken(): Promise<RealtimeToken> {
-  const { data } = await apiClient.post<unknown>(
-    "/conversations/realtime-token",
-  );
-  return realtimeTokenSchema.parse(data);
 }
