@@ -64,9 +64,12 @@ export async function fetchRecruiterWallet(): Promise<RecruiterWalletSummary> {
 export async function fetchRecruiterPlacements(
   page: number,
 ): Promise<Paginated<RecruiterPlacement>> {
-  const { data } = await apiClient.get<unknown>("/recruiter/wallet/placements", {
-    params: { page, limit: 20 },
-  });
+  const { data } = await apiClient.get<unknown>(
+    "/recruiter/wallet/placements",
+    {
+      params: { page, limit: 20 },
+    },
+  );
   return paginatedSchema(recruiterPlacementSchema).parse(data);
 }
 
