@@ -1,19 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, MessagesSquare } from "lucide-react";
+import { useState } from "react";
+import { AlertCircle } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
-import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
 import { useAdminConversations } from "../hooks/useAdmin";
-import { useListState } from "../hooks/useListState";
 import { SUBMISSION_LABELS } from "../schemas";
 import { ListPager } from "./ListPager";
-import { ListToolbar } from "./ListToolbar";
 import { SUBMISSION_STATUS_STYLES } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
+
+const PAGE_SIZE = 10;
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -24,86 +29,53 @@ function formatDateTime(iso: string): string {
   });
 }
 
-export function ConversationsTable() {
-  const {
-    page,
-    setPage,
-    qInput,
-    setQInput,
-    q,
-    status,
-    changeStatus,
-    limit,
-    changeLimit,
-  } = useListState();
+/**
+ * This recruiter's submissions, each a link into the full conversation thread —
+ * the same thread the Conversations directory opens.
+ */
+export function RecruiterSubmissions({
+  recruiterProfileId,
+}: {
+  recruiterProfileId: string;
+}) {
+  const [page, setPage] = useState(1);
   const { data, isPending, isError, refetch } = useAdminConversations({
     page,
-    limit,
-    q: q || undefined,
-    status: status || undefined,
+    limit: PAGE_SIZE,
+    recruiterProfileId,
   });
 
   return (
-    <div className="flex flex-col gap-4">
-      <ListToolbar
-        query={qInput}
-        onQueryChange={setQInput}
-        placeholder="Search by job, company or recruiter…"
-        filter={{
-          value: status,
-          onChange: changeStatus,
-          allLabel: "All statuses",
-          options: [
-            { value: "submitted", label: "Submitted" },
-            { value: "under_review", label: "Under review" },
-            { value: "advanced", label: "Advanced" },
-            { value: "rejected", label: "Rejected" },
-            { value: "withdrawn", label: "Withdrawn" },
-          ],
-        }}
-      />
-
-      {isPending ? (
-        <TableSkeleton />
-      ) : isError ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Submissions</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        {isPending ? (
+          <div className="h-32 animate-pulse" />
+        ) : isError ? (
+          <div className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
             <AlertCircle className="h-6 w-6" />
-            Could not load conversations.
+            Could not load submissions.
             <Button variant="outline" size="sm" onClick={() => void refetch()}>
               Retry
             </Button>
-          </CardContent>
-        </Card>
-      ) : data.data.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
-              <MessagesSquare className="h-6 w-6" />
-            </span>
-            <p className="text-sm font-semibold text-navy">
-              No conversations found
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Conversations appear once a recruiter submits candidates to a job.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
+          </div>
+        ) : data.data.length === 0 ? (
+          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+            This recruiter has not submitted any candidates yet.
+          </p>
+        ) : (
+          <>
             <div className="overflow-x-auto">
               <table className={TABLE_CLASS}>
                 <thead>
                   <tr className={THEAD_ROW_CLASS}>
                     <th scope="col" className="px-5 py-3 font-semibold">
-                      Company
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Recruiter
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
                       Job
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Company
                     </th>
                     <th
                       scope="col"
@@ -130,17 +102,14 @@ export function ConversationsTable() {
                           href={`/admin/conversations/${c.submissionId}`}
                           className="font-medium text-navy after:absolute after:inset-0 hover:text-primary focus-visible:underline focus-visible:outline-none"
                         >
-                          {c.companyName}
+                          <span className="block max-w-[220px] truncate">
+                            {c.jobTitle}
+                          </span>
                         </Link>
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">
-                        <span className="block max-w-[200px] truncate">
-                          {c.recruiterName}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        <span className="block max-w-[220px] truncate">
-                          {c.jobTitle}
+                        <span className="block max-w-[180px] truncate">
+                          {c.companyName}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-center tabular-nums text-navy">
@@ -168,12 +137,10 @@ export function ConversationsTable() {
               totalPages={data.meta.totalPages}
               total={data.meta.total}
               onPage={setPage}
-              pageSize={limit}
-              onPageSize={changeLimit}
             />
-          </CardContent>
-        </Card>
-      )}
-    </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

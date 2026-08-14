@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -15,6 +16,35 @@ import { useAdminCompany } from "../hooks/useAdmin";
 import { HoldButton } from "./HoldButton";
 import { DetailField, DetailSkeleton } from "./DetailPrimitives";
 import { ACCOUNT_STATUS_LABELS, ACCOUNT_STATUS_STYLES } from "./statusStyles";
+
+/** Label + clickable count that deep-links to this company's jobs list. */
+function JobCountField({
+  label,
+  count,
+  href,
+}: {
+  label: string;
+  count: number;
+  href: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        {label}
+      </span>
+      {count > 0 ? (
+        <Link
+          href={href}
+          className="w-fit text-sm font-semibold text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+        >
+          {count}
+        </Link>
+      ) : (
+        <span className="text-sm text-navy">0</span>
+      )}
+    </div>
+  );
+}
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -70,6 +100,10 @@ export function CompanyDetail({ userId }: { userId: string }) {
   }
 
   const location = [data.city, data.state].filter(Boolean).join(", ") || "—";
+  const jobsHref = `/admin/jobs?${new URLSearchParams({
+    companyProfileId: data.companyProfileId,
+    companyName: data.companyName,
+  }).toString()}`;
 
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
@@ -124,8 +158,16 @@ export function CompanyDetail({ userId }: { userId: string }) {
             <CardTitle className="text-base">Activity</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DetailField label="Jobs posted" value={String(data.jobCount)} />
-            <DetailField label="Open jobs" value={String(data.openJobCount)} />
+            <JobCountField
+              label="Jobs posted"
+              count={data.jobCount}
+              href={jobsHref}
+            />
+            <JobCountField
+              label="Open jobs"
+              count={data.openJobCount}
+              href={`${jobsHref}&status=published`}
+            />
             <DetailField
               label="Last login"
               value={formatDate(data.lastLoginAt)}

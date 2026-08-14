@@ -18,6 +18,7 @@ import {
   ACCOUNT_STATUS_STYLES,
   SUBSCRIPTION_STATUS_STYLES,
 } from "./statusStyles";
+import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -28,10 +29,20 @@ function formatDate(iso: string): string {
 }
 
 export function RecruitersTable() {
-  const { page, setPage, qInput, setQInput, q, status, changeStatus } =
-    useListState();
+  const {
+    page,
+    setPage,
+    qInput,
+    setQInput,
+    q,
+    status,
+    changeStatus,
+    limit,
+    changeLimit,
+  } = useListState();
   const { data, isPending, isError, refetch } = useAdminRecruiters({
     page,
+    limit,
     q: q || undefined,
     status: status || undefined,
   });
@@ -83,9 +94,9 @@ export function RecruitersTable() {
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className={TABLE_CLASS}>
                 <thead>
-                  <tr className="border-b border-border text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
+                  <tr className={THEAD_ROW_CLASS}>
                     <th scope="col" className="px-5 py-3 font-semibold">
                       Recruiter
                     </th>
@@ -111,10 +122,7 @@ export function RecruitersTable() {
                 </thead>
                 <tbody>
                   {data.data.map((r) => (
-                    <tr
-                      key={r.userId}
-                      className="border-b border-border/60 last:border-0 hover:bg-accent/40"
-                    >
+                    <tr key={r.userId} className={BODY_ROW_CLASS}>
                       <td className="px-5 py-3">
                         <Link
                           href={`/admin/recruiters/${r.userId}`}
@@ -178,6 +186,8 @@ export function RecruitersTable() {
               totalPages={data.meta.totalPages}
               total={data.meta.total}
               onPage={setPage}
+              pageSize={limit}
+              onPageSize={changeLimit}
             />
           </CardContent>
         </Card>

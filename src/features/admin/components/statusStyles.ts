@@ -1,4 +1,4 @@
-import type { AccountStatus, SubmissionStatus } from "../schemas";
+import type { AccountStatus, JobStatus, SubmissionStatus } from "../schemas";
 
 /** Account status pill colors (matches the app's light status palette). */
 export const ACCOUNT_STATUS_STYLES: Record<AccountStatus, string> = {
@@ -25,5 +25,14 @@ export const SUBMISSION_STATUS_STYLES: Record<SubmissionStatus, string> = {
   advanced: "bg-[#E7F4EC] text-[#17734E]",
   rejected: "bg-[#FBEAEA] text-[#9B3535]",
   withdrawn: "bg-muted text-muted-foreground",
+  unknown: "bg-muted text-muted-foreground",
+};
+
+export const JOB_STATUS_STYLES: Record<JobStatus, string> = {
+  published: "bg-[#E7F4EC] text-[#17734E]",
+  draft: "bg-muted text-muted-foreground",
+  paused: "bg-[#FBF3DF] text-[#7A5109]",
+  filled: "bg-primary/15 text-primary",
+  closed: "bg-[#FBEAEA] text-[#9B3535]",
   unknown: "bg-muted text-muted-foreground",
 };

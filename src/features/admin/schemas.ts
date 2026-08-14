@@ -54,6 +54,7 @@ export const recruiterDetailSchema = recruiterListItemSchema.extend({
   lastLoginAt: z.string().nullable(),
   currentPeriodEnd: z.string().nullable(),
   submissionCount: z.number(),
+  releasedEarningsMinor: z.number(),
   references: z.array(recruiterReferenceSchema),
 });
 export type RecruiterDetail = z.infer<typeof recruiterDetailSchema>;
@@ -65,6 +66,7 @@ export const companyListItemSchema = z.object({
   email: z.string(),
   status: accountStatusSchema,
   balanceMinor: z.number(),
+  jobCount: z.number(),
   joinedAt: z.string(),
 });
 export type CompanyListItem = z.infer<typeof companyListItemSchema>;
@@ -165,3 +167,47 @@ export const adminStatsSchema = z.object({
   ),
 });
 export type AdminStats = z.infer<typeof adminStatsSchema>;
+
+export const jobStatusSchema = tolerantEnum(
+  ["draft", "published", "paused", "filled", "closed", "unknown"],
+  "unknown",
+);
+export type JobStatus = z.infer<typeof jobStatusSchema>;
+
+export const adminJobListItemSchema = z.object({
+  jobId: z.string(),
+  title: z.string(),
+  companyProfileId: z.string(),
+  companyName: z.string(),
+  status: jobStatusSchema,
+  recruiterFeeMinor: z.number(),
+  locationState: z.string().nullable(),
+  submissionCount: z.number(),
+  createdAt: z.string(),
+});
+export type AdminJobListItem = z.infer<typeof adminJobListItemSchema>;
+
+export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+  draft: "Draft",
+  published: "Published",
+  paused: "Paused",
+  filled: "Filled",
+  closed: "Closed",
+  unknown: "Unknown",
+};
+
+export const recruiterPricingSchema = z.object({
+  amountMinor: z.number().nullable(),
+  priceId: z.string().nullable(),
+  currency: z.string(),
+});
+export type RecruiterPricing = z.infer<typeof recruiterPricingSchema>;
+
+export const adminUserSchema = z.object({
+  userId: z.string(),
+  email: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  createdAt: z.string(),
+});
+export type AdminUser = z.infer<typeof adminUserSchema>;
