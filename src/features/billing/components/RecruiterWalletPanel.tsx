@@ -223,11 +223,23 @@ function PlacementsTable() {
 
 /** Recruiter earnings: escrow summary + placement history. */
 export function RecruiterWalletPanel() {
-  const { data } = useRecruiterWallet();
+  const { data, isError, refetch } = useRecruiterWallet();
 
   return (
     <div className="flex flex-col gap-8">
-      <WalletSummaryCard data={data} />
+      {isError ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
+            <AlertCircle className="h-6 w-6" />
+            Could not load your earnings.
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <WalletSummaryCard data={data} />
+      )}
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-bold text-navy">Placements</h2>
         <PlacementsTable />
