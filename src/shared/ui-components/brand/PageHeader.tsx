@@ -12,10 +12,10 @@ interface PageHeaderProps {
 }
 
 /**
- * Standard page header in the Head-Hunters Platform style: a heavy navy
- * headline, a muted subtitle, and a clean hairline — with the mock's subtle
- * fade-up entrance. The breadcrumb in the top bar names the section, so the
- * header carries no eyebrow.
+ * Standard page header in the Head-Hunters Platform style: a muted subtitle and
+ * a clean hairline, with the mock's subtle fade-up entrance. The breadcrumb in
+ * the top bar names the page, so the title is kept only as a screen-reader
+ * heading (a visible headline would duplicate the breadcrumb).
  */
 export function PageHeader({
   title,
@@ -30,11 +30,11 @@ export function PageHeader({
     <header className={cn("[animation:fadeUp_.4s_ease_both]", className)}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="font-heading text-2xl font-extrabold tracking-[-0.01em] text-navy sm:text-[30px]">
-            {title}
-          </h1>
+          {/* Kept for the document outline / screen readers; the breadcrumb is
+           * the visible page name. */}
+          <h1 className="sr-only">{title}</h1>
           {subtitle && (
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
               {subtitle}
             </p>
           )}
