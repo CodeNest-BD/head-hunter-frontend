@@ -34,6 +34,7 @@ function useColumns(): ColumnDef<RecruiterListItem, unknown>[] {
         id: "name",
         header: "Recruiter",
         size: 240,
+        meta: { flex: true },
         cell: ({ row }) => {
           const r = row.original;
           return (
@@ -106,10 +107,11 @@ function useColumns(): ColumnDef<RecruiterListItem, unknown>[] {
       },
       {
         id: "actions",
-        header: "",
+        header: "Actions",
         enableSorting: false,
         enableResizing: false,
-        size: 150,
+        size: 160,
+        meta: { align: "right" },
         cell: ({ row }) => {
           const r = row.original;
           return (

@@ -52,6 +52,7 @@ function useColumns(): ColumnDef<ConversationListItem, unknown>[] {
         id: "jobTitle",
         header: "Job",
         size: 220,
+        meta: { flex: true },
         cell: ({ row }) => (
           <span className="block max-w-[220px] truncate text-muted-foreground">
             {row.original.jobTitle}
@@ -62,6 +63,7 @@ function useColumns(): ColumnDef<ConversationListItem, unknown>[] {
         id: "candidates",
         header: "Candidates",
         size: 120,
+        meta: { align: "center" },
         cell: ({ row }) => (
           <span className="tabular-nums text-navy">
             {row.original.candidateCount}

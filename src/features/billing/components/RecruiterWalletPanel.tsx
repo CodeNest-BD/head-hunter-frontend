@@ -106,6 +106,7 @@ function usePlacementColumns(): ColumnDef<RecruiterPlacement, unknown>[] {
         id: "role",
         header: "Role",
         size: 200,
+        meta: { flex: true },
         cell: ({ row }) => (
           <span className="block max-w-[200px] truncate text-muted-foreground">
             {row.original.jobTitle}

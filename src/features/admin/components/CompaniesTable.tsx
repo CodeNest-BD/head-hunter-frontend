@@ -39,6 +39,7 @@ function useColumns(): ColumnDef<CompanyListItem, unknown>[] {
         id: "companyName",
         header: "Company",
         size: 260,
+        meta: { flex: true },
         cell: ({ row }) => {
           const c = row.original;
           return (
@@ -73,6 +74,7 @@ function useColumns(): ColumnDef<CompanyListItem, unknown>[] {
         id: "jobs",
         header: "Jobs",
         size: 90,
+        meta: { align: "center" },
         cell: ({ row }) => {
           const c = row.original;
           return c.jobCount > 0 ? (
@@ -110,10 +112,11 @@ function useColumns(): ColumnDef<CompanyListItem, unknown>[] {
       },
       {
         id: "actions",
-        header: "",
+        header: "Actions",
         enableSorting: false,
         enableResizing: false,
-        size: 150,
+        size: 160,
+        meta: { align: "right" },
         cell: ({ row }) => {
           const c = row.original;
           return (

@@ -7,6 +7,7 @@ import {
   useReactTable,
   type ColumnDef,
   type OnChangeFn,
+  type RowData,
   type SortingState,
 } from "@tanstack/react-table";
 import { AlertCircle, ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
@@ -17,6 +18,28 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { DataTablePagination } from "@/shared/ui-components/data/DataTablePagination";
+
+declare module "@tanstack/react-table" {
+  // Per-column presentation hints understood by DataTable.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    /** Text alignment for the header and cells. Defaults to left. */
+    align?: "left" | "right" | "center";
+    /** Absorbs leftover width so the table fills its container without
+     * distributing slack across every column. Give exactly one column this. */
+    flex?: boolean;
+  }
+}
+
+const alignClass = (align?: "left" | "right" | "center"): string =>
+  align === "right" ? "text-right" : align === "center" ? "text-center" : "";
+
+const justifyClass = (align?: "left" | "right" | "center"): string =>
+  align === "right"
+    ? "justify-end"
+    : align === "center"
+      ? "justify-center"
+      : "justify-start";
 
 export interface DataTableProps<T> {
   columns: ColumnDef<T, unknown>[];
@@ -141,12 +164,18 @@ export function DataTable<T>({
                   {headerGroup.headers.map((header) => {
                     const canSort = header.column.getCanSort();
                     const sorted = header.column.getIsSorted();
+                    const meta = header.column.columnDef.meta;
                     return (
                       <th
                         key={header.id}
                         scope="col"
-                        className="relative select-none px-4 py-3 font-semibold"
-                        style={{ width: header.getSize() }}
+                        className={cn(
+                          "relative select-none px-4 py-3 font-semibold",
+                          alignClass(meta?.align),
+                        )}
+                        style={
+                          meta?.flex ? undefined : { width: header.getSize() }
+                        }
                         aria-sort={
                           sorted === "asc"
                             ? "ascending"
@@ -161,7 +190,8 @@ export function DataTable<T>({
                             disabled={!canSort}
                             onClick={header.column.getToggleSortingHandler()}
                             className={cn(
-                              "flex items-center gap-1.5",
+                              "flex w-full items-center gap-1.5",
+                              justifyClass(meta?.align),
                               canSort && "cursor-pointer hover:text-navy",
                             )}
                           >
@@ -203,20 +233,30 @@ export function DataTable<T>({
                   key={row.id}
                   className="border-b border-border/60 transition-colors last:border-0 even:bg-muted/20 hover:bg-accent/50 [&>td]:border-l [&>td]:border-border/40 [&>td:first-child]:border-l-0"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-4 py-3 align-middle"
-                      style={{ width: cell.column.getSize() }}
-                    >
-                      {
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        ) as ReactNode
-                      }
-                    </td>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const meta = cell.column.columnDef.meta;
+                    return (
+                      <td
+                        key={cell.id}
+                        className={cn(
+                          "px-4 py-3 align-middle",
+                          alignClass(meta?.align),
+                        )}
+                        style={
+                          meta?.flex
+                            ? undefined
+                            : { width: cell.column.getSize() }
+                        }
+                      >
+                        {
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          ) as ReactNode
+                        }
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
