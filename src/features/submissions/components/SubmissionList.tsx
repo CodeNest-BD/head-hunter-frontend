@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowRight, Send } from "lucide-react";
 
+import { UnreadBadge } from "@/features/conversations/components/UnreadBadge";
+import { useMessageUnreadCounts } from "@/features/conversations/hooks/useMessageUnreadCounts";
 import { useJobs } from "@/features/jobs";
 import { Button } from "@/shared/ui-components/controls/button";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -36,6 +38,7 @@ export function SubmissionList() {
   const jobTitles = new Map(
     jobs.data?.data.map((job) => [job.id, job.title]) ?? [],
   );
+  const { data: unreadCounts } = useMessageUnreadCounts();
 
   if (submissions.isPending) {
     return <TableSkeleton />;
@@ -107,7 +110,12 @@ export function SubmissionList() {
                 className="border-b border-border/60 transition-colors last:border-0 hover:bg-accent/40"
               >
                 <td className="px-4 py-3 font-medium text-foreground">
-                  {jobTitles.get(submission.jobId) ?? "—"}
+                  <span className="flex items-center gap-2">
+                    {jobTitles.get(submission.jobId) ?? "—"}
+                    <UnreadBadge
+                      count={unreadCounts?.get(submission.id) ?? 0}
+                    />
+                  </span>
                 </td>
                 <td className="px-4 py-3 tabular-nums text-muted-foreground">
                   {formatDate(submission.createdAt)}

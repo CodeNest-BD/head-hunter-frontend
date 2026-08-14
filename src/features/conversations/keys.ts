@@ -5,4 +5,5 @@ export const conversationKeys = {
   thread: (submissionId: string, params: ThreadParams) =>
     ["conversations", "thread", submissionId, params] as const,
   unreadCount: ["conversations", "unread-count"] as const,
+  unreadCounts: ["conversations", "unread-counts"] as const,
 };

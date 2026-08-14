@@ -3,6 +3,7 @@ import {
   conversationThreadSchema,
   markReadResponseSchema,
   messageSchema,
+  submissionUnreadCountsSchema,
   unreadCountSchema,
   type ConversationThread,
   type Message,
@@ -64,4 +65,12 @@ export async function markThreadRead(submissionId: string): Promise<number> {
 export async function fetchMessageUnreadCount(): Promise<number> {
   const { data } = await apiClient.get<unknown>("/conversations/unread-count");
   return unreadCountSchema.parse(data).unread;
+}
+
+/** GET /v1/conversations/unread-counts — unread messages per submission. */
+export async function fetchMessageUnreadCounts(): Promise<
+  Array<{ submissionId: string; unread: number }>
+> {
+  const { data } = await apiClient.get<unknown>("/conversations/unread-counts");
+  return submissionUnreadCountsSchema.parse(data).counts;
 }

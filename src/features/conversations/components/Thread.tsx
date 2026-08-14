@@ -96,6 +96,7 @@ export function Thread({ submissionId }: ThreadProps) {
   const {
     data,
     isPending,
+    isPlaceholderData,
     isError,
     refetch,
     fetchNextPage,
@@ -115,14 +116,25 @@ export function Thread({ submissionId }: ThreadProps) {
   // container's height at that moment; cleared once consumed.
   const pendingOlderPageScrollHeightRef = useRef<number | null>(null);
   const lastEventKeyRef = useRef<string | undefined>(undefined);
-  // The scroll container element this thread last scrolled for. A
-  // candidate-chip switch or an error→Retry both unmount and remount this
-  // `div` (via the `ThreadSkeleton`/error branches below) without
-  // necessarily changing the newest event — an untagged system event is
-  // often still the newest entry after narrowing to one candidate — so the
-  // element's own identity is tracked as a second, independent trigger
+  // The scroll container element this thread last scrolled for. An
+  // error→Retry unmounts and remounts this `div` (via the `ThreadSkeleton`/
+  // error branches below) without necessarily changing the newest event, so
+  // the element's own identity is tracked as a second, independent trigger
   // rather than folded into "did the newest event change".
   const lastScrolledContainerRef = useRef<HTMLDivElement | null>(null);
+  // The candidate filter this thread last scrolled for. `keepPreviousData`
+  // means switching filters no longer remounts the container (see
+  // `useConversationThread`), so that can no longer stand in for "the user
+  // asked for a different view" — this tracks it directly instead. Only
+  // updated once `isPlaceholderData` clears, i.e. once `events` actually
+  // reflects the new filter rather than the still-displayed stale data —
+  // otherwise the immediate re-render after clicking a chip (still showing
+  // the old filter's events while the new page fetches) would mark the
+  // filter "seen" a render too early, and the real transition — often onto
+  // an unchanged newest event, since the latest message is frequently the
+  // one just sent about the candidate being filtered to — would fall
+  // through both other triggers and never scroll at all.
+  const lastScrolledCandidateIdRef = useRef<string | null>(null);
 
   // Mark the counterparty's messages read on mount and whenever the thread
   // regains focus (e.g. switching back to this tab) — the same two moments a
@@ -136,22 +148,24 @@ export function Thread({ submissionId }: ThreadProps) {
   }, [submissionId]);
 
   // Scrolls to the newest message on first load, whenever the newest event
-  // actually changes (a real arrival — Realtime or the periodic poll), and
-  // whenever the scroll container itself has been replaced by a remount —
-  // a fresh `div` always starts at `scrollTop 0`, so without this a
-  // candidate-chip switch or an error→Retry re-opens the panel scrolled to
-  // the top even though the "newest event" signal alone stayed silent.
-  // Fetching an older page only ever appends to `data.pages`, and
+  // actually changes (a real arrival — Realtime or the periodic poll),
+  // whenever the scroll container itself has been replaced by a remount (an
+  // error→Retry — a fresh `div` always starts at `scrollTop 0`), and
+  // whenever the candidate filter has genuinely changed (the reader asked
+  // to look at a different, usually shorter, view and expects its newest
+  // message, not wherever they happened to be scrolled in the previous
+  // view). Fetching an older page only ever appends to `data.pages`, and
   // `orderedEvents` reverses that into oldest-first, so the *last* (newest)
   // event's key is unchanged and this stays a no-op for that case.
   //
   // Deliberately has no dependency array: every comparison below is
-  // idempotent (only a real change to the event key or the container
-  // element ever touches `scrollTop`), so re-running it on every render is
-  // a few reference checks, not a visible jump — and it means a remount
-  // is caught the instant it happens rather than depending on `data`
+  // idempotent (only a real change to one of the three signals ever touches
+  // `scrollTop`), so re-running it on every render is a few reference
+  // checks, not a visible jump — and it means a remount or a settled filter
+  // change is caught the instant it happens rather than depending on `data`
   // reference equality also having changed in the same commit, which is
-  // exactly the case a chip switch onto an untagged system event violates.
+  // exactly the case a filter switch onto an untagged system event (already
+  // the newest entry before and after narrowing) violates.
   // A layout effect, not a passive one, so the adjustment lands before the
   // browser paints the container at its stale `scrollTop 0`.
   useLayoutEffect(() => {
@@ -160,8 +174,19 @@ export function Thread({ submissionId }: ThreadProps) {
     const container = scrollContainerRef.current;
     const eventChanged = lastEventKey !== lastEventKeyRef.current;
     const containerChanged = container !== lastScrolledContainerRef.current;
+    // Placeholder data is the previous filter's events, redisplayed while the
+    // new filter's page fetches — `events` doesn't reflect `candidateId` yet,
+    // so comparing against it here would fire (and mark the filter "seen")
+    // one render too early, on data that hasn't actually changed.
+    const filterChanged =
+      !isPlaceholderData && candidateId !== lastScrolledCandidateIdRef.current;
     lastEventKeyRef.current = lastEventKey;
-    if (!container || (!eventChanged && !containerChanged)) return;
+    if (!isPlaceholderData) {
+      lastScrolledCandidateIdRef.current = candidateId;
+    }
+    if (!container || (!eventChanged && !containerChanged && !filterChanged)) {
+      return;
+    }
     lastScrolledContainerRef.current = container;
     container.scrollTop = container.scrollHeight;
   });
@@ -277,7 +302,10 @@ export function Thread({ submissionId }: ThreadProps) {
        * of leaving it unverified. */}
       <div
         ref={scrollContainerRef}
-        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-navy pr-1 [overflow-anchor:none]"
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-navy pr-1 [overflow-anchor:none]",
+          isPlaceholderData && "opacity-60 transition-opacity",
+        )}
       >
         {hasNextPage && (
           <Button
