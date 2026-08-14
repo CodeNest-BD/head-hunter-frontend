@@ -12,6 +12,9 @@ export function useListState(initialStatus = "") {
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState("");
   const [q, setQ] = useState("");
+  // `initialStatus` seeds the filter once, at mount. Callers that deep-link a
+  // status (e.g. JobsTable via ?status=) reach a fresh mount on navigation, so
+  // this is correct; it is not meant to re-sync if the prop changes in place.
   const [status, setStatus] = useState(initialStatus);
   const [limit, setLimit] = useState<number>(DEFAULT_PAGE_SIZE);
 
