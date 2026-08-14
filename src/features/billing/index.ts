@@ -10,6 +10,7 @@ export { WalletSummary } from "./components/WalletSummary";
 export {
   useLedger,
   useOpenSubscriptionPortal,
+  useRecruiterPrice,
   useStartSubscriptionCheckout,
   useStartTopUp,
   useSubscription,
@@ -18,6 +19,7 @@ export {
 export { billingKeys } from "./keys";
 export type {
   LedgerEntry,
+  RecruiterPrice,
   SubscriptionStatus,
   WalletSummary as WalletSummaryData,
 } from "./schemas";

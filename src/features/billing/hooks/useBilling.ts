@@ -5,6 +5,7 @@ import {
   createSubscriptionPortal,
   createTopUpCheckout,
   fetchLedger,
+  fetchRecruiterPrice,
   fetchSubscription,
   fetchWallet,
 } from "../api/billing";
@@ -25,6 +26,15 @@ export function useSubscription() {
   return useQuery({
     queryKey: billingKeys.subscription,
     queryFn: fetchSubscription,
+  });
+}
+
+/** The admin-configured recruiter price. Public — no session required. */
+export function useRecruiterPrice() {
+  return useQuery({
+    queryKey: billingKeys.recruiterPrice,
+    queryFn: fetchRecruiterPrice,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

@@ -1,10 +1,25 @@
+"use client";
+
+import { useRecruiterPrice } from "@/features/billing";
+import { formatMinor } from "@/shared/utils/money";
+
 import { LandingCta } from "./LandingCta";
 
+// Shown until the live price loads (and if it's ever unset) so the marketing
+// card never renders a blank or dashed price.
+const FALLBACK_PRICE = "$199";
+
 /**
- * Pricing section copied from the v2 mock: "Simple, honest pricing." with a
- * white "free forever" company card and a navy "$199 / month" recruiter card.
+ * Pricing section: a white "free forever" company card and a navy recruiter
+ * card whose price is the live, admin-configured recruiter subscription price.
  */
 export function Pricing() {
+  const { data: price } = useRecruiterPrice();
+  const recruiterPrice =
+    price?.amountMinor != null
+      ? formatMinor(price.amountMinor)
+      : FALLBACK_PRICE;
+
   return (
     <section
       id="pricing"
@@ -44,7 +59,7 @@ export function Pricing() {
               Recruiters
             </div>
             <div className="font-heading text-[44px] font-extrabold">
-              $199
+              {recruiterPrice}
               <span className="text-[17px] font-semibold text-[#7D89A3]">
                 {" "}
                 / month

@@ -38,6 +38,12 @@ export const subscriptionStatusSchema = z.object({
 });
 export type SubscriptionStatus = z.infer<typeof subscriptionStatusSchema>;
 
+export const recruiterPriceSchema = z.object({
+  amountMinor: z.number().nullable(),
+  currency: z.string(),
+});
+export type RecruiterPrice = z.infer<typeof recruiterPriceSchema>;
+
 export const LEDGER_TYPE_LABELS: Record<LedgerEntry["entryType"], string> = {
   credit: "Funds added",
   debit: "Funds spent",
