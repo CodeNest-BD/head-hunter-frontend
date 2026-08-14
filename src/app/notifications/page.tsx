@@ -13,7 +13,10 @@ export default function NotificationsPage() {
   return (
     <DashboardLayout>
       <div className="flex max-w-2xl flex-col gap-8">
-        <PageHeader title="Notifications" />
+        <PageHeader
+          title="Notifications"
+          subtitle="Updates on your jobs, submissions and followed companies."
+        />
         <NotificationList />
       </div>
     </DashboardLayout>

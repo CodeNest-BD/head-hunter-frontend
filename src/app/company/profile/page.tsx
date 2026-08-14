@@ -55,7 +55,10 @@ export default function CompanyProfilePage() {
     <RequireRole role="company">
       <DashboardLayout>
         <div className="flex flex-col gap-8">
-          <PageHeader title="Company profile" />
+          <PageHeader
+            title="Company profile"
+            subtitle="This is what recruiters see when they browse companies."
+          />
           <CompanyProfileContent />
         </div>
       </DashboardLayout>

@@ -16,6 +16,7 @@ export default function CompanyJobsPage() {
         <div className="flex flex-col gap-8">
           <PageHeader
             title="Jobs"
+            subtitle="Create a job, then publish it to notify your followers."
             actions={
               <Button asChild>
                 <Link href="/company/jobs/new">

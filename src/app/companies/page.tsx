@@ -10,7 +10,10 @@ export default function CompaniesPage() {
     <RequireRole role="recruiter">
       <DashboardLayout>
         <div className="flex flex-col gap-8">
-          <PageHeader title="Companies" />
+          <PageHeader
+            title="Companies"
+            subtitle="Follow a company to be notified when it posts a job."
+          />
           <CompanyList />
         </div>
       </DashboardLayout>

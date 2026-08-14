@@ -246,6 +246,7 @@ export default function JobsPage() {
                 Job map
               </span>
             }
+            subtitle="Explore open roles across the US. Pick a state or city to filter the roles below."
           />
 
           {/* Search + category filters */}

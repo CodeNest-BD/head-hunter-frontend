@@ -121,7 +121,11 @@ export default function EditJobPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to jobs
           </Link>
-          <PageHeader title="Edit job" className="mb-0" />
+          <PageHeader
+            title="Edit job"
+            subtitle="Update the details, then publish when you are ready."
+            className="mb-0"
+          />
           <EditJobContent jobId={params.id} />
         </div>
       </DashboardLayout>
