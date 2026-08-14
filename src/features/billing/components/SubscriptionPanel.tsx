@@ -10,9 +10,11 @@ import {
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
+import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   useOpenSubscriptionPortal,
+  useRecruiterPrice,
   useStartSubscriptionCheckout,
   useSubscription,
 } from "../hooks/useBilling";
@@ -20,7 +22,6 @@ import type { SubscriptionStatus } from "../schemas";
 
 // Display copy only — Stripe is the source of truth for the actual charge.
 const PLAN_NAME = "Recruiter membership";
-const PLAN_PRICE = "$199";
 const PLAN_INTERVAL = "month";
 const PLAN_FEATURES: readonly string[] = [
   "Full access to the 50-state job map",
@@ -78,6 +79,7 @@ function statusLine(status: Status, periodEnd: string | null): string {
  */
 export function SubscriptionPanel() {
   const { data, isLoading } = useSubscription();
+  const { data: price } = useRecruiterPrice();
   const checkout = useStartSubscriptionCheckout();
   const portal = useOpenSubscriptionPortal();
 
@@ -95,6 +97,8 @@ export function SubscriptionPanel() {
   // reachable for every status except a never-subscribed recruiter.
   const canManageBilling = status !== "none";
   const busy = checkout.isPending || portal.isPending;
+  const planPrice =
+    price?.amountMinor != null ? formatMinor(price.amountMinor) : "—";
 
   const planAction = (() => {
     switch (status) {
@@ -174,7 +178,7 @@ export function SubscriptionPanel() {
               {PLAN_NAME}
             </p>
             <p className="mt-2 font-heading text-[44px] font-extrabold leading-none">
-              {PLAN_PRICE}
+              {planPrice}
               <span className="text-[17px] font-semibold text-[#7D89A3]">
                 {" "}
                 / {PLAN_INTERVAL}

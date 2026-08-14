@@ -3,9 +3,11 @@ import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   checkoutUrlSchema,
   ledgerEntrySchema,
+  recruiterPriceSchema,
   subscriptionStatusSchema,
   walletSummarySchema,
   type LedgerEntry,
+  type RecruiterPrice,
   type SubscriptionStatus,
   type WalletSummary,
 } from "../schemas";
@@ -40,6 +42,12 @@ export async function createTopUpCheckout(
 export async function fetchSubscription(): Promise<SubscriptionStatus> {
   const { data } = await apiClient.get<unknown>("/billing/subscription");
   return subscriptionStatusSchema.parse(data);
+}
+
+/** GET /v1/billing/recruiter-price — public: the current subscription price. */
+export async function fetchRecruiterPrice(): Promise<RecruiterPrice> {
+  const { data } = await apiClient.get<unknown>("/billing/recruiter-price");
+  return recruiterPriceSchema.parse(data);
 }
 
 /** POST /v1/billing/subscription/checkout — returns the Stripe Checkout URL. */
