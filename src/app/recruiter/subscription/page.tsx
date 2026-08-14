@@ -10,7 +10,10 @@ export default function RecruiterSubscriptionPage() {
     <RequireRole role="recruiter">
       <DashboardLayout>
         <div className="flex max-w-3xl flex-col gap-8">
-          <PageHeader title="Subscription" />
+          <PageHeader
+            title="Subscription"
+            subtitle="A monthly subscription unlocks the job map, job list and candidate submissions."
+          />
           <CheckoutResultBanner
             param="checkout"
             successMessage="Subscription started — your access unlocks as soon as Stripe confirms the payment."

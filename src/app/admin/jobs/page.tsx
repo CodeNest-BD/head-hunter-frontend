@@ -30,7 +30,10 @@ export default function AdminJobsPage() {
         ]}
       >
         <div className="flex flex-col gap-8">
-          <PageHeader title="Jobs" />
+          <PageHeader
+            title="Jobs"
+            subtitle="Every job posted on the platform. Filter by company, status or title."
+          />
           <Suspense fallback={null}>
             <JobsContent />
           </Suspense>

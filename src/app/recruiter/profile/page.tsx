@@ -72,7 +72,10 @@ export default function RecruiterProfilePage() {
     <RequireRole role="recruiter">
       <DashboardLayout>
         <div className="flex max-w-2xl flex-col gap-8">
-          <PageHeader title="Recruiter profile" />
+          <PageHeader
+            title="Recruiter profile"
+            subtitle="Your details, specializations and references."
+          />
           <RecruiterProfileContent />
         </div>
       </DashboardLayout>

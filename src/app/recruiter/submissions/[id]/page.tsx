@@ -401,7 +401,10 @@ export default function SubmissionDetailPage() {
                 <ArrowLeft className="h-4 w-4" />
                 Back to submissions
               </Link>
-              <PageHeader title="Submission detail" />
+              <PageHeader
+                title="Submission detail"
+                subtitle="Track your candidates and the job you submitted them to."
+              />
             </div>
           }
           left={<SubmissionDetailLeftColumn submissionId={params.id} />}
