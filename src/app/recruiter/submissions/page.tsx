@@ -11,7 +11,6 @@ export default function RecruiterSubmissionsPage() {
       <DashboardLayout>
         <div className="flex flex-col gap-8">
           <PageHeader
-            eyebrow="Your submissions"
             title="Submissions"
             subtitle="Every candidate you've submitted, and where each one stands."
           />

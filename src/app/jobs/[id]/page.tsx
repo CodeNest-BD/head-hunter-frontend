@@ -254,7 +254,6 @@ export default function JobDetailPage() {
             Back to job map
           </Link>
           <PageHeader
-            eyebrow="Role"
             title="Job detail"
             subtitle="The fee, the role, and everything you need before you submit a candidate."
             className="mb-0"

@@ -46,7 +46,6 @@ function WalletContent() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
       <PageHeader
-        eyebrow="Billing"
         title="Wallet"
         subtitle="Load funds once, then publish jobs against your balance. Fees stay reserved until a role is filled or closed."
       />

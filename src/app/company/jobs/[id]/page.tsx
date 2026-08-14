@@ -122,7 +122,6 @@ export default function EditJobPage() {
             Back to jobs
           </Link>
           <PageHeader
-            eyebrow="Job"
             title="Edit job"
             subtitle="Update the details, then publish when you are ready."
             className="mb-0"

@@ -23,7 +23,6 @@ export default function NewJobPage() {
             Back to jobs
           </Link>
           <PageHeader
-            eyebrow="New job"
             title="New job"
             subtitle="Saved as a draft. You publish it from the job page, which is when followers are notified."
             className="mb-0"

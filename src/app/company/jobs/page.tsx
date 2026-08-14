@@ -15,7 +15,6 @@ export default function CompanyJobsPage() {
       <DashboardLayout>
         <div className="flex flex-col gap-8">
           <PageHeader
-            eyebrow="Your jobs"
             title="Jobs"
             subtitle="Create a job, then publish it to notify your followers."
             actions={

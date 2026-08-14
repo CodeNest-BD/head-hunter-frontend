@@ -21,7 +21,6 @@ export default function CompanyInboxPage() {
       <DashboardLayout>
         <div className="flex flex-col gap-8">
           <PageHeader
-            eyebrow="Candidate inbox"
             title="Inbox"
             subtitle="Candidates recruiters have submitted to your jobs."
           />

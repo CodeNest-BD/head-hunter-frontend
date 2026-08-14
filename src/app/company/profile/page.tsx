@@ -56,7 +56,6 @@ export default function CompanyProfilePage() {
       <DashboardLayout>
         <div className="flex flex-col gap-8">
           <PageHeader
-            eyebrow="Company"
             title="Company profile"
             subtitle="This is what recruiters see when they browse companies."
           />

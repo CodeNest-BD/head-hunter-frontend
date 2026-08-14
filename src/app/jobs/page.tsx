@@ -240,7 +240,6 @@ export default function JobsPage() {
       <DashboardLayout>
         <div className="flex flex-col gap-8">
           <PageHeader
-            eyebrow="Job map"
             title={
               <span className="flex items-center gap-2">
                 <MapPinned className="h-6 w-6 text-primary" />

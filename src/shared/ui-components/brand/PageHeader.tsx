@@ -1,10 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/shared/libs/shadCnConfig";
-import { Eyebrow } from "./Eyebrow";
 
 interface PageHeaderProps {
-  /** Optional uppercase eyebrow label. */
-  eyebrow?: string;
   title: ReactNode;
   subtitle?: ReactNode;
   /** Right-aligned actions (e.g. a primary button). */
@@ -15,12 +12,12 @@ interface PageHeaderProps {
 }
 
 /**
- * Standard page header in the Head-Hunters Platform style: a small eyebrow, a
- * heavy navy headline, a muted subtitle, and a clean hairline — with the mock's
- * subtle fade-up entrance.
+ * Standard page header in the Head-Hunters Platform style: a heavy navy
+ * headline, a muted subtitle, and a clean hairline — with the mock's subtle
+ * fade-up entrance. The breadcrumb in the top bar names the section, so the
+ * header carries no eyebrow.
  */
 export function PageHeader({
-  eyebrow,
   title,
   subtitle,
   actions,
@@ -33,11 +30,6 @@ export function PageHeader({
     <header className={cn("[animation:fadeUp_.4s_ease_both]", className)}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          {eyebrow && (
-            <div className="mb-2">
-              <Eyebrow>{eyebrow}</Eyebrow>
-            </div>
-          )}
           <h1 className="font-heading text-2xl font-extrabold tracking-[-0.01em] text-navy sm:text-[30px]">
             {title}
           </h1>
