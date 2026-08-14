@@ -38,8 +38,7 @@ function useColumns(): ColumnDef<CompanyListItem, unknown>[] {
       {
         id: "companyName",
         header: "Company",
-        size: 260,
-        meta: { flex: true },
+        size: 340,
         cell: ({ row }) => {
           const c = row.original;
           return (
@@ -115,12 +114,12 @@ function useColumns(): ColumnDef<CompanyListItem, unknown>[] {
         header: "Actions",
         enableSorting: false,
         enableResizing: false,
-        size: 160,
-        meta: { align: "right" },
+        size: 180,
+        meta: { align: "center" },
         cell: ({ row }) => {
           const c = row.original;
           return (
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center justify-center gap-2">
               <Button asChild variant="outline" size="sm">
                 <Link href={`/admin/companies/${c.userId}`}>View</Link>
               </Button>

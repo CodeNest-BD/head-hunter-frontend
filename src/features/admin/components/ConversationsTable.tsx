@@ -51,8 +51,7 @@ function useColumns(): ColumnDef<ConversationListItem, unknown>[] {
       {
         id: "jobTitle",
         header: "Job",
-        size: 220,
-        meta: { flex: true },
+        size: 300,
         cell: ({ row }) => (
           <span className="block max-w-[220px] truncate text-muted-foreground">
             {row.original.jobTitle}

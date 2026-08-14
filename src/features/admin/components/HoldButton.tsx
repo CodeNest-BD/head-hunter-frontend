@@ -5,6 +5,7 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { Ban, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { useReinstateAccount, useSuspendAccount } from "../hooks/useAdmin";
 import type { AccountStatus } from "../schemas";
@@ -60,12 +61,16 @@ export function HoldButton({
         <Button
           type="button"
           size={size === "sm" ? "sm" : "default"}
-          variant={isHeld ? "outline" : "destructive"}
+          variant="outline"
+          className={cn(
+            !isHeld &&
+              "border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive",
+          )}
         >
           {isHeld ? (
-            <ShieldCheck className="h-[18px] w-[18px]" />
+            <ShieldCheck className="h-4 w-4" />
           ) : (
-            <Ban className="h-[18px] w-[18px]" />
+            <Ban className="h-4 w-4" />
           )}
           {isHeld ? "Reinstate" : "Hold"}
         </Button>

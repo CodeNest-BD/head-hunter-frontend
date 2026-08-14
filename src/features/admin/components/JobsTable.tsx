@@ -33,8 +33,7 @@ function useColumns(): ColumnDef<AdminJobListItem, unknown>[] {
       {
         id: "title",
         header: "Job",
-        size: 260,
-        meta: { flex: true },
+        size: 320,
         cell: ({ row }) => (
           <div>
             <span className="block max-w-[240px] truncate font-medium text-navy">

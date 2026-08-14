@@ -25,9 +25,6 @@ declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     /** Text alignment for the header and cells. Defaults to left. */
     align?: "left" | "right" | "center";
-    /** Absorbs leftover width so the table fills its container without
-     * distributing slack across every column. Give exactly one column this. */
-    flex?: boolean;
   }
 }
 
@@ -173,9 +170,7 @@ export function DataTable<T>({
                           "relative select-none px-4 py-3 font-semibold",
                           alignClass(meta?.align),
                         )}
-                        style={
-                          meta?.flex ? undefined : { width: header.getSize() }
-                        }
+                        style={{ width: header.getSize() }}
                         aria-sort={
                           sorted === "asc"
                             ? "ascending"
@@ -215,9 +210,12 @@ export function DataTable<T>({
                             aria-orientation="vertical"
                             onMouseDown={header.getResizeHandler()}
                             onTouchStart={header.getResizeHandler()}
+                            onClick={(event) => event.stopPropagation()}
                             className={cn(
-                              "absolute right-0 top-0 h-full w-1 cursor-col-resize touch-none select-none bg-transparent hover:bg-primary/40",
-                              header.column.getIsResizing() && "bg-primary/60",
+                              "absolute right-0 top-0 flex h-full w-2 cursor-col-resize touch-none select-none items-center justify-center",
+                              "before:h-1/2 before:w-px before:bg-border before:transition-colors hover:before:w-0.5 hover:before:bg-primary",
+                              header.column.getIsResizing() &&
+                                "before:w-0.5 before:bg-primary",
                             )}
                           />
                         )}
@@ -242,11 +240,7 @@ export function DataTable<T>({
                           "px-4 py-3 align-middle",
                           alignClass(meta?.align),
                         )}
-                        style={
-                          meta?.flex
-                            ? undefined
-                            : { width: cell.column.getSize() }
-                        }
+                        style={{ width: cell.column.getSize() }}
                       >
                         {
                           flexRender(
