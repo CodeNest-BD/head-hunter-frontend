@@ -148,12 +148,9 @@ export type ConversationThread = z.infer<typeof conversationThreadSchema>;
 
 export const unreadCountSchema = z.object({ unread: z.number() });
 
-/** Short-lived HS256 token minted by the Nest API for Supabase Realtime auth. */
-export const realtimeTokenSchema = z.object({
-  token: z.string(),
-  expiresIn: z.number(),
+export const submissionUnreadCountsSchema = z.object({
+  counts: z.array(z.object({ submissionId: z.string(), unread: z.number() })),
 });
-export type RealtimeToken = z.infer<typeof realtimeTokenSchema>;
 
 export const markReadResponseSchema = z.object({ updated: z.number() });
 

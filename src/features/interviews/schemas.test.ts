@@ -19,6 +19,7 @@ const interview = {
   outcome: null,
   passFeedback: null,
   createdAt: "2026-08-11T09:00:00.000Z",
+  liveProposal: null,
 };
 
 describe("interviewSchema", () => {
@@ -26,6 +27,24 @@ describe("interviewSchema", () => {
     const parsed = interviewSchema.parse(interview);
     expect(parsed.confirmedSlotStart).toBeNull();
     expect(parsed.outcome).toBeNull();
+  });
+
+  it("parses the open proposal still awaiting a decision", () => {
+    const parsed = interviewSchema.parse({
+      ...interview,
+      liveProposal: {
+        id: "66666666-6666-4666-8666-666666666666",
+        status: "proposed",
+        slots: [
+          {
+            id: "55555555-5555-4555-8555-555555555555",
+            startAt: "2026-09-01T16:00:00.000Z",
+            endAt: "2026-09-01T17:00:00.000Z",
+          },
+        ],
+      },
+    });
+    expect(parsed.liveProposal?.slots).toHaveLength(1);
   });
 
   it("parses a scheduled interview with a confirmed slot and meeting link", () => {

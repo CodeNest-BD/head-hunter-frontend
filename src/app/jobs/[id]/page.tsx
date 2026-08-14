@@ -7,42 +7,46 @@ import {
   ArrowLeft,
   Banknote,
   Briefcase,
+  CalendarDays,
+  Clock,
   MapPin,
-  MessagesSquare,
   Send,
   Wallet,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 import { RequireRole } from "@/features/auth";
-import { ROLE_CATEGORY_LABELS, useJob } from "@/features/jobs";
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  ROLE_CATEGORY_LABELS,
+  useJob,
+} from "@/features/jobs";
 import { useCreateOrOpenSubmission } from "@/features/submissions";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
-import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import type { LucideIcon } from "lucide-react";
 
-const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-muted text-muted-foreground",
-  published: "text-[#17734E] bg-[#E7F4EC]",
-  paused: "text-[#92610C] bg-[#FBF3DF]",
-  filled: "bg-primary/15 text-primary",
-  closed: "bg-muted text-muted-foreground",
-};
-
 function Detail({
   icon: Icon,
   label,
   value,
+  className,
 }: {
   icon: LucideIcon;
   label: string;
   value: string;
+  className?: string;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-card p-4">
+    <div
+      className={cn(
+        "flex items-start gap-3 rounded-lg border border-border/60 bg-card p-4",
+        className,
+      )}
+    >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
         <Icon className="h-[18px] w-[18px]" />
       </span>
@@ -61,7 +65,7 @@ function FormSkeleton() {
     <div className="flex flex-col gap-6">
       <div className="h-28 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
       <div className="grid gap-3 sm:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
             className="h-20 w-full animate-pulse rounded-lg bg-muted"
@@ -72,6 +76,15 @@ function FormSkeleton() {
   );
 }
 
+/**
+ * The page's single call to action. It opens the submission-scoped workspace,
+ * which is where candidates are submitted AND where the thread with the company
+ * lives — so this one button serves both intents, and there is deliberately no
+ * separate "message company" action beside it.
+ *
+ * `useCreateOrOpenSubmission` needs only a `jobId`, so a recruiter can open the
+ * thread and start talking before submitting anyone.
+ */
 function SubmitCandidatesButton({ jobId }: { jobId: string }) {
   const router = useRouter();
   const createOrOpenSubmission = useCreateOrOpenSubmission();
@@ -92,37 +105,6 @@ function SubmitCandidatesButton({ jobId }: { jobId: string }) {
     >
       <Send className="h-[18px] w-[18px]" />
       {createOrOpenSubmission.isPending ? "Opening…" : "Submit candidates"}
-    </Button>
-  );
-}
-
-/**
- * Opens the same submission-scoped thread `SubmitCandidatesButton` does —
- * `useCreateOrOpenSubmission` needs only a `jobId`, so a recruiter can start
- * talking to the company before submitting anyone. Quieter `outline` variant
- * keeps submitting candidates the primary action on this page.
- */
-function MessageCompanyButton({ jobId }: { jobId: string }) {
-  const router = useRouter();
-  const createOrOpenSubmission = useCreateOrOpenSubmission();
-
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      disabled={createOrOpenSubmission.isPending}
-      onClick={() =>
-        createOrOpenSubmission.mutate(
-          { jobId },
-          {
-            onSuccess: (submission) =>
-              router.push(`/recruiter/submissions/${submission.id}`),
-          },
-        )
-      }
-    >
-      <MessagesSquare className="h-[18px] w-[18px]" />
-      {createOrOpenSubmission.isPending ? "Opening…" : "Message company"}
     </Button>
   );
 }
@@ -173,11 +155,19 @@ function JobDetailContent({ jobId }: { jobId: string }) {
     job.salaryMinMinor === null && job.salaryMaxMinor === null
       ? "—"
       : `${formatMinor(job.salaryMinMinor)} – ${formatMinor(job.salaryMaxMinor)}`;
+  const employmentType = job.employmentType
+    ? EMPLOYMENT_TYPE_LABELS[job.employmentType]
+    : "—";
+  // How stale a role is changes whether a recruiter works it, so this is
+  // relative rather than an absolute date. `publishedAt` is null only for a job
+  // that was never published, which a recruiter cannot reach from the job map.
+  const posted = job.publishedAt
+    ? formatDistanceToNow(job.publishedAt, { addSuffix: true })
+    : "—";
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-end gap-3">
-        <MessageCompanyButton jobId={jobId} />
+      <div className="flex justify-end">
         <SubmitCandidatesButton jobId={jobId} />
       </div>
 
@@ -211,18 +201,13 @@ function JobDetailContent({ jobId }: { jobId: string }) {
         />
         <Detail icon={MapPin} label="Location" value={location} />
         <Detail icon={Banknote} label="Salary range" value={salary} />
-        <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-4">
-          <span className="text-xs uppercase tracking-wide text-muted-foreground">
-            Status
-          </span>
-          <StatusBadge
-            label={job.status}
-            className={cn(
-              STATUS_STYLES[job.status] ?? "bg-muted text-muted-foreground",
-              "capitalize",
-            )}
-          />
-        </div>
+        <Detail icon={Clock} label="Employment type" value={employmentType} />
+        <Detail
+          icon={CalendarDays}
+          label="Posted"
+          value={posted}
+          className="sm:col-span-2"
+        />
       </div>
 
       {job.description && (
@@ -241,6 +226,10 @@ function JobDetailContent({ jobId }: { jobId: string }) {
 
 export default function JobDetailPage() {
   const params = useParams<{ id: string }>();
+  // Same query key as JobDetailContent's, so TanStack serves both subscribers
+  // from one request. Read here only for the heading: the role's name belongs in
+  // the page title, and it falls back while loading or if the fetch fails.
+  const { data: job } = useJob(params.id);
 
   return (
     <RequireRole role="recruiter">
@@ -254,7 +243,7 @@ export default function JobDetailPage() {
             Back to job map
           </Link>
           <PageHeader
-            title="Job detail"
+            title={job?.title ?? "Job detail"}
             subtitle="The fee, the role, and everything you need before you submit a candidate."
             className="mb-0"
           />

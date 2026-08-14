@@ -1,17 +1,35 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  fetchNotificationGroups,
   fetchNotifications,
   fetchUnreadCount,
   markAllNotificationsRead,
   markNotificationRead,
+  type NotificationGroupListParams,
   type NotificationListParams,
 } from "../api/notifications";
 import { notificationKeys } from "../keys";
 
-export function useNotifications(params: NotificationListParams) {
+/**
+ * `enabled` defaults to true for the plain list, but a group's expansion
+ * passes false until the caller opens it — the flat endpoint mints a real
+ * query, so there is no point fetching it for a group nobody expanded.
+ */
+export function useNotifications(
+  params: NotificationListParams,
+  enabled = true,
+) {
   return useQuery({
     queryKey: notificationKeys.list(params),
     queryFn: () => fetchNotifications(params),
+    enabled,
+  });
+}
+
+export function useNotificationGroups(params: NotificationGroupListParams) {
+  return useQuery({
+    queryKey: notificationKeys.groups(params),
+    queryFn: () => fetchNotificationGroups(params),
   });
 }
 

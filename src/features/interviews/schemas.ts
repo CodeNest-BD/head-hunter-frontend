@@ -47,6 +47,18 @@ export const interviewSlotSchema = z.object({
 export type InterviewSlot = z.infer<typeof interviewSlotSchema>;
 
 /**
+ * The one proposal on an interview still awaiting a decision — mirrors the
+ * backend's `LiveProposalDto`. Null once the batch is confirmed,
+ * counter-requested, expired, or none has been proposed yet.
+ */
+export const liveProposalSchema = z.object({
+  id: z.string(),
+  status: proposalStatusSchema,
+  slots: z.array(interviewSlotSchema),
+});
+export type LiveProposal = z.infer<typeof liveProposalSchema>;
+
+/**
  * Mirrors `InterviewResponseDto` — the entity's internal `recruiterProfileId`
  * / `companyProfileId` are deliberately absent, same as on the backend.
  */
@@ -63,6 +75,7 @@ export const interviewSchema = z.object({
   outcome: interviewOutcomeSchema.nullable(),
   passFeedback: z.string().nullable(),
   createdAt: z.string(),
+  liveProposal: liveProposalSchema.nullable(),
 });
 export type Interview = z.infer<typeof interviewSchema>;
 

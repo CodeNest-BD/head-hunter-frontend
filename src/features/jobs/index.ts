@@ -18,3 +18,4 @@ export { jobKeys } from "./keys";
 export type { Job, JobMapEntry, JobStatus, RoleCategory } from "./schemas";
 export { ROLE_CATEGORIES } from "./schemas";
 export { ROLE_CATEGORY_LABELS } from "./schemas";
+export { EMPLOYMENT_TYPE_LABELS } from "./schemas";

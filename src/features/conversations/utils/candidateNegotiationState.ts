@@ -29,6 +29,14 @@ export type OfferBadge =
 export interface CandidateNegotiationState {
   interview: InterviewBadge | null;
   offer: OfferBadge | null;
+  /**
+   * The records the badges were derived from. The badges stay display-only by
+   * design (see their comments); these carry the ids and statuses the
+   * interactive ProposalCard / OfferCard need, so the candidate card can act on
+   * the same negotiation the thread shows without a second selection rule.
+   */
+  interviewRecord: Interview | null;
+  offerRecord: Offer | null;
 }
 
 function groupByCandidateId<T extends { candidateId: string }>(
@@ -130,15 +138,23 @@ export function candidateNegotiationState(
     const candidateInterviews = interviewsByCandidate.get(candidateId) ?? [];
     const candidateOffers = offersByCandidate.get(candidateId) ?? [];
 
-    const interview =
+    const latestInterview =
       candidateInterviews.length > 0
-        ? toInterviewBadge(pickLatestInterview(candidateInterviews))
+        ? pickLatestInterview(candidateInterviews)
         : null;
+    const interview = latestInterview
+      ? toInterviewBadge(latestInterview)
+      : null;
 
     const liveOffer = pickLiveOffer(candidateOffers);
     const offer = liveOffer ? toOfferBadge(liveOffer) : null;
 
-    state.set(candidateId, { interview, offer });
+    state.set(candidateId, {
+      interview,
+      offer,
+      interviewRecord: latestInterview,
+      offerRecord: liveOffer,
+    });
   }
 
   return state;

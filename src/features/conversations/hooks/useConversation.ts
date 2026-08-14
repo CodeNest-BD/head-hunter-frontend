@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -49,6 +50,10 @@ export function useConversationThread(
     queryFn: ({ pageParam }) =>
       fetchConversationThread(submissionId, { ...params, page: pageParam }),
     initialPageParam: FIRST_PAGE,
+    // Switching the candidate filter changes the query key, which without this
+    // would blank an already-fetched thread to a skeleton. The old events stay
+    // on screen until the new ones arrive; Thread marks them stale meanwhile.
+    placeholderData: keepPreviousData,
     getNextPageParam: (lastPage) =>
       lastPage.events.meta.page < lastPage.events.meta.totalPages
         ? lastPage.events.meta.page + 1
@@ -91,6 +96,9 @@ export function useMarkThreadRead(submissionId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: conversationKeys.unreadCount,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: conversationKeys.unreadCounts,
       });
       void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },

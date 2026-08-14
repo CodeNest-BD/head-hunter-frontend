@@ -9,6 +9,7 @@ export type { OfferEventData } from "./components/OfferCard";
 export { ProposalCard } from "./components/ProposalCard";
 export type { ProposalEventData } from "./components/ProposalCard";
 export { Thread } from "./components/Thread";
+export { UnreadBadge } from "./components/UnreadBadge";
 export {
   useConversationThread,
   useMarkThreadRead,
@@ -16,6 +17,7 @@ export {
   useSendMessage,
 } from "./hooks/useConversation";
 export { useConversationRealtime } from "./hooks/useConversationRealtime";
+export { useMessageUnreadCounts } from "./hooks/useMessageUnreadCounts";
 export type { ConversationRealtimeStatus } from "./hooks/useConversationRealtime";
 export { conversationKeys } from "./keys";
 export type { ConversationEvent, ConversationThread } from "./schemas";

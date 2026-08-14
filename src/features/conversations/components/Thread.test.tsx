@@ -28,13 +28,13 @@ function renderWithClient(ui: ReactElement) {
 /**
  * Overrides `Element.prototype.scrollHeight` with a getter this test
  * controls, since jsdom never computes real layout. Installed on the
- * prototype rather than one specific node — a candidate-chip switch or an
- * error→Retry unmounts and remounts the scroll container as a brand-new
- * element, and a per-instance override (the previous version of this
- * helper) would go back to jsdom's default 0 on that fresh node, making
- * mount-time and remount-time scroll behaviour unobservable. Returns a
- * restore function; callers must invoke it (an `afterEach` below does this
- * automatically) so the override never leaks into another test.
+ * prototype rather than one specific node — an error→Retry unmounts and
+ * remounts the scroll container as a brand-new element, and a per-instance
+ * override (the previous version of this helper) would go back to jsdom's
+ * default 0 on that fresh node, making mount-time and remount-time scroll
+ * behaviour unobservable. Returns a restore function; callers must invoke
+ * it (an `afterEach` below does this automatically) so the override never
+ * leaks into another test.
  */
 function mockScrollHeight(getValue: () => number): () => void {
   const original = Object.getOwnPropertyDescriptor(
@@ -77,6 +77,13 @@ vi.mock("../api/conversations", () => ({
 const useAuthMock = vi.fn();
 vi.mock("@/features/auth", () => ({
   useAuth: () => useAuthMock(),
+}));
+
+// useConversationRealtime subscribes to the access token purely as an effect
+// dependency (see its own test for that behaviour); mocked here so this file
+// doesn't need a real Redux <Provider> just to satisfy that read.
+vi.mock("@/shared/store/hooks", () => ({
+  useAppSelector: () => null,
 }));
 
 // Thread renders ProposalCard for "proposal" events, which pulls in the
@@ -215,6 +222,17 @@ function threadResponse(
   };
 }
 
+/** Builds a single-event thread response carrying one message body — the
+ * minimal fixture the placeholder-data test needs, reusing `threadResponse`
+ * and `cand1Message` rather than inventing a parallel shape. */
+function threadWithMessage(body: string): ConversationThread {
+  return threadResponse([{ ...cand1Message, body }]);
+}
+
+function renderThread() {
+  return renderWithProviders(<Thread submissionId="submission-1" />);
+}
+
 describe("Thread", () => {
   beforeEach(() => {
     fetchConversationThreadMock.mockReset();
@@ -346,12 +364,14 @@ describe("Thread", () => {
     await waitFor(() => expect(scrollContainer.scrollTop).toBe(900));
   });
 
-  it("scrolls to the bottom after switching candidate filters even when the newest event is unchanged", async () => {
+  it("scrolls to the newest message after switching candidate filters, even when the newest event is unchanged", async () => {
     // The untagged system event is the newest entry in every filter (it has
     // no `candidateId`, so it survives narrowing to one candidate) — the
-    // exact shape that makes "did the newest event's identity change" alone
-    // insufficient: it never does across this switch, only the container
-    // does (the skeleton unmounts it while the new filtered query loads).
+    // trap `lastEventKey` alone can't catch: the newest event's identity
+    // never changes across this switch, so only tracking the filter itself
+    // (`candidateId`, added alongside `keepPreviousData`) makes the scroll
+    // effect fire at all. Before that, the container no longer remounting
+    // (Task 1's fix) meant this case scrolled nowhere.
     const systemEventLatest = {
       ...systemEvent,
       at: "2026-08-11T10:00:00.000Z",
@@ -382,12 +402,14 @@ describe("Thread", () => {
 
     const filteredContainer =
       container.querySelector<HTMLDivElement>(".overflow-y-auto");
-    if (!filteredContainer) throw new Error("scroll container not found");
-    // A different element — proof the skeleton actually unmounted the old
-    // one, i.e. this exercises the remount path and not a no-op.
-    expect(filteredContainer).not.toBe(initialContainer);
+    // Same element — `keepPreviousData` (Task 1) means the filter switch no
+    // longer remounts the scroll container.
+    expect(filteredContainer).toBe(initialContainer);
+    // Scrolled to the newest message of the *filtered* view regardless — the
+    // filter change is its own trigger, independent of whether the newest
+    // event's identity happened to change.
     await waitFor(() =>
-      expect(filteredContainer.scrollTop).toBe(scrollHeightValue),
+      expect(filteredContainer?.scrollTop).toBe(scrollHeightValue),
     );
   });
 
@@ -448,5 +470,37 @@ describe("Thread", () => {
     // added) — never jumps to the new bottom (500), which is what a naive
     // "scroll on every data change" would have done.
     expect(scrollContainer.scrollTop).toBe(450);
+  });
+
+  it("keeps the previous events on screen — dimmed, not blanked — while a candidate filter loads", async () => {
+    fetchConversationThreadMock.mockResolvedValue(
+      threadWithMessage("first message"),
+    );
+    const { container } = renderThread();
+    expect(await screen.findByText("first message")).toBeInTheDocument();
+
+    const eventsList = container.querySelector(".overflow-y-auto");
+    if (!eventsList) throw new Error("events list not found");
+    // Settled state: no stale affordance yet.
+    expect(eventsList).not.toHaveClass("opacity-60");
+
+    // The next fetch is for the filtered view and has not resolved yet.
+    let resolveFiltered: (value: ConversationThread) => void = () => {};
+    fetchConversationThreadMock.mockReturnValue(
+      new Promise<ConversationThread>((resolve) => {
+        resolveFiltered = resolve;
+      }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "J. Rivera" }));
+
+    // The skeleton must NOT have replaced the thread — the previous events
+    // stay on screen, marked stale rather than disappearing.
+    expect(screen.getByText("first message")).toBeInTheDocument();
+    expect(eventsList).toHaveClass("opacity-60");
+
+    resolveFiltered(threadWithMessage("filtered message"));
+    expect(await screen.findByText("filtered message")).toBeInTheDocument();
+    // The affordance clears once the filtered data has actually arrived.
+    expect(eventsList).not.toHaveClass("opacity-60");
   });
 });

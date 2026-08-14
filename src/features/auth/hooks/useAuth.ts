@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
+import { resetConversationSocket } from "@/lib/socket";
 import { sessionEstablished, sessionCleared } from "../store/authSlice";
 import { fetchMe } from "../api/me";
 import { callLogout } from "../api/refresh";
@@ -33,6 +34,7 @@ export function useAuth() {
       await callLogout();
     } finally {
       dispatch(sessionCleared());
+      resetConversationSocket();
       router.replace("/login");
     }
   }, [dispatch, router]);

@@ -34,6 +34,7 @@ function interview(overrides: Partial<Interview> = {}): Interview {
     outcome: null,
     passFeedback: null,
     createdAt: "2026-08-01T00:00:00.000Z",
+    liveProposal: null,
     ...overrides,
   };
 }
@@ -127,6 +128,18 @@ describe("OpenInterviewActions", () => {
     renderWithProviders(<OpenInterviewActions interview={interview()} />);
 
     expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
+  });
+
+  it("defers to ProposalCard once a batch is open, instead of offering a second way to propose times", () => {
+    const { container } = renderWithProviders(
+      <OpenInterviewActions
+        interview={interview({
+          liveProposal: { id: "prop-1", status: "proposed", slots: [] },
+        })}
+      />,
+    );
+
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("shows the agreed time for a scheduled interview instead of any action", () => {
