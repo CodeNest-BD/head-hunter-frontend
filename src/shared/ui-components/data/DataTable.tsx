@@ -129,8 +129,8 @@ export function DataTable<T>({
       <CardContent className="p-0">
         <div className="max-h-[calc(100vh-16rem)] overflow-auto">
           <table
-            className="w-full border-collapse text-sm"
-            style={{ width: table.getCenterTotalSize() }}
+            className="w-full table-fixed border-collapse text-sm"
+            style={{ minWidth: table.getCenterTotalSize() }}
           >
             <thead className="sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
