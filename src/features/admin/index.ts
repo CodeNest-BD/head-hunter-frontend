@@ -9,6 +9,8 @@ export { RecruiterDetail } from "./components/RecruiterDetail";
 export { CompanyDetail } from "./components/CompanyDetail";
 export { ConversationThread } from "./components/ConversationThread";
 export { JobsTable } from "./components/JobsTable";
+export { DisputesTable } from "./components/DisputesTable";
+export { ResolveDisputeDialog } from "./components/ResolveDisputeDialog";
 export { RecruiterPricingCard } from "./components/RecruiterPricingCard";
 export { AdminManagement } from "./components/AdminManagement";
 export { HoldButton } from "./components/HoldButton";

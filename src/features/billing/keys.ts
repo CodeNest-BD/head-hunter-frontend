@@ -5,6 +5,7 @@ export const billingKeys = {
   subscription: ["billing", "subscription"] as const,
   recruiterPrice: ["billing", "recruiter-price"] as const,
   recruiterWallet: ["billing", "recruiter-wallet"] as const,
+  payoutAccount: ["billing", "payout-account"] as const,
   recruiterPlacements: (params: {
     page: number;
     limit?: number;

@@ -66,9 +66,15 @@ export function useCounterOffer(offerId: string) {
 
 export function useAcceptOffer(offerId: string) {
   const invalidate = useInvalidateOnOffer();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => acceptOffer(offerId),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      // Accepting starts escrow: wallets and placement lists change too.
+      void queryClient.invalidateQueries({ queryKey: ["billing"] });
+      void queryClient.invalidateQueries({ queryKey: ["placements"] });
+    },
   });
 }
 

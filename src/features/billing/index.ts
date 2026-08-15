@@ -4,6 +4,7 @@
 // client-only React APIs.
 export { CheckoutResultBanner } from "./components/CheckoutResultBanner";
 export { LedgerTable } from "./components/LedgerTable";
+export { PayoutAccountCard } from "./components/PayoutAccountCard";
 export { RecruiterWalletPanel } from "./components/RecruiterWalletPanel";
 export { SubscriptionPanel } from "./components/SubscriptionPanel";
 export { TopUpCard } from "./components/TopUpCard";
@@ -11,6 +12,8 @@ export { WalletSummary } from "./components/WalletSummary";
 export {
   useLedger,
   useOpenSubscriptionPortal,
+  usePayoutAccount,
+  useStartPayoutOnboarding,
   useRecruiterPlacements,
   useRecruiterPrice,
   useRecruiterWallet,

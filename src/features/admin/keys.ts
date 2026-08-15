@@ -29,6 +29,7 @@ export const adminKeys = {
   conversation: (submissionId: string) =>
     ["admin", "conversation", submissionId] as const,
   jobs: (params: AdminListParams) => ["admin", "jobs", params] as const,
+  disputes: (params: AdminListParams) => ["admin", "disputes", params] as const,
   pricing: ["admin", "pricing"] as const,
   admins: ["admin", "admins"] as const,
 };

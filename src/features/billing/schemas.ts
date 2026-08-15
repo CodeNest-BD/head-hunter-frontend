@@ -73,6 +73,14 @@ export type RecruiterWalletSummary = z.infer<
   typeof recruiterWalletSummarySchema
 >;
 
+export const payoutAccountSchema = z.object({
+  status: z.enum(["not_connected", "onboarding_incomplete", "enabled"]),
+  payoutsEnabled: z.boolean(),
+});
+export type PayoutAccount = z.infer<typeof payoutAccountSchema>;
+
+export const onboardingLinkSchema = z.object({ url: z.string().url() });
+
 export const recruiterPlacementSchema = z.object({
   placementId: z.string(),
   companyName: z.string(),

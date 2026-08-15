@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { AlertCircle, Wallet2 } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -16,6 +16,7 @@ import {
   useRecruiterPlacements,
   useRecruiterWallet,
 } from "../hooks/useBilling";
+import { PayoutAccountCard } from "./PayoutAccountCard";
 import {
   PLACEMENT_STATUS_LABELS,
   type PlacementStatus,
@@ -208,6 +209,10 @@ export function RecruiterWalletPanel() {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* useSearchParams inside the card requires a Suspense boundary. */}
+      <Suspense fallback={null}>
+        <PayoutAccountCard />
+      </Suspense>
       {isError ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">

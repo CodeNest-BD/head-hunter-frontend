@@ -203,6 +203,47 @@ export const recruiterPricingSchema = z.object({
 });
 export type RecruiterPricing = z.infer<typeof recruiterPricingSchema>;
 
+export const disputeStatusSchema = tolerantEnum(
+  [
+    "open",
+    "under_review",
+    "resolved_release",
+    "resolved_refund",
+    "resolved_split",
+    "unknown",
+  ],
+  "unknown",
+);
+export type DisputeStatus = z.infer<typeof disputeStatusSchema>;
+
+export const DISPUTE_STATUS_LABELS: Record<DisputeStatus, string> = {
+  open: "Open",
+  under_review: "Under review",
+  resolved_release: "Released",
+  resolved_refund: "Refunded",
+  resolved_split: "Split",
+  unknown: "Unknown",
+};
+
+export const adminDisputeSchema = z.object({
+  disputeId: z.string(),
+  status: disputeStatusSchema,
+  reason: z.string(),
+  recruiterAwardMinor: z.number().nullable(),
+  resolutionNote: z.string().nullable(),
+  createdAt: z.string(),
+  resolvedAt: z.string().nullable(),
+  placementId: z.string(),
+  placementStatus: z.string(),
+  jobTitle: z.string(),
+  companyName: z.string(),
+  recruiterName: z.string(),
+  amountMinor: z.number(),
+});
+export type AdminDispute = z.infer<typeof adminDisputeSchema>;
+
+export type DisputeOutcome = "release" | "refund" | "split";
+
 export const adminUserSchema = z.object({
   userId: z.string(),
   email: z.string(),
