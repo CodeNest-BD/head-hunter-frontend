@@ -1,10 +1,12 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 
 import {
+  createPayoutOnboarding,
   createSubscriptionCheckout,
   createSubscriptionPortal,
   createTopUpCheckout,
   fetchLedger,
+  fetchPayoutAccount,
   fetchRecruiterPlacements,
   fetchRecruiterPrice,
   fetchRecruiterWallet,
@@ -38,6 +40,26 @@ export function useRecruiterPrice() {
     queryKey: billingKeys.recruiterPrice,
     queryFn: fetchRecruiterPrice,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Payout-account status. `refresh` forces a live Stripe re-check — used when
+ * the recruiter returns from onboarding, where the webhook may lag.
+ */
+export function usePayoutAccount(refresh = false) {
+  return useQuery({
+    queryKey: [...billingKeys.payoutAccount, refresh] as const,
+    queryFn: () => fetchPayoutAccount(refresh),
+  });
+}
+
+export function useStartPayoutOnboarding() {
+  return useMutation({
+    mutationFn: createPayoutOnboarding,
+    onSuccess: (url) => {
+      window.location.assign(url);
+    },
   });
 }
 

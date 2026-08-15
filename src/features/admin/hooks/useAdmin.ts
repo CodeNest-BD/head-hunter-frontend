@@ -10,6 +10,7 @@ import {
   changeAdminPassword,
   createAdmin,
   fetchAdmins,
+  fetchDisputes,
   fetchAdminStats,
   fetchCompanies,
   fetchCompany,
@@ -21,9 +22,11 @@ import {
   fetchRecruiters,
   reinstateAccount,
   removeAdmin,
+  resolveDispute,
   suspendAccount,
   updateRecruiterPricing,
   type CreateAdminInput,
+  type ResolveDisputeInput,
 } from "../api/admin";
 import { adminKeys, type AdminListParams } from "../keys";
 
@@ -167,5 +170,29 @@ export function useChangeAdminPassword() {
   return useMutation({
     mutationFn: ({ userId, password }: { userId: string; password: string }) =>
       changeAdminPassword(userId, password),
+  });
+}
+
+export function useAdminDisputes(params: AdminListParams) {
+  return useQuery({
+    queryKey: adminKeys.disputes(params),
+    queryFn: () => fetchDisputes(params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useResolveDispute() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      disputeId,
+      input,
+    }: {
+      disputeId: string;
+      input: ResolveDisputeInput;
+    }) => resolveDispute(disputeId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminKeys.all });
+    },
   });
 }

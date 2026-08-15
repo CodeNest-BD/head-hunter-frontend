@@ -4,6 +4,7 @@ import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import type { AdminListParams } from "../keys";
 import {
   accountStatusResponseSchema,
+  adminDisputeSchema,
   adminJobListItemSchema,
   adminStatsSchema,
   adminUserSchema,
@@ -15,6 +16,7 @@ import {
   recruiterListItemSchema,
   recruiterPricingSchema,
   type AccountStatus,
+  type AdminDispute,
   type AdminJobListItem,
   type AdminUser,
   type CompanyDetail,
@@ -23,6 +25,7 @@ import {
   type AdminStats,
   type ConversationThread,
   type RecruiterDetail,
+  type DisputeOutcome,
   type RecruiterListItem,
   type RecruiterPricing,
 } from "../schemas";
@@ -199,4 +202,28 @@ export async function changeAdminPassword(
   await apiClient.post<unknown>(`/admin/admins/${userId}/password`, {
     password,
   });
+}
+
+/** GET /v1/admin/disputes */
+export async function fetchDisputes(
+  params: AdminListParams,
+): Promise<Paginated<AdminDispute>> {
+  const { data } = await apiClient.get<unknown>("/admin/disputes", {
+    params: listParams(params),
+  });
+  return paginatedSchema(adminDisputeSchema).parse(data);
+}
+
+export interface ResolveDisputeInput {
+  outcome: DisputeOutcome;
+  recruiterAwardMinor?: number;
+  note?: string;
+}
+
+/** POST /v1/admin/disputes/:id/resolve */
+export async function resolveDispute(
+  disputeId: string,
+  input: ResolveDisputeInput,
+): Promise<void> {
+  await apiClient.post<unknown>(`/admin/disputes/${disputeId}/resolve`, input);
 }

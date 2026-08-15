@@ -3,12 +3,15 @@ import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   checkoutUrlSchema,
   ledgerEntrySchema,
+  onboardingLinkSchema,
+  payoutAccountSchema,
   recruiterPlacementSchema,
   recruiterPriceSchema,
   recruiterWalletSummarySchema,
   subscriptionStatusSchema,
   walletSummarySchema,
   type LedgerEntry,
+  type PayoutAccount,
   type RecruiterPlacement,
   type RecruiterPrice,
   type RecruiterWalletSummary,
@@ -52,6 +55,22 @@ export async function fetchSubscription(): Promise<SubscriptionStatus> {
 export async function fetchRecruiterPrice(): Promise<RecruiterPrice> {
   const { data } = await apiClient.get<unknown>("/billing/recruiter-price");
   return recruiterPriceSchema.parse(data);
+}
+
+/** GET /v1/recruiter/payout-account — Stripe Connect onboarding state. */
+export async function fetchPayoutAccount(
+  refresh = false,
+): Promise<PayoutAccount> {
+  const { data } = await apiClient.get<unknown>("/recruiter/payout-account", {
+    params: refresh ? { refresh: "true" } : undefined,
+  });
+  return payoutAccountSchema.parse(data);
+}
+
+/** POST /v1/recruiter/payout-account — returns the Stripe onboarding URL. */
+export async function createPayoutOnboarding(): Promise<string> {
+  const { data } = await apiClient.post<unknown>("/recruiter/payout-account");
+  return onboardingLinkSchema.parse(data).url;
 }
 
 /** GET /v1/recruiter/wallet — the recruiter's earnings summary. */

@@ -62,6 +62,8 @@ export interface DataTableProps<T> {
   emptyIcon?: LucideIcon;
   emptyTitle?: string;
   emptyMessage?: string;
+  /** Rows-per-page choices. Endpoints capped at limit≤100 must not offer 1000. */
+  pageSizeOptions?: readonly number[];
 }
 
 /**
@@ -89,6 +91,7 @@ export function DataTable<T>({
   emptyIcon: EmptyIcon,
   emptyTitle = "Nothing to show",
   emptyMessage = "Try a different search or filter.",
+  pageSizeOptions,
 }: DataTableProps<T>) {
   const table = useReactTable({
     data,
@@ -263,6 +266,7 @@ export function DataTable<T>({
           pageSize={pageSize}
           onPage={onPage}
           onPageSize={onPageSize}
+          pageSizeOptions={pageSizeOptions}
         />
       </CardContent>
     </Card>
