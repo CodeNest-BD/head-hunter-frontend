@@ -10,6 +10,7 @@ import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { useRaiseDispute } from "../hooks/usePlacements";
 
 const MIN_REASON = 10;
+const MAX_REASON = 2000;
 
 /**
  * Confirmation + reason for contesting a placement. Disputing freezes the
@@ -27,7 +28,8 @@ export function DisputeDialog({
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const dispute = useRaiseDispute();
-  const valid = reason.trim().length >= MIN_REASON;
+  const trimmed = reason.trim();
+  const valid = trimmed.length >= MIN_REASON && trimmed.length <= MAX_REASON;
 
   const submit = async (): Promise<void> => {
     try {
@@ -65,6 +67,7 @@ export function DisputeDialog({
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               rows={4}
+              maxLength={MAX_REASON}
               placeholder="e.g. The candidate resigned within the first week."
             />
             <p className="text-xs text-muted-foreground">

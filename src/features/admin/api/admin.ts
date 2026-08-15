@@ -227,8 +227,3 @@ export async function resolveDispute(
 ): Promise<void> {
   await apiClient.post<unknown>(`/admin/disputes/${disputeId}/resolve`, input);
 }
-
-/** POST /v1/admin/placements/:id/release — manual escrow release fallback. */
-export async function releasePlacement(placementId: string): Promise<void> {
-  await apiClient.post<unknown>(`/admin/placements/${placementId}/release`);
-}

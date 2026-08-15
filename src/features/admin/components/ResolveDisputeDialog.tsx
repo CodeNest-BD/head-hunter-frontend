@@ -160,6 +160,7 @@ export function ResolveDisputeDialog({
               value={note}
               onChange={(event) => setNote(event.target.value)}
               rows={2}
+              maxLength={2000}
             />
           </div>
 

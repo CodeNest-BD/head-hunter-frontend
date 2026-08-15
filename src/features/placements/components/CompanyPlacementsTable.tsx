@@ -154,6 +154,7 @@ export function CompanyPlacementsTable() {
       isLoading={isPending}
       isError={isError}
       onRetry={() => void refetch()}
+      pageSizeOptions={[25, 50, 100]}
       emptyIcon={Handshake}
       emptyTitle="No placements yet"
       emptyMessage="A placement appears here when you accept an offer for a submitted candidate."

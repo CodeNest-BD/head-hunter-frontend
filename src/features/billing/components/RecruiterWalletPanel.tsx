@@ -196,6 +196,7 @@ function PlacementsTable() {
       isLoading={isPending}
       isError={isError}
       onRetry={() => void refetch()}
+      pageSizeOptions={[25, 50, 100]}
       emptyIcon={Wallet2}
       emptyTitle="No placements yet"
       emptyMessage="Your commission appears here once a candidate you placed is hired."

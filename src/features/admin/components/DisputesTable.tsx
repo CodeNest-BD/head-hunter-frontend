@@ -62,6 +62,7 @@ function useColumns(): ColumnDef<AdminDispute, unknown>[] {
       {
         id: "jobTitle",
         header: "Job",
+        enableSorting: false,
         size: 200,
         cell: ({ row }) => (
           <span className="block max-w-[200px] truncate text-muted-foreground">

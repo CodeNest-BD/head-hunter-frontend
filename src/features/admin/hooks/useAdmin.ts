@@ -21,7 +21,6 @@ import {
   fetchRecruiterPricing,
   fetchRecruiters,
   reinstateAccount,
-  releasePlacement,
   removeAdmin,
   resolveDispute,
   suspendAccount,
@@ -192,16 +191,6 @@ export function useResolveDispute() {
       disputeId: string;
       input: ResolveDisputeInput;
     }) => resolveDispute(disputeId, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: adminKeys.all });
-    },
-  });
-}
-
-export function useReleasePlacement() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (placementId: string) => releasePlacement(placementId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: adminKeys.all });
     },
