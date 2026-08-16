@@ -13,16 +13,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ─── Landing page design tokens ───
-        // Prefixed with ld- to avoid collision with shadcn/ui tokens
-        "ld-accent": "#7C9ED9",
-        "ld-accent-dark": "#0E1524",
-        "ld-heading": "#FFFFFF",
-        "ld-body": "#9BA3A0",
-        "ld-caption": "#4F5D59",
-        "ld-on-accent": "#041812",
-        "ld-base": "#020B0F",
-        "ld-surface": "#07112B",
+        // ─── Brand scale (client palette) ───
+        // Fixed hexes for surfaces the semantic tokens don't cover: the navy
+        // hero panel, map fills, decorative gradients.
+        brand: {
+          navy: "#0A1738",
+          primary: "#034AEF",
+          secondary: "#2658CF",
+          blue: "#4F80E6",
+          sky: "#85B1F3",
+          ice: "#B4DBFD",
+          slate: "#323A52",
+          gray: "#616676",
+          "gray-light": "#858A98",
+          line: "#E0E8F3",
+          tint: "#EEF4FD",
+        },
         // ─── shadcn/ui tokens ───
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -79,6 +85,13 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontSize: {
+        // Landing hero display size, measured off the client reference.
+        hero: [
+          "clamp(2.75rem, 6.2vw, 5.375rem)",
+          { lineHeight: "1.02", letterSpacing: "-0.02em", fontWeight: "800" },
+        ],
       },
       fontFamily: {
         // The "Under Development" mock uses a single system sans; weight and

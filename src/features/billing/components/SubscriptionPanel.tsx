@@ -174,12 +174,12 @@ export function SubscriptionPanel() {
       <article className="overflow-hidden rounded-2xl bg-navy text-white shadow-card-lg">
         <div className="flex items-start justify-between gap-4 p-8 pb-6">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#8FB0F5]">
+            <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#85B1F3]">
               {PLAN_NAME}
             </p>
             <p className="mt-2 font-heading text-[44px] font-extrabold leading-none">
               {planPrice}
-              <span className="text-[17px] font-semibold text-[#7D89A3]">
+              <span className="text-[17px] font-semibold text-[#858A98]">
                 {" "}
                 / {PLAN_INTERVAL}
               </span>

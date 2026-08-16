@@ -67,10 +67,10 @@ const PLOTTED_CITIES: readonly PlottedCity[] = US_CITIES.flatMap((city) => {
 // State fills copied from the mock: a sky-blue selected fill with a blue
 // border, a slightly-blue tone for states that have roles, and a neutral tone
 // for empty ones. Role volume is conveyed by the centroid bubbles, not fill.
-const FILL_SELECTED = "#DBE6FA"; // sky blue (selected)
-const FILL_HAS_ROLES = "#E4EAF3";
-const FILL_EMPTY = "#ECEEF2";
-const FILL_HOVER = "#D6E2FA"; // subtle hover tint
+const FILL_SELECTED = "#B4DBFD"; // ice blue (selected)
+const FILL_HAS_ROLES = "#E0E8F3";
+const FILL_EMPTY = "#EEF4FD";
+const FILL_HOVER = "#D6E5FB"; // subtle hover tint
 
 function stateFill(
   count: number,
@@ -337,10 +337,10 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                   onBlur={() => setHoveredState(null)}
                   fill={stateFill(count, isActive, isHovered)}
                   stroke={
-                    isActive ? "#2050E0" : isHovered ? "#2050E0" : "#FFFFFF"
+                    isActive ? "#034AEF" : isHovered ? "#034AEF" : "#FFFFFF"
                   }
                   strokeWidth={isActive ? 1.6 : isHovered ? 1.2 : 1}
-                  className="cursor-pointer outline-none transition-[fill,stroke] duration-150 focus-visible:stroke-[#2050E0]"
+                  className="cursor-pointer outline-none transition-[fill,stroke] duration-150 focus-visible:stroke-[#034AEF]"
                   style={{
                     filter: isActive
                       ? "drop-shadow(0 2px 6px rgba(32,80,224,0.28))"
@@ -391,10 +391,10 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                     }}
                     fill={
                       isSelectedCity
-                        ? "#1740B8"
+                        ? "#2658CF"
                         : emphasized
-                          ? "#2050E0"
-                          : "#5B8AF0"
+                          ? "#034AEF"
+                          : "#4F80E6"
                     }
                     stroke="#FFFFFF"
                     strokeWidth={isSelectedCity ? 1.4 : 0.8}
@@ -412,7 +412,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                       y={city.y + 3}
                       className="pointer-events-none select-none"
                       fontSize={isSelectedCity ? 11 : 9}
-                      fill="#14213D"
+                      fill="#0A1738"
                       style={{ paintOrder: "stroke", fontWeight: 600 }}
                       stroke="#FFFFFF"
                       strokeWidth={2.5}
@@ -430,19 +430,19 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-3 text-xs text-muted-foreground">
           <span className="font-medium text-navy">Open roles</span>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#ECEEF2]" />
+            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#EEF4FD]" />
             None
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#E4EAF3]" />
+            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#E0E8F3]" />
             Has roles
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] border border-[#2050E0] bg-[#DBE6FA]" />
+            <span className="h-3 w-3 rounded-[3px] border border-[#034AEF] bg-[#B4DBFD]" />
             Selected
           </div>
           <div className="ml-auto flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#5B8AF0]" />
+            <span className="inline-block h-2 w-2 rounded-full bg-[#4F80E6]" />
             City
           </div>
         </div>

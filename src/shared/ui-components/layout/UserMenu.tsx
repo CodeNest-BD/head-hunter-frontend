@@ -44,7 +44,7 @@ export function UserMenu({ className }: { className?: string }) {
         <button
           type="button"
           className={cn(
-            "inline-flex items-center gap-2 rounded-full border border-[#C9D2E3] bg-white py-1 pl-1 pr-3 text-sm font-semibold text-navy outline-none transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-primary",
+            "inline-flex items-center gap-2 rounded-full border border-[#C9D0DF] bg-white py-1 pl-1 pr-3 text-sm font-semibold text-navy outline-none transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-primary",
             className,
           )}
         >

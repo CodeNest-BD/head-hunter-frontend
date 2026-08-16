@@ -186,7 +186,7 @@ function JobsList({ filters }: { filters: Filters }) {
         <li key={job.id}>
           <Link
             href={`/jobs/${job.id}`}
-            className="group block rounded-2xl border border-border bg-card p-4 shadow-card transition hover:border-[#C9D2E3] hover:shadow-card-hover"
+            className="group block rounded-2xl border border-border bg-card p-4 shadow-card transition hover:border-[#C9D0DF] hover:shadow-card-hover"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">

@@ -68,7 +68,7 @@ function PortalCard({
       </p>
       <Link
         href="/signup"
-        className="inline-flex items-center gap-1 text-lg font-bold text-primary hover:text-[#1740B8]"
+        className="inline-flex items-center gap-1 text-lg font-bold text-primary hover:text-[#2658CF]"
       >
         {linkLabel}
         <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -84,14 +84,14 @@ function RecruitersIcon() {
       height="120"
       viewBox="0 0 120 120"
       fill="none"
-      stroke="#2966E8"
+      stroke="#2658CF"
       strokeWidth="4"
       aria-hidden="true"
     >
       <circle cx="60" cy="60" r="17" />
       <path d="M52 66 q8 7 16 0" strokeWidth="3" />
-      <circle cx="56" cy="56" r="1.5" fill="#2966E8" />
-      <circle cx="64" cy="56" r="1.5" fill="#2966E8" />
+      <circle cx="56" cy="56" r="1.5" fill="#2658CF" />
+      <circle cx="64" cy="56" r="1.5" fill="#2658CF" />
       <circle cx="60" cy="16" r="10" />
       <circle cx="60" cy="104" r="10" />
       <circle cx="16" cy="60" r="10" />
@@ -119,7 +119,7 @@ function EmployersIcon() {
       height="120"
       viewBox="0 0 120 120"
       fill="none"
-      stroke="#2966E8"
+      stroke="#2658CF"
       strokeWidth="4"
       aria-hidden="true"
     >
@@ -130,7 +130,7 @@ function EmployersIcon() {
         textAnchor="middle"
         fontSize="13"
         fontWeight="800"
-        fill="#2966E8"
+        fill="#2658CF"
         stroke="none"
         fontFamily="inherit"
       >

@@ -11,14 +11,14 @@ interface EyebrowProps {
 /**
  * Section eyebrow copied from the "HeadHunter Platform v2" mock: a small,
  * uppercase, wide-tracked caption (no pill). Blue on light surfaces; the mock's
- * #8FB0F5 over navy hero panels.
+ * #85B1F3 over navy hero panels.
  */
 export function Eyebrow({ children, tone = "brand", className }: EyebrowProps) {
   return (
     <span
       className={cn(
         "inline-block text-[12px] font-semibold uppercase tracking-[0.1em]",
-        tone === "onDark" ? "text-[#8FB0F5]" : "text-primary",
+        tone === "onDark" ? "text-[#85B1F3]" : "text-primary",
         className,
       )}
     >

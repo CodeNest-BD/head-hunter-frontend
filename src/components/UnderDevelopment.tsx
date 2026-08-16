@@ -12,24 +12,24 @@ import { useEffect, useState } from "react";
 
 const CSS = `
 .ud-root{position:relative;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#0b1526;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
-.ud-root a{color:#3b82f6;text-decoration:none}
-.ud-root a:hover{color:#60a5fa}
+.ud-root a{color:#4F80E6;text-decoration:none}
+.ud-root a:hover{color:#85B1F3}
 .ud-blob1{position:absolute;top:-180px;right:-140px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.22),transparent 65%);animation:ud-drift 14s ease-in-out infinite}
 .ud-blob2{position:absolute;bottom:-220px;left:-160px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.14),transparent 65%);animation:ud-drift2 18s ease-in-out infinite}
 .ud-nav{position:relative;display:flex;align-items:center;padding:28px 56px;animation:ud-fade .8s ease both}
 .ud-brand{display:flex;align-items:center;gap:10px}
 .ud-brandname{font-size:19px;font-weight:800;color:#ffffff;letter-spacing:-.02em}
 .ud-main{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px 80px}
-.ud-pill{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(96,165,250,.4);border-radius:99px;padding:8px 18px;font-size:12px;font-weight:700;letter-spacing:.12em;color:#93c5fd;animation:ud-rise .7s cubic-bezier(.22,1,.36,1) .15s both}
-.ud-dot{width:7px;height:7px;border-radius:99px;background:#3b82f6;animation:ud-pulse 1.8s ease-in-out infinite}
+.ud-pill{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(96,165,250,.4);border-radius:99px;padding:8px 18px;font-size:12px;font-weight:700;letter-spacing:.12em;color:#B4DBFD;animation:ud-rise .7s cubic-bezier(.22,1,.36,1) .15s both}
+.ud-dot{width:7px;height:7px;border-radius:99px;background:#4F80E6;animation:ud-pulse 1.8s ease-in-out infinite}
 .ud-h1{margin:30px 0 0;font-size:clamp(44px,7vw,84px);line-height:1.06;font-weight:800;letter-spacing:-.03em;color:#ffffff;text-wrap:balance}
 .ud-mask{display:inline-block;overflow:hidden;vertical-align:bottom}
 .ud-word{display:inline-block;animation:ud-word .7s cubic-bezier(.22,1,.36,1) both}
-.ud-typed{color:#3b82f6}
-.ud-caret{display:inline-block;width:4px;height:.85em;background:#3b82f6;vertical-align:-.08em;margin-left:4px;border-radius:2px;animation:ud-caret 1s step-end infinite}
+.ud-typed{color:#4F80E6}
+.ud-caret{display:inline-block;width:4px;height:.85em;background:#4F80E6;vertical-align:-.08em;margin-left:4px;border-radius:2px;animation:ud-caret 1s step-end infinite}
 .ud-sub{max-width:440px;margin:28px 0 0;font-size:17px;line-height:1.65;color:#aab8cc;animation:ud-rise .7s cubic-bezier(.22,1,.36,1) .9s both}
 .ud-track{width:260px;height:3px;border-radius:99px;background:rgba(148,163,184,.18);margin-top:44px;overflow:hidden;animation:ud-fade .7s ease 1.1s both}
-.ud-fill{width:45%;height:100%;border-radius:99px;background:linear-gradient(90deg,transparent,#3b82f6,#60a5fa,transparent);animation:ud-bar 2.4s ease-in-out 1.3s infinite}
+.ud-fill{width:45%;height:100%;border-radius:99px;background:linear-gradient(90deg,transparent,#4F80E6,#85B1F3,transparent);animation:ud-bar 2.4s ease-in-out 1.3s infinite}
 @keyframes ud-word{from{opacity:0;transform:translateY(110%)}to{opacity:1;transform:translateY(0)}}
 @keyframes ud-rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 @keyframes ud-fade{from{opacity:0}to{opacity:1}}
@@ -80,8 +80,8 @@ export default function UnderDevelopment() {
       <nav className="ud-nav">
         <div className="ud-brand">
           <svg width="26" height="20" viewBox="0 0 26 20" fill="none">
-            <path d="M2 2l8 8-8 8V2z" fill="#2563eb" />
-            <path d="M12 2l8 8-8 8V2z" fill="#2563eb" />
+            <path d="M2 2l8 8-8 8V2z" fill="#034AEF" />
+            <path d="M12 2l8 8-8 8V2z" fill="#034AEF" />
           </svg>
           <span className="ud-brandname">HeadHunter</span>
         </div>

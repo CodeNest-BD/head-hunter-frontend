@@ -58,8 +58,8 @@ export default function AuthLayout({
         </div>
 
         <div className="relative max-w-md">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#60a5fa]/40 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#93c5fd]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#3b82f6] animate-pulse" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#85B1F3]/40 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#B4DBFD]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#4F80E6] animate-pulse" />
             The recruiting marketplace
           </span>
           <h1 className="mt-7 font-heading text-4xl font-extrabold leading-[1.08] tracking-[-0.03em] text-white text-balance">
@@ -84,8 +84,8 @@ export default function AuthLayout({
                     fill="none"
                     className="block"
                   >
-                    <path d="M2 2l8 8-8 8V2z" fill="#2563eb" />
-                    <path d="M12 2l8 8-8 8V2z" fill="#3b82f6" />
+                    <path d="M2 2l8 8-8 8V2z" fill="#034AEF" />
+                    <path d="M12 2l8 8-8 8V2z" fill="#4F80E6" />
                   </svg>
                 </span>
                 <div>
@@ -109,7 +109,7 @@ export default function AuthLayout({
             className="h-full w-2/5 rounded-full animate-[gradient-shift_8s_linear_infinite]"
             style={{
               background:
-                "linear-gradient(90deg, transparent, #3b82f6, #60a5fa, transparent)",
+                "linear-gradient(90deg, transparent, #4F80E6, #85B1F3, transparent)",
               backgroundSize: "200% 100%",
             }}
           />

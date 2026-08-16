@@ -45,7 +45,7 @@ export function JobsTable() {
 
   if (data.data.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-[#C9D2E3] bg-card px-6 py-14 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-[#C9D0DF] bg-card px-6 py-14 text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
           <Briefcase className="h-6 w-6" />
         </span>

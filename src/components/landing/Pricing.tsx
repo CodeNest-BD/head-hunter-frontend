@@ -55,17 +55,17 @@ export function Pricing() {
           </article>
 
           <article className="rounded-2xl bg-navy p-9 text-white shadow-card-lg">
-            <div className="mb-3.5 text-xs font-bold uppercase tracking-[0.09em] text-[#8FB0F5]">
+            <div className="mb-3.5 text-xs font-bold uppercase tracking-[0.09em] text-[#85B1F3]">
               Recruiters
             </div>
             <div className="font-heading text-[44px] font-extrabold">
               {recruiterPrice}
-              <span className="text-[17px] font-semibold text-[#7D89A3]">
+              <span className="text-[17px] font-semibold text-[#858A98]">
                 {" "}
                 / month
               </span>
             </div>
-            <p className="my-4 text-[15px] leading-relaxed text-[#B6C1D6]">
+            <p className="my-4 text-[15px] leading-relaxed text-[#C9D0DF]">
               Full access to the job map, unlimited candidate submissions, and
               guaranteed escrow-backed payouts. Cancel anytime.
             </p>

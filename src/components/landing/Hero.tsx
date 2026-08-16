@@ -28,10 +28,10 @@ export function Hero() {
             <Eyebrow tone="onDark">The recruitment marketplace</Eyebrow>
           </span>
           <h1 className="mb-5 font-heading text-[40px] font-extrabold leading-[1.04] tracking-[-0.02em] text-white sm:text-5xl lg:text-6xl">
-            An inbox full of <span className="text-[#5B8AF0]">candidates</span>{" "}
+            An inbox full of <span className="text-[#4F80E6]">candidates</span>{" "}
             worth hiring.
           </h1>
-          <p className="mb-8 max-w-xl text-lg leading-relaxed text-[#B6C1D6]">
+          <p className="mb-8 max-w-xl text-lg leading-relaxed text-[#C9D0DF]">
             Companies name the fee they&apos;ll pay for the right candidate.
             Freelance recruiters across all 50 states compete to deliver them.
             The fee sits in escrow until the hire sticks — a full 30-day
@@ -48,7 +48,7 @@ export function Hero() {
             <LandingCta
               role="recruiter"
               authedHref="/jobs"
-              className="h-auto rounded-[10px] border border-[#3A4A6B] bg-transparent px-6 py-4 text-base font-semibold text-white hover:border-[#5B8AF0] hover:bg-transparent"
+              className="h-auto rounded-[10px] border border-[#3A4A6B] bg-transparent px-6 py-4 text-base font-semibold text-white hover:border-[#4F80E6] hover:bg-transparent"
             >
               Recruit on Head-Hunters
             </LandingCta>
@@ -60,7 +60,7 @@ export function Hero() {
                 <dd className="font-heading text-[26px] font-extrabold text-white">
                   {stat.value}
                 </dd>
-                <p className="text-[13px] text-[#7D89A3]">{stat.label}</p>
+                <p className="text-[13px] text-[#858A98]">{stat.label}</p>
               </div>
             ))}
           </dl>
@@ -81,13 +81,13 @@ function HeroPreview() {
     >
       <div className="absolute left-9 right-[-8px] top-11 rotate-[2.5deg] rounded-[14px] border border-[#2E3D5C] bg-[#1B2A4A] p-5">
         <div className="text-[15px] font-bold text-white">Tom Okafor</div>
-        <div className="mt-0.5 text-[13px] text-[#7D89A3]">
+        <div className="mt-0.5 text-[13px] text-[#858A98]">
           Senior Mechanical Engineer
         </div>
       </div>
       <div className="absolute left-[18px] right-2.5 top-[22px] -rotate-[1.5deg] rounded-[14px] border border-[#33456B] bg-[#20304F] p-5">
         <div className="text-[15px] font-bold text-white">Elena Ruiz</div>
-        <div className="mt-0.5 text-[13px] text-[#7D89A3]">
+        <div className="mt-0.5 text-[13px] text-[#858A98]">
           Senior Mechanical Engineer
         </div>
       </div>
