@@ -10,6 +10,8 @@
 export { SignInForm } from "./components/SignInForm";
 export { SignUpForm } from "./components/SignUpForm";
 export { OtpForm } from "./components/OtpForm";
+export { ForgotPasswordForm } from "./components/ForgotPasswordForm";
+export { ResetPasswordForm } from "./components/ResetPasswordForm";
 export { RequireRole } from "./components/RequireRole";
 export { GoogleAuthButton } from "./components/GoogleAuthButton";
 export { AuthProvider } from "./providers/AuthProvider";

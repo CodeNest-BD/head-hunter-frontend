@@ -13,9 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui-components/controls/select";
+import { useMinRecruiterFee } from "@/features/billing";
 import { US_STATES } from "@/shared/data/usStatesGeo";
 import { sanitizeRichText } from "@/shared/libs/richText";
 import {
+  formatMinor,
   majorInputToMinor,
   majorToMinor,
   minorToMajorInput,
@@ -85,6 +87,7 @@ export function JobForm({
   isSubmitting,
   submitLabel,
 }: JobFormProps) {
+  const { data: minFee } = useMinRecruiterFee();
   const {
     register,
     control,
@@ -271,6 +274,16 @@ export function JobForm({
           <Label htmlFor="recruiterFee">Recruiter fee ($)</Label>
           <p className="text-sm text-muted-foreground">
             What you will pay a recruiter for a successful hire.
+            {minFee && (
+              <>
+                {" "}
+                Publishing requires at least{" "}
+                <span className="font-semibold text-foreground">
+                  {formatMinor(minFee.amountMinor)}
+                </span>
+                .
+              </>
+            )}
           </p>
           <Input
             id="recruiterFee"

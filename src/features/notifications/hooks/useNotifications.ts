@@ -5,6 +5,7 @@ import {
   fetchUnreadCount,
   markAllNotificationsRead,
   markNotificationRead,
+  markNotificationUnread,
   type NotificationGroupListParams,
   type NotificationListParams,
 } from "../api/notifications";
@@ -45,6 +46,16 @@ export function useMarkRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => markNotificationRead(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+    },
+  });
+}
+
+export function useMarkUnread() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => markNotificationUnread(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },

@@ -4,6 +4,7 @@ export const billingKeys = {
   ledger: (page: number) => ["billing", "ledger", page] as const,
   subscription: ["billing", "subscription"] as const,
   recruiterPrice: ["billing", "recruiter-price"] as const,
+  minRecruiterFee: ["billing", "min-recruiter-fee"] as const,
   recruiterWallet: ["billing", "recruiter-wallet"] as const,
   recruiterPlacements: (page: number) =>
     ["billing", "recruiter-placements", page] as const,

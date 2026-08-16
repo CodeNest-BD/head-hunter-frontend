@@ -5,6 +5,7 @@ import {
   createSubscriptionPortal,
   createTopUpCheckout,
   fetchLedger,
+  fetchMinRecruiterFee,
   fetchRecruiterPlacements,
   fetchRecruiterPrice,
   fetchRecruiterWallet,
@@ -84,5 +85,15 @@ export function useOpenSubscriptionPortal() {
     onSuccess: (url) => {
       window.location.assign(url);
     },
+  });
+}
+
+/** The publish floor for the job form's hint. Cached; silent on failure. */
+export function useMinRecruiterFee() {
+  return useQuery({
+    queryKey: billingKeys.minRecruiterFee,
+    queryFn: fetchMinRecruiterFee,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 }

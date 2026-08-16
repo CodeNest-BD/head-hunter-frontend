@@ -1,3 +1,7 @@
+// Before anything imports apiClient (which fails fast on a missing base URL):
+// component tests never hit the network, so any syntactically valid URL works.
+process.env.NEXT_PUBLIC_API_URL ??= "http://api.test";
+
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";

@@ -15,6 +15,7 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   published: "text-[#17734E] bg-[#E7F4EC]",
+  expired: "text-[#9B3535] bg-[#FBEAEA]",
   paused: "text-[#92610C] bg-[#FBF3DF]",
   filled: "bg-primary/15 text-primary",
   closed: "bg-muted text-muted-foreground",
@@ -63,6 +64,9 @@ function EditJobContent({ jobId }: { jobId: string }) {
   }
 
   const isDraft = job.status === "draft";
+  // Expired listings republish through the same transition: re-reserves the
+  // fee and restarts the 30-day clock.
+  const isExpired = job.status === "expired";
 
   return (
     <div className="flex flex-col gap-6">
@@ -80,10 +84,22 @@ function EditJobContent({ jobId }: { jobId: string }) {
             )}
           />
         </div>
-        {isDraft ? (
-          <Button type="button" disabled={isPublishing} onClick={publish}>
-            {isPublishing ? "Publishing…" : "Publish"}
-          </Button>
+        {isDraft || isExpired ? (
+          <div className="flex flex-col items-start gap-1.5 sm:items-end">
+            <Button type="button" disabled={isPublishing} onClick={publish}>
+              {isPublishing
+                ? "Publishing…"
+                : isExpired
+                  ? "Republish for 30 days"
+                  : "Publish"}
+            </Button>
+            {isExpired && (
+              <p className="text-xs text-muted-foreground">
+                This listing lapsed after 30 days; republishing reserves the fee
+                again.
+              </p>
+            )}
+          </div>
         ) : (
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <CheckCircle2 className="h-4 w-4 text-[#17734E]" />

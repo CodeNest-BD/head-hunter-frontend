@@ -1,22 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, Users } from "lucide-react";
 
+import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminRecruiters } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
-import { SUBSCRIPTION_LABELS } from "../schemas";
+import { VERIFICATION_LABELS } from "../schemas";
 import { HoldButton } from "./HoldButton";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
 import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_STATUS_STYLES,
-  SUBSCRIPTION_STATUS_STYLES,
+  VERIFICATION_STATUS_STYLES,
 } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
@@ -40,11 +42,13 @@ export function RecruitersTable() {
     limit,
     changeLimit,
   } = useListState();
+  const [verificationFilter, setVerificationFilter] = useState("");
   const { data, isPending, isError, refetch } = useAdminRecruiters({
     page,
     limit,
     q: q || undefined,
     status: status || undefined,
+    verificationStatus: verificationFilter || undefined,
   });
 
   return (
@@ -60,6 +64,19 @@ export function RecruitersTable() {
           options: [
             { value: "active", label: "Active" },
             { value: "suspended", label: "Held" },
+          ],
+        }}
+        extraFilter={{
+          value: verificationFilter,
+          onChange: (next) => {
+            setVerificationFilter(next);
+            setPage(1);
+          },
+          allLabel: "All verification",
+          options: [
+            { value: "pending", label: "Pending" },
+            { value: "verified", label: "Verified" },
+            { value: "rejected", label: "Rejected" },
           ],
         }}
       />
@@ -101,7 +118,10 @@ export function RecruitersTable() {
                       Recruiter
                     </th>
                     <th scope="col" className="px-5 py-3 font-semibold">
-                      Subscription
+                      Verification
+                    </th>
+                    <th scope="col" className="px-5 py-3 font-semibold">
+                      Rating
                     </th>
                     <th scope="col" className="px-5 py-3 font-semibold">
                       Location
@@ -139,14 +159,17 @@ export function RecruitersTable() {
                       </td>
                       <td className="px-5 py-3">
                         <StatusBadge
-                          label={
-                            SUBSCRIPTION_LABELS[r.subscriptionStatus] ??
-                            r.subscriptionStatus
-                          }
+                          label={VERIFICATION_LABELS[r.verificationStatus]}
                           className={
-                            SUBSCRIPTION_STATUS_STYLES[r.subscriptionStatus] ??
+                            VERIFICATION_STATUS_STYLES[r.verificationStatus] ??
                             "bg-muted text-muted-foreground"
                           }
+                        />
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3">
+                        <RatingStars
+                          value={r.ratingAvg}
+                          count={r.ratingCount}
                         />
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">

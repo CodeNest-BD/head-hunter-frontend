@@ -50,6 +50,16 @@ export async function markNotificationRead(id: string): Promise<Notification> {
   return notificationSchema.parse(data);
 }
 
+/** PATCH /v1/notifications/:id/unread — flag a read notification for later. */
+export async function markNotificationUnread(
+  id: string,
+): Promise<Notification> {
+  const { data } = await apiClient.patch<unknown>(
+    `/notifications/${id}/unread`,
+  );
+  return notificationSchema.parse(data);
+}
+
 /** POST /v1/notifications/read-all */
 export async function markAllNotificationsRead(): Promise<void> {
   await apiClient.post("/notifications/read-all");

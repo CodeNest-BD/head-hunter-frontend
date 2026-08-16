@@ -5,6 +5,7 @@
 export { RecruiterProfileForm } from "./components/RecruiterProfileForm";
 export { ReferencesSection } from "./components/ReferencesSection";
 export { SubscriptionCard } from "./components/SubscriptionCard";
+export { VerificationBanner } from "./components/VerificationBanner";
 export {
   useAddReference,
   useDevActivateSubscription,

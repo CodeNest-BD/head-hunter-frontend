@@ -1,8 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { isApiError } from "@/shared/libs/errorHandler";
 import {
   createSubmission,
+  fetchInboxJobs,
+  fetchInboxRecruiters,
   fetchSubmission,
   fetchSubmissions,
   updateSubmissionStatus,
@@ -72,5 +79,21 @@ export function useCreateOrOpenSubmission() {
           : "Could not submit candidates for this job. Please try again.",
       );
     },
+  });
+}
+
+export function useInboxJobs(page: number) {
+  return useQuery({
+    queryKey: submissionKeys.inboxJobs(page),
+    queryFn: () => fetchInboxJobs(page),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useInboxRecruiters(jobId: string, page: number) {
+  return useQuery({
+    queryKey: submissionKeys.inboxRecruiters(jobId, page),
+    queryFn: () => fetchInboxRecruiters(jobId, page),
+    placeholderData: keepPreviousData,
   });
 }

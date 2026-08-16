@@ -7,7 +7,11 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import type { Role } from "@/features/auth";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDateTime } from "@/shared/utils/formatDate";
-import { useMarkRead, useNotifications } from "../hooks/useNotifications";
+import {
+  useMarkRead,
+  useMarkUnread,
+  useNotifications,
+} from "../hooks/useNotifications";
 import { notificationHref } from "../utils/notificationHref";
 import type {
   Notification,
@@ -26,6 +30,28 @@ interface NotificationRowProps {
 }
 
 /**
+ * QA fix: a read notification can be flagged back to unread. Rendered outside
+ * the row's link so clicking it never navigates.
+ */
+function MarkUnreadButton({ id }: { id: string }) {
+  const markUnread = useMarkUnread();
+  return (
+    <button
+      type="button"
+      disabled={markUnread.isPending}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        markUnread.mutate(id);
+      }}
+      className="absolute right-3 top-3 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-primary focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100"
+    >
+      Mark unread
+    </button>
+  );
+}
+
+/**
  * One notification. A resolvable href renders the row as a link whose click
  * marks it read; an unresolvable one (`notificationHref` returned null)
  * renders identical markup as inert text — a dead link is worse than a row
@@ -35,7 +61,7 @@ function NotificationRow({ item, role, onOpen }: NotificationRowProps) {
   const href = notificationHref(item, role);
   const unread = item.readAt === null;
   const rowClassName = cn(
-    "relative flex items-start gap-4 rounded-xl border p-4 shadow-sm transition-colors",
+    "group relative flex items-start gap-4 rounded-xl border p-4 shadow-sm transition-colors",
     unread ? "border-primary/40 bg-primary/5" : "border-border/70 bg-card",
   );
 
@@ -47,10 +73,11 @@ function NotificationRow({ item, role, onOpen }: NotificationRowProps) {
           className="absolute left-0 top-4 h-8 w-1 rounded-r-full bg-primary"
         />
       )}
+      {!unread && <MarkUnreadButton id={item.id} />}
       <div className="flex flex-col gap-1">
         <p
           className={cn(
-            "text-foreground",
+            "pr-20 text-foreground",
             unread ? "font-semibold" : "font-medium",
           )}
         >

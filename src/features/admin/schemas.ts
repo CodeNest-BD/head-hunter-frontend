@@ -27,6 +27,13 @@ const subscriptionStatusSchema = z.enum([
   "canceled",
 ]);
 
+export const verificationStatusSchema = z.enum([
+  "pending",
+  "verified",
+  "rejected",
+]);
+export type AdminVerificationStatus = z.infer<typeof verificationStatusSchema>;
+
 export const recruiterListItemSchema = z.object({
   userId: z.string(),
   recruiterProfileId: z.string(),
@@ -35,6 +42,9 @@ export const recruiterListItemSchema = z.object({
   email: z.string(),
   status: accountStatusSchema,
   subscriptionStatus: subscriptionStatusSchema,
+  verificationStatus: verificationStatusSchema.catch("pending"),
+  ratingAvg: z.number().nullable().catch(null),
+  ratingCount: z.number().catch(0),
   city: z.string().nullable(),
   state: z.string().nullable(),
   joinedAt: z.string(),
@@ -46,6 +56,8 @@ const recruiterReferenceSchema = z
   .passthrough();
 
 export const recruiterDetailSchema = recruiterListItemSchema.extend({
+  verifiedAt: z.string().nullable().catch(null),
+  verificationNote: z.string().nullable().catch(null),
   phone: z.string().nullable(),
   addressLine: z.string().nullable(),
   zip: z.string().nullable(),
@@ -135,6 +147,12 @@ export const SUBSCRIPTION_LABELS: Record<string, string> = {
   canceled: "Canceled",
 };
 
+export const VERIFICATION_LABELS: Record<AdminVerificationStatus, string> = {
+  pending: "Pending",
+  verified: "Verified",
+  rejected: "Rejected",
+};
+
 export const SUBMISSION_LABELS: Record<SubmissionStatus, string> = {
   submitted: "Submitted",
   under_review: "Under review",
@@ -169,7 +187,7 @@ export const adminStatsSchema = z.object({
 export type AdminStats = z.infer<typeof adminStatsSchema>;
 
 export const jobStatusSchema = tolerantEnum(
-  ["draft", "published", "paused", "filled", "closed", "unknown"],
+  ["draft", "published", "paused", "filled", "closed", "expired", "unknown"],
   "unknown",
 );
 export type JobStatus = z.infer<typeof jobStatusSchema>;
@@ -193,8 +211,15 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   paused: "Paused",
   filled: "Filled",
   closed: "Closed",
+  expired: "Expired",
   unknown: "Unknown",
 };
+
+export const minRecruiterFeeSchema = z.object({
+  amountMinor: z.number(),
+  currency: z.string().catch("usd"),
+});
+export type MinRecruiterFee = z.infer<typeof minRecruiterFeeSchema>;
 
 export const recruiterPricingSchema = z.object({
   amountMinor: z.number().nullable(),

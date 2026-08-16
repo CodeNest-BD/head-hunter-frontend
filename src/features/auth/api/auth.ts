@@ -73,3 +73,30 @@ export async function googleLogin(input: {
   });
   return accessTokenResponse.parse(data);
 }
+
+/**
+ * POST /auth/forgot-password → 200 { success: true } always — the response
+ * never reveals whether the account exists.
+ */
+export async function forgotPassword(email: string): Promise<void> {
+  const { data } = await apiClient.post<unknown>(
+    "/auth/forgot-password",
+    { email },
+    { suppressGlobalErrorToast: true },
+  );
+  successResponse.parse(data);
+}
+
+/** POST /auth/reset-password → 200 { success: true }. 400 = bad/expired code. */
+export async function resetPassword(input: {
+  email: string;
+  otp: string;
+  newPassword: string;
+}): Promise<void> {
+  const { data } = await apiClient.post<unknown>(
+    "/auth/reset-password",
+    input,
+    { suppressGlobalErrorToast: true },
+  );
+  successResponse.parse(data);
+}

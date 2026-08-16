@@ -17,6 +17,7 @@ import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
+import { PasswordInput } from "@/shared/ui-components/controls/password-input";
 import { Label } from "@/shared/ui-components/controls/label";
 import {
   signUpSchema,
@@ -264,9 +265,8 @@ export function SignUpForm() {
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="password">Password</Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="new-password"
           aria-invalid={errors.password ? true : undefined}
           aria-describedby={passwordRequirementsId}

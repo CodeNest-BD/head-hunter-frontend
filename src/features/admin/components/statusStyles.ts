@@ -19,6 +19,12 @@ export const SUBSCRIPTION_STATUS_STYLES: Record<string, string> = {
   none: "bg-muted text-muted-foreground",
 };
 
+export const VERIFICATION_STATUS_STYLES: Record<string, string> = {
+  verified: "bg-[#E7F4EC] text-[#17734E]",
+  pending: "bg-[#FBF3DF] text-[#7A5109]",
+  rejected: "bg-[#FBEAEA] text-[#9B3535]",
+};
+
 export const SUBMISSION_STATUS_STYLES: Record<SubmissionStatus, string> = {
   submitted: "bg-primary/15 text-primary",
   under_review: "bg-[#FBF3DF] text-[#7A5109]",
@@ -34,5 +40,6 @@ export const JOB_STATUS_STYLES: Record<JobStatus, string> = {
   paused: "bg-[#FBF3DF] text-[#7A5109]",
   filled: "bg-primary/15 text-primary",
   closed: "bg-[#FBEAEA] text-[#9B3535]",
+  expired: "bg-[#FBF3DF] text-[#7A5109]",
   unknown: "bg-muted text-muted-foreground",
 };

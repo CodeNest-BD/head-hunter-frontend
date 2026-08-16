@@ -10,6 +10,7 @@ import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
+import { PasswordInput } from "@/shared/ui-components/controls/password-input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { signInSchema, type SignInFormData } from "../schemas";
 import { signIn } from "../api/auth";
@@ -105,10 +106,17 @@ export function SignInForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Password</Label>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="current-password"
           aria-invalid={errors.password ? true : undefined}
           {...register("password")}

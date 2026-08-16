@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { useAuth, type Role } from "@/features/auth";
+import { VerificationBanner } from "@/features/recruiters";
 import { AdminOverview } from "@/features/admin";
 import { useUnreadCount } from "@/features/notifications";
 import { BrandGlow, Eyebrow } from "@/shared/ui-components/brand";
@@ -143,6 +144,8 @@ function DashboardContent() {
           </p>
         </div>
       </header>
+
+      {isRecruiter && <VerificationBanner />}
 
       {isAdmin && <AdminOverview />}
 
