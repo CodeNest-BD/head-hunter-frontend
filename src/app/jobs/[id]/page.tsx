@@ -15,19 +15,23 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-import { RequireRole } from "@/features/auth";
+import { useAuth } from "@/features/auth";
 import {
   EMPLOYMENT_TYPE_LABELS,
   ROLE_CATEGORY_LABELS,
   useJob,
+  usePublicJob,
 } from "@/features/jobs";
+import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { useCreateOrOpenSubmission } from "@/features/submissions";
+import { PublicShell } from "@/components/landing/PublicShell";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import type { LucideIcon } from "lucide-react";
+import type { EmploymentType, RoleCategory } from "@/features/jobs";
 
 function Detail({
   icon: Icon,
@@ -60,7 +64,7 @@ function Detail({
   );
 }
 
-function FormSkeleton() {
+function DetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <div className="h-28 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
@@ -76,78 +80,22 @@ function FormSkeleton() {
   );
 }
 
-/**
- * The page's single call to action. It opens the submission-scoped workspace,
- * which is where candidates are submitted AND where the thread with the company
- * lives — so this one button serves both intents, and there is deliberately no
- * separate "message company" action beside it.
- *
- * `useCreateOrOpenSubmission` needs only a `jobId`, so a recruiter can open the
- * thread and start talking before submitting anyone.
- */
-function SubmitCandidatesButton({ jobId }: { jobId: string }) {
-  const router = useRouter();
-  const createOrOpenSubmission = useCreateOrOpenSubmission();
-
-  return (
-    <Button
-      type="button"
-      disabled={createOrOpenSubmission.isPending}
-      onClick={() =>
-        createOrOpenSubmission.mutate(
-          { jobId },
-          {
-            onSuccess: (submission) =>
-              router.push(`/recruiter/submissions/${submission.id}`),
-          },
-        )
-      }
-    >
-      <Send className="h-[18px] w-[18px]" />
-      {createOrOpenSubmission.isPending ? "Opening…" : "Submit candidates"}
-    </Button>
-  );
+/** The fields both data sources share, normalized for one renderer. */
+interface JobView {
+  title: string;
+  roleCategory: string;
+  employmentType: string | null;
+  locationCity: string | null;
+  locationState: string | null;
+  isRemote: boolean;
+  salaryMinMinor: number | null;
+  salaryMaxMinor: number | null;
+  recruiterFeeMinor: number;
+  publishedAt: Date | null;
+  description: string | null;
 }
 
-function JobDetailContent({ jobId }: { jobId: string }) {
-  const { data: job, isPending, isError, error, refetch } = useJob(jobId);
-
-  if (isPending) {
-    return <FormSkeleton />;
-  }
-  if (isError) {
-    // The most likely cause is the subscription paywall, so say so rather than
-    // showing a bare failure.
-    return (
-      <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
-        <div className="flex items-center gap-2 font-medium">
-          <AlertCircle className="h-[18px] w-[18px]" />
-          Could not load this job.
-          {(error as Error | undefined)?.message
-            ? ` ${(error as Error).message}`
-            : ""}
-        </div>
-        <p className="text-destructive/90">
-          If you are not subscribed yet, activate your subscription on your{" "}
-          <Link
-            href="/recruiter/profile"
-            className="font-medium underline underline-offset-2"
-          >
-            profile
-          </Link>
-          .
-        </p>
-        <button
-          type="button"
-          className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
-          onClick={() => void refetch()}
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
+function JobBody({ job, cta }: { job: JobView; cta: React.ReactNode }) {
   const location = job.isRemote
     ? "Remote"
     : [job.locationCity, job.locationState].filter(Boolean).join(", ") || "—";
@@ -156,20 +104,19 @@ function JobDetailContent({ jobId }: { jobId: string }) {
       ? "—"
       : `${formatMinor(job.salaryMinMinor)} – ${formatMinor(job.salaryMaxMinor)}`;
   const employmentType = job.employmentType
-    ? EMPLOYMENT_TYPE_LABELS[job.employmentType]
+    ? (EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType] ?? "—")
     : "—";
   // How stale a role is changes whether a recruiter works it, so this is
-  // relative rather than an absolute date. `publishedAt` is null only for a job
-  // that was never published, which a recruiter cannot reach from the job map.
+  // relative rather than an absolute date.
   const posted = job.publishedAt
     ? formatDistanceToNow(job.publishedAt, { addSuffix: true })
     : "—";
+  const category =
+    ROLE_CATEGORY_LABELS[job.roleCategory as RoleCategory] ?? "Other";
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-end">
-        <SubmitCandidatesButton jobId={jobId} />
-      </div>
+      {cta && <div className="flex justify-end">{cta}</div>}
 
       {/* Recruiter fee hero — the headline number, with a soft brand glow. */}
       <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-card p-6 shadow-sm">
@@ -187,18 +134,14 @@ function JobDetailContent({ jobId }: { jobId: string }) {
               {formatMinor(job.recruiterFeeMinor)}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Paid on a successful hire, after the 30-day guarantee.
+              Paid upon a successful hire.
             </p>
           </div>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Detail
-          icon={Briefcase}
-          label="Category"
-          value={ROLE_CATEGORY_LABELS[job.roleCategory]}
-        />
+        <Detail icon={Briefcase} label="Category" value={category} />
         <Detail icon={MapPin} label="Location" value={location} />
         <Detail icon={Banknote} label="Salary range" value={salary} />
         <Detail icon={Clock} label="Employment type" value={employmentType} />
@@ -224,32 +167,185 @@ function JobDetailContent({ jobId }: { jobId: string }) {
   );
 }
 
-export default function JobDetailPage() {
-  const params = useParams<{ id: string }>();
-  // Same query key as JobDetailContent's, so TanStack serves both subscribers
-  // from one request. Read here only for the heading: the role's name belongs in
-  // the page title, and it falls back while loading or if the fetch fails.
-  const { data: job } = useJob(params.id);
+/**
+ * The page's single call to action for a VERIFIED recruiter. It opens the
+ * submission-scoped workspace, which is where candidates are submitted AND
+ * where the thread with the company lives — so this one button serves both
+ * intents.
+ */
+function SubmitCandidatesButton({ jobId }: { jobId: string }) {
+  const router = useRouter();
+  const createOrOpenSubmission = useCreateOrOpenSubmission();
 
   return (
-    <RequireRole role="recruiter">
-      <DashboardLayout>
-        <div className="flex max-w-2xl flex-col gap-6">
-          <Link
-            href="/jobs"
-            className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to job map
-          </Link>
-          <PageHeader
-            title={job?.title ?? "Job detail"}
-            subtitle="The fee, the role, and everything you need before you submit a candidate."
-            className="mb-0"
-          />
-          <JobDetailContent jobId={params.id} />
-        </div>
-      </DashboardLayout>
-    </RequireRole>
+    <Button
+      type="button"
+      disabled={createOrOpenSubmission.isPending}
+      onClick={() =>
+        createOrOpenSubmission.mutate(
+          { jobId },
+          {
+            onSuccess: (submission) =>
+              router.push(`/recruiter/submissions/${submission.id}`),
+          },
+        )
+      }
+    >
+      <Send className="h-[18px] w-[18px]" />
+      {createOrOpenSubmission.isPending ? "Opening…" : "Submit candidates"}
+    </Button>
   );
+}
+
+function RecruiterCta({ jobId }: { jobId: string }) {
+  const { isVerified, verificationStatus, isLoading } =
+    useIsVerifiedRecruiter();
+  if (isLoading) return null;
+  if (isVerified) return <SubmitCandidatesButton jobId={jobId} />;
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      <Button type="button" disabled>
+        <Send className="h-[18px] w-[18px]" />
+        Submit candidates
+      </Button>
+      <p className="text-xs text-muted-foreground">
+        {verificationStatus === "rejected"
+          ? "Your verification was declined — see your "
+          : "Submitting unlocks once you're verified — check your "}
+        <Link
+          href="/recruiter/profile"
+          className="font-medium text-primary underline-offset-2 hover:underline"
+        >
+          profile
+        </Link>
+        .
+      </p>
+    </div>
+  );
+}
+
+/** Signed-in view: authed endpoint (role visibility rules), dashboard chrome. */
+function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
+  const { data: job, isPending, isError, refetch } = useJob(jobId);
+
+  return (
+    <DashboardLayout>
+      <div className="flex max-w-2xl flex-col gap-6">
+        <Link
+          href="/explore-jobs"
+          className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to explore jobs
+        </Link>
+        <PageHeader
+          title={job?.title ?? "Job detail"}
+          subtitle="The fee, the role, and everything you need before you submit a candidate."
+          className="mb-0"
+        />
+        {isPending ? (
+          <DetailSkeleton />
+        ) : isError || !job ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
+            <div className="flex items-center gap-2 font-medium">
+              <AlertCircle className="h-[18px] w-[18px]" />
+              Could not load this job. It may have expired or been closed.
+            </div>
+            <button
+              type="button"
+              className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
+              onClick={() => void refetch()}
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <JobBody
+            job={job}
+            cta={role === "recruiter" ? <RecruiterCta jobId={jobId} /> : null}
+          />
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
+
+/** Guest view: public endpoint, marketing chrome, sign-up CTA. */
+function GuestJobDetail({ jobId }: { jobId: string }) {
+  const { data: job, isPending, isError } = usePublicJob(jobId);
+
+  return (
+    <PublicShell>
+      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-5 py-12 md:px-0">
+        <Link
+          href="/explore-jobs"
+          className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to explore jobs
+        </Link>
+        {isPending ? (
+          <DetailSkeleton />
+        ) : isError || !job ? (
+          <div className="rounded-2xl border border-brand-line bg-white p-10 text-center">
+            <p className="font-heading text-lg font-extrabold text-navy">
+              This role is no longer available
+            </p>
+            <p className="mt-2 text-sm text-brand-gray">
+              It may have been filled or expired.{" "}
+              <Link
+                href="/explore-jobs"
+                className="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                Browse open jobs
+              </Link>
+              .
+            </p>
+          </div>
+        ) : (
+          <>
+            <div>
+              <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-navy">
+                {job.title}
+              </h1>
+              {job.companyName && (
+                <p className="mt-1 text-brand-gray">{job.companyName}</p>
+              )}
+            </div>
+            <JobBody
+              job={job}
+              cta={
+                <Button asChild className="font-bold">
+                  <Link href="/signup">
+                    <Send className="h-[18px] w-[18px]" />
+                    Sign up to submit candidates
+                  </Link>
+                </Button>
+              }
+            />
+          </>
+        )}
+      </div>
+    </PublicShell>
+  );
+}
+
+export default function JobDetailPage() {
+  const params = useParams<{ id: string }>();
+  const { status, user } = useAuth();
+
+  // While the session boots, stay chrome-neutral — avoids a guest→dashboard
+  // flash for signed-in visitors.
+  if (status === "booting") {
+    return (
+      <div className="mx-auto max-w-2xl px-5 py-16">
+        <DetailSkeleton />
+      </div>
+    );
+  }
+
+  if (status === "authenticated" && user) {
+    return <AuthedJobDetail jobId={params.id} role={user.role} />;
+  }
+  return <GuestJobDetail jobId={params.id} />;
 }

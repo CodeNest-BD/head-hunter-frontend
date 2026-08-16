@@ -14,8 +14,24 @@ export {
   usePublishJob,
   useUpdateJob,
 } from "./hooks/useJobs";
-export { jobKeys } from "./keys";
-export type { Job, JobMapEntry, JobStatus, RoleCategory } from "./schemas";
+export {
+  usePublicJob,
+  usePublicJobs,
+  usePublicJobStats,
+} from "./hooks/usePublicJobs";
+export { jobKeys, publicJobKeys } from "./keys";
+export type {
+  EmploymentType,
+  Job,
+  JobMapEntry,
+  JobStatus,
+  RoleCategory,
+} from "./schemas";
 export { ROLE_CATEGORIES } from "./schemas";
 export { ROLE_CATEGORY_LABELS } from "./schemas";
 export { EMPLOYMENT_TYPE_LABELS } from "./schemas";
+export type {
+  PublicJobCard,
+  PublicJobDetail,
+  PublicJobStats,
+} from "./publicSchemas";

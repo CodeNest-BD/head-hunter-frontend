@@ -47,7 +47,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   ],
   recruiter: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/jobs", label: "Job map", icon: Map },
+    { href: "/explore-jobs", label: "Explore jobs", icon: Map },
     { href: "/companies", label: "Companies", icon: Building2 },
     {
       href: "/notifications",
