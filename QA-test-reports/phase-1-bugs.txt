@@ -1,0 +1,5 @@
+1/ Password visibility toggle (eye logo) is not available during Login and Sign Up.
+
+2/ Password recovery functionality is not available for users who forget their password.
+
+3/  No option is available to mark a previously read notification as unread.

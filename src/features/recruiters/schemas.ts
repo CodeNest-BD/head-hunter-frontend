@@ -33,6 +33,14 @@ export const SUBSCRIPTION_STATUSES = [
 export const subscriptionStatusSchema = z.enum(SUBSCRIPTION_STATUSES);
 export type SubscriptionStatus = z.infer<typeof subscriptionStatusSchema>;
 
+export const VERIFICATION_STATUSES = [
+  "pending",
+  "verified",
+  "rejected",
+] as const;
+export const verificationStatusSchema = z.enum(VERIFICATION_STATUSES);
+export type VerificationStatus = z.infer<typeof verificationStatusSchema>;
+
 export const recruiterReferenceSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -52,6 +60,11 @@ export const recruiterProfileSchema = z.object({
   yearsExperience: z.number().nullable(),
   specializations: z.array(specializationSchema).nullable(),
   subscriptionStatus: subscriptionStatusSchema,
+  // Tolerant: a backend that predates verification reads as "pending".
+  verificationStatus: verificationStatusSchema.catch("pending"),
+  verificationNote: z.string().nullable().catch(null),
+  ratingAvg: z.number().nullable().catch(null),
+  ratingCount: z.number().catch(0),
   hasMarketplaceAccess: z.boolean(),
   references: z.array(recruiterReferenceSchema),
 });

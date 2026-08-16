@@ -16,9 +16,9 @@ interface NavLink {
 }
 
 const NAV_LINKS: readonly NavLink[] = [
-  { href: "#how", label: "How it works" },
-  { href: "#escrow", label: "Escrow" },
-  { href: "#pricing", label: "Pricing" },
+  { href: "/#how", label: "How It Works" },
+  { href: "/#pricing", label: "Pricing" },
+  { href: "/explore-jobs", label: "Explore Jobs" },
 ];
 
 /**
@@ -34,12 +34,12 @@ export function LandingNav() {
   const navItems = user ? NAV_BY_ROLE[user.role] : [];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[#E7EAF0] bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-brand-line bg-white/95 backdrop-blur">
       <nav
         aria-label="Primary"
         className="mx-auto flex max-w-[1240px] items-center gap-6 px-5 py-4 md:px-10"
       >
-        <Link href="/" aria-label="HeadHunter home">
+        <Link href="/" aria-label="Head-Hunters home">
           <Logo />
         </Link>
 
@@ -50,7 +50,7 @@ export function LandingNav() {
             <a
               key={link.href}
               href={link.href}
-              className="text-sm font-semibold text-[#3A4351] transition-colors hover:text-primary"
+              className="text-sm font-semibold text-brand-slate transition-colors hover:text-primary"
             >
               {link.label}
             </a>
@@ -67,10 +67,10 @@ export function LandingNav() {
                 variant="outline"
                 className="border-[#C9D0DF] font-semibold text-navy hover:border-primary hover:bg-transparent hover:text-primary"
               >
-                <Link href="/login">Log in</Link>
+                <Link href="/login">Log In</Link>
               </Button>
               <Button asChild className="font-bold">
-                <Link href="/signup">Get started</Link>
+                <Link href="/signup">Sign Up</Link>
               </Button>
             </>
           )}
@@ -89,7 +89,7 @@ export function LandingNav() {
 
       <div
         className={cn(
-          "overflow-hidden border-t border-[#E7EAF0] bg-white md:hidden",
+          "overflow-hidden border-t border-brand-line bg-white md:hidden",
           open ? "block" : "hidden",
         )}
       >
@@ -99,7 +99,7 @@ export function LandingNav() {
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className="rounded-lg px-2 py-2.5 text-sm font-semibold text-[#3A4351] hover:bg-accent hover:text-primary"
+              className="rounded-lg px-2 py-2.5 text-sm font-semibold text-brand-slate hover:bg-accent hover:text-primary"
             >
               {link.label}
             </a>
@@ -124,7 +124,7 @@ export function LandingNav() {
                       key={item.href}
                       href={item.href}
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-[#3A4351] hover:bg-accent hover:text-primary"
+                      className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-brand-slate hover:bg-accent hover:text-primary"
                     >
                       <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                       {item.label}
@@ -151,12 +151,12 @@ export function LandingNav() {
                   className="w-full border-[#C9D0DF] font-semibold text-navy"
                 >
                   <Link href="/login" onClick={() => setOpen(false)}>
-                    Log in
+                    Log In
                   </Link>
                 </Button>
                 <Button asChild className="w-full font-bold">
                   <Link href="/signup" onClick={() => setOpen(false)}>
-                    Get started
+                    Sign Up
                   </Link>
                 </Button>
               </>

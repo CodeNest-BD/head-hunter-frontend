@@ -1,80 +1,77 @@
-"use client";
-
-import { useRecruiterPrice } from "@/features/billing";
-import { formatMinor } from "@/shared/utils/money";
+import { Check } from "lucide-react";
 
 import { LandingCta } from "./LandingCta";
 
-// Shown until the live price loads (and if it's ever unset) so the marketing
-// card never renders a blank or dashed price.
-const FALLBACK_PRICE = "$199";
-
 /**
- * Pricing section: a white "free forever" company card and a navy recruiter
- * card whose price is the live, admin-configured recruiter subscription price.
+ * Pricing per phase 1–2: recruiting is free for recruiters (the subscription
+ * is suspended, so no price is fetched or shown), and companies simply set
+ * their own success fee per job.
  */
 export function Pricing() {
-  const { data: price } = useRecruiterPrice();
-  const recruiterPrice =
-    price?.amountMinor != null
-      ? formatMinor(price.amountMinor)
-      : FALLBACK_PRICE;
-
   return (
-    <section
-      id="pricing"
-      className="scroll-mt-20 bg-background px-5 py-20 md:px-10 md:py-24"
-    >
-      <div className="mx-auto max-w-4xl">
-        <h2 className="mb-11 text-center font-heading text-[34px] font-extrabold tracking-[-0.02em] text-navy sm:text-[42px]">
-          Simple, honest pricing.
+    <section id="pricing" className="scroll-mt-20 bg-background">
+      <div className="mx-auto max-w-[1240px] px-5 py-16 md:px-10">
+        <h2 className="mb-3 text-center font-heading text-3xl font-extrabold text-navy md:text-4xl">
+          Simple, Honest Pricing
         </h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          <article className="rounded-2xl border border-border bg-card p-9 shadow-card">
-            <div className="mb-3.5 text-xs font-bold uppercase tracking-[0.09em] text-muted-foreground">
-              Companies
-            </div>
-            <div className="font-heading text-[44px] font-extrabold text-navy">
-              Free
-              <span className="text-[17px] font-semibold text-[#8A93A3]">
-                {" "}
-                forever
-              </span>
-            </div>
-            <p className="my-4 text-[15px] leading-relaxed text-[#3A4351]">
-              Post unlimited jobs at no cost. You choose the recruiter fee for
-              each role — that&apos;s the only money you ever spend.
+        <p className="mx-auto mb-10 max-w-2xl text-center text-brand-gray">
+          No subscriptions, no retainers. The only fee is the one the company
+          sets for a successful hire.
+        </p>
+        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
+          <article className="flex flex-col rounded-2xl border border-brand-line bg-white p-8 shadow-card">
+            <h3 className="font-heading text-xl font-extrabold text-navy">
+              For Companies
+            </h3>
+            <p className="mt-1 font-heading text-4xl font-extrabold text-primary">
+              You set the price
             </p>
+            <ul className="mt-6 flex-1 space-y-3 text-[15px] text-brand-slate">
+              {[
+                "Post jobs free — pay only for a successful hire",
+                "Name the exact fee a placement is worth to you",
+                "Candidates from industry-experienced recruiters",
+              ].map((line) => (
+                <li key={line} className="flex items-start gap-2.5">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  {line}
+                </li>
+              ))}
+            </ul>
             <LandingCta
               role="company"
               authedHref="/company/jobs/new"
-              className="h-auto w-full rounded-[10px] bg-navy py-3.5 text-[15px] font-bold text-white hover:bg-navy/90"
+              className="mt-8 h-auto rounded-[10px] px-5 py-3.5 font-bold"
             >
-              Create a company account
+              Post a Job &amp; Set Your Price
             </LandingCta>
           </article>
 
-          <article className="rounded-2xl bg-navy p-9 text-white shadow-card-lg">
-            <div className="mb-3.5 text-xs font-bold uppercase tracking-[0.09em] text-[#85B1F3]">
-              Recruiters
-            </div>
-            <div className="font-heading text-[44px] font-extrabold">
-              {recruiterPrice}
-              <span className="text-[17px] font-semibold text-[#858A98]">
-                {" "}
-                / month
-              </span>
-            </div>
-            <p className="my-4 text-[15px] leading-relaxed text-[#C9D0DF]">
-              Full access to the job map, unlimited candidate submissions, and
-              guaranteed escrow-backed payouts. Cancel anytime.
+          <article className="flex flex-col rounded-2xl border border-brand-line bg-white p-8 shadow-card">
+            <h3 className="font-heading text-xl font-extrabold text-navy">
+              For Recruiters
+            </h3>
+            <p className="mt-1 font-heading text-4xl font-extrabold text-primary">
+              Free
             </p>
+            <ul className="mt-6 flex-1 space-y-3 text-[15px] text-brand-slate">
+              {[
+                "Browse live roles across all 50 states",
+                "Choose the searches that match your experience",
+                "Earn the full fee the company offers",
+              ].map((line) => (
+                <li key={line} className="flex items-start gap-2.5">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  {line}
+                </li>
+              ))}
+            </ul>
             <LandingCta
               role="recruiter"
-              authedHref="/recruiter/subscription"
-              className="h-auto w-full rounded-[10px] py-3.5 text-[15px] font-bold"
+              authedHref="/explore-jobs"
+              className="mt-8 h-auto rounded-[10px] px-5 py-3.5 font-bold"
             >
-              Start recruiting
+              Start Recruiting Free
             </LandingCta>
           </article>
         </div>
