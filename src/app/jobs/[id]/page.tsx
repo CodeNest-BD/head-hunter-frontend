@@ -29,6 +29,7 @@ import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
+import { RichTextView } from "@/shared/ui-components/data/RichTextView";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import type { LucideIcon } from "lucide-react";
 import type { EmploymentType, RoleCategory } from "@/features/jobs";
@@ -158,9 +159,7 @@ function JobBody({ job, cta }: { job: JobView; cta: React.ReactNode }) {
           <h2 className="mb-3 font-heading text-lg font-semibold tracking-tight text-foreground">
             Description
           </h2>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-            {job.description}
-          </p>
+          <RichTextView value={job.description} />
         </section>
       )}
     </div>
