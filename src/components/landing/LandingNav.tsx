@@ -65,7 +65,7 @@ export function LandingNav() {
               <Button
                 asChild
                 variant="outline"
-                className="border-[#C9D2E3] font-semibold text-navy hover:border-primary hover:bg-transparent hover:text-primary"
+                className="border-[#C9D0DF] font-semibold text-navy hover:border-primary hover:bg-transparent hover:text-primary"
               >
                 <Link href="/login">Log in</Link>
               </Button>
@@ -78,7 +78,7 @@ export function LandingNav() {
 
         <button
           type="button"
-          className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#C9D2E3] text-navy md:hidden"
+          className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#C9D0DF] text-navy md:hidden"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
@@ -148,7 +148,7 @@ export function LandingNav() {
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full border-[#C9D2E3] font-semibold text-navy"
+                  className="w-full border-[#C9D0DF] font-semibold text-navy"
                 >
                   <Link href="/login" onClick={() => setOpen(false)}>
                     Log in

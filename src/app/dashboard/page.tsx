@@ -137,7 +137,7 @@ function DashboardContent() {
           <h1 className="mt-3 font-heading text-3xl font-extrabold tracking-[-0.02em] text-white sm:text-4xl">
             Hey {user.firstName}.
           </h1>
-          <p className="mt-3 text-sm text-[#B6C1D6]">
+          <p className="mt-3 text-sm text-[#C9D0DF]">
             Signed in as {user.firstName} {user.lastName} ({user.email}) ·{" "}
             <span className="capitalize">{user.role}</span>
           </p>
@@ -154,7 +154,7 @@ function DashboardContent() {
             <Link
               key={link.href}
               href={link.href}
-              className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-card transition hover:-translate-y-0.5 hover:border-[#C9D2E3] hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-card transition hover:-translate-y-0.5 hover:border-[#C9D0DF] hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div className="flex items-center justify-between">
                 <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">

@@ -30,8 +30,8 @@ import {
 } from "@/shared/ui-components/controls/card";
 import { useAdminStats } from "../hooks/useAdmin";
 
-const RECRUITER_COLOR = "#2050E0";
-const COMPANY_COLOR = "#14213D";
+const RECRUITER_COLOR = "#034AEF";
+const COMPANY_COLOR = "#0A1738";
 const ACTIVE_COLOR = "#17734E";
 const HELD_COLOR = "#9B3535";
 

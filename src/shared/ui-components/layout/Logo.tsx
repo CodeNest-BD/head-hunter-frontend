@@ -3,14 +3,17 @@ import { cn } from "@/shared/libs/shadCnConfig";
 interface LogoProps {
   /** Hide the wordmark, showing only the mark. */
   markOnly?: boolean;
-  /** Wordmark ink: navy on light surfaces, white over navy panels. */
+  /** Wordmark ink: dark blue on light surfaces, white over navy panels. */
   tone?: "light" | "onDark";
   className?: string;
 }
 
 /**
- * HeadHunter brand lockup — the twin-chevron mark (mock blues #2050E0 / #5B8AF0)
- * plus the wordmark. Wordmark ink adapts to the surface.
+ * Head-Hunters brand lockup, drawn from the client's logo file
+ * (public/assets/brand/logo.png): a crosshair mark — light-blue ring and
+ * ticks (#4F80E6) around a primary-blue core (#034AEF) — next to the
+ * "Head-Hunters" wordmark with a grey ".com". Wordmark ink adapts to the
+ * surface.
  */
 export function Logo({
   markOnly = false,
@@ -18,26 +21,47 @@ export function Logo({
   className,
 }: LogoProps) {
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
+    <span className={cn("inline-flex items-center gap-2", className)}>
       <svg
-        width="26"
-        height="20"
-        viewBox="0 0 26 20"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
         fill="none"
         aria-hidden="true"
         className="shrink-0"
       >
-        <path d="M2 2l8 8-8 8V2z" fill="#2050E0" />
-        <path d="M12 2l8 8-8 8V2z" fill="#5B8AF0" />
+        {/* Ring */}
+        <circle
+          cx="12"
+          cy="12"
+          r="7.5"
+          stroke="#4F80E6"
+          strokeWidth="2.4"
+          fill="none"
+        />
+        {/* Ticks */}
+        <path
+          d="M12 0.6v3.2M12 20.2v3.2M0.6 12h3.2M20.2 12h3.2"
+          stroke="#4F80E6"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+        />
+        {/* Core */}
+        <circle cx="12" cy="12" r="4.4" fill="#034AEF" />
+        <circle cx="12" cy="12" r="1.9" fill="#FDFEFE" />
       </svg>
       {!markOnly && (
-        <span
-          className={cn(
-            "font-heading text-[19px] font-extrabold leading-none tracking-[-0.02em]",
-            tone === "onDark" ? "text-white" : "text-navy",
-          )}
-        >
-          HeadHunter
+        <span className="font-heading text-[19px] font-extrabold leading-none tracking-[-0.02em]">
+          <span className={tone === "onDark" ? "text-white" : "text-navy"}>
+            Head-Hunters
+          </span>
+          <span
+            className={
+              tone === "onDark" ? "text-white/60" : "text-brand-gray-light"
+            }
+          >
+            .com
+          </span>
         </span>
       )}
     </span>

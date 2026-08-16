@@ -38,10 +38,10 @@ export function Escrow() {
               key={feature.title}
               className="rounded-2xl border border-[#2E3D5C] p-7"
             >
-              <div className="mb-3 font-heading text-[30px] font-extrabold text-[#5B8AF0]">
+              <div className="mb-3 font-heading text-[30px] font-extrabold text-[#4F80E6]">
                 {feature.title}
               </div>
-              <p className="text-[15px] leading-relaxed text-[#B6C1D6]">
+              <p className="text-[15px] leading-relaxed text-[#C9D0DF]">
                 {feature.body}
               </p>
             </div>

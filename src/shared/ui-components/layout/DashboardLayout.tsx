@@ -225,13 +225,13 @@ export function DashboardLayout({
   const resolvedCrumbs = breadcrumbs ?? deriveBreadcrumbs(pathname);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-secondary">
       {/* Top bar — breadcrumb (desktop) / logo (mobile), plus the menu toggle.
        * Its left inset tracks the sidebar width so the breadcrumb stays aligned
        * with the content column in both states. */}
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-border/70 bg-background/80 px-4 backdrop-blur-md transition-[padding] duration-200 sm:px-6 lg:pr-10",
+          "fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-border/70 bg-secondary/80 px-4 backdrop-blur-md transition-[padding] duration-200 sm:px-6 lg:pr-10",
           collapsed ? "lg:pl-[6.5rem]" : "lg:pl-[18.5rem]",
         )}
       >
@@ -243,7 +243,7 @@ export function DashboardLayout({
         >
           <Menu className="h-5 w-5" />
         </button>
-        <Link href="/temp" aria-label="HeadHunter home" className="lg:hidden">
+        <Link href="/" aria-label="Head-Hunters home" className="lg:hidden">
           <Logo />
         </Link>
         {resolvedCrumbs.length > 0 && (
@@ -267,7 +267,7 @@ export function DashboardLayout({
           )}
         >
           {!collapsed && (
-            <Link href="/temp" aria-label="HeadHunter home">
+            <Link href="/" aria-label="Head-Hunters home">
               <Logo />
             </Link>
           )}
@@ -298,7 +298,7 @@ export function DashboardLayout({
           />
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[80%] flex-col border-r border-sidebar-border bg-sidebar shadow-2xl">
             <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-6">
-              <Link href="/temp" aria-label="HeadHunter home" onClick={close}>
+              <Link href="/" aria-label="Head-Hunters home" onClick={close}>
                 <Logo />
               </Link>
               <button

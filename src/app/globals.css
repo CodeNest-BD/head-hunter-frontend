@@ -3,66 +3,68 @@
 @tailwind utilities;
 
 /*
- * Head-Hunters light theme — copied from the "HeadHunter Platform v2" mock:
- * a light grey-blue canvas (#F1F3F7), white cards, navy ink (#14213D / #1B2434),
- * a blue primary (#2050E0, hover #1740B8), and soft navy-tinted shadows. All
- * shadcn tokens are defined on :root so token-based components adopt it.
+ * Head-Hunters light theme — client palette (requirements/client-feedback/
+ * color&typography.txt): near-white canvas #FDFEFE, white cards, dark-blue
+ * ink #0A1738 (text is dark blue, never black), primary #034AEF with
+ * secondary blue #2658CF, section tint #EEF4FD, border #E0E8F3, input
+ * #C9D0DF. All shadcn tokens are defined on :root so token-based components
+ * adopt it.
  */
 @layer base {
   :root {
-    /* Canvas #F1F3F7 / ink #1B2434 */
-    --background: 220 27% 96%;
-    --foreground: 220 32% 15%;
+    /* Canvas #FDFEFE / ink #0A1738 */
+    --background: 180 33% 99%;
+    --foreground: 223 70% 13%;
 
-    /* White surfaces; navy heading ink #14213D */
+    /* White surfaces; dark-blue heading ink #0A1738 */
     --card: 0 0% 100%;
-    --card-foreground: 222 51% 16%;
+    --card-foreground: 223 70% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 51% 16%;
+    --popover-foreground: 223 70% 13%;
 
-    /* Brand blue #2050E0 */
-    --primary: 225 75% 50%;
+    /* Brand blue #034AEF */
+    --primary: 222 98% 47%;
     --primary-foreground: 0 0% 100%;
 
-    /* Soft grey secondary surface #EEF0F4 */
-    --secondary: 220 21% 95%;
-    --secondary-foreground: 222 51% 16%;
+    /* Soft blue section surface #EEF4FD */
+    --secondary: 216 79% 96%;
+    --secondary-foreground: 223 70% 13%;
 
-    --muted: 220 21% 95%;
-    /* Secondary text #68707E */
-    --muted-foreground: 219 10% 45%;
+    --muted: 216 79% 96%;
+    /* Secondary text #616676 */
+    --muted-foreground: 226 10% 42%;
 
-    /* Blue tint #E8F0FE for accent fills */
-    --accent: 219 92% 95%;
-    --accent-foreground: 225 75% 42%;
+    /* Blue tint #EEF4FD for accent fills; ink = secondary blue #2658CF */
+    --accent: 216 79% 96%;
+    --accent-foreground: 222 69% 48%;
 
-    /* Danger #B3261E on #FDEBE8 */
+    /* Danger #B3261E on white */
     --destructive: 3 71% 41%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Hairlines: border #E3E6EC, input #D8DDE6 */
-    --border: 220 20% 91%;
-    --input: 220 19% 87%;
-    --ring: 225 75% 50%;
+    /* Hairlines: border #E0E8F3, input #C9D0DF */
+    --border: 215 44% 92%;
+    --input: 221 26% 83%;
+    --ring: 222 98% 47%;
 
     /* 8px base radius (buttons/inputs); cards use rounded-xl/2xl explicitly. */
     --radius: 0.5rem;
 
-    --chart-1: 225 75% 50%;
-    --chart-2: 199 89% 48%;
-    --chart-3: 152 42% 32%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 262 60% 55%;
+    --chart-1: 222 98% 47%;
+    --chart-2: 222 69% 48%;
+    --chart-3: 219 73% 61%;
+    --chart-4: 214 82% 74%;
+    --chart-5: 208 95% 85%;
 
-    /* Sidebar — white with a blue-tint active state and navy ink. */
+    /* Sidebar — white with a blue-tint active state and dark-blue ink. */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 219 10% 45%;
-    --sidebar-primary: 225 75% 50%;
+    --sidebar-foreground: 226 10% 42%;
+    --sidebar-primary: 222 98% 47%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 219 92% 95%;
-    --sidebar-accent-foreground: 222 51% 16%;
-    --sidebar-border: 220 20% 91%;
-    --sidebar-ring: 225 75% 50%;
+    --sidebar-accent: 216 79% 96%;
+    --sidebar-accent-foreground: 223 70% 13%;
+    --sidebar-border: 215 44% 92%;
+    --sidebar-ring: 222 98% 47%;
   }
 }
 
@@ -78,27 +80,27 @@
     color: hsl(var(--foreground));
   }
   ::selection {
-    background-color: hsl(225 75% 50% / 0.18);
+    background-color: hsl(222 98% 47% / 0.18);
   }
 }
 
 @layer utilities {
-  /* Brand navy — for hero/nav panels and heading ink where a token isn't apt. */
+  /* Brand navy #0A1738 — hero/nav panels and heading ink where a token isn't apt. */
   .text-navy {
-    color: #14213d;
+    color: #0a1738;
   }
   .bg-navy {
-    background-color: #14213d;
+    background-color: #0a1738;
   }
-  /* Soft elevation copied from the mock's cards. */
+  /* Soft navy-tinted elevation. */
   .shadow-card {
-    box-shadow: 0 14px 40px rgba(20, 33, 61, 0.07);
+    box-shadow: 0 14px 40px rgba(10, 23, 56, 0.07);
   }
   .shadow-card-lg {
-    box-shadow: 0 14px 40px rgba(20, 33, 61, 0.1);
+    box-shadow: 0 14px 40px rgba(10, 23, 56, 0.1);
   }
   .shadow-card-hover {
-    box-shadow: 0 12px 34px rgba(20, 33, 61, 0.12);
+    box-shadow: 0 12px 34px rgba(10, 23, 56, 0.12);
   }
 }
 
