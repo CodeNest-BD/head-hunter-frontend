@@ -86,7 +86,10 @@ export const EMPLOYMENT_TYPE_LABELS: Record<EmploymentType, string> = {
 export const jobFormSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required"),
-    description: z.string().trim(),
+    description: z
+      .string()
+      .trim()
+      .max(20000, "Description is too long (20,000 characters max)"),
     roleCategory: roleCategorySchema,
     employmentType: employmentTypeSchema.or(z.literal("")),
     locationState: z
