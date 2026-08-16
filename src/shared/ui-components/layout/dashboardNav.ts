@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import type { Role } from "@/features/auth";
+import { PHASE1_FREE } from "@/shared/config/featureFlags";
 
 export interface NavItem {
   href: string;
@@ -61,11 +62,17 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       icon: Send,
       badge: "messages",
     },
-    {
-      href: "/recruiter/subscription",
-      label: "Subscription",
-      icon: BadgeCheck,
-    },
+    // Recruiting is free during phases 1–2; the subscription page returns
+    // with the flag flip.
+    ...(PHASE1_FREE
+      ? []
+      : [
+          {
+            href: "/recruiter/subscription",
+            label: "Subscription",
+            icon: BadgeCheck,
+          },
+        ]),
     { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
     { href: "/recruiter/profile", label: "My profile", icon: UserRound },
   ],

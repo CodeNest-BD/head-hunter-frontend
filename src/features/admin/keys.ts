@@ -4,6 +4,8 @@ export interface AdminListParams {
   limit?: number;
   q?: string;
   status?: string;
+  /** Recruiter verification filter (pending queue, etc.). */
+  verificationStatus?: string;
   /** Restrict a list to one company (its profile id) — used by deep-links. */
   companyProfileId?: string;
   /** Restrict a list to one recruiter (its profile id). */
@@ -25,5 +27,6 @@ export const adminKeys = {
     ["admin", "conversation", submissionId] as const,
   jobs: (params: AdminListParams) => ["admin", "jobs", params] as const,
   pricing: ["admin", "pricing"] as const,
+  minRecruiterFee: ["admin", "min-recruiter-fee"] as const,
   admins: ["admin", "admins"] as const,
 };

@@ -87,6 +87,7 @@ export function JobsTable({
             { value: "paused", label: "Paused" },
             { value: "filled", label: "Filled" },
             { value: "closed", label: "Closed" },
+            { value: "expired", label: "Expired" },
           ],
         }}
       />

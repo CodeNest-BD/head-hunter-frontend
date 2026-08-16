@@ -97,3 +97,11 @@ export const LEDGER_TYPE_LABELS: Record<LedgerEntry["entryType"], string> = {
   refund: "Refund",
   payout: "Payout",
 };
+
+/** Public commission floor for publishing a job (minor units). */
+export const minRecruiterFeeResponseSchema = z.object({
+  amountMinor: z.number(),
+});
+export type MinRecruiterFeeResponse = z.infer<
+  typeof minRecruiterFeeResponseSchema
+>;

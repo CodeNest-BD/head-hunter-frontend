@@ -39,6 +39,9 @@ export const recruiterSummarySchema = z.object({
   lastName: z.string(),
   yearsExperience: z.number().nullable(),
   specializations: z.array(z.string()).nullable(),
+  // Tolerant: a backend that predates reviews reads as unrated.
+  ratingAvg: z.number().nullable().catch(null),
+  ratingCount: z.number().catch(0),
 });
 export type RecruiterSummary = z.infer<typeof recruiterSummarySchema>;
 
@@ -58,3 +61,35 @@ export const submissionSchema = z.object({
   updatedAt: z.coerce.date(),
 });
 export type Submission = z.infer<typeof submissionSchema>;
+
+export const JOB_STATUSES_IN_INBOX = [
+  "draft",
+  "published",
+  "paused",
+  "filled",
+  "closed",
+  "expired",
+] as const;
+
+/** Level 1 of the company inbox: one row per job that has submissions. */
+export const inboxJobRowSchema = z.object({
+  jobId: z.string(),
+  jobTitle: z.string(),
+  jobStatus: z.enum(JOB_STATUSES_IN_INBOX).catch("published"),
+  submissionCount: z.number(),
+  newSubmissionCount: z.number(),
+  unreadMessages: z.number(),
+  lastSubmittedAt: z.coerce.date(),
+});
+export type InboxJobRow = z.infer<typeof inboxJobRowSchema>;
+
+/** Level 2: one recruiter submission on the selected job, best-rated first. */
+export const inboxRecruiterRowSchema = z.object({
+  submissionId: z.string(),
+  status: submissionStatusSchema,
+  submittedAt: z.coerce.date(),
+  candidateCount: z.number(),
+  unreadMessages: z.number(),
+  recruiter: recruiterSummarySchema.nullable(),
+});
+export type InboxRecruiterRow = z.infer<typeof inboxRecruiterRowSchema>;

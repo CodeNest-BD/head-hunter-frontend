@@ -16,6 +16,7 @@ const STATUS_STYLES: Record<string, string> = {
   paused: "text-[#92610C] bg-[#FBF3DF]",
   filled: "bg-primary/15 text-primary",
   closed: "bg-muted text-muted-foreground",
+  expired: "text-[#9B3535] bg-[#FBEAEA]",
 };
 
 export function JobsTable() {

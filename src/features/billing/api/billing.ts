@@ -2,6 +2,7 @@ import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   checkoutUrlSchema,
+  minRecruiterFeeResponseSchema,
   ledgerEntrySchema,
   recruiterPlacementSchema,
   recruiterPriceSchema,
@@ -87,4 +88,17 @@ export async function createSubscriptionPortal(): Promise<string> {
     "/billing/subscription/portal",
   );
   return checkoutUrlSchema.parse(data).url;
+}
+
+/**
+ * GET /v1/billing/min-recruiter-fee — public: the commission floor a job
+ * must offer to publish. Read by the job form for its hint.
+ */
+export async function fetchMinRecruiterFee(): Promise<{
+  amountMinor: number;
+}> {
+  const { data } = await apiClient.get<unknown>("/billing/min-recruiter-fee", {
+    suppressGlobalErrorToast: true,
+  });
+  return minRecruiterFeeResponseSchema.parse(data);
 }

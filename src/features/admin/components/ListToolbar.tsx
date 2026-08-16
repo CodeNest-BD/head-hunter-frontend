@@ -16,16 +16,20 @@ export interface FilterOption {
   label: string;
 }
 
+interface FilterConfig {
+  value: string;
+  onChange: (value: string) => void;
+  options: FilterOption[];
+  allLabel: string;
+}
+
 interface ListToolbarProps {
   query: string;
   onQueryChange: (value: string) => void;
   placeholder: string;
-  filter?: {
-    value: string;
-    onChange: (value: string) => void;
-    options: FilterOption[];
-    allLabel: string;
-  };
+  filter?: FilterConfig;
+  /** A second dropdown (e.g. the verification queue beside account status). */
+  extraFilter?: FilterConfig;
 }
 
 // Radix Select forbids an empty-string item value, so "all" is the sentinel for
@@ -38,6 +42,7 @@ export function ListToolbar({
   onQueryChange,
   placeholder,
   filter,
+  extraFilter,
 }: ListToolbarProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -51,24 +56,29 @@ export function ListToolbar({
           aria-label="Search"
         />
       </div>
-      {filter && (
-        <Select
-          value={filter.value === "" ? ALL : filter.value}
-          onValueChange={(next) => filter.onChange(next === ALL ? "" : next)}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filter">
-            <SelectValue placeholder={filter.allLabel} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{filter.allLabel}</SelectItem>
-            {filter.options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+      {filter && <FilterSelect config={filter} />}
+      {extraFilter && <FilterSelect config={extraFilter} />}
     </div>
+  );
+}
+
+function FilterSelect({ config }: { config: FilterConfig }) {
+  return (
+    <Select
+      value={config.value === "" ? ALL : config.value}
+      onValueChange={(next) => config.onChange(next === ALL ? "" : next)}
+    >
+      <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filter">
+        <SelectValue placeholder={config.allLabel} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={ALL}>{config.allLabel}</SelectItem>
+        {config.options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

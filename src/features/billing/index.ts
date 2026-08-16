@@ -18,6 +18,7 @@ export {
   useStartTopUp,
   useSubscription,
   useWallet,
+  useMinRecruiterFee,
 } from "./hooks/useBilling";
 export { billingKeys } from "./keys";
 export type {

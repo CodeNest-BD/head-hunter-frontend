@@ -6,6 +6,8 @@ export const JOB_STATUSES = [
   "paused",
   "filled",
   "closed",
+  // Set by the platform 30 days after publish — never client-supplied.
+  "expired",
 ] as const;
 export const jobStatusSchema = z.enum(JOB_STATUSES);
 export type JobStatus = z.infer<typeof jobStatusSchema>;

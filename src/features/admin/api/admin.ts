@@ -13,6 +13,7 @@ import {
   conversationThreadSchema,
   recruiterDetailSchema,
   recruiterListItemSchema,
+  minRecruiterFeeSchema,
   recruiterPricingSchema,
   type AccountStatus,
   type AdminJobListItem,
@@ -24,6 +25,7 @@ import {
   type ConversationThread,
   type RecruiterDetail,
   type RecruiterListItem,
+  type MinRecruiterFee,
   type RecruiterPricing,
 } from "../schemas";
 
@@ -37,6 +39,9 @@ function listParams(params: AdminListParams): Record<string, unknown> {
     limit: params.limit ?? DEFAULT_PAGE_SIZE,
     ...(params.q ? { q: params.q } : {}),
     ...(params.status ? { status: params.status } : {}),
+    ...(params.verificationStatus
+      ? { verificationStatus: params.verificationStatus }
+      : {}),
     ...(params.companyProfileId
       ? { companyProfileId: params.companyProfileId }
       : {}),
@@ -66,6 +71,22 @@ export async function fetchRecruiters(
 export async function fetchRecruiter(userId: string): Promise<RecruiterDetail> {
   const { data } = await apiClient.get<unknown>(`/admin/recruiters/${userId}`);
   return recruiterDetailSchema.parse(data);
+}
+
+export interface VerificationDecisionInput {
+  userId: string;
+  status: "verified" | "rejected";
+  note?: string;
+}
+
+/** PATCH /v1/admin/recruiters/:userId/verification */
+export async function decideRecruiterVerification(
+  input: VerificationDecisionInput,
+): Promise<void> {
+  await apiClient.patch(`/admin/recruiters/${input.userId}/verification`, {
+    status: input.status,
+    ...(input.note ? { note: input.note } : {}),
+  });
 }
 
 /** GET /v1/admin/companies */
@@ -162,6 +183,25 @@ export async function updateRecruiterPricing(
     { amountMinor },
   );
   return recruiterPricingSchema.parse(data);
+}
+
+/** GET /v1/admin/settings/min-recruiter-fee */
+export async function fetchMinRecruiterFeeSetting(): Promise<MinRecruiterFee> {
+  const { data } = await apiClient.get<unknown>(
+    "/admin/settings/min-recruiter-fee",
+  );
+  return minRecruiterFeeSchema.parse(data);
+}
+
+/** PUT /v1/admin/settings/min-recruiter-fee */
+export async function updateMinRecruiterFee(
+  amountMinor: number,
+): Promise<MinRecruiterFee> {
+  const { data } = await apiClient.put<unknown>(
+    "/admin/settings/min-recruiter-fee",
+    { amountMinor },
+  );
+  return minRecruiterFeeSchema.parse(data);
 }
 
 /** GET /v1/admin/admins */

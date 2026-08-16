@@ -1,7 +1,12 @@
 "use client";
 
 import { RequireRole } from "@/features/auth";
-import { AdminManagement, RecruiterPricingCard } from "@/features/admin";
+import {
+  AdminManagement,
+  MinFeeCard,
+  RecruiterPricingCard,
+} from "@/features/admin";
+import { PHASE1_FREE } from "@/shared/config/featureFlags";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -18,9 +23,11 @@ export default function AdminSettingsPage() {
         <div className="flex flex-col gap-8">
           <PageHeader
             title="Settings"
-            subtitle="Recruiter subscription pricing and admin accounts."
+            subtitle="Marketplace policy and admin accounts."
           />
-          <RecruiterPricingCard />
+          <MinFeeCard />
+          {/* Subscription pricing returns when the phase-1 free period ends. */}
+          {!PHASE1_FREE && <RecruiterPricingCard />}
           <AdminManagement />
         </div>
       </DashboardLayout>

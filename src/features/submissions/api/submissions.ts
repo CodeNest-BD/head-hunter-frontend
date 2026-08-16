@@ -1,7 +1,11 @@
 import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
+  inboxJobRowSchema,
+  inboxRecruiterRowSchema,
   submissionSchema,
+  type InboxJobRow,
+  type InboxRecruiterRow,
   type Submission,
   type SubmissionStatus,
 } from "../schemas";
@@ -55,4 +59,26 @@ export async function createSubmission(
     { suppressGlobalErrorToast: true },
   );
   return submissionSchema.parse(data);
+}
+
+/** GET /v1/submissions/inbox/jobs — level 1 of the company inbox. */
+export async function fetchInboxJobs(
+  page: number,
+): Promise<Paginated<InboxJobRow>> {
+  const { data } = await apiClient.get<unknown>("/submissions/inbox/jobs", {
+    params: { page, limit: 25 },
+  });
+  return paginatedSchema(inboxJobRowSchema).parse(data);
+}
+
+/** GET /v1/submissions/inbox/jobs/:jobId/recruiters — level 2, rating-sorted. */
+export async function fetchInboxRecruiters(
+  jobId: string,
+  page: number,
+): Promise<Paginated<InboxRecruiterRow>> {
+  const { data } = await apiClient.get<unknown>(
+    `/submissions/inbox/jobs/${jobId}/recruiters`,
+    { params: { page, limit: 25 } },
+  );
+  return paginatedSchema(inboxRecruiterRowSchema).parse(data);
 }

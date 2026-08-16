@@ -9,6 +9,7 @@ export { RecruiterDetail } from "./components/RecruiterDetail";
 export { CompanyDetail } from "./components/CompanyDetail";
 export { ConversationThread } from "./components/ConversationThread";
 export { JobsTable } from "./components/JobsTable";
+export { MinFeeCard } from "./components/MinFeeCard";
 export { RecruiterPricingCard } from "./components/RecruiterPricingCard";
 export { AdminManagement } from "./components/AdminManagement";
 export { HoldButton } from "./components/HoldButton";

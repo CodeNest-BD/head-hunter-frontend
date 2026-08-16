@@ -1,10 +1,13 @@
 "use client";
 
-export { InboxTable } from "./components/InboxTable";
+export { InboxJobsTable } from "./components/InboxJobsTable";
+export { InboxRecruitersTable } from "./components/InboxRecruitersTable";
 export { SubmissionHeader } from "./components/SubmissionHeader";
 export { SubmissionList } from "./components/SubmissionList";
 export {
   useCreateOrOpenSubmission,
+  useInboxJobs,
+  useInboxRecruiters,
   useSubmission,
   useSubmissions,
   useUpdateSubmissionStatus,
@@ -16,5 +19,11 @@ export {
   SUBMISSION_STATUS_LABELS,
 } from "./schemas";
 export { recruiterDisplayName } from "./schemas";
-export type { RecruiterSummary, Submission, SubmissionStatus } from "./schemas";
+export type {
+  InboxJobRow,
+  InboxRecruiterRow,
+  RecruiterSummary,
+  Submission,
+  SubmissionStatus,
+} from "./schemas";
 export { createSubmission } from "./api/submissions";

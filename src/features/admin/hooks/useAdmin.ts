@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import {
   keepPreviousData,
   useInfiniteQuery,
@@ -9,6 +10,7 @@ import {
 import {
   changeAdminPassword,
   createAdmin,
+  decideRecruiterVerification,
   fetchAdmins,
   fetchAdminStats,
   fetchCompanies,
@@ -17,13 +19,16 @@ import {
   fetchConversations,
   fetchJobs,
   fetchRecruiter,
+  fetchMinRecruiterFeeSetting,
   fetchRecruiterPricing,
   fetchRecruiters,
   reinstateAccount,
   removeAdmin,
   suspendAccount,
+  updateMinRecruiterFee,
   updateRecruiterPricing,
   type CreateAdminInput,
+  type VerificationDecisionInput,
 } from "../api/admin";
 import { adminKeys, type AdminListParams } from "../keys";
 
@@ -43,6 +48,45 @@ export function useAdminRecruiter(userId: string) {
   return useQuery({
     queryKey: adminKeys.recruiter(userId),
     queryFn: () => fetchRecruiter(userId),
+  });
+}
+
+export function useDecideRecruiterVerification() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: VerificationDecisionInput) =>
+      decideRecruiterVerification(input),
+    onSuccess: (_, input) => {
+      void queryClient.invalidateQueries({
+        queryKey: ["admin", "recruiters"],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: adminKeys.recruiter(input.userId),
+      });
+      toast.success(
+        input.status === "verified"
+          ? "Recruiter verified — they now have full access"
+          : "Recruiter rejected — they have been notified",
+      );
+    },
+  });
+}
+
+export function useMinRecruiterFeeSetting() {
+  return useQuery({
+    queryKey: adminKeys.minRecruiterFee,
+    queryFn: fetchMinRecruiterFeeSetting,
+  });
+}
+
+export function useUpdateMinRecruiterFee() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (amountMinor: number) => updateMinRecruiterFee(amountMinor),
+    onSuccess: (setting) => {
+      queryClient.setQueryData(adminKeys.minRecruiterFee, setting);
+      toast.success("Minimum recruiter fee updated");
+    },
   });
 }
 

@@ -10,6 +10,7 @@ import {
   useDeclineOffer,
   useWithdrawOffer,
 } from "@/features/offers";
+import { ReviewCta } from "@/features/reviews";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
@@ -171,6 +172,14 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
           {jobTitle && <span>Title: {jobTitle}</span>}
           {startDate && <span>Start date: {formatDate(startDate)}</span>}
+        </div>
+      )}
+
+      {/* A hire (accepted offer) is what unlocks the company's review of the
+          recruiter — one per hire, editable afterwards. */}
+      {offerStatus === "accepted" && viewerParty === "company" && (
+        <div className="border-t border-border/60 pt-3">
+          <ReviewCta offerId={offerId} />
         </div>
       )}
 
