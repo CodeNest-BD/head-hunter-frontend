@@ -75,12 +75,11 @@ export function SubmissionList() {
             No submissions yet
           </p>
           <p className="max-w-sm text-sm text-muted-foreground">
-            Browse the{" "}
             <Link
-              href="/jobs"
+              href="/explore-jobs"
               className="font-medium text-primary underline-offset-2 hover:underline"
             >
-              job map
+              Explore open jobs
             </Link>{" "}
             and submit your first candidate.
           </p>

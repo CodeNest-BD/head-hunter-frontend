@@ -152,7 +152,7 @@ export function DecorativeUsMap() {
         </div>
       )}
 
-      <p className="mt-2 text-right text-[11px] font-medium uppercase tracking-[0.08em] text-brand-gray-light">
+      <p className="mt-2 text-right text-[11px] font-medium uppercase tracking-[0.08em] text-brand-gray">
         Illustrative preview ·{" "}
         <Link
           href="/explore-jobs"
