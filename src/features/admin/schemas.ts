@@ -196,6 +196,7 @@ export const adminJobListItemSchema = z.object({
   jobId: z.string(),
   title: z.string(),
   companyProfileId: z.string(),
+  companyUserId: z.string().catch(""),
   companyName: z.string(),
   status: jobStatusSchema,
   recruiterFeeMinor: z.number(),

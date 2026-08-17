@@ -18,4 +18,7 @@ export {
   useAdminCompanies,
   useAdminConversations,
   useAdminJobs,
+  useDeleteRecruiter,
+  useUpdateAdmin,
+  useUpdateAdminJob,
 } from "./hooks/useAdmin";

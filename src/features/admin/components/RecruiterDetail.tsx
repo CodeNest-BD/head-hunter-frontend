@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, BadgeCheck, BadgeX } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import { AlertCircle, BadgeCheck, BadgeX, Trash2 } from "lucide-react";
 
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -17,6 +19,7 @@ import { Textarea } from "@/shared/ui-components/controls/textarea";
 import {
   useAdminRecruiter,
   useDecideRecruiterVerification,
+  useDeleteRecruiter,
 } from "../hooks/useAdmin";
 import {
   SUBSCRIPTION_LABELS,
@@ -119,6 +122,69 @@ function VerificationCard({ data }: { data: RecruiterDetailData }) {
   );
 }
 
+/** Soft-deletes a recruiter (behind an alert-dialog confirm). */
+function DeleteRecruiterButton({
+  userId,
+  name,
+}: {
+  userId: string;
+  name: string;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const deleteRecruiter = useDeleteRecruiter();
+
+  return (
+    <AlertDialog.Root open={open} onOpenChange={setOpen}>
+      <AlertDialog.Trigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </Button>
+      </AlertDialog.Trigger>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
+        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-card-lg focus:outline-none">
+          <AlertDialog.Title className="font-heading text-lg font-extrabold text-foreground">
+            Delete {name}?
+          </AlertDialog.Title>
+          <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
+            The recruiter account is removed and its sessions revoked. This is
+            recoverable by support.
+          </AlertDialog.Description>
+          <div className="mt-5 flex justify-end gap-2">
+            <AlertDialog.Cancel asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </AlertDialog.Cancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleteRecruiter.isPending}
+              onClick={() =>
+                deleteRecruiter.mutate(userId, {
+                  onSuccess: () => {
+                    setOpen(false);
+                    router.push("/admin/recruiters");
+                  },
+                })
+              }
+            >
+              {deleteRecruiter.isPending ? "Deleting…" : "Delete recruiter"}
+            </Button>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
+  );
+}
+
 export function RecruiterDetail({ userId }: { userId: string }) {
   const { data, isPending, isError, refetch } = useAdminRecruiter(userId);
 
@@ -161,11 +227,14 @@ export function RecruiterDetail({ userId }: { userId: string }) {
               <p className="text-sm text-muted-foreground">{data.email}</p>
             </div>
           </div>
-          <HoldButton
-            userId={data.userId}
-            status={data.status}
-            subjectName={name}
-          />
+          <div className="flex items-center gap-2">
+            <HoldButton
+              userId={data.userId}
+              status={data.status}
+              subjectName={name}
+            />
+            <DeleteRecruiterButton userId={data.userId} name={name} />
+          </div>
         </CardContent>
       </Card>
 
