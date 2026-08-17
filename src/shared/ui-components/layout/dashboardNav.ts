@@ -6,7 +6,6 @@ import {
   Inbox,
   LayoutDashboard,
   type LucideIcon,
-  Map,
   MessagesSquare,
   Send,
   Settings,
@@ -48,7 +47,6 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   ],
   recruiter: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/explore-jobs", label: "Explore jobs", icon: Map },
     { href: "/companies", label: "Companies", icon: Building2 },
     {
       href: "/notifications",

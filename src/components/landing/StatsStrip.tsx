@@ -52,30 +52,26 @@ export function StatsStrip() {
   ];
 
   return (
-    <section aria-label="Marketplace statistics" className="bg-background">
-      <div className="mx-auto grid max-w-[1240px] grid-cols-2 gap-4 px-5 pb-14 md:px-10 lg:grid-cols-4">
-        {cells.map((cell) => {
-          const Icon = cell.icon;
-          return (
-            <div
-              key={cell.label}
-              className="flex items-center gap-4 rounded-2xl border border-brand-line bg-white px-5 py-4 shadow-card"
-            >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
-                <Icon className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="truncate font-heading text-xl font-extrabold text-navy">
-                  {cell.value}
-                </p>
-                <p className="truncate text-[13px] text-brand-gray">
-                  {cell.label}
-                </p>
-              </div>
+    <div aria-label="Marketplace statistics" className="grid grid-cols-2 gap-3">
+      {cells.map((cell) => {
+        const Icon = cell.icon;
+        return (
+          <div
+            key={cell.label}
+            className="flex items-center gap-3 rounded-xl border border-brand-line bg-white px-4 py-3 shadow-card"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+              <Icon className="h-[18px] w-[18px]" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-heading text-lg font-extrabold text-navy">
+                {cell.value}
+              </p>
+              <p className="truncate text-xs text-brand-gray">{cell.label}</p>
             </div>
-          );
-        })}
-      </div>
-    </section>
+          </div>
+        );
+      })}
+    </div>
   );
 }

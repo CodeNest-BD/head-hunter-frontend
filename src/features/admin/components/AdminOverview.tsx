@@ -13,13 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  BadgeCheck,
-  Building2,
-  Users,
-  Wallet2,
-  type LucideIcon,
-} from "lucide-react";
+import { Building2, Users, Wallet2, type LucideIcon } from "lucide-react";
 
 import { formatMinor } from "@/shared/utils/money";
 import {
@@ -120,7 +114,8 @@ export function AdminOverview() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Subscriptions stat removed — recruiting is free in phase 1. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={Users}
           label="Recruiters"
@@ -132,12 +127,6 @@ export function AdminOverview() {
           label="Companies"
           value={String(data.companies.total)}
           hint={`${data.companies.active} active · ${data.companies.held} held`}
-        />
-        <StatCard
-          icon={BadgeCheck}
-          label="Subscriptions"
-          value={String(data.recruiters.subscribed)}
-          hint="active recruiter subscriptions"
         />
         <StatCard
           icon={Wallet2}
