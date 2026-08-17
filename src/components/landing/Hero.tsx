@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DecorativeUsMap } from "./DecorativeUsMap";
 import { LandingCta } from "./LandingCta";
+import { StatsStrip } from "./StatsStrip";
 
 /**
  * Light hero per the client reference: dark-blue display headline with a
@@ -51,8 +52,11 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="[animation:fadeUp_600ms_120ms_ease_both]">
+        <div className="flex flex-col gap-6 [animation:fadeUp_600ms_120ms_ease_both]">
           <DecorativeUsMap />
+          {/* Live marketplace stats sit directly under the map (per the
+              client reference), scoped to the map column. */}
+          <StatsStrip />
         </div>
       </div>
     </section>
