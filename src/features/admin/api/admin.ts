@@ -237,3 +237,33 @@ export async function changeAdminPassword(
     password,
   });
 }
+
+/** PATCH /v1/admin/admins/:userId */
+export async function updateAdmin(
+  userId: string,
+  input: { firstName: string; lastName: string },
+): Promise<AdminUser> {
+  const { data } = await apiClient.patch<unknown>(
+    `/admin/admins/${userId}`,
+    input,
+  );
+  return adminUserSchema.parse(data);
+}
+
+/** DELETE /v1/admin/recruiters/:userId */
+export async function deleteRecruiter(userId: string): Promise<void> {
+  await apiClient.delete<unknown>(`/admin/recruiters/${userId}`);
+}
+
+/** PATCH /v1/admin/jobs/:jobId — admin edits any job. */
+export async function updateAdminJob(
+  jobId: string,
+  input: Record<string, unknown>,
+): Promise<void> {
+  await apiClient.patch<unknown>(`/admin/jobs/${jobId}`, input);
+}
+
+/** DELETE /v1/admin/jobs/:jobId — admin deletes any job. */
+export async function deleteAdminJob(jobId: string): Promise<void> {
+  await apiClient.delete<unknown>(`/admin/jobs/${jobId}`);
+}

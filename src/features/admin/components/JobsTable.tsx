@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminJobs } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
 import { JOB_STATUS_LABELS } from "../schemas";
+import { JobRowActions } from "./JobRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
 import { JOB_STATUS_STYLES } from "./statusStyles";
@@ -147,23 +148,43 @@ export function JobsTable({
                     <th scope="col" className="px-5 py-3 font-semibold">
                       Posted
                     </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-right font-semibold"
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.data.map((job) => (
                     <tr key={job.jobId} className={BODY_ROW_CLASS}>
                       <td className="px-5 py-3">
-                        <span className="block max-w-[260px] truncate font-medium text-navy">
+                        {/* Job title → the public job view. */}
+                        <Link
+                          href={`/jobs/${job.jobId}`}
+                          className="block max-w-[260px] truncate font-medium text-navy hover:text-primary hover:underline"
+                        >
                           {job.title}
-                        </span>
+                        </Link>
                         <span className="text-xs text-muted-foreground">
                           {job.locationState || "—"}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">
-                        <span className="block max-w-[200px] truncate">
-                          {job.companyName}
-                        </span>
+                        {/* Company name → its admin profile. */}
+                        {job.companyUserId ? (
+                          <Link
+                            href={`/admin/companies/${job.companyUserId}`}
+                            className="block max-w-[200px] truncate text-navy hover:text-primary hover:underline"
+                          >
+                            {job.companyName}
+                          </Link>
+                        ) : (
+                          <span className="block max-w-[200px] truncate">
+                            {job.companyName}
+                          </span>
+                        )}
                       </td>
                       <td className="px-5 py-3">
                         <StatusBadge
@@ -177,11 +198,24 @@ export function JobsTable({
                       <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
                         {formatMinor(job.recruiterFeeMinor)}
                       </td>
-                      <td className="px-5 py-3 text-center tabular-nums text-navy">
-                        {job.submissionCount}
+                      <td className="px-5 py-3 text-center tabular-nums">
+                        {/* Submissions → the threads on this job. */}
+                        {job.submissionCount > 0 ? (
+                          <Link
+                            href={`/admin/conversations?jobId=${job.jobId}`}
+                            className="font-medium text-primary hover:underline"
+                          >
+                            {job.submissionCount}
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
                         {formatDate(job.createdAt)}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <JobRowActions jobId={job.jobId} jobTitle={job.title} />
                       </td>
                     </tr>
                   ))}

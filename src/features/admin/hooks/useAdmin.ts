@@ -10,6 +10,8 @@ import {
 import {
   changeAdminPassword,
   createAdmin,
+  deleteAdminJob,
+  deleteRecruiter,
   decideRecruiterVerification,
   fetchAdmins,
   fetchAdminStats,
@@ -26,6 +28,8 @@ import {
   removeAdmin,
   suspendAccount,
   updateMinRecruiterFee,
+  updateAdmin,
+  updateAdminJob,
   updateRecruiterPricing,
   type CreateAdminInput,
   type VerificationDecisionInput,
@@ -211,5 +215,63 @@ export function useChangeAdminPassword() {
   return useMutation({
     mutationFn: ({ userId, password }: { userId: string; password: string }) =>
       changeAdminPassword(userId, password),
+  });
+}
+
+export function useUpdateAdmin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      firstName,
+      lastName,
+    }: {
+      userId: string;
+      firstName: string;
+      lastName: string;
+    }) => updateAdmin(userId, { firstName, lastName }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminKeys.admins });
+      toast.success("Admin updated");
+    },
+  });
+}
+
+export function useDeleteRecruiter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => deleteRecruiter(userId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "recruiters"] });
+      toast.success("Recruiter deleted");
+    },
+  });
+}
+
+export function useDeleteAdminJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (jobId: string) => deleteAdminJob(jobId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      toast.success("Job deleted");
+    },
+  });
+}
+
+export function useUpdateAdminJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      jobId,
+      input,
+    }: {
+      jobId: string;
+      input: Record<string, unknown>;
+    }) => updateAdminJob(jobId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      toast.success("Job updated");
+    },
   });
 }

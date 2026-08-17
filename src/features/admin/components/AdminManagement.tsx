@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, KeyRound, Trash2, UserPlus } from "lucide-react";
+import { AlertCircle, KeyRound, Pencil, Trash2, UserPlus } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -19,6 +19,7 @@ import {
   useChangeAdminPassword,
   useCreateAdmin,
   useRemoveAdmin,
+  useUpdateAdmin,
 } from "../hooks/useAdmin";
 import type { AdminUser } from "../schemas";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
@@ -171,10 +172,68 @@ function ChangePasswordForm({
   );
 }
 
+function EditAdminForm({
+  admin,
+  onDone,
+}: {
+  admin: AdminUser;
+  onDone: () => void;
+}) {
+  const update = useUpdateAdmin();
+  const [firstName, setFirstName] = useState(admin.firstName);
+  const [lastName, setLastName] = useState(admin.lastName);
+
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!firstName.trim() || !lastName.trim()) return;
+        update.mutate(
+          {
+            userId: admin.userId,
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+          },
+          { onSuccess: onDone },
+        );
+      }}
+      className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-secondary/50 p-3"
+    >
+      <div className="flex flex-col gap-1">
+        <Label htmlFor={`first-${admin.userId}`}>First name</Label>
+        <Input
+          id={`first-${admin.userId}`}
+          value={firstName}
+          onChange={(event) => setFirstName(event.target.value)}
+          className="h-9 w-40"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor={`last-${admin.userId}`}>Last name</Label>
+        <Input
+          id={`last-${admin.userId}`}
+          value={lastName}
+          onChange={(event) => setLastName(event.target.value)}
+          className="h-9 w-40"
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" disabled={update.isPending}>
+          {update.isPending ? "Saving…" : "Save"}
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={onDone}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 function AdminRow({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
   const remove = useRemoveAdmin();
   const [confirming, setConfirming] = useState(false);
   const [changing, setChanging] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   return (
     <>
@@ -199,6 +258,15 @@ function AdminRow({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
               type="button"
               variant="outline"
               size="sm"
+              onClick={() => setEditing((v) => !v)}
+            >
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+              Edit
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setChanging((v) => !v)}
             >
               <KeyRound className="mr-1.5 h-3.5 w-3.5" />
@@ -218,9 +286,12 @@ function AdminRow({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
           </div>
         </td>
       </tr>
-      {(changing || confirming) && (
+      {(changing || confirming || editing) && (
         <tr>
           <td colSpan={3} className="px-5 py-3">
+            {editing && (
+              <EditAdminForm admin={admin} onDone={() => setEditing(false)} />
+            )}
             {changing && (
               <ChangePasswordForm
                 userId={admin.userId}

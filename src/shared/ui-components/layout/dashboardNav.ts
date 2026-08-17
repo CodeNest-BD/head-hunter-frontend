@@ -6,7 +6,6 @@ import {
   Inbox,
   LayoutDashboard,
   type LucideIcon,
-  MessagesSquare,
   Send,
   Settings,
   Users,
@@ -79,11 +78,8 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/admin/recruiters", label: "Recruiters", icon: Users },
     { href: "/admin/companies", label: "Companies", icon: Building2 },
     { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
-    {
-      href: "/admin/conversations",
-      label: "Conversations",
-      icon: MessagesSquare,
-    },
+    // Conversations are consolidated under Jobs: a job's submission count
+    // links into the conversations view, so no separate nav item.
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ],
 };
