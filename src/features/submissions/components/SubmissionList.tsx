@@ -111,7 +111,14 @@ export function SubmissionList() {
               >
                 <td className="px-4 py-3 font-medium text-foreground">
                   <span className="flex items-center gap-2">
-                    {jobTitles.get(submission.jobId) ?? "—"}
+                    {/* Job title links to the job details page (client ask);
+                        the row's "View" opens the submission workspace. */}
+                    <Link
+                      href={`/jobs/${submission.jobId}`}
+                      className="hover:text-primary hover:underline"
+                    >
+                      {jobTitles.get(submission.jobId) ?? "—"}
+                    </Link>
                     <UnreadBadge
                       count={unreadCounts?.get(submission.id) ?? 0}
                     />
