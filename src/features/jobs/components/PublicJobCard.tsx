@@ -42,7 +42,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
           {formatMinor(job.recruiterFeeMinor)}
         </span>
       </p>
-      <p className="mt-0.5 text-xs text-brand-gray-light">
+      <p className="mt-0.5 text-xs text-brand-gray">
         Paid upon successful hire
       </p>
       <Link

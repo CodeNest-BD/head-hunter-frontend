@@ -4,7 +4,7 @@
  */
 export function LandingFooter() {
   return (
-    <footer className="flex flex-col gap-2 border-t border-brand-line px-5 py-6 text-[13px] text-brand-gray-light sm:flex-row sm:items-center sm:justify-between md:px-11">
+    <footer className="flex flex-col gap-2 border-t border-brand-line px-5 py-6 text-[13px] text-brand-gray sm:flex-row sm:items-center sm:justify-between md:px-11">
       <span>© 2026 Head-Hunters.com</span>
       <nav aria-label="Footer">
         <ul className="flex gap-2">

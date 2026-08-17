@@ -253,7 +253,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(60% 60% at 50% 40%, rgba(32,80,224,0.04), transparent 70%)",
+              "radial-gradient(60% 60% at 50% 40%, rgba(3,74,239,0.04), transparent 70%)",
           }}
         />
 
@@ -343,7 +343,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                   className="cursor-pointer outline-none transition-[fill,stroke] duration-150 focus-visible:stroke-[#034AEF]"
                   style={{
                     filter: isActive
-                      ? "drop-shadow(0 2px 6px rgba(32,80,224,0.28))"
+                      ? "drop-shadow(0 2px 6px rgba(3,74,239,0.28))"
                       : undefined,
                   }}
                 >
@@ -402,7 +402,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                     style={{
                       opacity: selectedState && !emphasized ? 0.4 : 0.95,
                       filter: isSelectedCity
-                        ? "drop-shadow(0 1px 4px rgba(32,80,224,0.5))"
+                        ? "drop-shadow(0 1px 4px rgba(3,74,239,0.5))"
                         : undefined,
                     }}
                   />
