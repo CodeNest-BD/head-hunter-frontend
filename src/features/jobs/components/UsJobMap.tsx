@@ -128,10 +128,27 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
   // A single scale drives an SVG-space transform; pan is centered on the
   // active state so zooming keeps the selection in view without a drag lib.
   const [zoom, setZoom] = useState(MIN_ZOOM);
+  // User drag offset in SVG units, added on top of the focus centering.
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{
+    startX: number;
+    startY: number;
+    panX: number;
+    panY: number;
+    moved: boolean;
+  } | null>(null);
+  // Set for one tick after a pan so the pointerup doesn't also select a state.
+  const suppressClickRef = useRef(false);
   // Hover popup position, relative to the map container.
   const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  // Returning to the un-zoomed view re-centers on the full map.
+  useEffect(() => {
+    if (zoom <= MIN_ZOOM) setPan({ x: 0, y: 0 });
+  }, [zoom]);
 
   // Mouse-wheel zoom. Attached natively with { passive: false } so we can
   // preventDefault and stop the page from scrolling while zooming the map.
@@ -162,6 +179,58 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
   const tx = width / 2 - focus.cx * zoom;
   const ty = height / 2 - focus.cy * zoom;
 
+  // The valid translate range keeps the scaled map covering the viewport, so
+  // neither a drag nor the focus centering can push it off-screen. At zoom 1
+  // the range collapses to 0 → the full map is always centered.
+  const clampedTx = Math.min(0, Math.max(width * (1 - zoom), tx + pan.x));
+  const clampedTy = Math.min(0, Math.max(height * (1 - zoom), ty + pan.y));
+
+  const svgUnitsPerPx = (): { sx: number; sy: number } => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    return {
+      sx: rect ? width / rect.width : 1,
+      sy: rect ? height / rect.height : 1,
+    };
+  };
+
+  const startDrag = (event: React.PointerEvent<SVGSVGElement>): void => {
+    if (zoom <= MIN_ZOOM) return; // Nothing to pan on the full map.
+    dragRef.current = {
+      startX: event.clientX,
+      startY: event.clientY,
+      panX: pan.x,
+      panY: pan.y,
+      moved: false,
+    };
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const moveDrag = (event: React.PointerEvent<SVGSVGElement>): void => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    const { sx, sy } = svgUnitsPerPx();
+    const dx = (event.clientX - drag.startX) * sx;
+    const dy = (event.clientY - drag.startY) * sy;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) drag.moved = true;
+    setPan({ x: drag.panX + dx, y: drag.panY + dy });
+  };
+
+  const endDrag = (event: React.PointerEvent<SVGSVGElement>): void => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    // A drag that actually moved must not also register as a state click.
+    if (drag.moved) {
+      suppressClickRef.current = true;
+      requestAnimationFrame(() => {
+        suppressClickRef.current = false;
+      });
+    }
+    dragRef.current = null;
+    setIsDragging(false);
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+  };
+
   const filteredCities = useMemo(() => {
     const q = cityQuery.trim().toLowerCase();
     const base = q
@@ -176,6 +245,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
   }, [cityQuery]);
 
   const handleStateClick = (code: string) => {
+    if (suppressClickRef.current) return; // Came from a pan, not a real click.
     onSelect(
       selectedState === code && selection.kind === "state"
         ? { kind: "none" }
@@ -281,11 +351,17 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         <svg
           ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
-          className="relative block h-auto w-full touch-none"
+          className={cn(
+            "relative block h-auto w-full touch-none",
+            zoom > MIN_ZOOM && (isDragging ? "cursor-grabbing" : "cursor-grab"),
+          )}
           role="group"
           aria-labelledby={titleId}
           preserveAspectRatio="xMidYMid meet"
-          onMouseMove={(event) => {
+          onPointerDown={startDrag}
+          onPointerMove={(event) => {
+            moveDrag(event);
+            if (isDragging) return; // Don't fight the drag with hover tracking.
             const rect = wrapRef.current?.getBoundingClientRect();
             if (!rect) return;
             setPointer({
@@ -293,6 +369,8 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
               y: event.clientY - rect.top,
             });
           }}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
           onMouseLeave={() => {
             setPointer(null);
             setHoveredState(null);
@@ -300,8 +378,12 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         >
           <title id={titleId}>Interactive map of open roles by US state</title>
           <g
-            transform={`translate(${tx} ${ty}) scale(${zoom})`}
-            style={{ transition: "transform 350ms cubic-bezier(0.4,0,0.2,1)" }}
+            transform={`translate(${clampedTx} ${clampedTy}) scale(${zoom})`}
+            style={{
+              transition: isDragging
+                ? "none"
+                : "transform 350ms cubic-bezier(0.4,0,0.2,1)",
+            }}
           >
             {/* States */}
             {US_STATES.map((geo) => {
@@ -351,6 +433,50 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                     count === 1 ? "role" : "roles"
                   }${feeLabel}`}</title>
                 </path>
+              );
+            })}
+
+            {/* Per-state count bubbles — the reference's headline signal.
+                Sized by open-role volume, centered on each state, and
+                pointer-through so the underlying state path stays the click
+                target. Only states with roles get one. */}
+            {US_STATES.map((geo) => {
+              const count = stats.get(geo.code)?.openRoles ?? 0;
+              if (count <= 0) return null;
+              const isActive = selectedState === geo.code;
+              // sqrt keeps a 400-role state from dwarfing a 4-role one.
+              const r = Math.min(26, 9 + Math.sqrt(count) * 2.4);
+              return (
+                <g
+                  key={`bubble-${geo.code}`}
+                  className="pointer-events-none select-none"
+                >
+                  <circle
+                    cx={geo.cx}
+                    cy={geo.cy}
+                    r={r + 5}
+                    fill="#4F80E6"
+                    opacity={0.18}
+                  />
+                  <circle
+                    cx={geo.cx}
+                    cy={geo.cy}
+                    r={r}
+                    fill={isActive ? "#034AEF" : "#2658CF"}
+                    opacity={0.92}
+                  />
+                  <text
+                    x={geo.cx}
+                    y={geo.cy}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize={Math.max(9, Math.min(15, r * 0.85))}
+                    fontWeight={800}
+                    fill="#FFFFFF"
+                  >
+                    {count}
+                  </text>
+                </g>
               );
             })}
 
