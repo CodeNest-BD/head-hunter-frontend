@@ -6,7 +6,6 @@ import { RequireRole } from "@/features/auth";
 import {
   RecruiterProfileForm,
   ReferencesSection,
-  SubscriptionCard,
   useMyRecruiterProfile,
 } from "@/features/recruiters";
 import { PageHeader } from "@/shared/ui-components/brand";
@@ -58,7 +57,8 @@ function RecruiterProfileContent() {
 
   return (
     <div className="flex flex-col gap-8">
-      <SubscriptionCard profile={data} />
+      {/* Subscription card removed — recruiting is free in phase 1; access is
+          gated by admin verification, surfaced on the dashboard banner. */}
       <div className="rounded-xl border border-border/70 bg-card p-6 shadow-sm">
         <RecruiterProfileForm profile={data} />
       </div>

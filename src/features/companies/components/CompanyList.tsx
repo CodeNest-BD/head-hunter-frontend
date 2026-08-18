@@ -4,14 +4,8 @@ import { useState } from "react";
 import { AlertCircle, Building2, ExternalLink, Search } from "lucide-react";
 
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Input } from "@/shared/ui-components/controls/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui-components/controls/card";
 import { formatMinor } from "@/shared/utils/money";
 import type { CompanySummary } from "../schemas";
 import { useCompanies } from "../hooks/useCompanies";
@@ -29,16 +23,89 @@ function commissionRange(company: CompanySummary): string | null {
     : `Up to ${formatMinor(max)}`;
 }
 
+/** Two-letter monogram from the company name — a clean avatar fallback. */
+function monogram(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
 function ListSkeleton() {
   return (
-    <ul className="flex flex-col gap-4">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <li
+    <div className="grid gap-4 sm:grid-cols-2">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
           key={i}
-          className="h-28 w-full animate-pulse rounded-xl border border-border/70 bg-muted"
+          className="h-40 w-full animate-pulse rounded-2xl border border-brand-line bg-white"
         />
       ))}
-    </ul>
+    </div>
+  );
+}
+
+function CompanyCard({ company }: { company: CompanySummary }) {
+  const range = commissionRange(company);
+
+  return (
+    <article className="flex h-full flex-col rounded-2xl border border-brand-line bg-white p-5 shadow-card transition-shadow hover:shadow-card-hover">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent font-heading text-sm font-extrabold text-primary">
+            {monogram(company.companyName)}
+          </span>
+          <div className="min-w-0">
+            <h3 className="truncate font-heading text-base font-extrabold text-navy">
+              {company.companyName}
+            </h3>
+            {company.website ? (
+              <a
+                href={company.website}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex max-w-full items-center gap-1 truncate text-xs text-brand-secondary underline-offset-2 hover:underline"
+              >
+                <span className="truncate">
+                  {company.website.replace(/^https?:\/\//, "")}
+                </span>
+                <ExternalLink className="h-3 w-3 shrink-0" />
+              </a>
+            ) : (
+              <p className="text-xs text-brand-gray-light">
+                {company.isFollowedByMe ? "Following" : "Company"}
+              </p>
+            )}
+          </div>
+        </div>
+        <FollowButton
+          companyId={company.id}
+          isFollowed={company.isFollowedByMe}
+        />
+      </div>
+
+      {company.description && (
+        <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-brand-slate">
+          {company.description}
+        </p>
+      )}
+
+      <div className="mt-auto pt-4">
+        {range ? (
+          <div className="inline-flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5">
+            <span className="text-xs font-medium text-brand-gray">
+              Commission
+            </span>
+            <span className="text-sm font-bold tabular-nums text-navy">
+              {range}
+            </span>
+          </div>
+        ) : (
+          <span className="text-xs text-brand-gray-light">
+            No commission range published
+          </span>
+        )}
+      </div>
+    </article>
   );
 }
 
@@ -83,15 +150,15 @@ export function CompanyList() {
       )}
 
       {data && data.data.length === 0 && (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-[#C9D0DF] bg-card px-6 py-14 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-input bg-white px-6 py-14 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
             <Building2 className="h-6 w-6" />
           </span>
           <div className="flex flex-col gap-1">
-            <p className="font-heading text-base font-semibold text-foreground">
+            <p className="font-heading text-base font-extrabold text-navy">
               No companies found
             </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
+            <p className="max-w-sm text-sm text-brand-gray">
               {query !== ""
                 ? `Nothing matches “${query}”. Try a different search.`
                 : "There are no companies to show right now."}
@@ -100,65 +167,18 @@ export function CompanyList() {
         </div>
       )}
 
-      <ul className="flex flex-col gap-4">
-        {data?.data.map((company) => {
-          const range = commissionRange(company);
-          return (
-            <li key={company.id}>
-              <Card className="border-border shadow-card transition hover:border-[#C9D0DF] hover:shadow-card-hover">
-                <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                      <Building2 className="h-[18px] w-[18px]" />
-                    </span>
-                    <div className="flex flex-col gap-1.5">
-                      <CardTitle className="font-heading tracking-tight">
-                        {company.companyName}
-                      </CardTitle>
-                      {company.website && (
-                        <CardDescription>
-                          <a
-                            href={company.website}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline"
-                          >
-                            {company.website}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </CardDescription>
-                      )}
-                    </div>
-                  </div>
-                  <FollowButton
-                    companyId={company.id}
-                    isFollowed={company.isFollowedByMe}
-                  />
-                </CardHeader>
-                {(company.description || range) && (
-                  <CardContent className="flex flex-col gap-3 pl-[76px]">
-                    {company.description && (
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {company.description}
-                      </p>
-                    )}
-                    {range && (
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">
-                          Commission range:{" "}
-                        </span>
-                        <span className="font-medium tabular-nums text-foreground">
-                          {range}
-                        </span>
-                      </p>
-                    )}
-                  </CardContent>
-                )}
-              </Card>
-            </li>
-          );
-        })}
-      </ul>
+      {data && data.data.length > 0 && (
+        <div
+          className={cn("grid gap-4 sm:grid-cols-2 xl:grid-cols-3")}
+          role="list"
+        >
+          {data.data.map((company) => (
+            <div role="listitem" key={company.id}>
+              <CompanyCard company={company} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LogOut,
+  Map,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -200,6 +201,7 @@ export function DashboardLayout({
         ? DETAIL_MAX_WIDTH_CLASSNAME
         : "max-w-6xl";
 
+  const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
 
@@ -250,6 +252,16 @@ export function DashboardLayout({
           <div className="hidden min-w-0 lg:block">
             <Breadcrumb items={resolvedCrumbs} />
           </div>
+        )}
+        {/* Recruiters get a persistent Explore-jobs entry in the top bar. */}
+        {user?.role === "recruiter" && (
+          <Link
+            href="/explore-jobs"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary"
+          >
+            <Map className="h-4 w-4" />
+            <span className="hidden sm:inline">Explore jobs</span>
+          </Link>
         )}
       </header>
 
