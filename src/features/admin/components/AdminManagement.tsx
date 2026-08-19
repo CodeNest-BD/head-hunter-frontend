@@ -353,7 +353,7 @@ export function AdminManagement() {
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="max-h-[70vh] overflow-auto">
               <table className={TABLE_CLASS}>
                 <thead>
                   <tr className={THEAD_ROW_CLASS}>

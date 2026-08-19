@@ -6,7 +6,13 @@ import { AlertCircle, Users } from "lucide-react";
 
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { TableAvatar } from "@/shared/ui-components/data/TableAvatar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import {
+  ColumnsToggle,
+  useVisibleColumns,
+  type ColumnDef,
+} from "@/shared/ui-components/data/columns";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminRecruiters } from "../hooks/useAdmin";
@@ -30,6 +36,16 @@ function formatDate(iso: string): string {
   });
 }
 
+const COLUMNS: ColumnDef[] = [
+  { key: "recruiter", label: "Recruiter", required: true },
+  { key: "verification", label: "Verification" },
+  { key: "rating", label: "Rating" },
+  { key: "location", label: "Location" },
+  { key: "joined", label: "Joined" },
+  { key: "status", label: "Status" },
+  { key: "actions", label: "Actions", required: true },
+];
+
 export function RecruitersTable() {
   const {
     page,
@@ -43,6 +59,7 @@ export function RecruitersTable() {
     changeLimit,
   } = useListState();
   const [verificationFilter, setVerificationFilter] = useState("");
+  const cols = useVisibleColumns("admin.recruiters.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminRecruiters({
     page,
     limit,
@@ -53,33 +70,42 @@ export function RecruitersTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      <ListToolbar
-        query={qInput}
-        onQueryChange={setQInput}
-        placeholder="Search recruiters by name or email…"
-        filter={{
-          value: status,
-          onChange: changeStatus,
-          allLabel: "All statuses",
-          options: [
-            { value: "active", label: "Active" },
-            { value: "suspended", label: "Held" },
-          ],
-        }}
-        extraFilter={{
-          value: verificationFilter,
-          onChange: (next) => {
-            setVerificationFilter(next);
-            setPage(1);
-          },
-          allLabel: "All verification",
-          options: [
-            { value: "pending", label: "Pending" },
-            { value: "verified", label: "Verified" },
-            { value: "rejected", label: "Rejected" },
-          ],
-        }}
-      />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="flex-1">
+          <ListToolbar
+            query={qInput}
+            onQueryChange={setQInput}
+            placeholder="Search recruiters by name or email…"
+            filter={{
+              value: status,
+              onChange: changeStatus,
+              allLabel: "All statuses",
+              options: [
+                { value: "active", label: "Active" },
+                { value: "suspended", label: "Held" },
+              ],
+            }}
+            extraFilter={{
+              value: verificationFilter,
+              onChange: (next) => {
+                setVerificationFilter(next);
+                setPage(1);
+              },
+              allLabel: "All verification",
+              options: [
+                { value: "pending", label: "Pending" },
+                { value: "verified", label: "Verified" },
+                { value: "rejected", label: "Rejected" },
+              ],
+            }}
+          />
+        </div>
+        <ColumnsToggle
+          columns={cols.columns}
+          isVisible={cols.isVisible}
+          onToggle={cols.toggle}
+        />
+      </div>
 
       {isPending ? (
         <TableSkeleton />
@@ -110,28 +136,38 @@ export function RecruitersTable() {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div className="max-h-[70vh] overflow-auto">
               <table className={TABLE_CLASS}>
                 <thead>
                   <tr className={THEAD_ROW_CLASS}>
                     <th scope="col" className="px-5 py-3 font-semibold">
                       Recruiter
                     </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Verification
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Rating
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Location
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Joined
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Status
-                    </th>
+                    {cols.isVisible("verification") && (
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Verification
+                      </th>
+                    )}
+                    {cols.isVisible("rating") && (
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Rating
+                      </th>
+                    )}
+                    {cols.isVisible("location") && (
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Location
+                      </th>
+                    )}
+                    {cols.isVisible("joined") && (
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Joined
+                      </th>
+                    )}
+                    {cols.isVisible("status") && (
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Status
+                      </th>
+                    )}
                     <th
                       scope="col"
                       className="px-5 py-3 text-right font-semibold"
@@ -144,46 +180,62 @@ export function RecruitersTable() {
                   {data.data.map((r) => (
                     <tr key={r.userId} className={BODY_ROW_CLASS}>
                       <td className="px-5 py-3">
-                        <Link
-                          href={`/admin/recruiters/${r.userId}`}
-                          className="font-medium text-navy hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
-                        >
-                          {r.firstName} {r.lastName}
-                        </Link>
-                        <p
-                          className="max-w-[240px] truncate text-xs text-muted-foreground"
-                          title={r.email}
-                        >
-                          {r.email}
-                        </p>
+                        <div className="flex items-center gap-3">
+                          <TableAvatar name={`${r.firstName} ${r.lastName}`} />
+                          <div className="min-w-0">
+                            <Link
+                              href={`/admin/recruiters/${r.userId}`}
+                              className="font-semibold text-navy hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+                            >
+                              {r.firstName} {r.lastName}
+                            </Link>
+                            <p
+                              className="max-w-[240px] truncate text-xs text-muted-foreground"
+                              title={r.email}
+                            >
+                              {r.email}
+                            </p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-5 py-3">
-                        <StatusBadge
-                          label={VERIFICATION_LABELS[r.verificationStatus]}
-                          className={
-                            VERIFICATION_STATUS_STYLES[r.verificationStatus] ??
-                            "bg-muted text-muted-foreground"
-                          }
-                        />
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3">
-                        <RatingStars
-                          value={r.ratingAvg}
-                          count={r.ratingCount}
-                        />
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        {[r.city, r.state].filter(Boolean).join(", ") || "—"}
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                        {formatDate(r.joinedAt)}
-                      </td>
-                      <td className="px-5 py-3">
-                        <StatusBadge
-                          label={ACCOUNT_STATUS_LABELS[r.status]}
-                          className={ACCOUNT_STATUS_STYLES[r.status]}
-                        />
-                      </td>
+                      {cols.isVisible("verification") && (
+                        <td className="px-5 py-3">
+                          <StatusBadge
+                            label={VERIFICATION_LABELS[r.verificationStatus]}
+                            className={
+                              VERIFICATION_STATUS_STYLES[
+                                r.verificationStatus
+                              ] ?? "bg-muted text-muted-foreground"
+                            }
+                          />
+                        </td>
+                      )}
+                      {cols.isVisible("rating") && (
+                        <td className="whitespace-nowrap px-5 py-3">
+                          <RatingStars
+                            value={r.ratingAvg}
+                            count={r.ratingCount}
+                          />
+                        </td>
+                      )}
+                      {cols.isVisible("location") && (
+                        <td className="px-5 py-3 text-muted-foreground">
+                          {[r.city, r.state].filter(Boolean).join(", ") || "—"}
+                        </td>
+                      )}
+                      {cols.isVisible("joined") && (
+                        <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
+                          {formatDate(r.joinedAt)}
+                        </td>
+                      )}
+                      {cols.isVisible("status") && (
+                        <td className="px-5 py-3">
+                          <StatusBadge
+                            label={ACCOUNT_STATUS_LABELS[r.status]}
+                            className={ACCOUNT_STATUS_STYLES[r.status]}
+                          />
+                        </td>
+                      )}
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-end gap-2">
                           <Button asChild variant="outline" size="sm">
