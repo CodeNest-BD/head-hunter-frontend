@@ -16,7 +16,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminCompanies } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
-import { HoldButton } from "./HoldButton";
+import { AccountRowActions } from "./AccountRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
 import { ACCOUNT_STATUS_LABELS, ACCOUNT_STATUS_STYLES } from "./statusStyles";
@@ -225,19 +225,13 @@ export function CompaniesTable() {
                         </td>
                       )}
                       <td className="px-5 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/admin/companies/${c.userId}`}>
-                              View
-                            </Link>
-                          </Button>
-                          <HoldButton
-                            userId={c.userId}
-                            status={c.status}
-                            subjectName={c.companyName}
-                            size="sm"
-                          />
-                        </div>
+                        <AccountRowActions
+                          userId={c.userId}
+                          status={c.status}
+                          subjectName={c.companyName}
+                          viewHref={`/admin/companies/${c.userId}`}
+                          kind="company"
+                        />
                       </td>
                     </tr>
                   ))}
