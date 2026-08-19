@@ -6,34 +6,38 @@
  * white card with a distinct header band and clear row separators.
  */
 
-/** The white card the table lives in. */
+/**
+ * The white card the table lives in. No `overflow-hidden` — that would clip
+ * the page-level sticky header. Rounded corners still read fine because the
+ * header spans the full width with its own solid fill.
+ */
 export const TABLE_CARD =
-  "overflow-hidden rounded-2xl border border-brand-line bg-card shadow-card";
+  "rounded-2xl border border-brand-line bg-card shadow-card";
 
 /** White card wrapping the search/filter/columns toolbar above a table. */
 export const TABLE_TOOLBAR =
   "flex flex-col gap-3 rounded-2xl border border-brand-line bg-card p-3 shadow-card sm:flex-row sm:items-center";
 
 /**
- * Wrap the <table> in this — bounded height + overflow makes the header
- * (sticky, below) pin to the top of the scroll area as rows scroll under it,
- * and still allows horizontal scroll on narrow screens.
+ * Table wrapper. Deliberately NOT an overflow container: an `overflow` here
+ * would become the scroll port and break the page-level sticky header. The
+ * page (body) scrolls instead, so the vertical scrollbar belongs to the page
+ * and tracks the rows rather than spanning the header.
  */
-export const TABLE_SCROLL = "max-h-[70vh] overflow-auto";
+export const TABLE_SCROLL = "w-full";
 
 export const TABLE_EL = "w-full border-collapse text-sm";
 
-/** Header band — tinted so it reads distinctly from the white body rows. */
+/** Dark header band (#0A1738) with light text — pinned under the top bar. */
 export const TABLE_HEAD = "text-left";
 export const TABLE_HEAD_ROW =
-  "text-[11px] font-semibold uppercase tracking-wider text-brand-gray";
+  "text-[11px] font-semibold uppercase tracking-wider text-white/70";
 /**
- * Each header cell is sticky with its own SOLID tint. The tint is a step
- * deeper than the page canvas (#EEF4FD) so the header reads as a distinct
- * band rather than blending into the background.
+ * Each header cell is sticky (page scroll) below the fixed top bar, with a
+ * solid dark fill so rows never bleed through while it's pinned.
  */
 export const TABLE_TH =
-  "sticky top-0 z-10 border-b border-border bg-[#DDE4F1] px-5 py-3.5";
+  "sticky top-16 z-20 border-b border-white/10 bg-[#0A1738] px-5 py-3.5";
 
 /** Body: white rows with hairline separators and a subtle hover. */
 export const TABLE_BODY = "divide-y divide-border bg-card";
