@@ -10,6 +10,17 @@ import { useJobs } from "@/features/jobs";
 import { Button } from "@/shared/ui-components/controls/button";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import {
+  TABLE_BODY,
+  TABLE_CARD,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_HEAD_ROW,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TH,
+} from "@/shared/ui-components/data/tableStyles";
 import { formatDate } from "@/shared/utils/formatDate";
 import { useSubmissions } from "../hooks/useSubmissions";
 import { SUBMISSION_STATUS_LABELS, type SubmissionStatus } from "../schemas";
@@ -18,8 +29,8 @@ const STATUS_STYLES: Record<SubmissionStatus, string> = {
   submitted: "bg-primary/15 text-primary",
   under_review: "text-[#92610C] bg-[#FBF3DF]",
   advanced: "text-[#17734E] bg-[#E7F4EC]",
-  rejected: "bg-muted text-muted-foreground",
-  withdrawn: "bg-muted text-muted-foreground",
+  rejected: "bg-[#FBEAEA] text-[#9B3535]",
+  withdrawn: "bg-[#EEF1F6] text-[#616676]",
 };
 
 const PAGE_SIZE = 20;
@@ -92,59 +103,60 @@ export function SubmissionList() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto rounded-xl border border-border/70 shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border/70 bg-muted/40 text-left">
-            <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="px-4 py-3 font-medium">Job</th>
-              <th className="px-4 py-3 font-medium">Submitted</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {submissions.data.data.map((submission) => (
-              <tr
-                key={submission.id}
-                className="border-b border-border/60 transition-colors last:border-0 hover:bg-accent/40"
-              >
-                <td className="px-4 py-3 font-medium text-foreground">
-                  <span className="flex items-center gap-2">
-                    {/* Job title links to the job details page (client ask);
-                        the row's "View" opens the submission workspace. */}
-                    <Link
-                      href={`/jobs/${submission.jobId}`}
-                      className="hover:text-primary hover:underline"
-                    >
-                      {jobTitles.get(submission.jobId) ?? "—"}
-                    </Link>
-                    <UnreadBadge
-                      count={unreadCounts?.get(submission.id) ?? 0}
-                    />
-                  </span>
-                </td>
-                <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                  {formatDate(submission.createdAt)}
-                </td>
-                <td className="px-4 py-3">
-                  <StatusBadge
-                    label={SUBMISSION_STATUS_LABELS[submission.status]}
-                    className={STATUS_STYLES[submission.status]}
-                  />
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/recruiter/submissions/${submission.id}`}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
-                  >
-                    View
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </td>
+      <div className={TABLE_CARD}>
+        <div className={TABLE_SCROLL}>
+          <table className={TABLE_EL}>
+            <thead className={TABLE_HEAD}>
+              <tr className={TABLE_HEAD_ROW}>
+                <th className={TABLE_TH}>Job</th>
+                <th className={TABLE_TH}>Submitted</th>
+                <th className={TABLE_TH}>Status</th>
+                <th className={TABLE_TH} />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className={TABLE_BODY}>
+              {submissions.data.data.map((submission) => (
+                <tr key={submission.id} className={TABLE_ROW}>
+                  <td className={`${TABLE_TD} font-semibold text-navy`}>
+                    <span className="flex items-center gap-2">
+                      {/* Job title links to the job details page (client ask);
+                          the row's "View" opens the submission workspace. */}
+                      <Link
+                        href={`/jobs/${submission.jobId}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {jobTitles.get(submission.jobId) ?? "—"}
+                      </Link>
+                      <UnreadBadge
+                        count={unreadCounts?.get(submission.id) ?? 0}
+                      />
+                    </span>
+                  </td>
+                  <td
+                    className={`${TABLE_TD} whitespace-nowrap tabular-nums text-brand-gray`}
+                  >
+                    {formatDate(submission.createdAt)}
+                  </td>
+                  <td className={TABLE_TD}>
+                    <StatusBadge
+                      label={SUBMISSION_STATUS_LABELS[submission.status]}
+                      className={STATUS_STYLES[submission.status]}
+                    />
+                  </td>
+                  <td className={`${TABLE_TD} text-right`}>
+                    <Link
+                      href={`/recruiter/submissions/${submission.id}`}
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                    >
+                      View
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {totalPages > 1 && (

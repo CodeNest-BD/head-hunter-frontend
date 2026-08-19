@@ -9,6 +9,17 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import {
+  TABLE_BODY,
+  TABLE_CARD,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_HEAD_ROW,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TH,
+} from "@/shared/ui-components/data/tableStyles";
 import { formatDate } from "@/shared/utils/formatDate";
 import { useInboxRecruiters } from "../hooks/useSubmissions";
 import {
@@ -21,8 +32,8 @@ const STATUS_STYLES: Record<SubmissionStatus, string> = {
   submitted: "bg-primary/15 text-primary",
   under_review: "text-[#92610C] bg-[#FBF3DF]",
   advanced: "text-[#17734E] bg-[#E7F4EC]",
-  rejected: "bg-muted text-muted-foreground",
-  withdrawn: "bg-muted text-muted-foreground",
+  rejected: "bg-[#FBEAEA] text-[#9B3535]",
+  withdrawn: "bg-[#EEF1F6] text-[#616676]",
 };
 
 /**
@@ -77,66 +88,67 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto rounded-xl border border-border/70 shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border/70 bg-muted/40 text-left">
-            <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="px-4 py-3 font-medium">Recruiter</th>
-              <th className="px-4 py-3 font-medium">Rating</th>
-              <th className="px-4 py-3 font-medium">Candidates</th>
-              <th className="px-4 py-3 font-medium">Submitted</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {data.data.map((row) => (
-              <tr
-                key={row.submissionId}
-                className="border-b border-border/60 transition-colors last:border-0 hover:bg-accent/40"
-              >
-                <td className="px-4 py-3 font-medium text-foreground">
-                  <span className="flex items-center gap-2">
-                    {recruiterDisplayName(row.recruiter)}
-                    {row.recruiter?.yearsExperience != null && (
-                      <span className="text-xs text-muted-foreground">
-                        {row.recruiter.yearsExperience} yrs
-                      </span>
-                    )}
-                    <UnreadBadge count={row.unreadMessages} />
-                  </span>
-                </td>
-                <td className="whitespace-nowrap px-4 py-3">
-                  <RatingStars
-                    value={row.recruiter?.ratingAvg ?? null}
-                    count={row.recruiter?.ratingCount}
-                  />
-                </td>
-                <td className="px-4 py-3 tabular-nums text-foreground">
-                  {row.candidateCount}
-                </td>
-                <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                  {formatDate(row.submittedAt)}
-                </td>
-                <td className="px-4 py-3">
-                  <StatusBadge
-                    label={SUBMISSION_STATUS_LABELS[row.status]}
-                    className={STATUS_STYLES[row.status]}
-                  />
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/company/inbox/${row.submissionId}`}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
-                  >
-                    Open conversation
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </td>
+      <div className={TABLE_CARD}>
+        <div className={TABLE_SCROLL}>
+          <table className={TABLE_EL}>
+            <thead className={TABLE_HEAD}>
+              <tr className={TABLE_HEAD_ROW}>
+                <th className={TABLE_TH}>Recruiter</th>
+                <th className={TABLE_TH}>Rating</th>
+                <th className={TABLE_TH}>Candidates</th>
+                <th className={TABLE_TH}>Submitted</th>
+                <th className={TABLE_TH}>Status</th>
+                <th className={TABLE_TH} />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className={TABLE_BODY}>
+              {data.data.map((row) => (
+                <tr key={row.submissionId} className={TABLE_ROW}>
+                  <td className={`${TABLE_TD} font-semibold text-navy`}>
+                    <span className="flex items-center gap-2">
+                      {recruiterDisplayName(row.recruiter)}
+                      {row.recruiter?.yearsExperience != null && (
+                        <span className="text-xs font-normal text-brand-gray">
+                          {row.recruiter.yearsExperience} yrs
+                        </span>
+                      )}
+                      <UnreadBadge count={row.unreadMessages} />
+                    </span>
+                  </td>
+                  <td className={`${TABLE_TD} whitespace-nowrap`}>
+                    <RatingStars
+                      value={row.recruiter?.ratingAvg ?? null}
+                      count={row.recruiter?.ratingCount}
+                    />
+                  </td>
+                  <td className={`${TABLE_TD} tabular-nums text-navy`}>
+                    {row.candidateCount}
+                  </td>
+                  <td
+                    className={`${TABLE_TD} whitespace-nowrap tabular-nums text-brand-gray`}
+                  >
+                    {formatDate(row.submittedAt)}
+                  </td>
+                  <td className={TABLE_TD}>
+                    <StatusBadge
+                      label={SUBMISSION_STATUS_LABELS[row.status]}
+                      className={STATUS_STYLES[row.status]}
+                    />
+                  </td>
+                  <td className={`${TABLE_TD} text-right`}>
+                    <Link
+                      href={`/company/inbox/${row.submissionId}`}
+                      className="inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                    >
+                      Open conversation
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       {data.meta.totalPages > 1 && (
         <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
