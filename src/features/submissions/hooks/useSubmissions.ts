@@ -24,6 +24,8 @@ export function useSubmissions(params: SubmissionListParams) {
   return useQuery({
     queryKey: submissionKeys.list(params),
     queryFn: () => fetchSubmissions(params),
+    // Keep the current page visible while the next page/filter loads.
+    placeholderData: keepPreviousData,
   });
 }
 
