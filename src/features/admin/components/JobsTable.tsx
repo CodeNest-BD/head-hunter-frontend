@@ -9,7 +9,7 @@ import {
   ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
-} from "@/shared/ui-components/data/columns";
+} from "@/shared/ui-components/data/Columns";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";

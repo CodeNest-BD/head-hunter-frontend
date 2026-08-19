@@ -14,7 +14,7 @@ import {
   ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
-} from "@/shared/ui-components/data/columns";
+} from "@/shared/ui-components/data/Columns";
 import {
   TABLE_BODY,
   TABLE_CARD,
