@@ -137,7 +137,7 @@ export function RecruitersTable() {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="max-h-[70vh] overflow-auto">
+            <div className="w-full">
               <table className={TABLE_CLASS}>
                 <thead>
                   <tr className={THEAD_ROW_CLASS}>
