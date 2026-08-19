@@ -10,7 +10,9 @@ export const THEAD_ROW_CLASS =
   "text-left text-xs uppercase tracking-[0.08em] text-muted-foreground " +
   // Each header cell sticks to the top of the scroll area with its own solid
   // tint (a semi-transparent bg would let rows show through while pinned).
-  "[&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:border-b [&>th]:border-border [&>th]:bg-secondary";
+  // A step deeper than the page canvas (#EEF4FD) so the header stands out
+  // instead of blending into the background.
+  "[&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:border-b [&>th]:border-border [&>th]:bg-[#DDE4F1]";
 
 export const BODY_ROW_CLASS =
   "border-b border-border/70 transition-colors last:border-0 hover:bg-secondary/50";
