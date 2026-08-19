@@ -8,6 +8,17 @@ import { UnreadBadge } from "@/features/conversations/components/UnreadBadge";
 import { Button } from "@/shared/ui-components/controls/button";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import {
+  TABLE_BODY,
+  TABLE_CARD,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_HEAD_ROW,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TH,
+} from "@/shared/ui-components/data/tableStyles";
 import { formatDate } from "@/shared/utils/formatDate";
 import { useInboxJobs } from "../hooks/useSubmissions";
 import type { InboxJobRow } from "../schemas";
@@ -90,69 +101,70 @@ export function InboxJobsTable() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto rounded-xl border border-border/70 shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border/70 bg-muted/40 text-left">
-            <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="px-4 py-3 font-medium">Job</th>
-              <th className="px-4 py-3 font-medium">Submissions</th>
-              <th className="px-4 py-3 font-medium">New</th>
-              <th className="px-4 py-3 font-medium">Last received</th>
-              <th className="px-4 py-3 font-medium">Job status</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {data.data.map((row) => (
-              <tr
-                key={row.jobId}
-                className="border-b border-border/60 transition-colors last:border-0 hover:bg-accent/40"
-              >
-                <td className="px-4 py-3 font-medium text-foreground">
-                  <span className="flex items-center gap-2">
+      <div className={TABLE_CARD}>
+        <div className={TABLE_SCROLL}>
+          <table className={TABLE_EL}>
+            <thead className={TABLE_HEAD}>
+              <tr className={TABLE_HEAD_ROW}>
+                <th className={TABLE_TH}>Job</th>
+                <th className={TABLE_TH}>Submissions</th>
+                <th className={TABLE_TH}>New</th>
+                <th className={TABLE_TH}>Last received</th>
+                <th className={TABLE_TH}>Job status</th>
+                <th className={TABLE_TH} />
+              </tr>
+            </thead>
+            <tbody className={TABLE_BODY}>
+              {data.data.map((row) => (
+                <tr key={row.jobId} className={TABLE_ROW}>
+                  <td className={`${TABLE_TD} font-semibold text-navy`}>
+                    <span className="flex items-center gap-2">
+                      <Link
+                        href={`/company/inbox/job/${row.jobId}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {row.jobTitle}
+                      </Link>
+                      <UnreadBadge count={row.unreadMessages} />
+                    </span>
+                  </td>
+                  <td className={`${TABLE_TD} tabular-nums text-navy`}>
+                    {row.submissionCount}
+                  </td>
+                  <td className={`${TABLE_TD} tabular-nums`}>
+                    {row.newSubmissionCount > 0 ? (
+                      <span className="font-semibold text-primary">
+                        {row.newSubmissionCount}
+                      </span>
+                    ) : (
+                      <span className="text-brand-gray-light">0</span>
+                    )}
+                  </td>
+                  <td
+                    className={`${TABLE_TD} whitespace-nowrap tabular-nums text-brand-gray`}
+                  >
+                    {formatDate(row.lastSubmittedAt)}
+                  </td>
+                  <td className={TABLE_TD}>
+                    <StatusBadge
+                      label={JOB_STATUS_LABELS[row.jobStatus]}
+                      className={JOB_STATUS_STYLES[row.jobStatus]}
+                    />
+                  </td>
+                  <td className={`${TABLE_TD} text-right`}>
                     <Link
                       href={`/company/inbox/job/${row.jobId}`}
-                      className="hover:text-primary hover:underline"
+                      className="inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                     >
-                      {row.jobTitle}
+                      View recruiters
+                      <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
-                    <UnreadBadge count={row.unreadMessages} />
-                  </span>
-                </td>
-                <td className="px-4 py-3 tabular-nums text-foreground">
-                  {row.submissionCount}
-                </td>
-                <td className="px-4 py-3 tabular-nums">
-                  {row.newSubmissionCount > 0 ? (
-                    <span className="font-semibold text-primary">
-                      {row.newSubmissionCount}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">0</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                  {formatDate(row.lastSubmittedAt)}
-                </td>
-                <td className="px-4 py-3">
-                  <StatusBadge
-                    label={JOB_STATUS_LABELS[row.jobStatus]}
-                    className={JOB_STATUS_STYLES[row.jobStatus]}
-                  />
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/company/inbox/job/${row.jobId}`}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
-                  >
-                    View recruiters
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
       {data.meta.totalPages > 1 && (
         <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
