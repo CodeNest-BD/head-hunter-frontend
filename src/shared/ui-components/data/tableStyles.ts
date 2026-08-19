@@ -10,16 +10,22 @@
 export const TABLE_CARD =
   "overflow-hidden rounded-2xl border border-brand-line bg-card shadow-card";
 
-/** Wrap the <table> in this for horizontal scroll on narrow screens. */
-export const TABLE_SCROLL = "overflow-x-auto";
+/**
+ * Wrap the <table> in this — bounded height + overflow makes the header
+ * (sticky, below) pin to the top of the scroll area as rows scroll under it,
+ * and still allows horizontal scroll on narrow screens.
+ */
+export const TABLE_SCROLL = "max-h-[70vh] overflow-auto";
 
 export const TABLE_EL = "w-full border-collapse text-sm";
 
 /** Header band — tinted so it reads distinctly from the white body rows. */
-export const TABLE_HEAD = "bg-secondary text-left";
+export const TABLE_HEAD = "text-left";
 export const TABLE_HEAD_ROW =
   "text-[11px] font-semibold uppercase tracking-wider text-brand-gray";
-export const TABLE_TH = "px-5 py-3.5";
+/** Each header cell is sticky with its own solid tint so rows never bleed through. */
+export const TABLE_TH =
+  "sticky top-0 z-10 border-b border-border bg-secondary px-5 py-3.5";
 
 /** Body: white rows with hairline separators and a subtle hover. */
 export const TABLE_BODY = "divide-y divide-border bg-card";

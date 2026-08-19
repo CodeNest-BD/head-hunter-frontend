@@ -7,7 +7,10 @@
 export const TABLE_CLASS = "w-full border-collapse text-sm";
 
 export const THEAD_ROW_CLASS =
-  "border-b border-border bg-muted/40 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground " +
+  "text-left text-xs uppercase tracking-[0.08em] text-muted-foreground " +
+  // Each header cell sticks to the top of the scroll area with its own solid
+  // tint (a semi-transparent bg would let rows show through while pinned).
+  "[&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:border-b [&>th]:border-border [&>th]:bg-secondary " +
   "[&>th]:border-l [&>th]:border-border/50 [&>th:first-child]:border-l-0";
 
 export const BODY_ROW_CLASS =

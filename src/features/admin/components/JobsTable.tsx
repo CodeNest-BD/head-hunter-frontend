@@ -5,6 +5,11 @@ import { AlertCircle, Briefcase, X } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import {
+  ColumnsToggle,
+  useVisibleColumns,
+  type ColumnDef,
+} from "@/shared/ui-components/data/columns";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
@@ -24,6 +29,16 @@ function formatDate(iso: string): string {
     year: "numeric",
   });
 }
+
+const COLUMNS: ColumnDef[] = [
+  { key: "job", label: "Job", required: true },
+  { key: "company", label: "Company" },
+  { key: "status", label: "Status" },
+  { key: "fee", label: "Recruiter fee" },
+  { key: "submissions", label: "Submissions" },
+  { key: "posted", label: "Posted" },
+  { key: "actions", label: "Actions", required: true },
+];
 
 interface JobsTableProps {
   /** When set, the list is restricted to one company (a deep-link). */
@@ -49,6 +64,7 @@ export function JobsTable({
     limit,
     changeLimit,
   } = useListState(initialStatus);
+  const cols = useVisibleColumns("admin.jobs.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminJobs({
     page,
     limit,
@@ -74,24 +90,33 @@ export function JobsTable({
         </div>
       )}
 
-      <ListToolbar
-        query={qInput}
-        onQueryChange={setQInput}
-        placeholder="Search jobs by title…"
-        filter={{
-          value: status,
-          onChange: changeStatus,
-          allLabel: "All statuses",
-          options: [
-            { value: "published", label: "Published" },
-            { value: "draft", label: "Draft" },
-            { value: "paused", label: "Paused" },
-            { value: "filled", label: "Filled" },
-            { value: "closed", label: "Closed" },
-            { value: "expired", label: "Expired" },
-          ],
-        }}
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <ListToolbar
+            query={qInput}
+            onQueryChange={setQInput}
+            placeholder="Search jobs by title…"
+            filter={{
+              value: status,
+              onChange: changeStatus,
+              allLabel: "All statuses",
+              options: [
+                { value: "published", label: "Published" },
+                { value: "draft", label: "Draft" },
+                { value: "paused", label: "Paused" },
+                { value: "filled", label: "Filled" },
+                { value: "closed", label: "Closed" },
+                { value: "expired", label: "Expired" },
+              ],
+            }}
+          />
+        </div>
+        <ColumnsToggle
+          columns={cols.columns}
+          isVisible={cols.isVisible}
+          onToggle={cols.toggle}
+        />
+      </div>
 
       {isPending ? (
         <TableSkeleton />
@@ -120,34 +145,44 @@ export function JobsTable({
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div className="max-h-[70vh] overflow-auto">
               <table className={TABLE_CLASS}>
                 <thead>
                   <tr className={THEAD_ROW_CLASS}>
                     <th scope="col" className="px-5 py-3 font-semibold">
                       Job
                     </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Company
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Status
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-right font-semibold"
-                    >
-                      Recruiter fee
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-center font-semibold"
-                    >
-                      Submissions
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Posted
-                    </th>
+                    {cols.isVisible("company") && (
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Company
+                      </th>
+                    )}
+                    {cols.isVisible("status") && (
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Status
+                      </th>
+                    )}
+                    {cols.isVisible("fee") && (
+                      <th
+                        scope="col"
+                        className="px-5 py-3 text-right font-semibold"
+                      >
+                        Recruiter fee
+                      </th>
+                    )}
+                    {cols.isVisible("submissions") && (
+                      <th
+                        scope="col"
+                        className="px-5 py-3 text-center font-semibold"
+                      >
+                        Submissions
+                      </th>
+                    )}
+                    {cols.isVisible("posted") && (
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Posted
+                      </th>
+                    )}
                     <th
                       scope="col"
                       className="px-5 py-3 text-right font-semibold"
@@ -171,49 +206,59 @@ export function JobsTable({
                           {job.locationState || "—"}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        {/* Company name → its admin profile. */}
-                        {job.companyUserId ? (
-                          <Link
-                            href={`/admin/companies/${job.companyUserId}`}
-                            className="block max-w-[200px] truncate text-navy hover:text-primary hover:underline"
-                          >
-                            {job.companyName}
-                          </Link>
-                        ) : (
-                          <span className="block max-w-[200px] truncate">
-                            {job.companyName}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3">
-                        <StatusBadge
-                          label={JOB_STATUS_LABELS[job.status] ?? job.status}
-                          className={
-                            JOB_STATUS_STYLES[job.status] ??
-                            "bg-muted text-muted-foreground"
-                          }
-                        />
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
-                        {formatMinor(job.recruiterFeeMinor)}
-                      </td>
-                      <td className="px-5 py-3 text-center tabular-nums">
-                        {/* Submissions → the threads on this job. */}
-                        {job.submissionCount > 0 ? (
-                          <Link
-                            href={`/admin/conversations?jobId=${job.jobId}`}
-                            className="font-medium text-primary hover:underline"
-                          >
-                            {job.submissionCount}
-                          </Link>
-                        ) : (
-                          <span className="text-muted-foreground">0</span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                        {formatDate(job.createdAt)}
-                      </td>
+                      {cols.isVisible("company") && (
+                        <td className="px-5 py-3 text-muted-foreground">
+                          {/* Company name → its admin profile. */}
+                          {job.companyUserId ? (
+                            <Link
+                              href={`/admin/companies/${job.companyUserId}`}
+                              className="block max-w-[200px] truncate text-navy hover:text-primary hover:underline"
+                            >
+                              {job.companyName}
+                            </Link>
+                          ) : (
+                            <span className="block max-w-[200px] truncate">
+                              {job.companyName}
+                            </span>
+                          )}
+                        </td>
+                      )}
+                      {cols.isVisible("status") && (
+                        <td className="px-5 py-3">
+                          <StatusBadge
+                            label={JOB_STATUS_LABELS[job.status] ?? job.status}
+                            className={
+                              JOB_STATUS_STYLES[job.status] ??
+                              "bg-muted text-muted-foreground"
+                            }
+                          />
+                        </td>
+                      )}
+                      {cols.isVisible("fee") && (
+                        <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
+                          {formatMinor(job.recruiterFeeMinor)}
+                        </td>
+                      )}
+                      {cols.isVisible("submissions") && (
+                        <td className="px-5 py-3 text-center tabular-nums">
+                          {/* Submissions → the threads on this job. */}
+                          {job.submissionCount > 0 ? (
+                            <Link
+                              href={`/admin/conversations?jobId=${job.jobId}`}
+                              className="font-medium text-primary hover:underline"
+                            >
+                              {job.submissionCount}
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">0</span>
+                          )}
+                        </td>
+                      )}
+                      {cols.isVisible("posted") && (
+                        <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
+                          {formatDate(job.createdAt)}
+                        </td>
+                      )}
                       <td className="px-5 py-3 text-right">
                         <JobRowActions jobId={job.jobId} jobTitle={job.title} />
                       </td>
