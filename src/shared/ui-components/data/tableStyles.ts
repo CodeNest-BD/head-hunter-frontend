@@ -27,9 +27,13 @@ export const TABLE_EL = "w-full border-collapse text-sm";
 export const TABLE_HEAD = "text-left";
 export const TABLE_HEAD_ROW =
   "text-[11px] font-semibold uppercase tracking-wider text-brand-gray";
-/** Each header cell is sticky with its own solid tint so rows never bleed through. */
+/**
+ * Each header cell is sticky with its own SOLID tint. The tint is a step
+ * deeper than the page canvas (#EEF4FD) so the header reads as a distinct
+ * band rather than blending into the background.
+ */
 export const TABLE_TH =
-  "sticky top-0 z-10 border-b border-border bg-secondary px-5 py-3.5";
+  "sticky top-0 z-10 border-b border-border bg-[#DDE4F1] px-5 py-3.5";
 
 /** Body: white rows with hairline separators and a subtle hover. */
 export const TABLE_BODY = "divide-y divide-border bg-card";
