@@ -10,6 +10,10 @@
 export const TABLE_CARD =
   "overflow-hidden rounded-2xl border border-brand-line bg-card shadow-card";
 
+/** White card wrapping the search/filter/columns toolbar above a table. */
+export const TABLE_TOOLBAR =
+  "flex flex-col gap-3 rounded-2xl border border-brand-line bg-card p-3 shadow-card sm:flex-row sm:items-center";
+
 /**
  * Wrap the <table> in this — bounded height + overflow makes the header
  * (sticky, below) pin to the top of the scroll area as rows scroll under it,
