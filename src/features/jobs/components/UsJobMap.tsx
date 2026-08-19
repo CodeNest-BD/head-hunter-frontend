@@ -105,7 +105,7 @@ function StatePopup({
       className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full"
       style={{ left: pointer.x, top: pointer.y - 14 }}
     >
-      <div className="whitespace-nowrap rounded-lg border border-border bg-white px-3 py-2 shadow-card-lg">
+      <div className="whitespace-nowrap rounded-md border border-border bg-white px-3 py-2 shadow-card-lg">
         <p className="text-[13px] font-bold text-navy">{name}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {count > 0
@@ -315,7 +315,7 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
 
       <div
         ref={wrapRef}
-        className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+        className="relative overflow-hidden rounded-md border border-border bg-card shadow-card"
       >
         {/* Faint blue tint behind the map — keeps the canvas light. */}
         <div
@@ -646,7 +646,7 @@ function CityCombobox({
           id={listId}
           align="start"
           sideOffset={6}
-          className="z-50 w-64 overflow-hidden rounded-lg border border-border bg-popover p-0 text-popover-foreground shadow-card outline-none"
+          className="z-50 w-64 overflow-hidden rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-card outline-none"
         >
           <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />

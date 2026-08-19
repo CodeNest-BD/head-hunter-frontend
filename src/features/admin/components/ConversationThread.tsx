@@ -201,7 +201,7 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
                       {formatDateTime(event.at)}
                     </p>
                     {event.body && (
-                      <p className="mt-2 rounded-lg bg-muted/60 px-3 py-2 text-sm text-foreground">
+                      <p className="mt-2 rounded-md bg-muted/60 px-3 py-2 text-sm text-foreground">
                         {event.body}
                       </p>
                     )}

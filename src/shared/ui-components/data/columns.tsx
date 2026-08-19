@@ -67,7 +67,7 @@ export function ColumnsToggle({
       <Dropdown.Trigger asChild>
         <button
           type="button"
-          className="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-card px-3 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary"
+          className="inline-flex h-9 items-center gap-2 rounded-md border border-input bg-card px-3 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary"
         >
           <SlidersHorizontal className="h-4 w-4" />
           Columns
@@ -77,7 +77,7 @@ export function ColumnsToggle({
         <Dropdown.Content
           align="end"
           sideOffset={4}
-          className="z-50 min-w-[200px] rounded-lg border border-border bg-popover p-1.5 shadow-card-lg"
+          className="z-50 min-w-[200px] rounded-md border border-border bg-popover p-1.5 shadow-card-lg"
         >
           <p className="px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-brand-gray">
             Toggle columns

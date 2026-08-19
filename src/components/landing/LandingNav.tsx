@@ -77,7 +77,7 @@ export function LandingNav() {
 
         <button
           type="button"
-          className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#C9D0DF] text-navy md:hidden"
+          className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#C9D0DF] text-navy md:hidden"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
@@ -98,7 +98,7 @@ export function LandingNav() {
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className="rounded-lg px-2 py-2.5 text-sm font-semibold text-brand-slate hover:bg-accent hover:text-primary"
+              className="rounded-md px-2 py-2.5 text-sm font-semibold text-brand-slate hover:bg-accent hover:text-primary"
             >
               {link.label}
             </a>
@@ -123,7 +123,7 @@ export function LandingNav() {
                       key={item.href}
                       href={item.href}
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-brand-slate hover:bg-accent hover:text-primary"
+                      className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm font-medium text-brand-slate hover:bg-accent hover:text-primary"
                     >
                       <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                       {item.label}
@@ -136,7 +136,7 @@ export function LandingNav() {
                     setOpen(false);
                     void logout();
                   }}
-                  className="mt-1 flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10"
+                  className="mt-1 flex items-center gap-3 rounded-md px-2 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10"
                 >
                   <LogOut className="h-[18px] w-[18px]" />
                   Log out

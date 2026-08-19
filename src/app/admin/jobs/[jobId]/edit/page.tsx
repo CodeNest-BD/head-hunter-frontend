@@ -23,12 +23,12 @@ function EditContent({ jobId }: { jobId: string }) {
 
   if (isPending) {
     return (
-      <div className="h-64 animate-pulse rounded-xl border border-border bg-card" />
+      <div className="h-64 animate-pulse rounded-md border border-border bg-card" />
     );
   }
   if (isError || !job) {
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
+      <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
         <span className="flex items-center gap-2 font-medium">
           <AlertCircle className="h-[18px] w-[18px]" />
           Could not load this job.
@@ -47,7 +47,7 @@ function EditContent({ jobId }: { jobId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-border/70 bg-card p-6 shadow-sm">
+    <div className="rounded-md border border-border/70 bg-card p-6 shadow-sm">
       <JobForm
         job={job}
         isSubmitting={update.isPending}

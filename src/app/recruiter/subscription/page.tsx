@@ -12,7 +12,7 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 /** Shown while recruiting is free (phases 1–2). */
 function FreeDuringLaunchCard() {
   return (
-    <div className="rounded-2xl border border-brand-line bg-card p-8 text-center shadow-card">
+    <div className="rounded-md border border-brand-line bg-card p-8 text-center shadow-card">
       <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
         <BadgeCheck className="h-6 w-6" />
       </span>
@@ -39,7 +39,7 @@ export default function RecruiterSubscriptionPage() {
   return (
     <RequireRole role="recruiter">
       <DashboardLayout>
-        <div className="flex max-w-3xl flex-col gap-8">
+        <div className="flex max-w-3xl flex-col gap-6">
           <PageHeader
             title="Subscription"
             subtitle={

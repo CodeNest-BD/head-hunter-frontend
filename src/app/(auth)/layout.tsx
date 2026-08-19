@@ -27,7 +27,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="grid min-h-screen bg-background text-foreground lg:grid-cols-[1.05fr_1fr]">
+    <main className="grid min-h-screen bg-background text-foreground lg:grid-cols-[2fr_3fr]">
       {/* Brand panel — desktop only. */}
       <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[#0b1526] via-[#0d1b31] to-[#0b1526] lg:flex lg:flex-col lg:justify-between lg:p-14">
         {/* Soft drifting blue glows, echoing the landing aesthetic. */}
@@ -53,7 +53,7 @@ export default function AuthLayout({
             href="/"
             className="inline-flex rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            <Logo />
+            <Logo tone="onDark" />
           </Link>
         </div>
 
@@ -65,7 +65,7 @@ export default function AuthLayout({
           <h1 className="mt-7 font-heading text-4xl font-extrabold leading-[1.08] tracking-[-0.03em] text-white text-balance">
             Where great companies meet great recruiters.
           </h1>
-          <p className="mt-4 max-w-sm text-base leading-relaxed text-muted-foreground">
+          <p className="mt-4 max-w-sm text-base leading-relaxed text-white/70">
             One focused workspace to source talent, manage placements, and get
             paid — without the noise.
           </p>
@@ -89,10 +89,10 @@ export default function AuthLayout({
                   </svg>
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-semibold text-white">
                     {item.title}
                   </p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-0.5 text-sm leading-relaxed text-white/60">
                     {item.body}
                   </p>
                 </div>

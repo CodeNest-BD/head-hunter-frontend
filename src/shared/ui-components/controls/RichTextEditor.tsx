@@ -98,12 +98,12 @@ export function RichTextEditor({
 
   if (!editor) {
     return (
-      <div className="min-h-[230px] animate-pulse rounded-lg border border-input bg-muted/50" />
+      <div className="min-h-[230px] animate-pulse rounded-md border border-input bg-muted/50" />
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-input bg-background shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+    <div className="overflow-hidden rounded-md border border-input bg-background shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
       <div
         role="toolbar"
         aria-label="Text formatting"

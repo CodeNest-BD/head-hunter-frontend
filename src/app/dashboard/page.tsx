@@ -125,10 +125,10 @@ function DashboardContent() {
   const isAdmin = user.role === "admin";
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {/* Navy hero card — the mock's premium dark hero: glow, on-dark eyebrow,
           and a heavy white headline. */}
-      <header className="relative overflow-hidden rounded-2xl bg-navy p-6 shadow-card [animation:hh-rise_.6s_cubic-bezier(.22,1,.36,1)_both] sm:p-8">
+      <header className="relative overflow-hidden rounded-md bg-navy p-6 shadow-card [animation:hh-rise_.6s_cubic-bezier(.22,1,.36,1)_both] sm:p-8">
         <BrandGlow variant="hero" />
         <div className="relative flex flex-col">
           <Logo tone="onDark" />
@@ -157,10 +157,10 @@ function DashboardContent() {
             <Link
               key={link.href}
               href={link.href}
-              className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-card transition hover:-translate-y-0.5 hover:border-[#C9D0DF] hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group relative flex flex-col gap-3 rounded-md border border-border bg-card p-5 shadow-card transition hover:-translate-y-0.5 hover:border-[#C9D0DF] hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div className="flex items-center justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/15 text-primary">
                   <Icon className="h-[18px] w-[18px]" />
                 </span>
                 {showBadge ? (
@@ -183,7 +183,7 @@ function DashboardContent() {
       </div>
 
       {!user.emailVerified && (
-        <div className="rounded-xl border border-[#F0E2B8] bg-[#FBF3DF] p-4 text-sm text-[#92610C]">
+        <div className="rounded-md border border-[#F0E2B8] bg-[#FBF3DF] p-4 text-sm text-[#92610C]">
           Your email is not verified yet. Some actions may be unavailable.
         </div>
       )}

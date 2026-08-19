@@ -40,7 +40,7 @@ export function CandidateAttachments({
       </Button>
 
       {showFiles && (
-        <div className="mt-3 rounded-lg border border-border/60 bg-background/50 p-3 text-sm">
+        <div className="mt-3 rounded-md border border-border/60 bg-background/50 p-3 text-sm">
           {attachments.isPending && (
             <p className="text-muted-foreground">Loading attachments…</p>
           )}

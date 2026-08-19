@@ -58,7 +58,7 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors",
+        "group relative flex items-center gap-3 rounded-md py-2 text-sm font-medium transition-colors",
         collapsed ? "justify-center px-0" : "px-3",
         active
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -128,7 +128,7 @@ function SidebarContent({
 
       <div className="border-t border-sidebar-border p-3">
         {!collapsed && (
-          <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+          <div className="flex items-center gap-3 rounded-md px-2 py-2">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
               {initials || <UserRound className="h-4 w-4" />}
             </span>
@@ -147,7 +147,7 @@ function SidebarContent({
           onClick={() => void logout()}
           title={collapsed ? "Log out" : undefined}
           className={cn(
-            "flex w-full items-center gap-3 rounded-lg py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-destructive/15 hover:text-destructive",
+            "flex w-full items-center gap-3 rounded-md py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-destructive/15 hover:text-destructive",
             collapsed ? "justify-center px-0" : "mt-1 px-3",
           )}
         >
@@ -257,7 +257,7 @@ export function DashboardLayout({
         {user?.role === "recruiter" && (
           <Link
             href="/explore-jobs"
-            className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary"
           >
             <Map className="h-4 w-4" />
             <span className="hidden sm:inline">Explore jobs</span>

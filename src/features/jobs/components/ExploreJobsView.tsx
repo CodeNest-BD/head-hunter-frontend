@@ -252,12 +252,12 @@ function MapSection({
   if (!isVerified) {
     const pending = isRecruiter && verificationStatus !== "verified";
     return (
-      <section className="relative overflow-hidden rounded-2xl border border-brand-line bg-white p-6 shadow-card">
+      <section className="relative overflow-hidden rounded-md border border-brand-line bg-white p-6 shadow-card">
         <div className="pointer-events-none select-none opacity-60 blur-[3px]">
           <DecorativeUsMap />
         </div>
         <div className="absolute inset-0 flex items-center justify-center bg-white/55">
-          <div className="mx-4 max-w-md rounded-2xl border border-brand-line bg-white p-6 text-center shadow-card-lg">
+          <div className="mx-4 max-w-md rounded-md border border-brand-line bg-white p-6 text-center shadow-card-lg">
             <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-accent text-primary">
               <Lock className="h-5 w-5" />
             </span>
@@ -332,7 +332,7 @@ function LiveMap({
   }, [map.data]);
 
   return (
-    <section className="rounded-2xl border border-brand-line bg-white p-4 shadow-card sm:p-6">
+    <section className="rounded-md border border-brand-line bg-white p-4 shadow-card sm:p-6">
       <UsJobMap stats={stats} selection={selection} onSelect={onSelect} />
     </section>
   );
@@ -384,14 +384,14 @@ function CardsPage({
   }
   if (isError && isFirst) {
     return (
-      <div className="col-span-full rounded-2xl border border-brand-line bg-white p-10 text-center text-brand-gray">
+      <div className="col-span-full rounded-md border border-brand-line bg-white p-10 text-center text-brand-gray">
         Jobs are unavailable right now — please try again shortly.
       </div>
     );
   }
   if (data && data.data.length === 0 && isFirst) {
     return (
-      <div className="col-span-full flex flex-col items-center gap-2 rounded-2xl border border-brand-line bg-white p-12 text-center">
+      <div className="col-span-full flex flex-col items-center gap-2 rounded-md border border-brand-line bg-white p-12 text-center">
         <SearchX className="h-7 w-7 text-brand-gray-light" />
         <p className="font-heading font-extrabold text-navy">
           No open roles match these filters

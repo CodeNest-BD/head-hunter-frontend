@@ -36,18 +36,18 @@ export function PageHeader({
     return (
       <header
         className={cn(
-          "rounded-2xl bg-navy px-6 py-6 shadow-card [animation:fadeUp_.4s_ease_both] sm:px-8",
+          "rounded-md bg-navy px-6 py-5 shadow-card [animation:fadeUp_.4s_ease_both] sm:px-7",
           className,
         )}
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <h1 className="font-heading text-2xl font-extrabold tracking-[-0.01em] text-white sm:text-[30px]">
+            <h1 className="font-heading text-xl font-extrabold tracking-[-0.01em] text-white sm:text-[22px]">
               {title}
               <span className="text-primary">.</span>
             </h1>
             {subtitle && (
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60">
+              <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-white/60">
                 {subtitle}
               </p>
             )}
@@ -65,13 +65,13 @@ export function PageHeader({
     // No own bottom margin: every page places this inside a flex column whose
     // `gap` owns the spacing — a margin here would stack on top of it.
     <header className={cn("[animation:fadeUp_.4s_ease_both]", className)}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="font-heading text-2xl font-extrabold tracking-[-0.01em] text-navy sm:text-[30px]">
+          <h1 className="font-heading text-xl font-extrabold tracking-[-0.01em] text-navy sm:text-[22px]">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               {subtitle}
             </p>
           )}
@@ -80,7 +80,7 @@ export function PageHeader({
           <div className="flex shrink-0 items-center gap-3">{actions}</div>
         )}
       </div>
-      <div className="mt-5 h-px w-full bg-border" />
+      <div className="mt-4 h-px w-full bg-border" />
       {children}
     </header>
   );

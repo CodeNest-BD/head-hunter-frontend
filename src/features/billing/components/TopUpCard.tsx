@@ -55,7 +55,7 @@ export function TopUpCard() {
   return (
     <Card>
       <CardHeader className="flex-row items-start gap-3 space-y-0">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
           <CreditCard className="h-[18px] w-[18px]" />
         </span>
         <div className="flex flex-col gap-1">
@@ -84,7 +84,7 @@ export function TopUpCard() {
                     aria-pressed={active}
                     onClick={() => setPreset(preset)}
                     className={cn(
-                      "rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors",
+                      "rounded-md border px-3 py-2.5 text-sm font-semibold transition-colors",
                       active
                         ? "border-primary bg-primary/5 text-primary"
                         : "border-input text-navy hover:border-primary hover:text-primary",

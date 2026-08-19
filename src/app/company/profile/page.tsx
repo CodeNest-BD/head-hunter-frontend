@@ -29,7 +29,7 @@ function CompanyProfileContent() {
   }
   if (isError) {
     return (
-      <div className="flex max-w-md flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+      <div className="flex max-w-md flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
         <div className="flex items-center gap-2 font-medium">
           <AlertCircle className="h-[18px] w-[18px]" />
           Could not load your profile.
@@ -54,7 +54,7 @@ export default function CompanyProfilePage() {
   return (
     <RequireRole role="company">
       <DashboardLayout>
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <PageHeader
             title="Company profile"
             subtitle="This is what recruiters see when they browse companies."

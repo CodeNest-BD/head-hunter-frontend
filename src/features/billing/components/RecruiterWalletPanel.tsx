@@ -226,7 +226,7 @@ export function RecruiterWalletPanel() {
   const { data, isError, refetch } = useRecruiterWallet();
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {isError ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">

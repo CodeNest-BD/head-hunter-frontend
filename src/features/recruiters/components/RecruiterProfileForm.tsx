@@ -117,7 +117,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
                 return (
                   <label
                     key={item}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-border has-[:checked]:border-primary/50 has-[:checked]:bg-primary/10"
+                    className="flex cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-border has-[:checked]:border-primary/50 has-[:checked]:bg-primary/10"
                   >
                     <input
                       type="checkbox"

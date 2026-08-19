@@ -52,7 +52,7 @@ const CANDIDATE_STATUS_STYLES: Record<CandidateStatus, string> = {
 
 function CardSkeleton() {
   return (
-    <div className="h-40 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
+    <div className="h-40 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
   );
 }
 
@@ -65,7 +65,7 @@ function CardSkeleton() {
 function LeftColumnSkeleton() {
   return (
     <>
-      <div className="h-32 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
+      <div className="h-32 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
       <div className="flex flex-col gap-4">
         <div className="h-6 w-40 animate-pulse rounded bg-muted" />
         <CardSkeleton />
@@ -83,7 +83,7 @@ function ErrorCallout({
   onRetry?: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+    <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
       <div className="flex items-center gap-2 font-medium">
         <AlertCircle className="h-[18px] w-[18px] shrink-0" />
         {message}
@@ -121,7 +121,7 @@ function CandidateItem({
 
   if (mode === "edit") {
     return (
-      <div className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card p-5 shadow-sm">
+      <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm">
         <CandidateForm
           submissionId={submissionId}
           candidate={candidate}
@@ -142,7 +142,7 @@ function CandidateItem({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-5 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <p className="font-heading text-base font-semibold text-foreground">
@@ -235,7 +235,7 @@ function AddCandidateSection({
 
   if (isAdding) {
     return (
-      <div className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card p-5 shadow-sm">
+      <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm">
         <CandidateForm
           submissionId={submissionId}
           onDone={() => setIsAdding(false)}
@@ -287,7 +287,7 @@ function CandidateListSection({
       </h2>
 
       {candidates.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-[#C9D0DF] bg-card px-6 py-12 text-center shadow-card">
+        <div className="rounded-md border border-dashed border-[#C9D0DF] bg-card px-6 py-12 text-center shadow-card">
           <div className="flex flex-col items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <UserRound className="h-6 w-6" />

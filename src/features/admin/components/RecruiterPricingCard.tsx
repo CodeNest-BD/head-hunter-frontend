@@ -56,7 +56,7 @@ export function RecruiterPricingCard() {
       </CardHeader>
       <CardContent>
         {isPending ? (
-          <div className="h-24 animate-pulse rounded-lg bg-muted/40" />
+          <div className="h-24 animate-pulse rounded-md bg-muted/40" />
         ) : isError ? (
           <div className="flex flex-col items-start gap-3 text-sm text-destructive">
             <span className="flex items-center gap-2">

@@ -151,7 +151,7 @@ function PagerButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2 text-sm font-semibold tabular-nums transition-colors",
+        "inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2 text-sm font-semibold tabular-nums transition-colors",
         active
           ? "border-primary bg-primary text-primary-foreground"
           : "border-input bg-card text-navy hover:border-brand-primary hover:text-primary",

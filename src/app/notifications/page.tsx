@@ -12,7 +12,7 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 export default function NotificationsPage() {
   return (
     <DashboardLayout>
-      <div className="flex max-w-2xl flex-col gap-8">
+      <div className="flex max-w-3xl flex-col gap-6">
         <PageHeader
           title="Notifications"
           subtitle="Updates on your jobs, submissions and followed companies."

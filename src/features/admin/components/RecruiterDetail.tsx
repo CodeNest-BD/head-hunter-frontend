@@ -81,7 +81,7 @@ function VerificationCard({ data }: { data: RecruiterDetailData }) {
               : "Review the profile and references, then approve or reject. Only verified recruiters can use the live map and submit candidates."}
         </p>
         {data.verificationNote && (
-          <p className="rounded-lg border border-border bg-secondary/60 px-3 py-2 text-sm text-navy">
+          <p className="rounded-md border border-border bg-secondary/60 px-3 py-2 text-sm text-navy">
             <span className="font-semibold">Last note:</span>{" "}
             {data.verificationNote}
           </p>
@@ -149,7 +149,7 @@ function DeleteRecruiterButton({
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-card-lg focus:outline-none">
+        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
           <AlertDialog.Title className="font-heading text-lg font-extrabold text-foreground">
             Delete {name}?
           </AlertDialog.Title>
@@ -341,7 +341,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
                 {data.references.map((ref) => (
                   <li
                     key={ref.id}
-                    className="rounded-lg border border-border px-3 py-2 text-sm text-navy"
+                    className="rounded-md border border-border px-3 py-2 text-sm text-navy"
                   >
                     {ref.name}
                   </li>

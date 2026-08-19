@@ -45,7 +45,7 @@ export function CheckoutResultBanner({
     <div
       role="status"
       className={
-        "flex items-start gap-3 rounded-xl border px-4 py-3 text-sm " +
+        "flex items-start gap-3 rounded-md border px-4 py-3 text-sm " +
         (isSuccess
           ? "border-[#CDE7D8] bg-[#E7F4EC] text-[#17734E]"
           : "border-[#F0D4D4] bg-[#FBEAEA] text-[#9B3535]")

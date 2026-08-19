@@ -149,7 +149,7 @@ function ChangePasswordForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-end"
+      className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 p-3 sm:flex-row sm:items-end"
     >
       <div className="flex flex-1 flex-col gap-1.5">
         <Label htmlFor={`pw-${userId}`}>New password</Label>
@@ -197,7 +197,7 @@ function EditAdminForm({
           { onSuccess: onDone },
         );
       }}
-      className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-secondary/50 p-3"
+      className="flex flex-wrap items-end gap-3 rounded-md border border-border bg-secondary/50 p-3"
     >
       <div className="flex flex-col gap-1">
         <Label htmlFor={`first-${admin.userId}`}>First name</Label>
