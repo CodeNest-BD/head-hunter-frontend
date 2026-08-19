@@ -27,6 +27,7 @@ import {
   VERIFICATION_STATUS_STYLES,
 } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
+import { TABLE_TOOLBAR } from "@/shared/ui-components/data/tableStyles";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -70,7 +71,7 @@ export function RecruitersTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className={TABLE_TOOLBAR}>
         <div className="flex-1">
           <ListToolbar
             query={qInput}
