@@ -21,6 +21,7 @@ import {
   TABLE_TD,
   TABLE_TH,
 } from "@/shared/ui-components/data/tableStyles";
+import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { formatDate } from "@/shared/utils/formatDate";
 import { useSubmissions } from "../hooks/useSubmissions";
 import { SUBMISSION_STATUS_LABELS, type SubmissionStatus } from "../schemas";
@@ -160,30 +161,14 @@ export function SubmissionList() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-1 text-sm">
-          <span className="text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((current) => current - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((current) => current + 1)}
-            >
-              Next
-            </Button>
-          </div>
+        <div className={TABLE_CARD}>
+          <TablePager
+            page={page}
+            totalPages={totalPages}
+            total={submissions.data.meta.total}
+            pageSize={PAGE_SIZE}
+            onPage={setPage}
+          />
         </div>
       )}
     </div>
