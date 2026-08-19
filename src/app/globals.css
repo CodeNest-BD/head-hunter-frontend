@@ -47,7 +47,7 @@
     --input: 221 26% 83%;
     --ring: 222 98% 47%;
 
-    /* 8px base radius (buttons/inputs); cards use rounded-md/2xl explicitly. */
+    /* 8px base radius; surfaces use `rounded-md` (6px) uniformly app-wide. */
     --radius: 0.5rem;
 
     --chart-1: 222 98% 47%;

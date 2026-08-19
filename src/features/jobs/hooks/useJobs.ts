@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -18,6 +23,9 @@ export function useJobs(params: JobListParams) {
   return useQuery({
     queryKey: jobKeys.list(params),
     queryFn: () => fetchJobs(params),
+    // Keep the current page on screen while the next page/filter loads, so the
+    // table doesn't flash a skeleton on every pagination step.
+    placeholderData: keepPreviousData,
   });
 }
 

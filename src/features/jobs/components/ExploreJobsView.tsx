@@ -118,6 +118,10 @@ export function ExploreJobsView() {
 
   const jobs = usePublicJobs({ ...listParams, page });
   const total = jobs.data?.meta.total ?? 0;
+  // Distinct categories are counted from the loaded rows, so the figure is only
+  // exact when the whole result set fits on one page; otherwise it's omitted
+  // rather than shown understated against the all-pages `total`.
+  const singlePage = (jobs.data?.meta.totalPages ?? 1) <= 1;
   const categoryCount = new Set(
     (jobs.data?.data ?? []).map((job) => job.roleCategory),
   ).size;
@@ -172,8 +176,12 @@ export function ExploreJobsView() {
               )}
             </h2>
             <p className="mt-1 text-sm text-brand-gray">
-              {total} {total === 1 ? "role" : "roles"} across {categoryCount}{" "}
-              {categoryCount === 1 ? "category" : "categories"}
+              {total} {total === 1 ? "role" : "roles"}
+              {singlePage && total > 0
+                ? ` across ${categoryCount} ${
+                    categoryCount === 1 ? "category" : "categories"
+                  }`
+                : ""}
             </p>
           </div>
           <SortToggle

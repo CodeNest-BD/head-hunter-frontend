@@ -30,7 +30,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import {
   ROLE_CATEGORY_LABELS,
-  type JobStatus,
+  jobStatusSchema,
   type RoleCategory,
 } from "../schemas";
 import { useJobs } from "../hooks/useJobs";
@@ -69,11 +69,12 @@ export function JobsTable() {
   } = useListState();
   const [category, setCategory] = useState("");
   const cols = useVisibleColumns("company.jobs.columns", COLUMNS);
+  const parsedStatus = jobStatusSchema.safeParse(status);
   const { data, isPending, isError, refetch } = useJobs({
     page,
     limit,
     q: q || undefined,
-    status: (status || undefined) as JobStatus | undefined,
+    status: parsedStatus.success ? parsedStatus.data : undefined,
     roleCategory: category || undefined,
   });
 

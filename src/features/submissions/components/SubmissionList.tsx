@@ -31,7 +31,11 @@ import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { useListState } from "@/shared/hooks/useListState";
 import { formatDate } from "@/shared/utils/formatDate";
 import { useSubmissions } from "../hooks/useSubmissions";
-import { SUBMISSION_STATUS_LABELS, type SubmissionStatus } from "../schemas";
+import {
+  SUBMISSION_STATUS_LABELS,
+  submissionStatusSchema,
+  type SubmissionStatus,
+} from "../schemas";
 
 const STATUS_STYLES: Record<SubmissionStatus, string> = {
   submitted: "bg-primary/15 text-primary",
@@ -66,11 +70,12 @@ export function SubmissionList() {
     changeLimit,
   } = useListState();
   const cols = useVisibleColumns("recruiter.submissions.columns", COLUMNS);
+  const parsedStatus = submissionStatusSchema.safeParse(status);
   const submissions = useSubmissions({
     page,
     limit,
     q: q || undefined,
-    status: (status || undefined) as SubmissionStatus | undefined,
+    status: parsedStatus.success ? parsedStatus.data : undefined,
   });
   // Submissions carry only jobId. One jobs fetch builds a lookup, rather than a
   // request per row (mirrors the inbox).
