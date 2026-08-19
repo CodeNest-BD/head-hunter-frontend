@@ -27,7 +27,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="grid min-h-screen bg-background text-foreground lg:grid-cols-[2fr_3fr]">
+    <main className="grid min-h-screen bg-background text-foreground lg:h-screen lg:grid-cols-[2fr_3fr] lg:overflow-hidden">
       {/* Brand panel — desktop only. */}
       <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[#0b1526] via-[#0d1b31] to-[#0b1526] lg:flex lg:flex-col lg:justify-between lg:p-14">
         {/* Soft drifting blue glows, echoing the landing aesthetic. */}
@@ -116,18 +116,23 @@ export default function AuthLayout({
         </div>
       </aside>
 
-      {/* Form column. */}
-      <section className="flex flex-col items-center px-5 py-10 sm:px-8 lg:justify-center lg:px-14 lg:py-12">
-        {/* Mobile logo — the brand panel is hidden below lg. */}
-        <div className="mb-8 lg:hidden">
-          <Link
-            href="/"
-            className="inline-flex rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
-            <Logo />
-          </Link>
+      {/* Form column — the only scroller on desktop, so a tall form (sign-up)
+       * never shifts the fixed brand panel. `min-h-full` keeps short forms
+       * (sign-in) vertically centred while letting tall ones scroll from the
+       * top without the flex-centering clip. */}
+      <section className="lg:h-screen lg:overflow-y-auto">
+        <div className="flex min-h-full flex-col items-center px-5 py-10 sm:px-8 lg:justify-center lg:px-14 lg:py-12">
+          {/* Mobile logo — the brand panel is hidden below lg. */}
+          <div className="mb-8 lg:hidden">
+            <Link
+              href="/"
+              className="inline-flex rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <Logo />
+            </Link>
+          </div>
+          <div className="flex w-full max-w-md flex-col">{children}</div>
         </div>
-        <div className="flex w-full max-w-md flex-col">{children}</div>
       </section>
     </main>
   );
