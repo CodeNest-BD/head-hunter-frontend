@@ -6,6 +6,7 @@ import { RequireRole } from "@/features/auth";
 import { CompanyProfileForm, useMyCompanyProfile } from "@/features/companies";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
+import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 function ProfileSkeleton() {
@@ -47,7 +48,13 @@ function CompanyProfileContent() {
       </div>
     );
   }
-  return <CompanyProfileForm profile={data} />;
+  return (
+    <Card className="max-w-2xl">
+      <CardContent className="pt-5">
+        <CompanyProfileForm profile={data} />
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function CompanyProfilePage() {

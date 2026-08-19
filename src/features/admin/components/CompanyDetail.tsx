@@ -65,14 +65,14 @@ function WalletStat({
   primary?: boolean;
 }) {
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-5">
       <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </p>
       <p
         className={
-          "mt-2 font-heading font-extrabold leading-none " +
-          (primary ? "text-4xl text-primary" : "text-[26px] text-navy")
+          "mt-1.5 font-heading font-extrabold leading-none " +
+          (primary ? "text-3xl text-primary" : "text-2xl text-navy")
         }
       >
         {formatMinor(minor)}
@@ -108,7 +108,7 @@ export function CompanyDetail({ userId }: { userId: string }) {
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
       <Card>
-        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2.5">
               <h2 className="font-heading text-xl font-bold text-navy">
