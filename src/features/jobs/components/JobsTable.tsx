@@ -5,6 +5,17 @@ import { AlertCircle, Briefcase, Plus } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import {
+  TABLE_BODY,
+  TABLE_CARD,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_HEAD_ROW,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TH,
+} from "@/shared/ui-components/data/tableStyles";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { ROLE_CATEGORY_LABELS } from "../schemas";
@@ -70,50 +81,49 @@ export function JobsTable() {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border/70 shadow-sm">
-      <table className="w-full text-sm">
-        <thead className="border-b border-border/70 bg-muted/40 text-left">
-          <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-            <th className="px-4 py-3 font-medium">Title</th>
-            <th className="px-4 py-3 font-medium">Category</th>
-            <th className="px-4 py-3 font-medium">Fee</th>
-            <th className="px-4 py-3 font-medium">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.data.map((job) => (
-            <tr
-              key={job.id}
-              className="border-b border-border/60 transition-colors last:border-0 hover:bg-accent/40"
-            >
-              <td className="px-4 py-3">
-                <Link
-                  href={`/company/jobs/${job.id}`}
-                  className="font-medium text-foreground transition-colors hover:text-primary"
-                >
-                  {job.title}
-                </Link>
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">
-                {ROLE_CATEGORY_LABELS[job.roleCategory]}
-              </td>
-              <td className="px-4 py-3 tabular-nums text-foreground">
-                {formatMinor(job.recruiterFeeMinor)}
-              </td>
-              <td className="px-4 py-3">
-                <StatusBadge
-                  label={job.status}
-                  className={cn(
-                    STATUS_STYLES[job.status] ??
-                      "bg-muted text-muted-foreground",
-                    "capitalize",
-                  )}
-                />
-              </td>
+    <div className={TABLE_CARD}>
+      <div className={TABLE_SCROLL}>
+        <table className={TABLE_EL}>
+          <thead className={TABLE_HEAD}>
+            <tr className={TABLE_HEAD_ROW}>
+              <th className={TABLE_TH}>Title</th>
+              <th className={TABLE_TH}>Category</th>
+              <th className={TABLE_TH}>Fee</th>
+              <th className={TABLE_TH}>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className={TABLE_BODY}>
+            {data.data.map((job) => (
+              <tr key={job.id} className={TABLE_ROW}>
+                <td className={`${TABLE_TD} font-semibold text-navy`}>
+                  <Link
+                    href={`/company/jobs/${job.id}`}
+                    className="transition-colors hover:text-primary hover:underline"
+                  >
+                    {job.title}
+                  </Link>
+                </td>
+                <td className={`${TABLE_TD} text-brand-gray`}>
+                  {ROLE_CATEGORY_LABELS[job.roleCategory]}
+                </td>
+                <td className={`${TABLE_TD} tabular-nums text-navy`}>
+                  {formatMinor(job.recruiterFeeMinor)}
+                </td>
+                <td className={TABLE_TD}>
+                  <StatusBadge
+                    label={job.status}
+                    className={cn(
+                      STATUS_STYLES[job.status] ??
+                        "bg-muted text-muted-foreground",
+                      "capitalize",
+                    )}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   TABLE_TD,
   TABLE_TH,
 } from "@/shared/ui-components/data/tableStyles";
+import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { formatDate } from "@/shared/utils/formatDate";
 import { useInboxJobs } from "../hooks/useSubmissions";
 import type { InboxJobRow } from "../schemas";
@@ -167,26 +168,14 @@ export function InboxJobsTable() {
         </div>
       </div>
       {data.meta.totalPages > 1 && (
-        <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage((current) => current - 1)}
-          >
-            Previous
-          </Button>
-          Page {data.meta.page} of {data.meta.totalPages}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={page >= data.meta.totalPages}
-            onClick={() => setPage((current) => current + 1)}
-          >
-            Next
-          </Button>
+        <div className={TABLE_CARD}>
+          <TablePager
+            page={page}
+            totalPages={data.meta.totalPages}
+            total={data.meta.total}
+            pageSize={data.meta.limit}
+            onPage={setPage}
+          />
         </div>
       )}
     </div>
