@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Loader2, Lock, SearchX } from "lucide-react";
+import { Loader2, Lock, Search, SearchX } from "lucide-react";
 
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
@@ -56,10 +56,13 @@ const FEE_BUCKETS: readonly FeeBucket[] = [
 
 const ANY_CATEGORY = "all";
 
+type SortField = "publishedAt" | "recruiterFeeMinor";
+
 interface Filters {
   roleCategory: string;
   feeBucket: string;
   q: string;
+  sort: SortField;
   selection: MapSelection;
 }
 
@@ -67,13 +70,14 @@ const INITIAL_FILTERS: Filters = {
   roleCategory: ANY_CATEGORY,
   feeBucket: "any",
   q: "",
+  sort: "publishedAt",
   selection: { kind: "none" },
 };
 
 /**
  * The public explore-jobs experience: the live state-bubble map for verified
- * recruiters (guests get a locked illustrative map), filters, and the public
- * job-card grid with an accumulating "Load more".
+ * recruiters (guests get a locked illustrative map), a sort toggle and filter
+ * toolbar, and the public job-card grid with numbered pagination.
  */
 export function ExploreJobsView() {
   const { isRecruiter, isVerified, verificationStatus } =
@@ -99,10 +103,24 @@ export function ExploreJobsView() {
       feeMax: bucket.feeMax,
       q: debouncedQ.trim() || undefined,
       locationState: selectedState,
+      sortBy: filters.sort,
       limit,
     }),
-    [filters.roleCategory, bucket, debouncedQ, selectedState, limit],
+    [
+      filters.roleCategory,
+      filters.sort,
+      bucket,
+      debouncedQ,
+      selectedState,
+      limit,
+    ],
   );
+
+  const jobs = usePublicJobs({ ...listParams, page });
+  const total = jobs.data?.meta.total ?? 0;
+  const categoryCount = new Set(
+    (jobs.data?.data ?? []).map((job) => job.roleCategory),
+  ).size;
 
   const setFilter = (patch: Partial<Filters>): void => {
     setFilters((prev) => ({ ...prev, ...patch }));
@@ -138,38 +156,57 @@ export function ExploreJobsView() {
       />
 
       <section className="mt-12">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <h2 className="font-heading text-2xl font-extrabold text-navy">
-            {headline}
-            {filters.selection.kind !== "none" && (
-              <button
-                type="button"
-                onClick={() => setFilter({ selection: { kind: "none" } })}
-                className="ml-3 align-middle text-sm font-semibold text-brand-secondary hover:underline"
-              >
-                Clear
-              </button>
-            )}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="sm:w-56">
+        {/* State + result counts on the left, sort toggle on the right. */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="font-heading text-2xl font-extrabold text-navy sm:text-[28px]">
+              {headline}
+              {filters.selection.kind !== "none" && (
+                <button
+                  type="button"
+                  onClick={() => setFilter({ selection: { kind: "none" } })}
+                  className="ml-3 align-middle text-sm font-semibold text-brand-secondary hover:underline"
+                >
+                  Clear
+                </button>
+              )}
+            </h2>
+            <p className="mt-1 text-sm text-brand-gray">
+              {total} {total === 1 ? "role" : "roles"} across {categoryCount}{" "}
+              {categoryCount === 1 ? "category" : "categories"}
+            </p>
+          </div>
+          <SortToggle
+            value={filters.sort}
+            onChange={(sort) => setFilter({ sort })}
+          />
+        </div>
+
+        {/* Filter toolbar on a white card. */}
+        <div className="mt-5 rounded-md border border-brand-line bg-white p-4 shadow-card">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_13.5rem_13.5rem]">
+            <div>
               <Label
                 htmlFor="explore-q"
-                className="mb-1.5 block text-xs font-bold uppercase tracking-[0.06em] text-brand-gray"
+                className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray"
               >
                 Search
               </Label>
-              <Input
-                id="explore-q"
-                placeholder="Job title…"
-                value={filters.q}
-                onChange={(event) => setFilter({ q: event.target.value })}
-              />
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="explore-q"
+                  placeholder="Job title…"
+                  value={filters.q}
+                  onChange={(event) => setFilter({ q: event.target.value })}
+                  className="pl-9"
+                />
+              </div>
             </div>
-            <div className="sm:w-48">
+            <div>
               <Label
                 htmlFor="explore-category"
-                className="mb-1.5 block text-xs font-bold uppercase tracking-[0.06em] text-brand-gray"
+                className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray"
               >
                 Role Category
               </Label>
@@ -190,12 +227,12 @@ export function ExploreJobsView() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="sm:w-44">
+            <div>
               <Label
                 htmlFor="explore-fee"
-                className="mb-1.5 block text-xs font-bold uppercase tracking-[0.06em] text-brand-gray"
+                className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray"
               >
-                Price Range
+                Recruiter Fee
               </Label>
               <Select
                 value={filters.feeBucket}
@@ -217,7 +254,7 @@ export function ExploreJobsView() {
         </div>
 
         <CardsGrid
-          params={{ ...listParams, page }}
+          query={jobs}
           page={page}
           pageSize={limit}
           onPage={setPage}
@@ -340,20 +377,57 @@ function LiveMap({
   );
 }
 
+/** The Most-recent / Highest-fee segmented control from the reference. */
+function SortToggle({
+  value,
+  onChange,
+}: {
+  value: SortField;
+  onChange: (value: SortField) => void;
+}) {
+  const options: { value: SortField; label: string }[] = [
+    { value: "publishedAt", label: "Most recent" },
+    { value: "recruiterFeeMinor", label: "Highest fee" },
+  ];
+  return (
+    <div className="inline-flex shrink-0 rounded-md border border-brand-line bg-secondary p-1">
+      {options.map((option) => {
+        const active = value === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(option.value)}
+            className={
+              "rounded-[6px] px-3.5 py-1.5 text-sm font-semibold transition-colors " +
+              (active
+                ? "bg-white text-navy shadow-sm"
+                : "text-brand-gray hover:text-navy")
+            }
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function CardsGrid({
-  params,
+  query,
   page,
   pageSize,
   onPage,
   onPageSize,
 }: {
-  params: Parameters<typeof usePublicJobs>[0];
+  query: ReturnType<typeof usePublicJobs>;
   page: number;
   pageSize: number;
   onPage: (page: number) => void;
   onPageSize: (size: number) => void;
 }) {
-  const { data, isLoading, isError } = usePublicJobs(params);
+  const { data, isLoading, isError } = query;
 
   if (isLoading) {
     return (
