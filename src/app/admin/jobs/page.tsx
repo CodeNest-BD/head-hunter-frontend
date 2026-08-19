@@ -31,6 +31,7 @@ export default function AdminJobsPage() {
       >
         <div className="flex flex-col gap-8">
           <PageHeader
+            variant="banner"
             title="Jobs"
             subtitle="Every job posted on the platform. Filter by company, status or title."
           />

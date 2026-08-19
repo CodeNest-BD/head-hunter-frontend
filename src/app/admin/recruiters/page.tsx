@@ -17,6 +17,7 @@ export default function AdminRecruitersPage() {
       >
         <div className="flex flex-col gap-8">
           <PageHeader
+            variant="banner"
             title="Recruiters"
             subtitle="Every recruiter on the platform. Open a profile or hold an account."
           />

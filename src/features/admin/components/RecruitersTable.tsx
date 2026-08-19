@@ -18,7 +18,7 @@ import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminRecruiters } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
 import { VERIFICATION_LABELS } from "../schemas";
-import { HoldButton } from "./HoldButton";
+import { AccountRowActions } from "./AccountRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
 import {
@@ -237,19 +237,13 @@ export function RecruitersTable() {
                         </td>
                       )}
                       <td className="px-5 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/admin/recruiters/${r.userId}`}>
-                              View
-                            </Link>
-                          </Button>
-                          <HoldButton
-                            userId={r.userId}
-                            status={r.status}
-                            subjectName={`${r.firstName} ${r.lastName}`}
-                            size="sm"
-                          />
-                        </div>
+                        <AccountRowActions
+                          userId={r.userId}
+                          status={r.status}
+                          subjectName={`${r.firstName} ${r.lastName}`}
+                          viewHref={`/admin/recruiters/${r.userId}`}
+                          kind="recruiter"
+                        />
                       </td>
                     </tr>
                   ))}
