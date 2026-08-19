@@ -88,6 +88,7 @@ Verification: `tsc --noEmit`, `next lint`, `vitest` (240), `next build` — all
 green.
 
 ## Not done / follow-ups
+
 - Admin "expired jobs" is a status **filter** on the admin jobs page, not a
   separate tab.
 - PRs are not opened yet (branches pushed only).
