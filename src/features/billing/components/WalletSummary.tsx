@@ -14,19 +14,19 @@ interface MetricProps {
 
 function Metric({ label, valueMinor, hint, primary = false }: MetricProps) {
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-5">
       <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </p>
       <p
         className={cn(
-          "mt-2 font-heading font-extrabold leading-none text-navy",
-          primary ? "text-4xl text-primary" : "text-[26px]",
+          "mt-1.5 font-heading font-extrabold leading-none text-navy",
+          primary ? "text-3xl text-primary" : "text-2xl",
         )}
       >
         {valueMinor === undefined ? "—" : formatMinor(valueMinor)}
       </p>
-      <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
+      <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>
     </div>
   );
 }

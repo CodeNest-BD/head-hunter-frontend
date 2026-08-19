@@ -209,7 +209,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
       <Card>
-        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-lg font-bold text-primary">
               {initials(data.firstName, data.lastName)}
