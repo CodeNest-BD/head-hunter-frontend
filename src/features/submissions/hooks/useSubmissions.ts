@@ -82,18 +82,18 @@ export function useCreateOrOpenSubmission() {
   });
 }
 
-export function useInboxJobs(page: number) {
+export function useInboxJobs(page: number, limit = 25) {
   return useQuery({
-    queryKey: submissionKeys.inboxJobs(page),
-    queryFn: () => fetchInboxJobs(page),
+    queryKey: submissionKeys.inboxJobs(page, limit),
+    queryFn: () => fetchInboxJobs(page, limit),
     placeholderData: keepPreviousData,
   });
 }
 
-export function useInboxRecruiters(jobId: string, page: number) {
+export function useInboxRecruiters(jobId: string, page: number, limit = 25) {
   return useQuery({
-    queryKey: submissionKeys.inboxRecruiters(jobId, page),
-    queryFn: () => fetchInboxRecruiters(jobId, page),
+    queryKey: submissionKeys.inboxRecruiters(jobId, page, limit),
+    queryFn: () => fetchInboxRecruiters(jobId, page, limit),
     placeholderData: keepPreviousData,
   });
 }

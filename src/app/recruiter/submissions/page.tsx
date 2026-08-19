@@ -8,9 +8,10 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 export default function RecruiterSubmissionsPage() {
   return (
     <RequireRole role="recruiter">
-      <DashboardLayout>
+      <DashboardLayout wide>
         <div className="flex flex-col gap-6">
           <PageHeader
+            variant="banner"
             title="Submissions"
             subtitle="Every candidate you've submitted, and where each one stands."
           />
