@@ -9,6 +9,7 @@ import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { TablePager } from "@/shared/ui-components/data/TablePager";
 import {
   Select,
   SelectContent,
@@ -31,6 +32,7 @@ import { PublicJobCard } from "./PublicJobCard";
 import { UsJobMap, type MapSelection } from "./UsJobMap";
 
 const PAGE_SIZE = 12;
+const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
 
 /** Price-range buckets from the reference's "Price Range" filter. */
 interface FeeBucket {
@@ -77,7 +79,8 @@ export function ExploreJobsView() {
   const { isRecruiter, isVerified, verificationStatus } =
     useIsVerifiedRecruiter();
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
-  const [pagesShown, setPagesShown] = useState(1);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState<number>(PAGE_SIZE);
   const debouncedQ = useDebouncedValue(filters.q, 300);
 
   const bucket =
@@ -96,20 +99,14 @@ export function ExploreJobsView() {
       feeMax: bucket.feeMax,
       q: debouncedQ.trim() || undefined,
       locationState: selectedState,
-      limit: PAGE_SIZE,
+      limit,
     }),
-    [filters.roleCategory, bucket, debouncedQ, selectedState],
-  );
-
-  // Accumulate pages client-side: each "Load more" mounts one more query.
-  const pageNumbers = useMemo(
-    () => Array.from({ length: pagesShown }, (_, index) => index + 1),
-    [pagesShown],
+    [filters.roleCategory, bucket, debouncedQ, selectedState, limit],
   );
 
   const setFilter = (patch: Partial<Filters>): void => {
     setFilters((prev) => ({ ...prev, ...patch }));
-    setPagesShown(1);
+    setPage(1);
   };
 
   const headline =
@@ -220,9 +217,14 @@ export function ExploreJobsView() {
         </div>
 
         <CardsGrid
-          pageNumbers={pageNumbers}
-          listParams={listParams}
-          onLoadMore={() => setPagesShown((count) => count + 1)}
+          params={{ ...listParams, page }}
+          page={page}
+          pageSize={limit}
+          onPage={setPage}
+          onPageSize={(next) => {
+            setLimit(next);
+            setPage(1);
+          }}
         />
       </section>
     </div>
@@ -339,59 +341,37 @@ function LiveMap({
 }
 
 function CardsGrid({
-  pageNumbers,
-  listParams,
-  onLoadMore,
-}: {
-  pageNumbers: readonly number[];
-  listParams: Parameters<typeof usePublicJobs>[0];
-  onLoadMore: () => void;
-}) {
-  return (
-    <div className="mt-8">
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {pageNumbers.map((page) => (
-          <CardsPage
-            key={page}
-            params={{ ...listParams, page }}
-            isFirst={page === 1}
-          />
-        ))}
-      </div>
-      <LoadMore
-        params={{ ...listParams, page: pageNumbers[pageNumbers.length - 1] }}
-        onLoadMore={onLoadMore}
-      />
-    </div>
-  );
-}
-
-function CardsPage({
   params,
-  isFirst,
+  page,
+  pageSize,
+  onPage,
+  onPageSize,
 }: {
   params: Parameters<typeof usePublicJobs>[0];
-  isFirst: boolean;
+  page: number;
+  pageSize: number;
+  onPage: (page: number) => void;
+  onPageSize: (size: number) => void;
 }) {
   const { data, isLoading, isError } = usePublicJobs(params);
 
-  if (isLoading && isFirst) {
+  if (isLoading) {
     return (
-      <div className="col-span-full flex items-center justify-center py-16 text-brand-gray">
+      <div className="mt-8 flex items-center justify-center py-16 text-brand-gray">
         <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading jobs…
       </div>
     );
   }
-  if (isError && isFirst) {
+  if (isError || !data) {
     return (
-      <div className="col-span-full rounded-md border border-brand-line bg-white p-10 text-center text-brand-gray">
+      <div className="mt-8 rounded-md border border-brand-line bg-white p-10 text-center text-brand-gray">
         Jobs are unavailable right now — please try again shortly.
       </div>
     );
   }
-  if (data && data.data.length === 0 && isFirst) {
+  if (data.data.length === 0) {
     return (
-      <div className="col-span-full flex flex-col items-center gap-2 rounded-md border border-brand-line bg-white p-12 text-center">
+      <div className="mt-8 flex flex-col items-center gap-2 rounded-md border border-brand-line bg-white p-12 text-center">
         <SearchX className="h-7 w-7 text-brand-gray-light" />
         <p className="font-heading font-extrabold text-navy">
           No open roles match these filters
@@ -402,37 +382,26 @@ function CardsPage({
       </div>
     );
   }
-  return (
-    <>
-      {(data?.data ?? []).map((job: PublicJobCardData) => (
-        <PublicJobCard key={job.id} job={job} />
-      ))}
-    </>
-  );
-}
 
-function LoadMore({
-  params,
-  onLoadMore,
-}: {
-  params: Parameters<typeof usePublicJobs>[0];
-  onLoadMore: () => void;
-}) {
-  const { data, isFetching } = usePublicJobs(params);
-  const meta = data?.meta;
-  const hasMore = meta ? meta.page < meta.totalPages : false;
-  if (!hasMore) return null;
   return (
-    <div className="mt-8 flex justify-center">
-      <Button
-        type="button"
-        variant="outline"
-        disabled={isFetching}
-        onClick={onLoadMore}
-        className="rounded-[10px] border-input px-6 font-bold text-navy hover:border-brand-primary hover:text-primary"
-      >
-        {isFetching ? "Loading…" : "Load More Jobs"}
-      </Button>
+    <div className="mt-8 flex flex-col gap-6">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {data.data.map((job: PublicJobCardData) => (
+          <PublicJobCard key={job.id} job={job} />
+        ))}
+      </div>
+      {/* Numbered pagination, matching the app's tables. */}
+      <div className="rounded-md border border-brand-line bg-white shadow-card">
+        <TablePager
+          page={page}
+          totalPages={data.meta.totalPages}
+          total={data.meta.total}
+          pageSize={pageSize}
+          onPage={onPage}
+          onPageSize={onPageSize}
+          pageSizeOptions={PAGE_SIZE_OPTIONS}
+        />
+      </div>
     </div>
   );
 }
