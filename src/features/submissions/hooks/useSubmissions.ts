@@ -13,6 +13,8 @@ import {
   fetchSubmission,
   fetchSubmissions,
   updateSubmissionStatus,
+  type InboxJobsParams,
+  type InboxRecruitersParams,
   type SubmissionListParams,
 } from "../api/submissions";
 import { submissionKeys } from "../keys";
@@ -82,18 +84,21 @@ export function useCreateOrOpenSubmission() {
   });
 }
 
-export function useInboxJobs(page: number, limit = 25) {
+export function useInboxJobs(params: InboxJobsParams) {
   return useQuery({
-    queryKey: submissionKeys.inboxJobs(page, limit),
-    queryFn: () => fetchInboxJobs(page, limit),
+    queryKey: submissionKeys.inboxJobs(params),
+    queryFn: () => fetchInboxJobs(params),
     placeholderData: keepPreviousData,
   });
 }
 
-export function useInboxRecruiters(jobId: string, page: number, limit = 25) {
+export function useInboxRecruiters(
+  jobId: string,
+  params: InboxRecruitersParams,
+) {
   return useQuery({
-    queryKey: submissionKeys.inboxRecruiters(jobId, page, limit),
-    queryFn: () => fetchInboxRecruiters(jobId, page, limit),
+    queryKey: submissionKeys.inboxRecruiters(jobId, params),
+    queryFn: () => fetchInboxRecruiters(jobId, params),
     placeholderData: keepPreviousData,
   });
 }
