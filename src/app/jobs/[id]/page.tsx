@@ -48,11 +48,11 @@ function Detail({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-lg border border-border/60 bg-card p-4",
+        "flex items-start gap-3 rounded-md border border-brand-line bg-card p-3.5",
         className,
       )}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
         <Icon className="h-[18px] w-[18px]" />
       </span>
       <div className="flex min-w-0 flex-col">
@@ -68,12 +68,12 @@ function Detail({
 function DetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="h-28 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
+      <div className="h-28 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
       <div className="grid gap-3 sm:grid-cols-2">
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="h-20 w-full animate-pulse rounded-lg bg-muted"
+            className="h-20 w-full animate-pulse rounded-md bg-muted"
           />
         ))}
       </div>
@@ -116,22 +116,22 @@ function JobBody({ job, cta }: { job: JobView; cta: React.ReactNode }) {
     ROLE_CATEGORY_LABELS[job.roleCategory as RoleCategory] ?? "Other";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {cta && <div className="flex justify-end">{cta}</div>}
 
       {/* Recruiter fee hero — the headline number, with a soft brand glow. */}
-      <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-card p-6 shadow-sm">
+      <div className="relative overflow-hidden rounded-md border border-primary/30 bg-card p-5 shadow-sm">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl"
         />
         <div className="relative flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
             <Wallet className="h-5 w-5" />
           </span>
           <div>
             <p className="text-sm text-muted-foreground">Recruiter fee</p>
-            <p className="font-heading text-3xl font-extrabold tracking-tight tabular-nums text-foreground">
+            <p className="font-heading text-[28px] font-extrabold leading-tight tracking-tight tabular-nums text-navy">
               {formatMinor(job.recruiterFeeMinor)}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -155,7 +155,7 @@ function JobBody({ job, cta }: { job: JobView; cta: React.ReactNode }) {
       </div>
 
       {job.description && (
-        <section className="rounded-xl border border-border/70 bg-card p-6 shadow-sm">
+        <section className="rounded-md border border-brand-line bg-card p-5 shadow-sm">
           <h2 className="mb-3 font-heading text-lg font-semibold tracking-tight text-foreground">
             Description
           </h2>
@@ -245,7 +245,7 @@ function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
         {isPending ? (
           <DetailSkeleton />
         ) : isError || !job ? (
-          <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
+          <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
             <div className="flex items-center gap-2 font-medium">
               <AlertCircle className="h-[18px] w-[18px]" />
               Could not load this job. It may have expired or been closed.
@@ -286,7 +286,7 @@ function GuestJobDetail({ jobId }: { jobId: string }) {
         {isPending ? (
           <DetailSkeleton />
         ) : isError || !job ? (
-          <div className="rounded-2xl border border-brand-line bg-white p-10 text-center">
+          <div className="rounded-md border border-brand-line bg-white p-10 text-center">
             <p className="font-heading text-lg font-extrabold text-navy">
               This role is no longer available
             </p>

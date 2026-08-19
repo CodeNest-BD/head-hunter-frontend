@@ -83,7 +83,7 @@ export function AccountRowActions({
             <Dropdown.Content
               align="end"
               sideOffset={4}
-              className="z-50 min-w-[170px] rounded-lg border border-border bg-popover p-1 shadow-card-lg"
+              className="z-50 min-w-[170px] rounded-md border border-border bg-popover p-1 shadow-card-lg"
             >
               <Dropdown.Item asChild>
                 <Link href={viewHref} className={ITEM_CLASS}>
@@ -126,7 +126,7 @@ export function AccountRowActions({
       <AlertDialog.Root open={holdOpen} onOpenChange={setHoldOpen}>
         <AlertDialog.Portal>
           <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-card-lg focus:outline-none">
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
             <AlertDialog.Title className="font-heading text-lg font-extrabold text-navy">
               {isHeld ? `Reinstate ${subjectName}?` : `Hold ${subjectName}?`}
             </AlertDialog.Title>
@@ -163,7 +163,7 @@ export function AccountRowActions({
         <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
           <AlertDialog.Portal>
             <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-            <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-card-lg focus:outline-none">
+            <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
               <AlertDialog.Title className="font-heading text-lg font-extrabold text-foreground">
                 Delete {subjectName}?
               </AlertDialog.Title>

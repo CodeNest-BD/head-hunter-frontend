@@ -19,7 +19,7 @@ function ListSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <li
           key={i}
-          className="h-20 w-full animate-pulse rounded-xl border border-border/70 bg-muted"
+          className="h-20 w-full animate-pulse rounded-md border border-border/70 bg-muted"
         />
       ))}
     </ul>
@@ -41,7 +41,7 @@ export function NotificationList() {
 
   if (isError) {
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+      <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
         <div className="flex items-center gap-2 font-medium">
           <AlertCircle className="h-[18px] w-[18px]" />
           Could not load notifications.
@@ -59,7 +59,7 @@ export function NotificationList() {
 
   if (data.data.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-[#C9D0DF] bg-card px-6 py-14 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-[#C9D0DF] bg-card px-6 py-14 text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <BellOff className="h-6 w-6" />
         </span>
@@ -95,13 +95,15 @@ export function NotificationList() {
         </div>
       )}
 
-      <ul className="flex flex-col gap-3">
-        {data.data.map((group) => (
-          <li key={group.key}>
-            <NotificationGroup group={group} role={user.role} />
-          </li>
-        ))}
-      </ul>
+      <div className="overflow-hidden rounded-md border border-brand-line bg-card shadow-card">
+        <ul className="divide-y divide-border">
+          {data.data.map((group) => (
+            <li key={group.key}>
+              <NotificationGroup group={group} role={user.role} />
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-1 text-sm">

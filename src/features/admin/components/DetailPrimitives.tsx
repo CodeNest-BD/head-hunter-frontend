@@ -26,7 +26,7 @@ export function initials(first: string, last: string): string {
 export function DetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="h-24 animate-pulse rounded-2xl border border-border bg-card" />
+      <div className="h-24 animate-pulse rounded-md border border-border bg-card" />
       <div className="grid gap-4 md:grid-cols-2">
         {[0, 1, 2, 3].map((i) => (
           <Card key={i}>

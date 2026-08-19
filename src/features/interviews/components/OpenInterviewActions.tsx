@@ -83,7 +83,7 @@ export function OpenInterviewActions({
 
   if (panel === "proposing") {
     return (
-      <div className="flex flex-col gap-2 rounded-lg border border-border/60 p-3">
+      <div className="flex flex-col gap-2 rounded-md border border-border/60 p-3">
         <p className="text-sm font-medium text-foreground">
           Propose interview times
         </p>
@@ -142,7 +142,7 @@ export function OpenInterviewActions({
         </div>
       )}
       {cancelInterview.isError && (
-        <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {withdrawInterviewErrorMessage(cancelInterview.error)}
         </div>

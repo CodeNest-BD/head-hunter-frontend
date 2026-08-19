@@ -90,7 +90,7 @@ export function ProposeSlotsForm({
         return (
           <div
             key={field.id}
-            className="flex flex-col gap-2 rounded-lg border border-border/60 p-3"
+            className="flex flex-col gap-2 rounded-md border border-border/60 p-3"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">
@@ -124,7 +124,7 @@ export function ProposeSlotsForm({
                       onSelect={(date) =>
                         dayField.onChange(date ? format(date, DAY_FORMAT) : "")
                       }
-                      className="rounded-lg border border-input p-2"
+                      className="rounded-md border border-input p-2"
                       aria-label={`Day for time ${index + 1}`}
                     />
                   )}
@@ -211,7 +211,7 @@ export function ProposeSlotsForm({
       </Button>
 
       {proposeSlots.isError && (
-        <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {proposeSlotsErrorMessage(proposeSlots.error)}
         </div>

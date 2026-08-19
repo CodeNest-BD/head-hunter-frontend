@@ -85,7 +85,7 @@ export function SubscriptionPanel() {
 
   if (isLoading || !data) {
     return (
-      <div className="h-40 animate-pulse rounded-2xl border border-border bg-card" />
+      <div className="h-40 animate-pulse rounded-md border border-border bg-card" />
     );
   }
 
@@ -130,11 +130,11 @@ export function SubscriptionPanel() {
   return (
     <div className="flex flex-col gap-6">
       {/* Status strip */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span
             className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-md border",
               TONE_STYLES[meta.tone],
             )}
           >
@@ -171,7 +171,7 @@ export function SubscriptionPanel() {
       </div>
 
       {/* Plan card */}
-      <article className="overflow-hidden rounded-2xl bg-navy text-white shadow-card-lg">
+      <article className="overflow-hidden rounded-md bg-navy text-white shadow-card-lg">
         <div className="flex items-start justify-between gap-4 p-8 pb-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#85B1F3]">

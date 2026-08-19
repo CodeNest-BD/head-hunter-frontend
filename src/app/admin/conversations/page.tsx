@@ -15,7 +15,7 @@ export default function AdminConversationsPage() {
           { label: "Conversations" },
         ]}
       >
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <PageHeader
             title="Conversations"
             subtitle="Company↔recruiter interaction on every submission — candidates, scheduling and offers."

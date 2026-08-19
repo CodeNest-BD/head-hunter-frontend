@@ -20,7 +20,7 @@ export default function AdminSettingsPage() {
           { label: "Settings" },
         ]}
       >
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <PageHeader
             title="Settings"
             subtitle="Marketplace policy and admin accounts."

@@ -29,7 +29,7 @@ export default function AdminJobsPage() {
           { label: "Jobs" },
         ]}
       >
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <PageHeader
             variant="banner"
             title="Jobs"

@@ -48,7 +48,7 @@ function StatCard({ label, value, hint, icon: Icon }: StatCardProps) {
   return (
     <Card>
       <CardContent className="flex items-start gap-3 p-5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
           <Icon className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0">
@@ -77,7 +77,7 @@ export function AdminOverview() {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-24 animate-pulse rounded-2xl border border-border bg-card"
+            className="h-24 animate-pulse rounded-md border border-border bg-card"
           />
         ))}
       </div>

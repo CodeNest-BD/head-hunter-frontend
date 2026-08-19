@@ -9,7 +9,7 @@ export default function RecruiterSubmissionsPage() {
   return (
     <RequireRole role="recruiter">
       <DashboardLayout>
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <PageHeader
             title="Submissions"
             subtitle="Every candidate you've submitted, and where each one stands."

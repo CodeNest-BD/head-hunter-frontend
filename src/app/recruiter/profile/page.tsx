@@ -14,8 +14,8 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 function ProfileSkeleton() {
   return (
-    <div className="flex flex-col gap-8">
-      <div className="h-24 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
+    <div className="flex flex-col gap-6">
+      <div className="h-24 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
       <div className="flex flex-col gap-5">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="flex flex-col gap-2">
@@ -36,7 +36,7 @@ function RecruiterProfileContent() {
   }
   if (isError) {
     return (
-      <div className="flex max-w-md flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+      <div className="flex max-w-md flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
         <div className="flex items-center gap-2 font-medium">
           <AlertCircle className="h-[18px] w-[18px]" />
           Could not load your profile.
@@ -56,10 +56,10 @@ function RecruiterProfileContent() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {/* Subscription card removed — recruiting is free in phase 1; access is
           gated by admin verification, surfaced on the dashboard banner. */}
-      <div className="rounded-xl border border-border/70 bg-card p-6 shadow-sm">
+      <div className="rounded-md border border-border/70 bg-card p-6 shadow-sm">
         <RecruiterProfileForm profile={data} />
       </div>
       <ReferencesSection references={data.references} />
@@ -71,7 +71,7 @@ export default function RecruiterProfilePage() {
   return (
     <RequireRole role="recruiter">
       <DashboardLayout>
-        <div className="flex max-w-2xl flex-col gap-8">
+        <div className="flex max-w-2xl flex-col gap-6">
           <PageHeader
             title="Recruiter profile"
             subtitle="Your details, specializations and references."

@@ -22,7 +22,7 @@ export default function CompanyInboxJobPage() {
   return (
     <RequireRole role="company">
       <DashboardLayout>
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <Link
             href="/company/inbox"
             className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"

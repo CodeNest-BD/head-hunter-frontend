@@ -23,7 +23,7 @@ function categoryLabel(roleCategory: string): string {
  */
 export function PublicJobCard({ job }: { job: PublicJobCardData }) {
   return (
-    <article className="flex flex-col rounded-2xl border border-brand-line bg-white p-6 shadow-card transition-shadow hover:shadow-card-hover">
+    <article className="flex flex-col rounded-md border border-brand-line bg-white p-6 shadow-card transition-shadow hover:shadow-card-hover">
       <span className="mb-3 inline-flex w-fit rounded-full bg-accent px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] text-brand-secondary">
         {categoryLabel(job.roleCategory)}
       </span>
@@ -47,7 +47,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
       </p>
       <Link
         href={`/jobs/${job.id}`}
-        className="mt-5 inline-flex items-center justify-center rounded-lg border border-input px-4 py-2.5 text-sm font-bold text-navy transition-colors hover:border-brand-primary hover:text-primary"
+        className="mt-5 inline-flex items-center justify-center rounded-md border border-input px-4 py-2.5 text-sm font-bold text-navy transition-colors hover:border-brand-primary hover:text-primary"
       >
         View Details
       </Link>

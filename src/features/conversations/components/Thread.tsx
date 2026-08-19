@@ -41,7 +41,7 @@ export interface ThreadProps {
  * sitting beside the left column.
  */
 const THREAD_PANEL_CLASSNAME =
-  "flex h-[32rem] flex-col gap-4 rounded-xl border border-border/70 bg-card p-5 shadow-sm lg:h-full";
+  "flex h-[32rem] flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm lg:h-full";
 
 function ThreadSkeleton() {
   return (
@@ -56,7 +56,7 @@ function ThreadSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-16 w-2/3 animate-pulse rounded-2xl bg-muted"
+            className="h-16 w-2/3 animate-pulse rounded-md bg-muted"
           />
         ))}
       </div>

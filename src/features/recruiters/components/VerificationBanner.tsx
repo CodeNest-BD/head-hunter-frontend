@@ -24,7 +24,7 @@ export function VerificationBanner() {
     return (
       <div
         role="status"
-        className="flex items-start gap-3 rounded-xl border border-destructive/40 bg-[#FBEAEA] p-4"
+        className="flex items-start gap-3 rounded-md border border-destructive/40 bg-[#FBEAEA] p-4"
       >
         <ShieldX className="mt-0.5 h-5 w-5 shrink-0 text-[#9B3535]" />
         <div className="text-sm text-[#9B3535]">
@@ -50,7 +50,7 @@ export function VerificationBanner() {
   return (
     <div
       role="status"
-      className="flex items-start gap-3 rounded-xl border border-[#F0E2B8] bg-[#FBF3DF] p-4"
+      className="flex items-start gap-3 rounded-md border border-[#F0E2B8] bg-[#FBF3DF] p-4"
     >
       <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-[#7A5109]" />
       <div className="text-sm text-[#7A5109]">

@@ -57,9 +57,9 @@ export default function NewJobPage() {
                 return (
                   <div
                     key={tip.title}
-                    className="rounded-xl border border-border/70 bg-card p-5 shadow-sm"
+                    className="rounded-md border border-border/70 bg-card p-5 shadow-sm"
                   >
-                    <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                    <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-primary/15 text-primary">
                       <Icon className="h-[18px] w-[18px]" />
                     </span>
                     <h3 className="font-heading text-sm font-extrabold text-foreground">

@@ -62,7 +62,7 @@ export function UserMenu({ className }: { className?: string }) {
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="z-50 w-64 overflow-hidden rounded-xl border border-border bg-white p-1 shadow-card-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className="z-50 w-64 overflow-hidden rounded-md border border-border bg-white p-1 shadow-card-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           {/* Identity header */}
           <div className="flex items-center gap-3 px-3 py-3">
@@ -87,7 +87,7 @@ export function UserMenu({ className }: { className?: string }) {
               <DropdownMenu.Item key={item.href} asChild>
                 <Link
                   href={item.href}
-                  className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#3A4351] outline-none transition-colors focus:bg-accent focus:text-primary data-[highlighted]:bg-accent data-[highlighted]:text-primary"
+                  className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-[#3A4351] outline-none transition-colors focus:bg-accent focus:text-primary data-[highlighted]:bg-accent data-[highlighted]:text-primary"
                 >
                   <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                   <span className="truncate">{item.label}</span>
@@ -102,7 +102,7 @@ export function UserMenu({ className }: { className?: string }) {
 
           <DropdownMenu.Item
             onSelect={() => void logout()}
-            className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive outline-none transition-colors focus:bg-destructive/10 data-[highlighted]:bg-destructive/10"
+            className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-destructive outline-none transition-colors focus:bg-destructive/10 data-[highlighted]:bg-destructive/10"
           >
             <LogOut className="h-[18px] w-[18px]" />
             Log out

@@ -65,7 +65,7 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
       </div>
 
       {references.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[#C9D0DF] bg-card px-6 py-10 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-md border border-dashed border-[#C9D0DF] bg-card px-6 py-10 text-center">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <UserRound className="h-5 w-5" />
           </span>
@@ -77,7 +77,7 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
             confirmingId === reference.id ? (
               <li
                 key={reference.id}
-                className="rounded-xl border border-border/70 bg-card p-4 shadow-sm"
+                className="rounded-md border border-border/70 bg-card p-4 shadow-sm"
               >
                 <ConfirmAction
                   message="Remove this reference? This cannot be undone."
@@ -91,7 +91,7 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
             ) : (
               <li
                 key={reference.id}
-                className="flex items-start justify-between gap-4 rounded-xl border border-border/70 bg-card p-4 shadow-sm"
+                className="flex items-start justify-between gap-4 rounded-md border border-border/70 bg-card p-4 shadow-sm"
               >
                 <div className="text-sm">
                   <p className="font-medium text-foreground">
@@ -123,14 +123,14 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
       )}
 
       {atCapacity ? (
-        <p className="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
+        <p className="rounded-md border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
           You have the maximum of {MAX_REFERENCES} references. Remove one to add
           another.
         </p>
       ) : (
         <form
           onSubmit={onSubmit}
-          className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card p-5 shadow-sm"
+          className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">

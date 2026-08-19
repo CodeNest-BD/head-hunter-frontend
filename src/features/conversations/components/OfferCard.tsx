@@ -145,7 +145,7 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-4">
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-sm font-semibold text-foreground">Offer</p>
         <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
@@ -330,7 +330,7 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
       )}
 
       {mutationIsError && (
-        <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {negotiationErrorMessage(mutationError)}
         </div>

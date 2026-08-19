@@ -14,7 +14,7 @@ export default function CompanyInboxPage() {
   return (
     <RequireRole role="company">
       <DashboardLayout>
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <PageHeader
             title="Inbox"
             subtitle="Every job with submissions — pick one to see its recruiters and candidates."

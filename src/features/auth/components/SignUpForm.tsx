@@ -180,7 +180,7 @@ export function SignUpForm() {
                     onClick={() => field.onChange(option.value)}
                     aria-pressed={active}
                     className={cn(
-                      "flex flex-col rounded-lg border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                      "flex flex-col rounded-md border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       active
                         ? "border-primary bg-primary/10 text-foreground"
                         : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-accent",
@@ -379,7 +379,7 @@ export function SignUpForm() {
             {referenceFields.map((referenceField, index) => (
               <div
                 key={referenceField.id}
-                className="flex flex-col gap-2.5 rounded-lg border border-border/70 bg-card/50 p-4"
+                className="flex flex-col gap-2.5 rounded-md border border-border/70 bg-card/50 p-4"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

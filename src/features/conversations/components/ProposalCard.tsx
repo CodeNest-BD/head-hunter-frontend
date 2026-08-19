@@ -88,7 +88,7 @@ function ReadOnlySlots({ slots }: { slots: SlotOption[] }) {
       {slots.map((slot) => (
         <li
           key={slot.id}
-          className="rounded-lg border border-input px-3 py-2 text-sm text-muted-foreground"
+          className="rounded-md border border-input px-3 py-2 text-sm text-muted-foreground"
         >
           {formatDateTime(slot.startAt)} – {formatDateTime(slot.endAt)}
         </li>
@@ -124,7 +124,7 @@ function SlotRadioGroup({
           <label
             key={slot.id}
             className={cn(
-              "flex cursor-pointer items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground transition-colors hover:border-primary/50",
+              "flex cursor-pointer items-center gap-2 rounded-md border border-input px-3 py-2 text-sm text-foreground transition-colors hover:border-primary/50",
               selectedSlotId === slot.id && "border-primary bg-primary/10",
             )}
           >
@@ -203,7 +203,7 @@ export function ProposalCard({
 
   if (showProposeForm) {
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4">
+      <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-4">
         <p className="text-sm font-semibold text-foreground">
           Propose new times
         </p>
@@ -225,7 +225,7 @@ export function ProposalCard({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-4">
       <div className="flex flex-col gap-0.5">
         <p className="text-sm font-semibold text-foreground">{title}</p>
         {note && <p className="text-sm text-muted-foreground">{note}</p>}
@@ -342,7 +342,7 @@ export function ProposalCard({
       {(confirmSlot.isError ||
         counterRequest.isError ||
         cancelInterview.isError) && (
-        <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {cancelInterview.isError
             ? withdrawInterviewErrorMessage(cancelInterview.error)

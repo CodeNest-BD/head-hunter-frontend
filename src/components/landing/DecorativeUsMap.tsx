@@ -161,7 +161,7 @@ export function DecorativeUsMap() {
       {/* Hover popup — appears only while a bubble is hovered. */}
       {active && (
         <div
-          className="pointer-events-none absolute hidden w-52 -translate-x-1/2 -translate-y-full rounded-xl border border-brand-line bg-white p-4 shadow-card-lg sm:block"
+          className="pointer-events-none absolute hidden w-52 -translate-x-1/2 -translate-y-full rounded-md border border-brand-line bg-white p-4 shadow-card-lg sm:block"
           style={{
             left: `min(max(${(active.x / US_VIEWBOX.width) * 100}%, 6rem), calc(100% - 6rem))`,
             top: `${(active.y / US_VIEWBOX.height) * 100 - 4}%`,

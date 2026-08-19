@@ -37,7 +37,7 @@ const STATUS_STYLES: Record<SubmissionStatus, string> = {
 
 function CardSkeleton() {
   return (
-    <div className="h-40 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
+    <div className="h-40 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
   );
 }
 
@@ -50,7 +50,7 @@ function CardSkeleton() {
 function LeftColumnSkeleton() {
   return (
     <>
-      <div className="h-40 w-full animate-pulse rounded-xl border border-border/70 bg-muted" />
+      <div className="h-40 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
       <div className="flex flex-col gap-4">
         <CardSkeleton />
         <CardSkeleton />
@@ -67,7 +67,7 @@ function ErrorCallout({
   onRetry?: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+    <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
       <div className="flex items-center gap-2 font-medium">
         <AlertCircle className="h-[18px] w-[18px] shrink-0" />
         {message}
@@ -98,7 +98,7 @@ function CandidateListSection({
 }) {
   if (candidates.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#C9D0DF] bg-card px-6 py-12 text-center shadow-card">
+      <div className="rounded-md border border-dashed border-[#C9D0DF] bg-card px-6 py-12 text-center shadow-card">
         <div className="flex flex-col items-center gap-3">
           <Eyebrow>No candidates</Eyebrow>
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -133,7 +133,7 @@ function SubmissionInfoHeader({ submission }: { submission: Submission }) {
   const updateStatus = useUpdateSubmissionStatus(submission.id);
 
   return (
-    <div className="flex flex-col gap-5 rounded-xl border border-border/70 bg-card p-5 shadow-sm">
+    <div className="flex flex-col gap-5 rounded-md border border-border/70 bg-card p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
@@ -201,7 +201,7 @@ function SubmissionInfoHeader({ submission }: { submission: Submission }) {
       </div>
 
       {submission.note && (
-        <div className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-background/50 p-4">
+        <div className="flex flex-col gap-1.5 rounded-md border border-border/60 bg-background/50 p-4">
           <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
             <FileText className="h-3.5 w-3.5" />
             Recruiter note

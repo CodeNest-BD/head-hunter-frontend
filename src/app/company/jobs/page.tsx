@@ -13,7 +13,7 @@ export default function CompanyJobsPage() {
   return (
     <RequireRole role="company">
       <DashboardLayout>
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <PageHeader
             title="Jobs"
             subtitle="Create a job, then publish it to notify your followers."
