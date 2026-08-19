@@ -6,6 +6,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Toaster } from "sonner";
 import { store } from "@/shared/store/store";
 import { queryClient } from "@/shared/libs/queryClient";
+import { GlobalProgressBar } from "@/shared/ui-components/feedback/GlobalProgressBar";
 import { AuthProvider } from "@/features/auth";
 
 // Google OAuth needs a real client id. When it's absent (or the build-time
@@ -30,6 +31,7 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <ReduxProvider store={store}>
       <QueryClientProvider client={queryClient}>
+        <GlobalProgressBar />
         <GoogleOAuthProvider clientId={googleClientId ?? ""}>
           <AuthProvider>{children}</AuthProvider>
           <Toaster richColors position="top-right" />
