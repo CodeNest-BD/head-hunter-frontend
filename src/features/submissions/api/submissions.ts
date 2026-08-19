@@ -15,6 +15,8 @@ export interface SubmissionListParams {
   limit?: number;
   jobId?: string;
   status?: SubmissionStatus;
+  /** Case-insensitive match on the job title. */
+  q?: string;
 }
 
 /** GET /v1/submissions — a company sees submissions on its own jobs. */
@@ -61,26 +63,54 @@ export async function createSubmission(
   return submissionSchema.parse(data);
 }
 
+export interface InboxJobsParams {
+  page?: number;
+  limit?: number;
+  /** Case-insensitive match on the job title. */
+  q?: string;
+  /** Job status filter. */
+  status?: string;
+}
+
 /** GET /v1/submissions/inbox/jobs — level 1 of the company inbox. */
 export async function fetchInboxJobs(
-  page: number,
-  limit = 25,
+  params: InboxJobsParams,
 ): Promise<Paginated<InboxJobRow>> {
   const { data } = await apiClient.get<unknown>("/submissions/inbox/jobs", {
-    params: { page, limit },
+    params: {
+      page: params.page ?? 1,
+      limit: params.limit ?? 25,
+      q: params.q || undefined,
+      status: params.status || undefined,
+    },
   });
   return paginatedSchema(inboxJobRowSchema).parse(data);
+}
+
+export interface InboxRecruitersParams {
+  page?: number;
+  limit?: number;
+  /** Case-insensitive match on the recruiter's name. */
+  q?: string;
+  /** Submission status filter. */
+  status?: string;
 }
 
 /** GET /v1/submissions/inbox/jobs/:jobId/recruiters — level 2, rating-sorted. */
 export async function fetchInboxRecruiters(
   jobId: string,
-  page: number,
-  limit = 25,
+  params: InboxRecruitersParams,
 ): Promise<Paginated<InboxRecruiterRow>> {
   const { data } = await apiClient.get<unknown>(
     `/submissions/inbox/jobs/${jobId}/recruiters`,
-    { params: { page, limit } },
+    {
+      params: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 25,
+        q: params.q || undefined,
+        status: params.status || undefined,
+      },
+    },
   );
   return paginatedSchema(inboxRecruiterRowSchema).parse(data);
 }

@@ -5,8 +5,8 @@ export const submissionKeys = {
   list: (params: SubmissionListParams) =>
     ["submissions", "list", params] as const,
   detail: (id: string) => ["submissions", "detail", id] as const,
-  inboxJobs: (page: number, limit: number) =>
-    ["submissions", "inbox-jobs", page, limit] as const,
-  inboxRecruiters: (jobId: string, page: number, limit: number) =>
-    ["submissions", "inbox-recruiters", jobId, page, limit] as const,
+  inboxJobs: (params: unknown) =>
+    ["submissions", "inbox-jobs", params] as const,
+  inboxRecruiters: (jobId: string, params: unknown) =>
+    ["submissions", "inbox-recruiters", jobId, params] as const,
 };
