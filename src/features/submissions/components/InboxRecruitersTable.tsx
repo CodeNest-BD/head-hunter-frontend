@@ -44,7 +44,12 @@ const STATUS_STYLES: Record<SubmissionStatus, string> = {
  */
 export function InboxRecruitersTable({ jobId }: { jobId: string }) {
   const [page, setPage] = useState(1);
-  const { data, isPending, isError, refetch } = useInboxRecruiters(jobId, page);
+  const [limit, setLimit] = useState(25);
+  const { data, isPending, isError, refetch } = useInboxRecruiters(
+    jobId,
+    page,
+    limit,
+  );
 
   if (isPending) {
     return <TableSkeleton />;
@@ -150,18 +155,18 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
             </tbody>
           </table>
         </div>
+        <TablePager
+          page={page}
+          totalPages={data.meta.totalPages}
+          total={data.meta.total}
+          pageSize={limit}
+          onPage={setPage}
+          onPageSize={(next) => {
+            setLimit(next);
+            setPage(1);
+          }}
+        />
       </div>
-      {data.meta.totalPages > 1 && (
-        <div className={TABLE_CARD}>
-          <TablePager
-            page={page}
-            totalPages={data.meta.totalPages}
-            total={data.meta.total}
-            pageSize={data.meta.limit}
-            onPage={setPage}
-          />
-        </div>
-      )}
     </div>
   );
 }

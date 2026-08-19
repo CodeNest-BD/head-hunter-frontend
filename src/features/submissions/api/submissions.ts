@@ -64,9 +64,10 @@ export async function createSubmission(
 /** GET /v1/submissions/inbox/jobs — level 1 of the company inbox. */
 export async function fetchInboxJobs(
   page: number,
+  limit = 25,
 ): Promise<Paginated<InboxJobRow>> {
   const { data } = await apiClient.get<unknown>("/submissions/inbox/jobs", {
-    params: { page, limit: 25 },
+    params: { page, limit },
   });
   return paginatedSchema(inboxJobRowSchema).parse(data);
 }
@@ -75,10 +76,11 @@ export async function fetchInboxJobs(
 export async function fetchInboxRecruiters(
   jobId: string,
   page: number,
+  limit = 25,
 ): Promise<Paginated<InboxRecruiterRow>> {
   const { data } = await apiClient.get<unknown>(
     `/submissions/inbox/jobs/${jobId}/recruiters`,
-    { params: { page, limit: 25 } },
+    { params: { page, limit } },
   );
   return paginatedSchema(inboxRecruiterRowSchema).parse(data);
 }

@@ -13,9 +13,10 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 export default function CompanyInboxPage() {
   return (
     <RequireRole role="company">
-      <DashboardLayout>
+      <DashboardLayout wide>
         <div className="flex flex-col gap-6">
           <PageHeader
+            variant="banner"
             title="Inbox"
             subtitle="Every job with submissions — pick one to see its recruiters and candidates."
           />

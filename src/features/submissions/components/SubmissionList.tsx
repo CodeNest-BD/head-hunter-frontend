@@ -34,8 +34,6 @@ const STATUS_STYLES: Record<SubmissionStatus, string> = {
   withdrawn: "bg-[#EEF1F6] text-[#616676]",
 };
 
-const PAGE_SIZE = 20;
-
 /**
  * The recruiter's own submissions across every job. Candidate counts are
  * deliberately absent: fetching them per row would be N+1, so the count lives
@@ -43,7 +41,8 @@ const PAGE_SIZE = 20;
  */
 export function SubmissionList() {
   const [page, setPage] = useState(1);
-  const submissions = useSubmissions({ page, limit: PAGE_SIZE });
+  const [limit, setLimit] = useState(25);
+  const submissions = useSubmissions({ page, limit });
   // Submissions carry only jobId. One jobs fetch builds a lookup, rather than a
   // request per row (mirrors InboxTable).
   const jobs = useJobs({ limit: 100 });
@@ -99,8 +98,6 @@ export function SubmissionList() {
       </div>
     );
   }
-
-  const totalPages = submissions.data.meta.totalPages;
 
   return (
     <div className="flex flex-col gap-3">
@@ -158,19 +155,18 @@ export function SubmissionList() {
             </tbody>
           </table>
         </div>
+        <TablePager
+          page={page}
+          totalPages={submissions.data.meta.totalPages}
+          total={submissions.data.meta.total}
+          pageSize={limit}
+          onPage={setPage}
+          onPageSize={(next) => {
+            setLimit(next);
+            setPage(1);
+          }}
+        />
       </div>
-
-      {totalPages > 1 && (
-        <div className={TABLE_CARD}>
-          <TablePager
-            page={page}
-            totalPages={totalPages}
-            total={submissions.data.meta.total}
-            pageSize={PAGE_SIZE}
-            onPage={setPage}
-          />
-        </div>
-      )}
     </div>
   );
 }

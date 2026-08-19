@@ -21,7 +21,7 @@ export default function CompanyInboxJobPage() {
 
   return (
     <RequireRole role="company">
-      <DashboardLayout>
+      <DashboardLayout wide>
         <div className="flex flex-col gap-6">
           <Link
             href="/company/inbox"
@@ -31,6 +31,7 @@ export default function CompanyInboxJobPage() {
             Back to inbox
           </Link>
           <PageHeader
+            variant="banner"
             title={job?.title ?? "Recruiters"}
             subtitle="Recruiters who submitted to this job, sorted by their review rating."
             className="mb-0"

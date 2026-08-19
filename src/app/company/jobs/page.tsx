@@ -12,9 +12,10 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 export default function CompanyJobsPage() {
   return (
     <RequireRole role="company">
-      <DashboardLayout>
+      <DashboardLayout wide>
         <div className="flex flex-col gap-6">
           <PageHeader
+            variant="banner"
             title="Jobs"
             subtitle="Create a job, then publish it to notify your followers."
             actions={

@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, Briefcase, Plus } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import { TablePager } from "@/shared/ui-components/data/TablePager";
 import {
   TABLE_BODY,
   TABLE_CARD,
@@ -31,7 +33,9 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export function JobsTable() {
-  const { data, isPending, isError, refetch } = useJobs({ limit: 50 });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const { data, isPending, isError, refetch } = useJobs({ page, limit });
 
   if (isPending) {
     return <TableSkeleton />;
@@ -124,6 +128,17 @@ export function JobsTable() {
           </tbody>
         </table>
       </div>
+      <TablePager
+        page={page}
+        totalPages={data.meta.totalPages}
+        total={data.meta.total}
+        pageSize={limit}
+        onPage={setPage}
+        onPageSize={(next) => {
+          setLimit(next);
+          setPage(1);
+        }}
+      />
     </div>
   );
 }

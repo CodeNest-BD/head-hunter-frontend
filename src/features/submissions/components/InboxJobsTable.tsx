@@ -49,7 +49,8 @@ const JOB_STATUS_LABELS: Record<InboxJobRow["jobStatus"], string> = {
  */
 export function InboxJobsTable() {
   const [page, setPage] = useState(1);
-  const { data, isPending, isError, refetch } = useInboxJobs(page);
+  const [limit, setLimit] = useState(25);
+  const { data, isPending, isError, refetch } = useInboxJobs(page, limit);
 
   if (isPending) {
     return <TableSkeleton />;
@@ -166,18 +167,18 @@ export function InboxJobsTable() {
             </tbody>
           </table>
         </div>
+        <TablePager
+          page={page}
+          totalPages={data.meta.totalPages}
+          total={data.meta.total}
+          pageSize={limit}
+          onPage={setPage}
+          onPageSize={(next) => {
+            setLimit(next);
+            setPage(1);
+          }}
+        />
       </div>
-      {data.meta.totalPages > 1 && (
-        <div className={TABLE_CARD}>
-          <TablePager
-            page={page}
-            totalPages={data.meta.totalPages}
-            total={data.meta.total}
-            pageSize={data.meta.limit}
-            onPage={setPage}
-          />
-        </div>
-      )}
     </div>
   );
 }

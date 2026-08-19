@@ -11,6 +11,7 @@ export default function CompaniesPage() {
       <DashboardLayout wide>
         <div className="flex flex-col gap-6">
           <PageHeader
+            variant="banner"
             title="Companies"
             subtitle="Follow a company to be notified when it posts a job."
           />
