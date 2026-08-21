@@ -5,6 +5,7 @@ import {
   Building2,
   Inbox,
   LayoutDashboard,
+  MapPinned,
   type LucideIcon,
   Send,
   Settings,
@@ -46,6 +47,11 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   ],
   recruiter: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    // Second, right after the dashboard: browsing the map is the recruiter's
+    // main job. It was previously reachable only from the desktop top bar,
+    // which the mobile drawer does not render — so on a phone the map, and
+    // with it the whole marketplace, had no route at all.
+    { href: "/explore-jobs", label: "Job map", icon: MapPinned },
     { href: "/companies", label: "Companies", icon: Building2 },
     {
       href: "/notifications",

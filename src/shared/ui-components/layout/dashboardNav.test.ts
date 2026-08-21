@@ -9,6 +9,7 @@ describe("recruiter navigation", () => {
     expect(labels).toEqual(
       expect.arrayContaining([
         "Dashboard",
+        "Job map",
         "Companies",
         "Notifications",
         "Submissions",
@@ -22,6 +23,20 @@ describe("recruiter navigation", () => {
     const labels = navForRole("recruiter", false).map((item) => item.label);
 
     expect(labels).toEqual(["Notifications", "My profile"]);
+  });
+
+  it("gives an approved recruiter a route to the job map", () => {
+    const jobMap = navForRole("recruiter", true).find(
+      (item) => item.label === "Job map",
+    );
+
+    expect(jobMap?.href).toBe("/explore-jobs");
+  });
+
+  it("keeps the job map away from an unapproved recruiter", () => {
+    const labels = navForRole("recruiter", false).map((item) => item.label);
+
+    expect(labels).not.toContain("Job map");
   });
 
   it("never reduces a company's navigation", () => {
