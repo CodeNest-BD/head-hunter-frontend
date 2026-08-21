@@ -25,8 +25,15 @@ interface FilePreviewDialogProps {
  *
  * The frame is mounted only while open, so closing stops the fetch and a
  * presigned URL is never requested for a file nobody looks at. Rendering is the
- * browser's own PDF viewer rather than a bundled one — no extra dependency, and
- * it inherits the viewer the user already knows.
+ * browser's own PDF viewer rather than a bundled one — no extra dependency.
+ *
+ * The `#toolbar=0&navpanes=0` fragment suppresses Chrome's own PDF chrome: its
+ * toolbar carries a second download and print control, and its nav pane adds a
+ * thumbnail sidebar, neither of which we want inside our own frame. These are
+ * PDF open parameters, so they are a hint — a viewer that ignores them (Firefox's
+ * pdf.js) simply shows its own controls, which still works. The fragment is safe
+ * to append to a presigned URL: fragments are never sent to the server, so the
+ * signature is untouched.
  */
 export function FilePreviewDialog({
   previewUrl,
@@ -43,39 +50,35 @@ export function FilePreviewDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex h-[calc(100vh-4rem)] w-[calc(100vw-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-md border border-border bg-card shadow-card-lg focus:outline-none">
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
-            <div className="min-w-0">
-              <Dialog.Title className="truncate font-heading text-sm font-extrabold text-foreground">
-                {fileName}
-              </Dialog.Title>
+          <div className="flex shrink-0 items-center gap-3 border-b border-border px-3 py-2">
+            <Dialog.Title className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+              {fileName}
               {typeof sizeBytes === "number" && (
-                <Dialog.Description className="text-xs tabular-nums text-muted-foreground">
+                <span className="ml-2 text-xs font-normal tabular-nums text-muted-foreground">
                   {formatSize(sizeBytes)}
-                </Dialog.Description>
+                </span>
               )}
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Button asChild type="button" variant="outline" size="sm">
-                <a href={downloadUrl}>
-                  <Download className="h-4 w-4" />
-                  Download
-                </a>
-              </Button>
-              <Dialog.Close asChild>
-                <button
-                  type="button"
-                  aria-label="Close"
-                  className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </Dialog.Close>
-            </div>
+            </Dialog.Title>
+            <Button asChild type="button" variant="outline" size="sm">
+              <a href={downloadUrl}>
+                <Download className="h-4 w-4" />
+                Download
+              </a>
+            </Button>
+            <Dialog.Close asChild>
+              <button
+                type="button"
+                aria-label="Close"
+                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </Dialog.Close>
           </div>
 
           {open && (
             <iframe
-              src={previewUrl}
+              src={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
               title={fileName}
               className="h-full w-full flex-1 border-0 bg-muted"
             />
