@@ -1,7 +1,7 @@
 "use client";
 
 import { StatCard } from "@/shared/ui-components/dashboard/DashboardParts";
-import { formatMinor } from "@/shared/utils/money";
+import { Money } from "@/shared/ui-components/data/MoneyVisibility";
 import { useWallet } from "../hooks/useBilling";
 
 /**
@@ -16,17 +16,17 @@ export function WalletSummary() {
       <StatCard
         tone="navy"
         label="Available to spend"
-        value={formatMinor(data?.availableMinor)}
+        value={<Money minor={data?.availableMinor} />}
         hint="Spendable on new job posts"
       />
       <StatCard
         label="Balance"
-        value={formatMinor(data?.balanceMinor)}
+        value={<Money minor={data?.balanceMinor} />}
         hint="Everything loaded into your wallet"
       />
       <StatCard
         label="Reserved"
-        value={formatMinor(data?.reservedMinor)}
+        value={<Money minor={data?.reservedMinor} />}
         hint="Held for your published jobs"
       />
     </div>

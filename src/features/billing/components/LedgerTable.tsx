@@ -5,7 +5,7 @@ import { Receipt } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDateTime } from "@/shared/utils/formatDate";
-import { formatMinor } from "@/shared/utils/money";
+import { Money } from "@/shared/ui-components/data/MoneyVisibility";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useLedger } from "../hooks/useBilling";
@@ -94,13 +94,13 @@ export function LedgerTable() {
                     )}
                   >
                     {isInflow(entry.entryType) ? "+" : "−"}
-                    {formatMinor(entry.amountMinor)}
+                    <Money minor={entry.amountMinor} />
                   </td>
                   <td className="whitespace-nowrap px-5 py-3 text-right text-muted-foreground">
-                    {formatMinor(entry.balanceAfterMinor)}
+                    <Money minor={entry.balanceAfterMinor} />
                   </td>
                   <td className="whitespace-nowrap px-5 py-3 text-right text-muted-foreground">
-                    {formatMinor(entry.reservedAfterMinor)}
+                    <Money minor={entry.reservedAfterMinor} />
                   </td>
                 </tr>
               ))}

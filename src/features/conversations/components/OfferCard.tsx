@@ -18,6 +18,7 @@ import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { formatDate } from "@/shared/utils/formatDate";
+import { Money } from "@/shared/ui-components/data/MoneyVisibility";
 import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
 import type { ConversationEvent } from "../schemas";
 
@@ -164,7 +165,7 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
           Salary
         </span>
         <p className="text-lg font-semibold text-foreground">
-          {formatMinor(salaryMinor)}
+          <Money minor={salaryMinor} />
         </p>
       </div>
 
@@ -190,7 +191,7 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
       <div className="flex items-baseline gap-1.5 border-t border-border/60 pt-2 text-xs text-muted-foreground">
         <span>Recruiter&apos;s fee (fixed, not part of this negotiation):</span>
         <span className="font-medium text-foreground">
-          {formatMinor(amountMinor)}
+          <Money minor={amountMinor} />
         </span>
       </div>
 

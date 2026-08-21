@@ -7,7 +7,7 @@ import { AlertCircle, Wallet2 } from "lucide-react";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
-import { formatMinor } from "@/shared/utils/money";
+import { Money } from "@/shared/ui-components/data/MoneyVisibility";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -80,7 +80,7 @@ function BalanceCard({
           navy ? "text-white" : "text-navy",
         )}
       >
-        {valueMinor === undefined ? "—" : formatMinor(valueMinor)}
+        <Money minor={valueMinor} />
       </p>
       <p
         className={cn(
@@ -231,7 +231,7 @@ function PlacementsTable({
                     {p.candidateName}
                   </td>
                   <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
-                    {formatMinor(p.amountMinor)}
+                    <Money minor={p.amountMinor} />
                   </td>
                   <td className="px-5 py-3">
                     <StatusBadge

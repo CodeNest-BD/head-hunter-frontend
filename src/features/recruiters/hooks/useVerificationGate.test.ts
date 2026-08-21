@@ -71,9 +71,7 @@ describe("useVerificationGate", () => {
 
   it("approves a verified recruiter", async () => {
     useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
-    fetchMyRecruiterProfileMock.mockResolvedValue(
-      recruiterProfile("verified"),
-    );
+    fetchMyRecruiterProfileMock.mockResolvedValue(recruiterProfile("verified"));
 
     const { result } = renderHook(() => useVerificationGate(), { wrapper });
 
@@ -97,9 +95,7 @@ describe("useVerificationGate", () => {
 
   it("withholds approval from a rejected recruiter", async () => {
     useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
-    fetchMyRecruiterProfileMock.mockResolvedValue(
-      recruiterProfile("rejected"),
-    );
+    fetchMyRecruiterProfileMock.mockResolvedValue(recruiterProfile("rejected"));
 
     const { result } = renderHook(() => useVerificationGate(), { wrapper });
 

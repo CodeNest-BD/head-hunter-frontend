@@ -63,7 +63,9 @@ describe("ExploreJobsView", () => {
     expect(
       screen.getByText("Job listings are for verified recruiters"),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Senior Backend Engineer")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Senior Backend Engineer"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Acme Inc.")).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText("Job title…")).not.toBeInTheDocument();
     expect(useJobsMock).not.toHaveBeenCalled();

@@ -15,6 +15,7 @@ import {
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
 import { formatDateTime } from "@/shared/utils/formatDate";
+import { Money } from "@/shared/ui-components/data/MoneyVisibility";
 import { formatMinor } from "@/shared/utils/money";
 import { useMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 
@@ -162,7 +163,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
         />
         <StatCard
           label="In escrow"
-          value={formatMinor(wallet.data?.inEscrowMinor ?? 0)}
+          value={<Money minor={wallet.data?.inEscrowMinor ?? 0} />}
           hint={
             wallet.data && wallet.data.placementsCount > 0
               ? `across ${wallet.data.placementsCount} placement${wallet.data.placementsCount === 1 ? "" : "s"}`

@@ -15,7 +15,7 @@ import {
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
 import { formatDateTime } from "@/shared/utils/formatDate";
-import { formatMinor } from "@/shared/utils/money";
+import { Money } from "@/shared/ui-components/data/MoneyVisibility";
 import { useMyCompanyProfile } from "../hooks/useCompanyProfile";
 
 /** A description shorter than this reads as a placeholder to recruiters. */
@@ -109,7 +109,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
         <StatCard
           tone="navy"
           label="Available to spend"
-          value={formatMinor(wallet.data?.availableMinor)}
+          value={<Money minor={wallet.data?.availableMinor} />}
           // `availableMinor` is balance MINUS reserved, so the old
           // "before fees are reserved" said the opposite of what it is.
           hint="free for new job fees"
@@ -137,7 +137,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
         />
         <StatCard
           label="Reserved"
-          value={formatMinor(wallet.data?.reservedMinor)}
+          value={<Money minor={wallet.data?.reservedMinor} />}
           hint="held against live posts"
           href="/company/wallet"
         />

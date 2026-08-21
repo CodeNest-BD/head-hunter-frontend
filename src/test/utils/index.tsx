@@ -6,9 +6,15 @@ import {
 } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
 
+import { MoneyVisibilityProvider } from "@/shared/ui-components/data/MoneyVisibility";
+
 /**
  * Renders with a throwaway QueryClient per test — retries off so a failing
  * query surfaces immediately instead of after backoff.
+ *
+ * Money is revealed, so assertions can name real amounts. The app defaults to
+ * masked; `setupTest.ts` stores the revealed preference, which the provider
+ * picks up. A test that needs the masked default clears that key first.
  */
 export function renderWithProviders(
   ui: ReactElement,
@@ -20,7 +26,9 @@ export function renderWithProviders(
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <MoneyVisibilityProvider>{children}</MoneyVisibilityProvider>
+      </QueryClientProvider>
     );
   }
 
