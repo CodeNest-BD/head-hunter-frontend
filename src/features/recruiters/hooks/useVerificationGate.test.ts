@@ -132,6 +132,32 @@ describe("useVerificationGate", () => {
     expect(result.current.isError).toBe(true);
   });
 
+  it("withholds approval while the session is booting, even though nobody looks like a recruiter yet", () => {
+    // The 401 this guards: `isApproved` was `!isRecruiter || isVerified`, and
+    // during boot the store has no user — so every visitor read as an approved
+    // non-recruiter and callers fired the authed marketplace queries with no
+    // token.
+    useAuthMock.mockReturnValue({ status: "booting", user: null });
+
+    const { result } = renderHook(() => useVerificationGate(), { wrapper });
+
+    expect(result.current.isApproved).toBe(false);
+    expect(result.current.isLoading).toBe(true);
+    expect(fetchMyRecruiterProfileMock).not.toHaveBeenCalled();
+  });
+
+  it("approves a non-recruiter once the session has settled", () => {
+    useAuthMock.mockReturnValue({
+      status: "authenticated",
+      user: { role: "company" },
+    });
+
+    const { result } = renderHook(() => useVerificationGate(), { wrapper });
+
+    expect(result.current.isApproved).toBe(true);
+    expect(result.current.isLoading).toBe(false);
+  });
+
   it("reports approval as undecided while the session is still booting", async () => {
     // The regression this guards: the profile request fired on the role alone,
     // 401'd during boot, and the undecided gate read as a decided "not

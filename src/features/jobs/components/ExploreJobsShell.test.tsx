@@ -48,13 +48,15 @@ describe("ExploreJobsShell", () => {
     expect(screen.queryByTestId("dashboard-shell")).not.toBeInTheDocument();
   });
 
-  it("does not guess a shell while the session is still booting", () => {
+  it("renders neither shell while the session is still booting", () => {
     useAuthMock.mockReturnValue({ status: "booting", user: null });
 
     render(<ExploreJobsShell />);
 
-    // The public shell holds until the session resolves — the alternative is a
-    // dashboard frame that flips to marketing a moment later.
-    expect(screen.getByTestId("public-shell")).toBeInTheDocument();
+    // The regression this guards: a reload painted the marketing hero, then
+    // swapped it for the dashboard once the silent refresh landed.
+    expect(screen.queryByTestId("public-shell")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("dashboard-shell")).not.toBeInTheDocument();
+    expect(screen.getByText("Loading…")).toBeInTheDocument();
   });
 });

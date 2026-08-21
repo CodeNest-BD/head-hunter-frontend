@@ -32,7 +32,10 @@ export function useVerificationGate(): VerificationGateState {
 
   return {
     status: verificationStatus ?? undefined,
-    isApproved: !isRecruiter || isVerified,
+    // Fails closed while undecided. Approving non-recruiters is right once the
+    // session is known, but during boot nobody looks like a recruiter, so this
+    // used to approve everyone — including visitors with no token at all.
+    isApproved: !isLoading && (!isRecruiter || isVerified),
     isLoading,
     isError,
     retry: refetch,
