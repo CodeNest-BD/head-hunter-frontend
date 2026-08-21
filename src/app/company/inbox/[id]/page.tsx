@@ -133,42 +133,35 @@ function SubmissionInfoHeader({ submission }: { submission: Submission }) {
   const updateStatus = useUpdateSubmissionStatus(submission.id);
 
   return (
-    <div className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <UserRound className="h-5 w-5" />
-          </span>
-          <div className="flex flex-col gap-0.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-              Submitted by
-            </p>
+    <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 shadow-card">
+      {/* Two lines, not four: the name carries the status badge beside it and the
+          secondary detail sits on one muted line under it, so the header does not
+          out-tall the one control it holds. */}
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <UserRound className="h-[18px] w-[18px]" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex flex-wrap items-center gap-2">
             <p className="font-heading text-base font-semibold text-navy">
               {recruiterDisplayName(submission.recruiter)}
             </p>
-            {submission.recruiter?.yearsExperience !== null &&
-              submission.recruiter !== null && (
-                <p className="text-sm text-muted-foreground">
-                  {submission.recruiter.yearsExperience} years of recruiting
-                  experience
-                </p>
-              )}
-            <div className="mt-2">
-              <StatusBadge
-                label={SUBMISSION_STATUS_LABELS[submission.status]}
-                className={STATUS_STYLES[submission.status]}
-              />
-            </div>
+            <StatusBadge
+              label={SUBMISSION_STATUS_LABELS[submission.status]}
+              className={STATUS_STYLES[submission.status]}
+            />
           </div>
+          <p className="text-xs text-muted-foreground">
+            Submitted by this recruiter
+            {submission.recruiter?.yearsExperience !== null &&
+              submission.recruiter !== null &&
+              ` · ${submission.recruiter.yearsExperience} years of recruiting experience`}
+          </p>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="submission-status"
-            className="text-xs font-medium text-muted-foreground"
-          >
-            Update status
-          </label>
+        <div className="shrink-0">
+          {/* The visible label is dropped: the select already carries an
+              aria-label, and the badge beside the name says what the status is. */}
           <select
             id="submission-status"
             aria-label="Submission status"
