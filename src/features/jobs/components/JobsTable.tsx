@@ -262,14 +262,35 @@ export function JobsTable() {
                           )}
                           {cols.isVisible("submissions") && (
                             <td className={`${TABLE_TD} tabular-nums`}>
-                              {subs && subs.fresh > 0 ? (
-                                <span className="font-semibold text-primary">
-                                  {subs.fresh} new
-                                </span>
+                              {/* "new" is the count still sitting in `submitted`
+                                  — candidates nobody has triaged yet. The total
+                                  stays visible beside it: showing only the new
+                                  count made a job with five submissions read as
+                                  two. Both link into that job's inbox. */}
+                              {subs && subs.total > 0 ? (
+                                <Link
+                                  href={`/company/inbox/job/${job.id}`}
+                                  className="inline-flex items-center gap-1.5 transition-colors hover:underline"
+                                >
+                                  {subs.fresh > 0 ? (
+                                    <>
+                                      <span className="font-semibold text-primary">
+                                        {subs.fresh} new
+                                      </span>
+                                      {subs.total > subs.fresh && (
+                                        <span className="text-brand-gray">
+                                          of {subs.total}
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <span className="text-brand-gray">
+                                      {subs.total}
+                                    </span>
+                                  )}
+                                </Link>
                               ) : (
-                                <span className="text-brand-gray">
-                                  {subs?.total ?? 0}
-                                </span>
+                                <span className="text-brand-gray">0</span>
                               )}
                             </td>
                           )}
