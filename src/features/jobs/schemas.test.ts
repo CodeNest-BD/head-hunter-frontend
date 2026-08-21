@@ -40,8 +40,20 @@ describe("jobFormSchema", () => {
     expect(errorPaths({ locationState: "CAL" })).toContain("locationState");
   });
 
-  it("requires a state, because the job map skips rows without one", () => {
-    expect(errorPaths({ locationState: "" })).toContain("locationState");
+  it("requires a state on an on-site role, because the job map skips rows without one", () => {
+    expect(errorPaths({ locationState: "", isRemote: false })).toContain(
+      "locationState",
+    );
+  });
+
+  it("does not require a state on a remote role, which has none to give", () => {
+    expect(errorPaths({ locationState: "", isRemote: true })).toEqual([]);
+  });
+
+  it("still rejects a malformed state code on a remote role", () => {
+    expect(errorPaths({ locationState: "CAL", isRemote: true })).toContain(
+      "locationState",
+    );
   });
 
   it("requires a description, which is what recruiters read before pitching", () => {

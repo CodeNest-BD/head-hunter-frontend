@@ -110,12 +110,13 @@ export const jobFormSchema = z
       .refine((value) => value.length > 0, {
         message: "Pick an employment type",
       }),
-    // Required because the job map groups by state and skips rows without one:
-    // a stateless job is invisible on the marketplace's main discovery surface.
+    // Two letters when given; whether it may be omitted depends on isRemote,
+    // which a field-level rule cannot see — see the superRefine below.
     locationState: z
       .string()
       .trim()
-      .length(2, "Pick the state this role sits in"),
+      .length(2, "Use the two-letter state code")
+      .or(z.literal("")),
     locationCity: z.string().trim(),
     isRemote: z.boolean(),
     salaryMin: z.string().trim(),
@@ -137,7 +138,19 @@ export const jobFormSchema = z
       return max >= min;
     },
     { message: "Maximum must be at least the minimum", path: ["salaryMax"] },
-  );
+  )
+  // A located role needs its state: the job map groups by it and skips rows
+  // without one, so a stateless on-site job is invisible on the marketplace's
+  // main discovery surface. A remote role has no state to give.
+  .superRefine((values, ctx) => {
+    if (!values.isRemote && values.locationState === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["locationState"],
+        message: "Pick a state, or mark the role remote",
+      });
+    }
+  });
 export type JobFormValues = z.infer<typeof jobFormSchema>;
 
 /** One row of GET /v1/jobs/map — the per-state aggregate behind the job map. */

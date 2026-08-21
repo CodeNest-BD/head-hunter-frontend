@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/shared/ui-components/controls/select";
 import { useMinRecruiterFee } from "@/features/billing";
+import { US_CITIES } from "@/shared/data/usCities";
 import { US_STATES } from "@/shared/data/usStatesGeo";
 import { sanitizeRichText } from "@/shared/libs/richText";
 import {
@@ -100,10 +101,17 @@ export function JobForm({
     control,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<JobFormValues>({
     resolver: zodResolver(jobFormSchema),
     defaultValues: toDefaults(job),
   });
+
+  const isRemote = watch("isRemote");
+  const locationState = watch("locationState");
+  const citiesInState = US_CITIES.filter(
+    (city) => city.state === locationState,
+  );
 
   const submit = handleSubmit((values) => {
     onSubmit({
@@ -204,7 +212,9 @@ export function JobForm({
         <Section title="Location" hint="Where the work happens.">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="locationState">State</Label>
+              <Label htmlFor="locationState">
+                State{isRemote ? " (optional)" : ""}
+              </Label>
               <Controller
                 control={control}
                 name="locationState"
@@ -234,11 +244,24 @@ export function JobForm({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="locationCity">City (optional)</Label>
+              {/* Suggestions, not a closed list: US_CITIES is a curated set of
+                  the largest cities plus state capitals, so a select would
+                  reject plenty of real places. A datalist narrows to the chosen
+                  state while still accepting anything typed. */}
               <Input
                 id="locationCity"
-                placeholder="San Francisco"
+                list="location-city-options"
+                autoComplete="off"
+                placeholder={
+                  locationState ? "Start typing a city" : "Pick a state first"
+                }
                 {...register("locationCity")}
               />
+              <datalist id="location-city-options">
+                {citiesInState.map((city) => (
+                  <option key={city.name} value={city.name} />
+                ))}
+              </datalist>
             </div>
           </div>
 
