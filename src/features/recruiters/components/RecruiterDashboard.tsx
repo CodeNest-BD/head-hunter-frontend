@@ -14,7 +14,7 @@ import {
   StatCard,
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
-import { formatDate } from "@/shared/utils/formatDate";
+import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { useMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 
@@ -32,7 +32,6 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   const openRoles = useJobs({ limit: 5, sortBy: "publishedAt" });
   const activity = useNotifications({ limit: 6 });
 
-  const specializations = profile.data?.specializations ?? [];
   const references = profile.data?.references ?? [];
   const verificationStatus = profile.data?.verificationStatus;
   const yearsExperience = profile.data?.yearsExperience ?? null;
@@ -52,6 +51,16 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
 
   const openRolesTotal = openRoles.data?.meta.total ?? null;
   const latestRole = openRoles.data?.data[0] ?? null;
+
+  const advanced = subs.filter((s) => s.status === "advanced").length;
+  const activeSubmissionsHint =
+    activeCount === 0
+      ? "nothing in flight"
+      : advanced > 0
+        ? `${advanced} advanced`
+        : underReview.length > 0
+          ? `${underReview.length} under review`
+          : "awaiting company review";
 
   const subtitleParts = [
     "Recruiter",
@@ -87,7 +96,9 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
       id: `role-${latestRole.id}`,
       tone: "blue",
       title: `${latestRole.title || "A new role"} just posted`,
-      detail: `${latestRole.companyName || "A company"} · a fresh open role to submit to`,
+      detail: `${latestRole.companyName || "A company"} · ${formatMinor(
+        latestRole.recruiterFeeMinor,
+      )} recruiter fee`,
       actionLabel: "Submit",
       href: `/jobs/${latestRole.id}`,
     });
@@ -108,8 +119,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
       id: "references",
       tone: "blue",
       title: `Add ${missing} more reference${missing === 1 ? "" : "s"}`,
-      detail:
-        "A full profile of 3 references improves your verification standing.",
+      detail: "Admins check references when they review your account.",
       actionLabel: "Add",
       href: "/recruiter/profile",
     });
@@ -130,8 +140,6 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   return (
     <div className="flex flex-col gap-6">
       <PageBanner
-        size="lg"
-        eyebrow="Overview"
         title={`Hey ${firstName}`}
         subtitle={subtitleParts.join(" · ")}
       />
@@ -140,34 +148,33 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
         <StatCard
           label="Open roles"
           value={openRolesTotal ?? "—"}
-          hint={
-            specializations.length > 0
-              ? `you cover ${specializations.length} sector${specializations.length === 1 ? "" : "s"}`
-              : "browse the map"
-          }
+          hint="open to you right now"
+          href="/explore-jobs"
         />
         <StatCard
           label="Active submissions"
           value={submissions.isPending ? "—" : activeCount}
-          hint={
-            underReview.length > 0
-              ? `${underReview.length} under review`
-              : "none open"
-          }
+          // The hint has to describe the same set as the number. It used to read
+          // "none open" whenever nothing was `under_review`, so a single
+          // submitted candidate showed "1 · none open".
+          hint={activeSubmissionsHint}
+          href="/recruiter/submissions"
         />
         <StatCard
           label="In escrow"
           value={formatMinor(wallet.data?.inEscrowMinor ?? 0)}
           hint={
             wallet.data && wallet.data.placementsCount > 0
-              ? `${wallet.data.placementsCount} placement${wallet.data.placementsCount === 1 ? "" : "s"}`
-              : "no placements yet"
+              ? `across ${wallet.data.placementsCount} placement${wallet.data.placementsCount === 1 ? "" : "s"}`
+              : "released 30 days after a start"
           }
+          href="/recruiter/wallet"
         />
         <StatCard
           label="Companies followed"
           value={followed.isPending ? "—" : followedTotal}
-          hint="in your feed"
+          hint="you're alerted when they post"
+          href="/companies"
         />
       </div>
 
@@ -206,8 +213,15 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
                   className="border-b border-border/70 py-3.5 last:border-0"
                 >
                   <p className="text-sm font-medium text-navy">{note.title}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {formatDate(note.createdAt)}
+                  {note.body && (
+                    <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
+                      {note.body}
+                    </p>
+                  )}
+                  {/* Date and time, not just the date: two events on one day are
+                      otherwise indistinguishable, which reads as a duplicate. */}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {formatDateTime(note.createdAt)}
                   </p>
                 </li>
               ))}

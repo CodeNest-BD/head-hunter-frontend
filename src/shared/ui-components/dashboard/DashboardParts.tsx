@@ -4,26 +4,33 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/shared/libs/shadCnConfig";
 
-/** A single headline metric. Navy tone leads a dashboard's most important number. */
+/**
+ * A single headline metric. Navy tone leads a dashboard's most important number.
+ *
+ * Pass `href` when the number has somewhere to go: a stat the reader cannot act
+ * on is decoration, and the figure is usually the reason they came to the page.
+ */
 export function StatCard({
   label,
   value,
   hint,
   tone = "white",
+  href,
 }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
   tone?: "navy" | "white";
+  href?: string;
 }) {
   const navy = tone === "navy";
-  return (
-    <div
-      className={cn(
-        "rounded-md p-5 shadow-card",
-        navy ? "bg-navy" : "border border-border bg-card",
-      )}
-    >
+  const className = cn(
+    "block rounded-md p-5 shadow-card",
+    navy ? "bg-navy" : "border border-border bg-card",
+    href && "transition-colors hover:border-primary/40",
+  );
+  const body = (
+    <>
       <p
         className={cn(
           "text-[11px] font-semibold uppercase tracking-[0.12em]",
@@ -52,7 +59,15 @@ export function StatCard({
           </span>
         )}
       </p>
-    </div>
+    </>
+  );
+
+  return href ? (
+    <Link href={href} className={className}>
+      {body}
+    </Link>
+  ) : (
+    <div className={className}>{body}</div>
   );
 }
 
