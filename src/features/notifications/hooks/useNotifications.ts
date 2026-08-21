@@ -13,6 +13,19 @@ import { notificationKeys } from "../keys";
  * `enabled` defaults to true, but callers can gate the query off until a
  * condition is met (e.g. a panel is opened) to avoid a wasted fetch.
  */
+/**
+ * Notifications have no realtime transport: the only websocket event is
+ * `message.created`, and it invalidates conversation keys, never these. Without
+ * a poll, a notification only appeared when something happened to remount the
+ * query — so the badge sat stale for as long as the user stayed on a page.
+ *
+ * Both queries therefore poll and refetch on focus (overriding the app-wide
+ * `refetchOnWindowFocus: false`). `refetchIntervalInBackground` is left off, so
+ * a hidden tab stops polling and the focus refetch covers coming back to it.
+ */
+const UNREAD_COUNT_POLL_MS = 30_000;
+const LIST_POLL_MS = 60_000;
+
 export function useNotifications(
   params: NotificationListParams,
   enabled = true,
@@ -21,6 +34,8 @@ export function useNotifications(
     queryKey: notificationKeys.list(params),
     queryFn: () => fetchNotifications(params),
     enabled,
+    refetchInterval: LIST_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -28,6 +43,8 @@ export function useUnreadCount() {
   return useQuery({
     queryKey: notificationKeys.unreadCount,
     queryFn: fetchUnreadCount,
+    refetchInterval: UNREAD_COUNT_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
