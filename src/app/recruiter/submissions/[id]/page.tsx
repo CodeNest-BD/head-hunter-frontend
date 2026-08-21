@@ -239,18 +239,18 @@ function CandidateListSection({
               {candidates.length} of {MAX_CANDIDATES} slots used
             </p>
           </div>
-          {!isAdding && (
-            <Button
-              type="button"
-              size="sm"
-              disabled={disabled}
-              title={disabledReason}
-              onClick={() => setIsAdding(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Add candidate
-            </Button>
-          )}
+          {/* Stays put while the form is open — hiding it made the header change
+              shape on click, and it is the anchor the form appears under. */}
+          <Button
+            type="button"
+            size="sm"
+            disabled={disabled}
+            title={disabledReason}
+            onClick={() => setIsAdding(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Add candidate
+          </Button>
         </div>
 
         {/* One segment per slot — fills as candidates are added. */}
