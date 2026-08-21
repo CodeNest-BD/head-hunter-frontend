@@ -5,6 +5,9 @@ import { useAuth } from "@/features/auth";
 // Imported from the keys module directly, not the feature barrel: the barrel
 // also re-exports components that would drag unrelated UI into every module
 // that merely wants to invalidate the inbox/submissions list.
+import { candidateKeys } from "@/features/candidates/keys";
+import { interviewKeys } from "@/features/interviews/keys";
+import { offerKeys } from "@/features/offers/keys";
 import { submissionKeys } from "@/features/submissions/keys";
 import { getConversationSocket } from "@/lib/socket";
 import { useAppSelector } from "@/shared/store/hooks";
@@ -25,6 +28,7 @@ interface MessageCreatedFrame {
 }
 
 const MESSAGE_CREATED = "message.created";
+const NEGOTIATION_CHANGED = "negotiation.changed";
 
 const isMessageCreatedFrame = (
   payload: unknown,
@@ -45,6 +49,25 @@ const isMessageCreatedFrame = (
     typeof payload.senderUserId === "string" &&
     typeof payload.messageId === "string" &&
     typeof payload.createdAt === "string"
+  );
+};
+
+interface NegotiationChangedFrame {
+  submissionId: string;
+  kind: string;
+}
+
+const isNegotiationChangedFrame = (
+  payload: unknown,
+): payload is NegotiationChangedFrame => {
+  if (typeof payload !== "object" || payload === null) {
+    return false;
+  }
+  if (!("submissionId" in payload) || !("kind" in payload)) {
+    return false;
+  }
+  return (
+    typeof payload.submissionId === "string" && typeof payload.kind === "string"
   );
 };
 
@@ -134,9 +157,28 @@ export function useConversationRealtime(
       void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
     };
 
+    // Offers, interviews and candidate status all move on this submission, and
+    // the party who did not act has no mutation of their own to learn from. The
+    // frame carries no state — everything is re-read through REST, so a missed
+    // one self-heals on the next poll.
+    const onNegotiationChanged = (payload: unknown): void => {
+      if (!isNegotiationChangedFrame(payload)) {
+        return;
+      }
+      if (payload.submissionId !== submissionId) {
+        return;
+      }
+      void queryClient.invalidateQueries({ queryKey: offerKeys.all });
+      void queryClient.invalidateQueries({ queryKey: interviewKeys.all });
+      void queryClient.invalidateQueries({ queryKey: candidateKeys.all });
+      void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+      void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
+    };
+
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on(MESSAGE_CREATED, onMessageCreated);
+    socket.on(NEGOTIATION_CHANGED, onNegotiationChanged);
     if (socket.connected) {
       setStatus("live");
     }
@@ -146,6 +188,7 @@ export function useConversationRealtime(
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off(MESSAGE_CREATED, onMessageCreated);
+      socket.off(NEGOTIATION_CHANGED, onNegotiationChanged);
       // The socket is shared app-wide and deliberately left connected; only this
       // hook's listeners come off.
     };
