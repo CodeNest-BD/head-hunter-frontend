@@ -25,11 +25,15 @@ import type { ConversationRealtimeStatus } from "./useConversationRealtime";
 
 const FIRST_PAGE = 1;
 
-// Realtime carries the latency when the socket is live, so polling only needs
-// to be the slow safety net; when it's the sole channel (still connecting, or
-// fallen back after a dropped subscription) it runs at the original cadence.
-const POLL_INTERVAL_LIVE_MS = 60_000;
-const POLL_INTERVAL_FALLBACK_MS = 15_000;
+// Polling is the thread's floor, not its safety net.
+//
+// A socket that has connected reports "live", which is not the same as "is
+// delivering": if a frame never arrives, a 60s poll meant an incoming message
+// sat unseen until the next tick or a window refocus, while the badges beside it
+// updated on their own 5s cadence. So the fallback matches the badges, and even
+// a live socket is backstopped inside a few seconds.
+const POLL_INTERVAL_LIVE_MS = 15_000;
+const POLL_INTERVAL_FALLBACK_MS = REALTIME_POLL_MS;
 
 /**
  * The `{ data, meta }` envelope the API returns for `events` is one page of
