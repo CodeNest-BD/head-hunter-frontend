@@ -138,7 +138,7 @@ function NotificationRow({
   );
   // The link and the mark-read button are siblings, never nested: a <button>
   // inside an <a> is invalid markup and clicking it would navigate the row.
-  const bodyClassName = "flex min-w-0 flex-1 items-start gap-3 px-4 py-3.5";
+  const bodyClassName = "flex min-w-0 flex-1 items-start gap-3 py-3.5 pl-4";
 
   const content = (
     <>
@@ -152,27 +152,14 @@ function NotificationRow({
         <Icon className="h-[18px] w-[18px]" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3">
-          <p
-            className={cn(
-              "text-sm text-navy",
-              unread ? "font-semibold" : "font-medium",
-            )}
-          >
-            {item.title}
-          </p>
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {formatTime(item.createdAt)}
-            </span>
-            {unread && (
-              <span
-                aria-label="Unread"
-                className="h-2 w-2 shrink-0 rounded-full bg-primary"
-              />
-            )}
-          </div>
-        </div>
+        <p
+          className={cn(
+            "flex h-5 items-center text-sm text-navy",
+            unread ? "font-semibold" : "font-medium",
+          )}
+        >
+          {item.title}
+        </p>
         {item.body && (
           <p className="mt-0.5 text-sm text-muted-foreground">{item.body}</p>
         )}
@@ -199,18 +186,36 @@ function NotificationRow({
       ) : (
         <div className={bodyClassName}>{content}</div>
       )}
-      {unread && (
-        <button
-          type="button"
-          title="Mark as read"
-          aria-label={`Mark "${item.title}" as read`}
-          disabled={isMarkingRead}
-          onClick={() => onMarkRead(item.id)}
-          className="mr-3 mt-3.5 shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary disabled:opacity-40"
-        >
-          <Check className="h-4 w-4" />
-        </button>
-      )}
+      {/* Time, unread dot and the mark-read control share one cluster on the
+          first text line. Every slot keeps its width when empty, so the
+          timestamps stay in a column whether a row is read or unread. */}
+      <div className="flex shrink-0 items-start gap-2 py-3.5 pr-4">
+        <span className="flex h-5 items-center text-xs tabular-nums text-muted-foreground">
+          {formatTime(item.createdAt)}
+        </span>
+        <span className="flex h-5 w-2 items-center justify-center">
+          {unread && (
+            <span
+              aria-label="Unread"
+              className="h-2 w-2 rounded-full bg-primary"
+            />
+          )}
+        </span>
+        {unread ? (
+          <button
+            type="button"
+            title="Mark as read"
+            aria-label={`Mark "${item.title}" as read`}
+            disabled={isMarkingRead}
+            onClick={() => onMarkRead(item.id)}
+            className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground transition-colors hover:text-primary disabled:opacity-40"
+          >
+            <Check className="h-4 w-4" />
+          </button>
+        ) : (
+          <span aria-hidden="true" className="h-5 w-5" />
+        )}
+      </div>
     </div>
   );
 }
