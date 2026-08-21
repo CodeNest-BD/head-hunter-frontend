@@ -1,4 +1,4 @@
-import { useAuth } from "@/features/auth";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 
 import { fetchMyRecruiterProfile } from "../api/recruiterProfiles";
@@ -14,6 +14,12 @@ export interface VerifiedRecruiterState {
   verificationStatus: VerificationStatus | null;
   /** True while the (recruiter-only) profile fetch is still in flight. */
   isLoading: boolean;
+  /** True when the (recruiter-only) profile fetch failed, leaving status
+   * unknown — distinct from `verificationStatus === null`, which is also the
+   * resting state for a guest or non-recruiter. */
+  isError: boolean;
+  /** Retries the profile fetch after a failure. */
+  refetch: () => void;
 }
 
 /**
@@ -39,5 +45,7 @@ export function useIsVerifiedRecruiter(): VerifiedRecruiterState {
     isVerified: verificationStatus === "verified",
     verificationStatus,
     isLoading: isRecruiter && profile.isLoading,
+    isError: isRecruiter && profile.isError,
+    refetch: () => void profile.refetch(),
   };
 }

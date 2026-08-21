@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { useVerificationGate } from "@/features/recruiters/hooks/useVerificationGate";
 import { VerificationBanner } from "@/features/recruiters/components/VerificationBanner";
+import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 
 /** Matches the loading placeholder already used on /recruiter/profile. */
 function PageSkeleton() {
@@ -29,10 +30,23 @@ export function RequireApprovedRecruiter({
 }: {
   children: ReactNode;
 }) {
-  const { isApproved, isLoading } = useVerificationGate();
+  const { isApproved, isLoading, isError, retry } = useVerificationGate();
 
   if (isLoading) {
     return <PageSkeleton />;
+  }
+  // A failed profile fetch also leaves `isApproved` false (via
+  // `useIsVerifiedRecruiter`'s null status), but that isn't "not yet
+  // approved" — it's "we don't know". Without this branch it fell through to
+  // `VerificationBanner`, which renders nothing for a null status, leaving a
+  // blank page on every transient failure instead of a way to retry.
+  if (isError) {
+    return (
+      <ErrorRetryCallout
+        message="Could not load your verification status."
+        onRetry={retry}
+      />
+    );
   }
   if (!isApproved) {
     return <VerificationBanner />;

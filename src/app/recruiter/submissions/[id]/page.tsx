@@ -38,7 +38,7 @@ import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationS
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDetailLayout";
-import { RequireRole } from "@/features/auth";
+import { RequireApprovedRecruiter, RequireRole } from "@/features/auth";
 
 const MAX_CANDIDATES = 5;
 
@@ -398,25 +398,31 @@ export default function SubmissionDetailPage() {
   return (
     <RequireRole role="recruiter">
       <DashboardLayout wide="detail">
-        <TwoColumnDetailLayout
-          header={
-            <div className="flex flex-col gap-6">
-              <Link
-                href="/recruiter/submissions"
-                className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to submissions
-              </Link>
-              <PageHeader
-                title="Submission detail"
-                subtitle="Track your candidates and the job you submitted them to."
-              />
-            </div>
-          }
-          left={<SubmissionDetailLeftColumn submissionId={params.id} />}
-          right={<Thread submissionId={params.id} />}
-        />
+        {/* Keeps the submission/candidates queries and the conversation
+         * socket from ever mounting for an unapproved recruiter — both live
+         * inside `left`/`right` below, which `RequireApprovedRecruiter`
+         * swaps out entirely rather than rendering hidden. */}
+        <RequireApprovedRecruiter>
+          <TwoColumnDetailLayout
+            header={
+              <div className="flex flex-col gap-6">
+                <Link
+                  href="/recruiter/submissions"
+                  className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to submissions
+                </Link>
+                <PageHeader
+                  title="Submission detail"
+                  subtitle="Track your candidates and the job you submitted them to."
+                />
+              </div>
+            }
+            left={<SubmissionDetailLeftColumn submissionId={params.id} />}
+            right={<Thread submissionId={params.id} />}
+          />
+        </RequireApprovedRecruiter>
       </DashboardLayout>
     </RequireRole>
   );

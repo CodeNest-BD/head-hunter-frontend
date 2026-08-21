@@ -1,7 +1,5 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
-
 import { AccountSection, RequireRole } from "@/features/auth";
 import {
   RecruiterProfileForm,
@@ -12,7 +10,7 @@ import {
 } from "@/features/recruiters";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
-import { Button } from "@/shared/ui-components/controls/button";
+import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 const VERIFICATION_PILL: Record<
@@ -61,22 +59,10 @@ function RecruiterProfileContent() {
       {isPending ? (
         <ProfileSkeleton />
       ) : isError ? (
-        <div className="flex max-w-md flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-          <div className="flex items-center gap-2 font-medium">
-            <AlertCircle className="h-[18px] w-[18px]" />
-            Could not load your profile.
-          </div>
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void refetch()}
-            >
-              Retry
-            </Button>
-          </div>
-        </div>
+        <ErrorRetryCallout
+          message="Could not load your profile."
+          onRetry={() => void refetch()}
+        />
       ) : (
         <>
           <RecruiterProfileForm profile={data} />

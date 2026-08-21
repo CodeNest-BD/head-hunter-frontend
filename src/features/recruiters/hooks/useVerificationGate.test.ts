@@ -11,9 +11,10 @@ const { useAuthMock, fetchMyRecruiterProfileMock } = vi.hoisted(() => ({
 }));
 
 // The hook's session source (via useIsVerifiedRecruiter) is the same one
-// RequireRole uses — mocking the barrel keeps this test independent of the
-// Redux store.
-vi.mock("@/features/auth", () => ({ useAuth: useAuthMock }));
+// RequireRole uses — mocking the concrete hook module (not the auth barrel)
+// keeps this test independent of the Redux store and avoids re-introducing
+// the auth <-> recruiters barrel cycle.
+vi.mock("@/features/auth/hooks/useAuth", () => ({ useAuth: useAuthMock }));
 vi.mock("../api/recruiterProfiles", () => ({
   fetchMyRecruiterProfile: fetchMyRecruiterProfileMock,
 }));
@@ -62,6 +63,8 @@ describe("useVerificationGate", () => {
       status: undefined,
       isApproved: true,
       isLoading: false,
+      isError: false,
+      retry: expect.any(Function),
     });
     expect(fetchMyRecruiterProfileMock).not.toHaveBeenCalled();
   });
@@ -77,6 +80,7 @@ describe("useVerificationGate", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.status).toBe("verified");
     expect(result.current.isApproved).toBe(true);
+    expect(result.current.isError).toBe(false);
   });
 
   it("withholds approval from a pending recruiter", async () => {
@@ -88,6 +92,7 @@ describe("useVerificationGate", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.status).toBe("pending");
     expect(result.current.isApproved).toBe(false);
+    expect(result.current.isError).toBe(false);
   });
 
   it("withholds approval from a rejected recruiter", async () => {
@@ -101,5 +106,18 @@ describe("useVerificationGate", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.status).toBe("rejected");
     expect(result.current.isApproved).toBe(false);
+    expect(result.current.isError).toBe(false);
+  });
+
+  it("surfaces a failed profile fetch as isError, distinct from a decided status", async () => {
+    useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
+    fetchMyRecruiterProfileMock.mockRejectedValue(new Error("network down"));
+
+    const { result } = renderHook(() => useVerificationGate(), { wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.status).toBeUndefined();
+    expect(result.current.isApproved).toBe(false);
+    expect(result.current.isError).toBe(true);
   });
 });

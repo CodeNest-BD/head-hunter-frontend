@@ -7,6 +7,11 @@ export interface VerificationGateState {
   /** True for every non-recruiter, and for a recruiter once verified. */
   isApproved: boolean;
   isLoading: boolean;
+  /** True when the profile fetch failed, leaving approval undecidable —
+   * distinct from `!isApproved`, which means the server answered "not yet". */
+  isError: boolean;
+  /** Retries the profile fetch after a failure. */
+  retry: () => void;
 }
 
 /**
@@ -16,12 +21,20 @@ export interface VerificationGateState {
  * drift from what the API enforces. Companies and admins are never gated.
  */
 export function useVerificationGate(): VerificationGateState {
-  const { isRecruiter, isVerified, verificationStatus, isLoading } =
-    useIsVerifiedRecruiter();
+  const {
+    isRecruiter,
+    isVerified,
+    verificationStatus,
+    isLoading,
+    isError,
+    refetch,
+  } = useIsVerifiedRecruiter();
 
   return {
     status: verificationStatus ?? undefined,
     isApproved: !isRecruiter || isVerified,
     isLoading,
+    isError,
+    retry: refetch,
   };
 }
