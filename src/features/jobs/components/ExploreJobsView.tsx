@@ -137,7 +137,7 @@ export function ExploreJobsView() {
       : "All States";
 
   return (
-    <div className="mx-auto max-w-[1240px] px-5 pb-20 md:px-10">
+    <div className="w-full px-5 pb-20 md:px-10">
       <section className="pb-10 pt-12 text-center">
         <h1 className="mx-auto max-w-3xl font-heading text-4xl font-extrabold tracking-[-0.02em] text-navy md:text-5xl">
           Set Your Price.{" "}

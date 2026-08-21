@@ -1,116 +1,26 @@
 "use client";
 
-import Link from "next/link";
-import {
-  ArrowRight,
-  Bell,
-  Briefcase,
-  Building2,
-  Inbox,
-  Map,
-  MessagesSquare,
-  Users,
-  UserRound,
-  type LucideIcon,
-} from "lucide-react";
+import dynamic from "next/dynamic";
 
-import { useAuth, type Role } from "@/features/auth";
-import { VerificationBanner } from "@/features/recruiters";
-import { AdminOverview } from "@/features/admin";
-import { useUnreadCount } from "@/features/notifications";
-import { BrandGlow, Eyebrow } from "@/shared/ui-components/brand";
+import { useAuth } from "@/features/auth";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
-import { Logo } from "@/shared/ui-components/layout/Logo";
 
-interface DashboardLink {
-  href: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-}
-
-const LINKS_BY_ROLE: Record<Role, DashboardLink[]> = {
-  company: [
-    {
-      href: "/company/jobs",
-      title: "Jobs",
-      description: "Create a job, then publish it to notify your followers.",
-      icon: Briefcase,
-    },
-    {
-      href: "/company/inbox",
-      title: "Inbox",
-      description: "Candidates recruiters have submitted to your jobs.",
-      icon: Inbox,
-    },
-    {
-      href: "/company/profile",
-      title: "Company profile",
-      description: "What recruiters see when they browse companies.",
-      icon: Building2,
-    },
-  ],
-  recruiter: [
-    {
-      href: "/explore-jobs",
-      title: "Explore jobs",
-      description: "Open roles by state, and the fee each company is offering.",
-      icon: Map,
-    },
-    {
-      href: "/companies",
-      title: "Companies",
-      description:
-        "Browse companies and follow the ones you want to hear from.",
-      icon: Building2,
-    },
-    {
-      href: "/notifications",
-      title: "Notifications",
-      description: "New jobs from the companies you follow.",
-      icon: Bell,
-    },
-    {
-      href: "/recruiter/profile",
-      title: "My profile",
-      description:
-        "Your details, specializations, references and subscription.",
-      icon: UserRound,
-    },
-  ],
-  admin: [
-    {
-      href: "/admin/recruiters",
-      title: "Recruiters",
-      description: "Manage recruiter accounts, view profiles and hold access.",
-      icon: Users,
-    },
-    {
-      href: "/admin/companies",
-      title: "Companies",
-      description: "Manage company accounts, wallets and hold access.",
-      icon: Building2,
-    },
-    {
-      href: "/admin/conversations",
-      title: "Conversations",
-      description:
-        "Review company↔recruiter interactions on every submission.",
-      icon: MessagesSquare,
-    },
-  ],
-};
-
-/** Recruiter-only: the count endpoint is not rendered for a company. */
-function UnreadBadge() {
-  const { data } = useUnreadCount();
-  if (!data) return null;
-  return (
-    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold tabular-nums text-primary-foreground">
-      {data > 99 ? "99+" : data}
-    </span>
-  );
-}
+// Each role's dashboard is a heavy composite (it pulls in that role's feature
+// graph). Code-split them so /dashboard only loads the one it renders, instead
+// of bundling all three — and their whole feature graphs — into one route.
+const RecruiterDashboard = dynamic(() =>
+  import("@/features/recruiters/components/RecruiterDashboard").then(
+    (mod) => mod.RecruiterDashboard,
+  ),
+);
+const CompanyDashboard = dynamic(() =>
+  import("@/features/companies/components/CompanyDashboard").then(
+    (mod) => mod.CompanyDashboard,
+  ),
+);
+const AdminOverview = dynamic(() =>
+  import("@/features/admin").then((mod) => mod.AdminOverview),
+);
 
 function DashboardContent() {
   const { user } = useAuth();
@@ -120,75 +30,13 @@ function DashboardContent() {
   // the type honest during the redirect frame.
   if (!user) return null;
 
-  const links = LINKS_BY_ROLE[user.role];
-  const isRecruiter = user.role === "recruiter";
-  const isAdmin = user.role === "admin";
-
-  return (
-    <div className="flex flex-col gap-6">
-      {/* Navy hero card — the mock's premium dark hero: glow, on-dark eyebrow,
-          and a heavy white headline. */}
-      <header className="relative overflow-hidden rounded-md bg-navy p-6 shadow-card [animation:hh-rise_.6s_cubic-bezier(.22,1,.36,1)_both] sm:p-8">
-        <BrandGlow variant="hero" />
-        <div className="relative flex flex-col">
-          <Logo tone="onDark" />
-          <div className="mt-6">
-            <Eyebrow tone="onDark">Overview</Eyebrow>
-          </div>
-          <h1 className="mt-3 font-heading text-3xl font-extrabold tracking-[-0.02em] text-white sm:text-4xl">
-            Hey {user.firstName}.
-          </h1>
-          <p className="mt-3 text-sm text-[#C9D0DF]">
-            Signed in as {user.firstName} {user.lastName} ({user.email}) ·{" "}
-            <span className="capitalize">{user.role}</span>
-          </p>
-        </div>
-      </header>
-
-      {isRecruiter && <VerificationBanner />}
-
-      {isAdmin && <AdminOverview />}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        {links.map((link) => {
-          const Icon = link.icon;
-          const showBadge = isRecruiter && link.href === "/notifications";
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="group relative flex flex-col gap-3 rounded-md border border-border bg-card p-5 shadow-card transition hover:-translate-y-0.5 hover:border-[#C9D0DF] hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <div className="flex items-center justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/15 text-primary">
-                  <Icon className="h-[18px] w-[18px]" />
-                </span>
-                {showBadge ? (
-                  <UnreadBadge />
-                ) : (
-                  <ArrowRight className="h-[18px] w-[18px] text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                )}
-              </div>
-              <div className="flex flex-col gap-1">
-                <h2 className="font-heading text-base font-semibold tracking-tight text-foreground">
-                  {link.title}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {link.description}
-                </p>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {!user.emailVerified && (
-        <div className="rounded-md border border-[#F0E2B8] bg-[#FBF3DF] p-4 text-sm text-[#92610C]">
-          Your email is not verified yet. Some actions may be unavailable.
-        </div>
-      )}
-    </div>
-  );
+  if (user.role === "recruiter") {
+    return <RecruiterDashboard firstName={user.firstName} />;
+  }
+  if (user.role === "company") {
+    return <CompanyDashboard firstName={user.firstName} />;
+  }
+  return <AdminOverview firstName={user.firstName} />;
 }
 
 export default function DashboardPage() {

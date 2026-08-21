@@ -479,76 +479,6 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
                 </g>
               );
             })}
-
-            {/* City dots */}
-            {PLOTTED_CITIES.map((city) => {
-              const inSelectedState = selectedState === city.state;
-              const isSelectedCity =
-                selectedCity === city.name && selectedState === city.state;
-              const emphasized = inSelectedState || isSelectedCity;
-              const r = isSelectedCity ? 5 : emphasized ? 3.6 : 1.9;
-              return (
-                <g key={`${city.state}-${city.name}`}>
-                  <circle
-                    cx={city.x}
-                    cy={city.y}
-                    r={r}
-                    // Only emphasized (in-state) dots are exposed as buttons and
-                    // keyboard-reachable; the searchable combobox is the a11y
-                    // path for every city. Faint out-of-state dots stay
-                    // mouse-clickable but hidden from assistive tech so their
-                    // role/tabindex can't drift out of sync.
-                    role={emphasized ? "button" : undefined}
-                    tabIndex={emphasized ? 0 : undefined}
-                    aria-hidden={emphasized ? undefined : true}
-                    aria-label={
-                      emphasized ? `${city.name}, ${city.state}` : undefined
-                    }
-                    aria-pressed={emphasized ? isSelectedCity : undefined}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleCityClick(city);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleCityClick(city);
-                      }
-                    }}
-                    fill={
-                      isSelectedCity
-                        ? "#2658CF"
-                        : emphasized
-                          ? "#034AEF"
-                          : "#4F80E6"
-                    }
-                    stroke="#FFFFFF"
-                    strokeWidth={isSelectedCity ? 1.4 : 0.8}
-                    className="cursor-pointer outline-none transition-all duration-200"
-                    style={{
-                      opacity: selectedState && !emphasized ? 0.4 : 0.95,
-                      filter: isSelectedCity
-                        ? "drop-shadow(0 1px 4px rgba(3,74,239,0.5))"
-                        : undefined,
-                    }}
-                  />
-                  {emphasized && (
-                    <text
-                      x={city.x + r + 2}
-                      y={city.y + 3}
-                      className="pointer-events-none select-none"
-                      fontSize={isSelectedCity ? 11 : 9}
-                      fill="#0A1738"
-                      style={{ paintOrder: "stroke", fontWeight: 600 }}
-                      stroke="#FFFFFF"
-                      strokeWidth={2.5}
-                    >
-                      {city.name}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
           </g>
         </svg>
 
@@ -566,10 +496,6 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
           <div className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-[3px] border border-[#034AEF] bg-[#B4DBFD]" />
             Selected
-          </div>
-          <div className="ml-auto flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#4F80E6]" />
-            City
           </div>
         </div>
       </div>

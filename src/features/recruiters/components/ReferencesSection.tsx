@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Trash2, UserRound } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
@@ -21,6 +21,14 @@ import {
 
 const MAX_REFERENCES = 3;
 
+/** Two-letter monogram from a reference's name. */
+function monogram(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
 interface ReferencesSectionProps {
   references: RecruiterReference[];
 }
@@ -29,6 +37,7 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
   const add = useAddReference();
   const remove = useRemoveReference();
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const atCapacity = references.length >= MAX_REFERENCES;
 
   const {
@@ -49,88 +58,92 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
         title: values.title || undefined,
         phone: values.phone || undefined,
       },
-      { onSuccess: () => reset() },
+      {
+        onSuccess: () => {
+          reset();
+          setAdding(false);
+        },
+      },
     );
   });
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-heading text-lg font-semibold tracking-tight text-foreground">
-          References
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Up to {MAX_REFERENCES} professional references from recruiting roles.
-        </p>
+    <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-heading text-base font-bold text-navy">
+            References
+          </h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            Up to {MAX_REFERENCES} professional references from recruiting
+            roles.
+          </p>
+        </div>
+        <span className="shrink-0 text-sm font-semibold tabular-nums text-muted-foreground">
+          {references.length} / {MAX_REFERENCES}
+        </span>
       </div>
 
-      {references.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-md border border-dashed border-[#C9D0DF] bg-card px-6 py-10 text-center">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
-            <UserRound className="h-5 w-5" />
-          </span>
-          <p className="text-sm text-muted-foreground">No references yet.</p>
-        </div>
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {references.map((reference) =>
-            confirmingId === reference.id ? (
-              <li
-                key={reference.id}
-                className="rounded-md border border-border/70 bg-card p-4 shadow-sm"
-              >
-                <ConfirmAction
-                  message="Remove this reference? This cannot be undone."
-                  confirmLabel="Confirm remove"
-                  busyLabel="Removing…"
-                  busy={remove.isPending}
-                  onCancel={() => setConfirmingId(null)}
-                  onConfirm={() => remove.mutate(reference.id)}
-                />
-              </li>
-            ) : (
-              <li
-                key={reference.id}
-                className="flex items-start justify-between gap-4 rounded-md border border-border/70 bg-card p-4 shadow-sm"
-              >
-                <div className="text-sm">
-                  <p className="font-medium text-foreground">
-                    {reference.name}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {[reference.title, reference.company]
+      <div className="mt-4 divide-y divide-border border-t border-border">
+        {references.length === 0 && !adding && (
+          <p className="py-6 text-sm text-muted-foreground">
+            No references yet — add up to {MAX_REFERENCES}.
+          </p>
+        )}
+
+        {references.map((reference) =>
+          confirmingId === reference.id ? (
+            <div key={reference.id} className="py-4">
+              <ConfirmAction
+                message="Remove this reference? This cannot be undone."
+                confirmLabel="Confirm remove"
+                busyLabel="Removing…"
+                busy={remove.isPending}
+                onCancel={() => setConfirmingId(null)}
+                onConfirm={() => remove.mutate(reference.id)}
+              />
+            </div>
+          ) : (
+            <div
+              key={reference.id}
+              className="flex items-center justify-between gap-4 py-3.5"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-xs font-bold text-primary">
+                  {monogram(reference.name)}
+                </span>
+                <div className="min-w-0 text-sm">
+                  <p className="font-semibold text-navy">{reference.name}</p>
+                  <p className="truncate text-muted-foreground">
+                    {[reference.title, reference.company, reference.phone]
                       .filter(Boolean)
                       .join(" · ") || "—"}
                   </p>
-                  {reference.phone && (
-                    <p className="text-muted-foreground">{reference.phone}</p>
-                  )}
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setConfirmingId(reference.id)}
-                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Remove
-                </Button>
-              </li>
-            ),
-          )}
-        </ul>
-      )}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmingId(reference.id)}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                Remove
+              </Button>
+            </div>
+          ),
+        )}
+      </div>
 
       {atCapacity ? (
-        <p className="rounded-md border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
+        <p className="mt-4 rounded-md border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
           You have the maximum of {MAX_REFERENCES} references. Remove one to add
           another.
         </p>
-      ) : (
+      ) : adding ? (
         <form
           onSubmit={onSubmit}
-          className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm"
+          className="mt-4 flex flex-col gap-4 rounded-md border border-border bg-secondary/40 p-4"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
@@ -155,12 +168,32 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
               <Input id="ref-phone" {...register("phone")} />
             </div>
           </div>
-          <div>
+          <div className="flex gap-2">
             <Button type="submit" size="sm" disabled={add.isPending}>
               {add.isPending ? "Adding…" : "Add reference"}
             </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                reset();
+                setAdding(false);
+              }}
+            >
+              Cancel
+            </Button>
           </div>
         </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+        >
+          <Plus className="h-4 w-4" />
+          Add a reference
+        </button>
       )}
     </section>
   );
