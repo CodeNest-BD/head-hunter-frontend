@@ -7,9 +7,10 @@ import { ChevronDown, LogOut, UserRound } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { useMessageUnreadCount } from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
+import { useVerificationGate } from "@/features/recruiters";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { CountBadge } from "./CountBadge";
-import { NAV_BY_ROLE } from "./dashboardNav";
+import { navForRole } from "./dashboardNav";
 
 /** Live unread count for the notifications menu item (recruiter only). */
 function UnreadCount() {
@@ -30,13 +31,14 @@ function UnreadMessageCount() {
  */
 export function UserMenu({ className }: { className?: string }) {
   const { user, logout } = useAuth();
+  const { isApproved } = useVerificationGate();
   if (!user) return null;
 
   const initials =
     `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`
       .toUpperCase()
       .trim() || null;
-  const items = NAV_BY_ROLE[user.role];
+  const items = navForRole(user.role, isApproved);
 
   return (
     <DropdownMenu.Root>

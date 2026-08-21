@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { Clock3, ShieldX } from "lucide-react";
 
+import { Button } from "@/shared/ui-components/controls/button";
 import { useIsVerifiedRecruiter } from "../hooks/useIsVerifiedRecruiter";
-import { useMyRecruiterProfile } from "../hooks/useRecruiterProfile";
+import {
+  useMyRecruiterProfile,
+  useReapplyRecruiterVerification,
+} from "../hooks/useRecruiterProfile";
 
 /**
  * Tells an unverified recruiter where they stand: amber while the admin
@@ -15,6 +19,7 @@ export function VerificationBanner() {
   const { isRecruiter, isVerified, verificationStatus } =
     useIsVerifiedRecruiter();
   const { data: profile } = useMyRecruiterProfile();
+  const reapply = useReapplyRecruiterVerification();
 
   if (!isRecruiter || isVerified || verificationStatus === null) {
     return null;
@@ -42,6 +47,17 @@ export function VerificationBanner() {
             </Link>{" "}
             and contact support to request a re-review.
           </p>
+          <div className="mt-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => reapply.mutate()}
+              disabled={reapply.isPending}
+            >
+              {reapply.isPending ? "Re-applying…" : "Re-apply"}
+            </Button>
+          </div>
         </div>
       </div>
     );

@@ -39,7 +39,6 @@ const LINKABLE_PATHS = new Set<string>([
   "/company/wallet",
   "/company/profile",
   "/recruiter/submissions",
-  "/recruiter/subscription",
   "/recruiter/profile",
   "/admin/recruiters",
   "/admin/companies",

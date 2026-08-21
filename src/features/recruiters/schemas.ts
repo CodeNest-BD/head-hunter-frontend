@@ -70,6 +70,13 @@ export const recruiterProfileSchema = z.object({
 });
 export type RecruiterProfile = z.infer<typeof recruiterProfileSchema>;
 
+export const reapplyRecruiterVerificationResponseSchema = z.object({
+  verificationStatus: verificationStatusSchema,
+});
+export type ReapplyRecruiterVerificationResult = z.infer<
+  typeof reapplyRecruiterVerificationResponseSchema
+>;
+
 /** Profile edit form. Strings throughout; converted at the submit boundary. */
 export const recruiterProfileFormSchema = z.object({
   addressLine: z.string().trim(),

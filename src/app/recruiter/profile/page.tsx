@@ -7,6 +7,7 @@ import {
   RecruiterProfileForm,
   ReferencesSection,
   useMyRecruiterProfile,
+  VerificationBanner,
   type VerificationStatus,
 } from "@/features/recruiters";
 import { PageBanner } from "@/shared/ui-components/brand";
@@ -54,6 +55,8 @@ function RecruiterProfileContent() {
           data ? <VerificationPill status={data.verificationStatus} /> : null
         }
       />
+
+      <VerificationBanner />
 
       {isPending ? (
         <ProfileSkeleton />

@@ -18,12 +18,13 @@ import { useAdminRecruiters } from "@/features/admin/hooks/useAdmin";
 import { useWallet } from "@/features/billing/hooks/useBilling";
 import { useMessageUnreadCount } from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
+import { useVerificationGate } from "@/features/recruiters";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { Breadcrumb, type Crumb } from "./Breadcrumb";
 import { deriveBreadcrumbs } from "./breadcrumbs";
 import { CountBadge } from "./CountBadge";
-import { NAV_BY_ROLE, type NavItem } from "./dashboardNav";
+import { navForRole, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
 
 /** Persists the desktop collapse choice across navigations and reloads. */
@@ -148,9 +149,10 @@ function SidebarContent({
 }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { isApproved } = useVerificationGate();
   if (!user) return null;
 
-  const items = NAV_BY_ROLE[user.role];
+  const items = navForRole(user.role, isApproved);
   const isActive = (href: string) =>
     href === "/dashboard"
       ? pathname === "/dashboard"

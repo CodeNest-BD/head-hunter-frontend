@@ -83,3 +83,25 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ],
 };
+
+/** Labels an unapproved recruiter may still reach. Mirrors the server's allow-list. */
+const UNAPPROVED_RECRUITER_LABELS = ["Notifications", "My profile"] as const;
+
+/**
+ * Approval-aware nav selector. `UserMenu` and `SidebarContent` both read
+ * through this instead of `NAV_BY_ROLE` directly, so reducing an unapproved
+ * recruiter's navigation fixes the dropdown and the sidebar in one change.
+ * Companies and admins are never reduced.
+ */
+export function navForRole(
+  role: Role,
+  isApproved: boolean,
+): readonly NavItem[] {
+  const items = NAV_BY_ROLE[role];
+  if (role !== "recruiter" || isApproved) {
+    return items;
+  }
+  return items.filter((item) =>
+    (UNAPPROVED_RECRUITER_LABELS as readonly string[]).includes(item.label),
+  );
+}

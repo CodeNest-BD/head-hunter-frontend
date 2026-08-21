@@ -4,6 +4,7 @@ import {
   addReference,
   devActivateSubscription,
   fetchMyRecruiterProfile,
+  reapplyRecruiterVerification,
   removeReference,
   updateMyRecruiterProfile,
   type CreateReferenceInput,
@@ -47,6 +48,22 @@ export function useRemoveReference() {
     mutationFn: (id: string) => removeReference(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: recruiterKeys.myProfile });
+    },
+  });
+}
+
+/**
+ * Re-submits a declined recruiter for review. Only legal from `rejected` —
+ * the server 409s otherwise — so this is wired to the banner's Re-apply
+ * action, not offered while pending or verified.
+ */
+export function useReapplyRecruiterVerification() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: reapplyRecruiterVerification,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: recruiterKeys.myProfile });
+      toast.success("Re-application submitted — an admin will review it");
     },
   });
 }
