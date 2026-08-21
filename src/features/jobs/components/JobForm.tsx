@@ -279,7 +279,10 @@ export function JobForm({
           title="Compensation"
           hint="The salary band for the candidate and the fee for the recruiter."
         >
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {/* The salary band and the recruiter fee are different money paid by
+              different parties to different people, so they get their own rows
+              rather than reading as three columns of one figure. */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="salaryMin">Salary minimum ($) (optional)</Label>
               <Input
@@ -301,20 +304,21 @@ export function JobForm({
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="recruiterFee">Recruiter fee ($)</Label>
-              <Input
-                id="recruiterFee"
-                inputMode="decimal"
-                placeholder="10000"
-                {...register("recruiterFee")}
-              />
-              {errors.recruiterFee && (
-                <p className="text-xs text-destructive">
-                  {errors.recruiterFee.message}
-                </p>
-              )}
-            </div>
+          </div>
+
+          <div className="flex max-w-xs flex-col gap-2">
+            <Label htmlFor="recruiterFee">Recruiter fee ($)</Label>
+            <Input
+              id="recruiterFee"
+              inputMode="decimal"
+              placeholder="10000"
+              {...register("recruiterFee")}
+            />
+            {errors.recruiterFee && (
+              <p className="text-xs text-destructive">
+                {errors.recruiterFee.message}
+              </p>
+            )}
           </div>
           <p className="text-[13px] text-muted-foreground">
             What you will pay a recruiter for a successful hire.
