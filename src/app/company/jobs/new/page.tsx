@@ -32,7 +32,7 @@ export default function NewJobPage() {
   return (
     <RequireRole role="company">
       <DashboardLayout>
-        <div className="mx-auto flex max-w-5xl flex-col gap-6">
+        <div className="flex w-full flex-col gap-6">
           <Link
             href="/company/jobs"
             className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"

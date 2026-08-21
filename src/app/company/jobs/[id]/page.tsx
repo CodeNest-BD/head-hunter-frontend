@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
@@ -23,18 +23,15 @@ const STATUS_STYLES: Record<string, string> = {
 
 function FormSkeleton() {
   return (
-    <div className="flex flex-col gap-5">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex flex-col gap-2">
-          <div className="h-4 w-32 animate-pulse rounded bg-muted" />
-          <div className="h-9 w-full animate-pulse rounded-md bg-muted" />
-        </div>
-      ))}
+    <div className="flex flex-col gap-4">
+      <div className="h-72 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
+      <div className="h-48 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
     </div>
   );
 }
 
 function EditJobContent({ jobId }: { jobId: string }) {
+  const router = useRouter();
   const { data: job, isPending, isError, refetch } = useJob(jobId);
   const update = useUpdateJob(jobId);
   const { publish, isPending: isPublishing } = usePublishJob(jobId);
@@ -67,25 +64,27 @@ function EditJobContent({ jobId }: { jobId: string }) {
   // Expired listings republish through the same transition: re-reserves the
   // fee and restarts the 30-day clock.
   const isExpired = job.status === "expired";
+  const canPublish = isDraft || isExpired;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-1.5">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Status
-          </p>
-          <StatusBadge
-            label={job.status}
-            className={cn(
-              "w-fit",
-              STATUS_STYLES[job.status] ?? "bg-muted text-muted-foreground",
-              "capitalize",
-            )}
-          />
-        </div>
-        {isDraft || isExpired ? (
-          <div className="flex flex-col items-start gap-1.5 sm:items-end">
+      <PageHeader
+        title={
+          <span className="flex flex-wrap items-center gap-3">
+            Edit job
+            <StatusBadge
+              label={job.status}
+              className={cn(
+                "text-xs",
+                STATUS_STYLES[job.status] ?? "bg-muted text-muted-foreground",
+                "capitalize",
+              )}
+            />
+          </span>
+        }
+        subtitle="Update the details, then publish when you are ready."
+        actions={
+          canPublish ? (
             <Button type="button" disabled={isPublishing} onClick={publish}>
               {isPublishing
                 ? "Publishing…"
@@ -93,32 +92,32 @@ function EditJobContent({ jobId }: { jobId: string }) {
                   ? "Republish for 30 days"
                   : "Publish"}
             </Button>
-            {isExpired && (
-              <p className="text-xs text-muted-foreground">
-                This listing lapsed after 30 days; republishing reserves the fee
-                again.
-              </p>
-            )}
-          </div>
-        ) : (
-          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <CheckCircle2 className="h-4 w-4 text-[#17734E]" />
-            Published
-            {job.publishedAt
-              ? ` on ${job.publishedAt.toLocaleDateString()}`
-              : ""}
-          </p>
-        )}
-      </div>
+          ) : (
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <CheckCircle2 className="h-4 w-4 text-[#17734E]" />
+              Published
+              {job.publishedAt
+                ? ` on ${job.publishedAt.toLocaleDateString()}`
+                : ""}
+            </span>
+          )
+        }
+      />
 
-      <div className="rounded-md border border-border/70 bg-card p-6 shadow-sm">
-        <JobForm
-          job={job}
-          onSubmit={(input) => update.mutate(input)}
-          isSubmitting={update.isPending}
-          submitLabel="Save changes"
-        />
-      </div>
+      {isExpired && (
+        <p className="rounded-md border border-[#F0E2B8] bg-[#FBF3DF] px-4 py-3 text-sm text-[#7A5109]">
+          This listing lapsed after 30 days; republishing reserves the fee
+          again.
+        </p>
+      )}
+
+      <JobForm
+        job={job}
+        onSubmit={(input) => update.mutate(input)}
+        isSubmitting={update.isPending}
+        submitLabel="Save changes"
+        onCancel={() => router.push("/company/jobs")}
+      />
     </div>
   );
 }
@@ -129,7 +128,7 @@ export default function EditJobPage() {
   return (
     <RequireRole role="company">
       <DashboardLayout>
-        <div className="flex max-w-2xl flex-col gap-6">
+        <div className="flex w-full flex-col gap-4">
           <Link
             href="/company/jobs"
             className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -137,11 +136,6 @@ export default function EditJobPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to jobs
           </Link>
-          <PageHeader
-            title="Edit job"
-            subtitle="Update the details, then publish when you are ready."
-            className="mb-0"
-          />
           <EditJobContent jobId={params.id} />
         </div>
       </DashboardLayout>

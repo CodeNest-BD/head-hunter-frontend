@@ -5,18 +5,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LogOut,
-  Map,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
+  Plus,
   UserRound,
   X,
 } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { useAdminRecruiters } from "@/features/admin/hooks/useAdmin";
+import { useWallet } from "@/features/billing/hooks/useBilling";
 import { useMessageUnreadCount } from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { formatMinor } from "@/shared/utils/money";
 import { Breadcrumb, type Crumb } from "./Breadcrumb";
 import { deriveBreadcrumbs } from "./breadcrumbs";
 import { CountBadge } from "./CountBadge";
@@ -30,6 +33,56 @@ const SIDEBAR_COLLAPSED_KEY = "hh-sidebar-collapsed";
 function UnreadBadge() {
   const { data } = useUnreadCount();
   return <CountBadge count={data} />;
+}
+
+/**
+ * Company top-bar actions: the available balance follows you across every page
+ * (so you never publish into an empty wallet by surprise) next to New job.
+ */
+function CompanyTopBarActions() {
+  const { data } = useWallet();
+  return (
+    <div className="flex items-center gap-2">
+      <Link
+        href="/company/wallet"
+        className="hidden items-center gap-1.5 rounded-md border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary sm:inline-flex"
+      >
+        <span className="text-muted-foreground">Available</span>
+        <span className="tabular-nums">
+          {formatMinor(data?.availableMinor)}
+        </span>
+      </Link>
+      <Link
+        href="/company/jobs/new"
+        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+      >
+        <Plus className="h-4 w-4" />
+        <span className="hidden sm:inline">New job</span>
+      </Link>
+    </div>
+  );
+}
+
+/**
+ * Admin top-bar pill: pending recruiter verifications follow the admin across
+ * every page, since clearing them is the job. Renders nothing at zero.
+ */
+function AdminTopBarPending() {
+  const { data } = useAdminRecruiters({
+    page: 1,
+    verificationStatus: "pending",
+    limit: 1,
+  });
+  const pending = data?.meta.total ?? 0;
+  if (pending === 0) return null;
+  return (
+    <Link
+      href="/admin/recruiters"
+      className="inline-flex items-center rounded-full bg-[#FBF3DF] px-3 py-1.5 text-sm font-semibold text-[#7A5109] transition-colors hover:bg-[#F6E9C6]"
+    >
+      {pending} verification{pending === 1 ? "" : "s"} pending
+    </Link>
+  );
 }
 
 /** Unread-messages pill for the Inbox (company) / Submissions (recruiter)
@@ -162,13 +215,9 @@ function SidebarContent({
 export interface DashboardLayoutProps {
   children: ReactNode;
   /**
-   * Content-column width. `false` (default) uses the standard `max-w-6xl`
-   * reading width most pages use. `true` removes the cap entirely — for
-   * data tables that need the full width. `"detail"` widens it to
-   * `DETAIL_MAX_WIDTH_CLASSNAME` instead: enough for a page with two
-   * columns of real content (e.g. the submission/inbox detail views) to use
-   * the space beside the sidebar, without stretching edge-to-edge like
-   * `true` does on an ultra-wide monitor.
+   * Retained for API compatibility. Every authenticated page now fills the
+   * content area edge-to-edge, so this no longer changes the width — pages
+   * that want a narrower reading column cap it themselves.
    */
   wide?: boolean | "detail";
   /** Trail shown in the top bar, aligned with the content column. */
@@ -176,31 +225,15 @@ export interface DashboardLayoutProps {
 }
 
 /**
- * Cap for `wide="detail"` pages: most of the space beside the sidebar at a
- * 1920px viewport (1920 - 256px sidebar - 2 × 40px `lg:px-10` gutter =
- * 1584px available), while still leaving a proportionate margin on wider
- * displays instead of growing without bound.
- */
-const DETAIL_MAX_WIDTH_CLASSNAME = "max-w-[96rem]";
-
-/**
  * App chrome for authenticated pages: a left sidebar (role-based nav) and a
  * slim top bar. On desktop the sidebar collapses to an icon-only rail (the
  * choice is remembered); on small screens it is a slide-over toggled from the
- * top bar.
+ * top bar. The content area is full-width; pages own any narrower column.
  */
 export function DashboardLayout({
   children,
-  wide = false,
   breadcrumbs,
 }: DashboardLayoutProps) {
-  const containerMaxWidthClassName =
-    wide === true
-      ? "max-w-none"
-      : wide === "detail"
-        ? DETAIL_MAX_WIDTH_CLASSNAME
-        : "max-w-6xl";
-
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
@@ -253,16 +286,31 @@ export function DashboardLayout({
             <Breadcrumb items={resolvedCrumbs} />
           </div>
         )}
-        {/* Recruiters get a persistent Explore-jobs entry in the top bar. */}
-        {user?.role === "recruiter" && (
+        {/* Global site links, right after the breadcrumb, shown to every
+         * signed-in user on app pages (public pages get the marketing nav). */}
+        <nav
+          aria-label="Site"
+          className="hidden items-center gap-5 md:flex lg:ml-2"
+        >
+          <Link
+            href="/#how"
+            className="text-sm font-semibold text-navy transition-colors hover:text-primary"
+          >
+            How It Works
+          </Link>
           <Link
             href="/explore-jobs"
-            className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary"
+            className="text-sm font-semibold text-navy transition-colors hover:text-primary"
           >
-            <Map className="h-4 w-4" />
-            <span className="hidden sm:inline">Explore jobs</span>
+            Explore Jobs
           </Link>
-        )}
+        </nav>
+
+        {/* Role affordances stay pinned to the right. */}
+        <div className="ml-auto flex items-center gap-3">
+          {user?.role === "company" && <CompanyTopBarActions />}
+          {user?.role === "admin" && <AdminTopBarPending />}
+        </div>
       </header>
 
       {/* Fixed sidebar (desktop) */}
@@ -339,9 +387,7 @@ export function DashboardLayout({
          * `TwoColumnDetailLayout`'s `PAGE_HEIGHT_CLASSNAME` for the one
          * other place this padding's value has to be known. */}
         <main className="min-h-screen px-4 pb-16 pt-20 sm:px-6 lg:px-10">
-          <div className={cn("mx-auto w-full", containerMaxWidthClassName)}>
-            {children}
-          </div>
+          <div className="w-full">{children}</div>
         </main>
       </div>
     </div>

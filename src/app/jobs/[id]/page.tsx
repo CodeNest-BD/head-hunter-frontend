@@ -1,18 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  AlertCircle,
-  ArrowLeft,
-  Banknote,
-  Briefcase,
-  CalendarDays,
-  Clock,
-  MapPin,
-  Send,
-  Wallet,
-} from "lucide-react";
+import { AlertCircle, ArrowLeft, Send, Wallet } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { useAuth } from "@/features/auth";
@@ -27,56 +18,16 @@ import { useCreateOrOpenSubmission } from "@/features/submissions";
 import { PublicShell } from "@/components/landing/PublicShell";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
-import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { RichTextView } from "@/shared/ui-components/data/RichTextView";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
-import type { LucideIcon } from "lucide-react";
 import type { EmploymentType, RoleCategory } from "@/features/jobs";
-
-function Detail({
-  icon: Icon,
-  label,
-  value,
-  className,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-start gap-3 rounded-md border border-brand-line bg-card p-3.5",
-        className,
-      )}
-    >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
-        <Icon className="h-[18px] w-[18px]" />
-      </span>
-      <div className="flex min-w-0 flex-col">
-        <span className="text-xs uppercase tracking-wide text-muted-foreground">
-          {label}
-        </span>
-        <span className="truncate font-medium text-foreground">{value}</span>
-      </div>
-    </div>
-  );
-}
 
 function DetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <div className="h-28 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
-      <div className="grid gap-3 sm:grid-cols-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-20 w-full animate-pulse rounded-md bg-muted"
-          />
-        ))}
-      </div>
+      <div className="h-80 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
     </div>
   );
 }
@@ -96,7 +47,20 @@ interface JobView {
   description: string | null;
 }
 
-function JobBody({ job, cta }: { job: JobView; cta: React.ReactNode }) {
+/** One label/value fact in the header card. */
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 truncate font-medium text-navy">{value}</p>
+    </div>
+  );
+}
+
+/** Fee + the role's facts, the strip a recruiter scans first. */
+function FactsCard({ job }: { job: JobView }) {
   const location = job.isRemote
     ? "Remote"
     : [job.locationCity, job.locationState].filter(Boolean).join(", ") || "—";
@@ -107,8 +71,6 @@ function JobBody({ job, cta }: { job: JobView; cta: React.ReactNode }) {
   const employmentType = job.employmentType
     ? (EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType] ?? "—")
     : "—";
-  // How stale a role is changes whether a recruiter works it, so this is
-  // relative rather than an absolute date.
   const posted = job.publishedAt
     ? formatDistanceToNow(job.publishedAt, { addSuffix: true })
     : "—";
@@ -116,51 +78,71 @@ function JobBody({ job, cta }: { job: JobView; cta: React.ReactNode }) {
     ROLE_CATEGORY_LABELS[job.roleCategory as RoleCategory] ?? "Other";
 
   return (
-    <div className="flex flex-col gap-5">
-      {cta && <div className="flex justify-end">{cta}</div>}
-
-      {/* Recruiter fee hero — the headline number, with a soft brand glow. */}
-      <div className="relative overflow-hidden rounded-md border border-primary/30 bg-card p-5 shadow-sm">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl"
-        />
-        <div className="relative flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
-            <Wallet className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-sm text-muted-foreground">Recruiter fee</p>
-            <p className="font-heading text-[28px] font-extrabold leading-tight tracking-tight tabular-nums text-navy">
-              {formatMinor(job.recruiterFeeMinor)}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Paid upon a successful hire.
-            </p>
-          </div>
+    <div className="flex flex-col divide-y divide-border rounded-md border border-border bg-card shadow-card md:flex-row md:divide-x md:divide-y-0">
+      <div className="flex items-center gap-3 p-5 sm:p-6 md:w-72">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
+          <Wallet className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            Recruiter fee
+          </p>
+          <p className="font-heading text-2xl font-extrabold tabular-nums text-navy">
+            {formatMinor(job.recruiterFeeMinor)}
+          </p>
+          <p className="text-xs text-muted-foreground">on a successful hire</p>
         </div>
       </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Detail icon={Briefcase} label="Category" value={category} />
-        <Detail icon={MapPin} label="Location" value={location} />
-        <Detail icon={Banknote} label="Salary range" value={salary} />
-        <Detail icon={Clock} label="Employment type" value={employmentType} />
-        <Detail
-          icon={CalendarDays}
-          label="Posted"
-          value={posted}
-          className="sm:col-span-2"
-        />
+      <div className="grid flex-1 grid-cols-1 gap-x-6 gap-y-4 p-5 sm:grid-cols-2 sm:p-6">
+        <Fact label="Category" value={category} />
+        <Fact label="Location" value={location} />
+        <Fact label="Salary range" value={salary} />
+        <Fact label="Employment type" value={employmentType} />
+        <Fact label="Posted" value={posted} />
+        <Fact label="Work model" value={job.isRemote ? "Remote" : "On-site"} />
       </div>
+    </div>
+  );
+}
 
-      {job.description && (
-        <section className="rounded-md border border-brand-line bg-card p-5 shadow-sm">
-          <h2 className="mb-3 font-heading text-lg font-semibold tracking-tight text-foreground">
-            Description
-          </h2>
-          <RichTextView value={job.description} />
-        </section>
+function DescriptionCard({ description }: { description: string | null }) {
+  return (
+    <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+      <h2 className="mb-3 font-heading text-lg font-bold tracking-tight text-navy">
+        Description
+      </h2>
+      {description ? (
+        <RichTextView value={description} />
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          No description provided for this role.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function JobBody({ job, cta }: { job: JobView; cta: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <FactsCard job={job} />
+      {cta ? (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <DescriptionCard description={job.description} />
+          <aside className="h-fit lg:sticky lg:top-24">
+            <div className="rounded-md border border-border bg-card p-5 shadow-card">
+              <h2 className="font-heading text-base font-bold text-navy">
+                Ready to submit?
+              </h2>
+              <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+                Open the workspace to add candidates and message the company.
+              </p>
+              <div className="mt-4">{cta}</div>
+            </div>
+          </aside>
+        </div>
+      ) : (
+        <DescriptionCard description={job.description} />
       )}
     </div>
   );
@@ -179,6 +161,7 @@ function SubmitCandidatesButton({ jobId }: { jobId: string }) {
   return (
     <Button
       type="button"
+      className="w-full"
       disabled={createOrOpenSubmission.isPending}
       onClick={() =>
         createOrOpenSubmission.mutate(
@@ -202,8 +185,8 @@ function RecruiterCta({ jobId }: { jobId: string }) {
   if (isLoading) return null;
   if (isVerified) return <SubmitCandidatesButton jobId={jobId} />;
   return (
-    <div className="flex flex-col items-end gap-1.5">
-      <Button type="button" disabled>
+    <div className="flex flex-col gap-1.5">
+      <Button type="button" className="w-full" disabled>
         <Send className="h-[18px] w-[18px]" />
         Submit candidates
       </Button>
@@ -228,8 +211,8 @@ function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
   const { data: job, isPending, isError, refetch } = useJob(jobId);
 
   return (
-    <DashboardLayout>
-      <div className="flex max-w-2xl flex-col gap-6">
+    <DashboardLayout wide="detail">
+      <div className="flex w-full flex-col gap-4">
         <Link
           href="/explore-jobs"
           className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -275,7 +258,7 @@ function GuestJobDetail({ jobId }: { jobId: string }) {
 
   return (
     <PublicShell>
-      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-5 py-12 md:px-0">
+      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-12 md:px-0">
         <Link
           href="/explore-jobs"
           className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -286,11 +269,11 @@ function GuestJobDetail({ jobId }: { jobId: string }) {
         {isPending ? (
           <DetailSkeleton />
         ) : isError || !job ? (
-          <div className="rounded-md border border-brand-line bg-white p-10 text-center">
+          <div className="rounded-md border border-border bg-card p-10 text-center">
             <p className="font-heading text-lg font-extrabold text-navy">
               This role is no longer available
             </p>
-            <p className="mt-2 text-sm text-brand-gray">
+            <p className="mt-2 text-sm text-muted-foreground">
               It may have been filled or expired.{" "}
               <Link
                 href="/explore-jobs"
@@ -306,15 +289,16 @@ function GuestJobDetail({ jobId }: { jobId: string }) {
             <div>
               <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-navy">
                 {job.title}
+                <span className="text-primary">.</span>
               </h1>
               {job.companyName && (
-                <p className="mt-1 text-brand-gray">{job.companyName}</p>
+                <p className="mt-1 text-muted-foreground">{job.companyName}</p>
               )}
             </div>
             <JobBody
               job={job}
               cta={
-                <Button asChild className="font-bold">
+                <Button asChild className="w-full font-bold">
                   <Link href="/signup">
                     <Send className="h-[18px] w-[18px]" />
                     Sign up to submit candidates
@@ -337,7 +321,7 @@ export default function JobDetailPage() {
   // flash for signed-in visitors.
   if (status === "booting") {
     return (
-      <div className="mx-auto max-w-2xl px-5 py-16">
+      <div className="mx-auto max-w-5xl px-5 py-16">
         <DetailSkeleton />
       </div>
     );
