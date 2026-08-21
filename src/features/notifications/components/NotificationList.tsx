@@ -7,6 +7,7 @@ import {
   Bell,
   BellOff,
   Briefcase,
+  Check,
   CheckCheck,
   MessageSquare,
   ShieldCheck,
@@ -118,9 +119,13 @@ function groupByDay(items: readonly Notification[], now: Date): DayGroup[] {
 function NotificationRow({
   item,
   onOpen,
+  onMarkRead,
+  isMarkingRead,
 }: {
   item: Notification;
   onOpen: (id: string) => void;
+  onMarkRead: (id: string) => void;
+  isMarkingRead: boolean;
 }) {
   const { user } = useAuth();
   const href = user ? notificationHref(item, user.role) : null;
@@ -128,18 +133,15 @@ function NotificationRow({
   const { Icon, tone } = iconFor(item.type);
 
   const rowClassName = cn(
-    "relative flex items-start gap-3 px-4 py-3.5 transition-colors",
+    "relative flex items-start transition-colors",
     unread ? "bg-primary/[0.04]" : "hover:bg-secondary/50",
   );
+  // The link and the mark-read button are siblings, never nested: a <button>
+  // inside an <a> is invalid markup and clicking it would navigate the row.
+  const bodyClassName = "flex min-w-0 flex-1 items-start gap-3 px-4 py-3.5";
 
   const content = (
     <>
-      {unread && (
-        <span
-          aria-hidden="true"
-          className="absolute left-0 top-0 h-full w-[3px] bg-primary"
-        />
-      )}
       <span
         aria-hidden="true"
         className={cn(
@@ -178,13 +180,38 @@ function NotificationRow({
     </>
   );
 
-  if (!href) {
-    return <div className={rowClassName}>{content}</div>;
-  }
   return (
-    <Link href={href} className={rowClassName} onClick={() => onOpen(item.id)}>
-      {content}
-    </Link>
+    <div className={rowClassName}>
+      {unread && (
+        <span
+          aria-hidden="true"
+          className="absolute left-0 top-0 h-full w-[3px] bg-primary"
+        />
+      )}
+      {href ? (
+        <Link
+          href={href}
+          className={bodyClassName}
+          onClick={() => onOpen(item.id)}
+        >
+          {content}
+        </Link>
+      ) : (
+        <div className={bodyClassName}>{content}</div>
+      )}
+      {unread && (
+        <button
+          type="button"
+          title="Mark as read"
+          aria-label={`Mark "${item.title}" as read`}
+          disabled={isMarkingRead}
+          onClick={() => onMarkRead(item.id)}
+          className="mr-3 mt-3.5 shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary disabled:opacity-40"
+        >
+          <Check className="h-4 w-4" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -310,6 +337,8 @@ export function NotificationList() {
                       <NotificationRow
                         item={item}
                         onOpen={(id) => markRead.mutate(id)}
+                        onMarkRead={(id) => markRead.mutate(id)}
+                        isMarkingRead={markRead.isPending}
                       />
                     </li>
                   ))}
