@@ -1,4 +1,4 @@
-import { Money } from "@/shared/ui-components/data/MoneyVisibility";
+import { formatMinor } from "@/shared/utils/money";
 import type { Candidate } from "../schemas";
 
 interface CandidateFieldsProps {
@@ -33,7 +33,7 @@ export function CandidateFields({ candidate }: CandidateFieldsProps) {
           <div>
             <dt className="text-xs text-muted-foreground">Expected salary</dt>
             <dd className="text-foreground">
-              <Money minor={candidate.expectedSalaryMinor} />
+              {formatMinor(candidate.expectedSalaryMinor)}
             </dd>
           </div>
         )}

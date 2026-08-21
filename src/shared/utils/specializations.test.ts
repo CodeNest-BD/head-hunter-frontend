@@ -36,7 +36,9 @@ describe("getSpecializationLabel", () => {
   });
 
   it("passes an unrecognized value through unchanged, casing and punctuation intact", () => {
-    expect(getSpecializationLabel("Renewable energy")).toBe("Renewable energy");
+    expect(getSpecializationLabel("Renewable energy")).toBe(
+      "Renewable energy",
+    );
     expect(getSpecializationLabel("AI & Robotics")).toBe("AI & Robotics");
   });
 });

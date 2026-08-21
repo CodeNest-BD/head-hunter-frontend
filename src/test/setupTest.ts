@@ -4,21 +4,10 @@ process.env.NEXT_PUBLIC_API_URL ??= "http://api.test";
 
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach, beforeEach, vi } from "vitest";
+import { afterEach, vi } from "vitest";
 
 // Referenced by vitest.config.ts's setupFiles since the scaffold was created,
 // but never written — the test tier could not start until this existed.
-
-// Money is masked by default in the app. Tests assert on real amounts, so the
-// revealed preference is stored before each render; a test that wants the masked
-// default removes this key itself.
-beforeEach(() => {
-  try {
-    window.localStorage.setItem("hh.money.hidden", "false");
-  } catch {
-    // Storage unavailable in this environment — masked default applies.
-  }
-});
 
 afterEach(() => {
   cleanup();

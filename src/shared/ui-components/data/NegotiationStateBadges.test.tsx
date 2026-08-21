@@ -1,7 +1,5 @@
-import { screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-
-import { renderWithProviders as render } from "@/test/utils";
 
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { NegotiationStateBadges } from "./NegotiationStateBadges";

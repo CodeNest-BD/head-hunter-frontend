@@ -4,7 +4,7 @@ import type {
 } from "@/features/conversations/utils/candidateNegotiationState";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDateTime } from "@/shared/utils/formatDate";
-import { useFormatMoney } from "./MoneyVisibility";
+import { formatMinor } from "@/shared/utils/money";
 
 export interface NegotiationStateBadgesProps {
   interview: InterviewBadge | null;
@@ -49,15 +49,10 @@ function describeInterview(interview: InterviewBadge | null): BadgeContent {
   }
 }
 
-function describeOffer(
-  offer: OfferBadge | null,
-  // The amount is baked into the phrase, so masking has to happen here rather
-  // than by wrapping a standalone element.
-  formatMoney: (minor: number | null | undefined) => string,
-): BadgeContent {
+function describeOffer(offer: OfferBadge | null): BadgeContent {
   if (!offer) return { phrase: "none yet", tone: "neutral" };
   const salary =
-    offer.salaryMinor !== null ? ` · ${formatMoney(offer.salaryMinor)}` : "";
+    offer.salaryMinor !== null ? ` · ${formatMinor(offer.salaryMinor)}` : "";
   switch (offer.kind) {
     case "sent":
       return { phrase: `offer sent${salary}`, tone: "pending" };
@@ -104,17 +99,13 @@ export function NegotiationStateBadges({
   interview,
   offer,
 }: NegotiationStateBadgesProps) {
-  const formatMoney = useFormatMoney();
   return (
     <div className="flex flex-wrap items-center gap-2">
       <NegotiationBadge
         label="Interview"
         content={describeInterview(interview)}
       />
-      <NegotiationBadge
-        label="Offer"
-        content={describeOffer(offer, formatMoney)}
-      />
+      <NegotiationBadge label="Offer" content={describeOffer(offer)} />
     </div>
   );
 }

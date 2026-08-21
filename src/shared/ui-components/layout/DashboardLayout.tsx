@@ -20,10 +20,7 @@ import { useMessageUnreadCount } from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
 import { useVerificationGate } from "@/features/recruiters";
 import { cn } from "@/shared/libs/shadCnConfig";
-import {
-  Money,
-  MoneyVisibilityToggle,
-} from "@/shared/ui-components/data/MoneyVisibility";
+import { formatMinor } from "@/shared/utils/money";
 import { Breadcrumb, type Crumb } from "./Breadcrumb";
 import { deriveBreadcrumbs } from "./breadcrumbs";
 import { CountBadge } from "./CountBadge";
@@ -52,10 +49,10 @@ function CompanyTopBarActions() {
         className="hidden items-center gap-1.5 rounded-md border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary sm:inline-flex"
       >
         <span className="text-muted-foreground">Available</span>
-        <Money minor={data?.availableMinor} className="tabular-nums" />
+        <span className="tabular-nums">
+          {formatMinor(data?.availableMinor)}
+        </span>
       </Link>
-      {/* One switch for every amount in the app — see MoneyVisibility. */}
-      <MoneyVisibilityToggle />
       <Link
         href="/company/jobs/new"
         className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
@@ -311,7 +308,6 @@ export function DashboardLayout({
             </Link>
           </nav>
           {user?.role === "company" && <CompanyTopBarActions />}
-          {user?.role !== "company" && <MoneyVisibilityToggle />}
           {user?.role === "admin" && <AdminTopBarPending />}
         </div>
       </header>
