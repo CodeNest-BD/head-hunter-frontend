@@ -146,11 +146,6 @@ export function InboxJobsTable() {
                           <span className="truncate font-semibold text-navy">
                             {row.jobTitle}
                           </span>
-                          {fresh && (
-                            <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                              New
-                            </span>
-                          )}
                           <UnreadBadge count={row.unreadMessages} />
                         </div>
                         <p className="mt-0.5 text-[13px] text-muted-foreground">
