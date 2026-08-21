@@ -30,6 +30,7 @@ import {
   type SubmissionStatus,
 } from "@/features/submissions";
 import { PageHeader } from "@/shared/ui-components/brand";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { NegotiationActionCards } from "@/shared/ui-components/data/NegotiationActionCards";
@@ -213,62 +214,6 @@ function CandidateItem({
   );
 }
 
-function AddCandidateSection({
-  submissionId,
-  candidateCount,
-  submissionStatus,
-}: {
-  submissionId: string;
-  candidateCount: number;
-  submissionStatus: SubmissionStatus;
-}) {
-  const [isAdding, setIsAdding] = useState(false);
-  const submissionClosed =
-    submissionStatus === "withdrawn" || submissionStatus === "rejected";
-  const atCapacity = candidateCount >= MAX_CANDIDATES;
-  const disabled = submissionClosed || atCapacity;
-  const disabledReason = submissionClosed
-    ? "This submission is no longer open for new candidates."
-    : atCapacity
-      ? `A submission may hold at most ${MAX_CANDIDATES} candidates.`
-      : undefined;
-
-  if (isAdding) {
-    return (
-      <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm">
-        <CandidateForm
-          submissionId={submissionId}
-          onDone={() => setIsAdding(false)}
-        />
-        <div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsAdding(false)}
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <Button
-        type="button"
-        disabled={disabled}
-        title={disabledReason}
-        onClick={() => setIsAdding(true)}
-      >
-        <Plus className="h-[18px] w-[18px]" />
-        Add candidate
-      </Button>
-    </div>
-  );
-}
-
 function CandidateListSection({
   submissionId,
   submissionStatus,
@@ -280,27 +225,70 @@ function CandidateListSection({
   candidates: Candidate[];
   negotiationState: ReturnType<typeof candidateNegotiationState>;
 }) {
+  const [isAdding, setIsAdding] = useState(false);
+  const submissionClosed =
+    submissionStatus === "withdrawn" || submissionStatus === "rejected";
+  const atCapacity = candidates.length >= MAX_CANDIDATES;
+  const disabled = submissionClosed || atCapacity;
+  const disabledReason = submissionClosed
+    ? "This submission is no longer open for new candidates."
+    : atCapacity
+      ? `A submission may hold at most ${MAX_CANDIDATES} candidates.`
+      : undefined;
+
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="font-heading text-lg font-semibold text-foreground">
-        Candidates ({candidates.length}/{MAX_CANDIDATES})
-      </h2>
+      <div className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="font-heading text-base font-bold text-navy">
+              Candidates
+            </h2>
+            <p className="text-[13px] text-muted-foreground">
+              {candidates.length} of {MAX_CANDIDATES} slots used
+            </p>
+          </div>
+          {!isAdding && (
+            <Button
+              type="button"
+              size="sm"
+              disabled={disabled}
+              title={disabledReason}
+              onClick={() => setIsAdding(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Add candidate
+            </Button>
+          )}
+        </div>
 
-      {candidates.length === 0 && (
-        <div className="rounded-md border border-dashed border-[#C9D0DF] bg-card px-6 py-12 text-center shadow-card">
-          <div className="flex flex-col items-center gap-3">
+        {/* One segment per slot — fills as candidates are added. */}
+        <div className="mt-4 flex gap-1.5">
+          {Array.from({ length: MAX_CANDIDATES }).map((_, i) => (
+            <span
+              key={i}
+              className={cn(
+                "h-1.5 flex-1 rounded-full",
+                i < candidates.length ? "bg-primary" : "bg-muted",
+              )}
+            />
+          ))}
+        </div>
+
+        {candidates.length === 0 && !isAdding && (
+          <div className="mt-4 flex flex-col items-center gap-3 rounded-md border border-dashed border-input bg-secondary/40 px-6 py-10 text-center">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <UserRound className="h-6 w-6" />
             </span>
-            <p className="font-heading text-base font-semibold text-foreground">
+            <p className="font-heading text-base font-semibold text-navy">
               No candidates yet
             </p>
             <p className="max-w-sm text-sm text-muted-foreground">
-              Add your first candidate below to get this submission moving.
+              Add your first candidate to get this submission moving.
             </p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {candidates.map((candidate) => (
         <CandidateItem
@@ -311,11 +299,24 @@ function CandidateListSection({
         />
       ))}
 
-      <AddCandidateSection
-        submissionId={submissionId}
-        candidateCount={candidates.length}
-        submissionStatus={submissionStatus}
-      />
+      {isAdding && (
+        <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-5 shadow-card">
+          <CandidateForm
+            submissionId={submissionId}
+            onDone={() => setIsAdding(false)}
+          />
+          <div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsAdding(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

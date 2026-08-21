@@ -47,19 +47,18 @@ function EditContent({ jobId }: { jobId: string }) {
   }
 
   return (
-    <div className="rounded-md border border-border/70 bg-card p-6 shadow-sm">
-      <JobForm
-        job={job}
-        isSubmitting={update.isPending}
-        submitLabel="Save changes"
-        onSubmit={(input) =>
-          update.mutate(
-            { jobId, input: input as unknown as Record<string, unknown> },
-            { onSuccess: () => router.push("/admin/jobs") },
-          )
-        }
-      />
-    </div>
+    <JobForm
+      job={job}
+      isSubmitting={update.isPending}
+      submitLabel="Save changes"
+      onCancel={() => router.push("/admin/jobs")}
+      onSubmit={(input) =>
+        update.mutate(
+          { jobId, input: input as unknown as Record<string, unknown> },
+          { onSuccess: () => router.push("/admin/jobs") },
+        )
+      }
+    />
   );
 }
 
@@ -75,7 +74,7 @@ export default function AdminEditJobPage() {
           { label: "Edit" },
         ]}
       >
-        <div className="flex max-w-3xl flex-col gap-6">
+        <div className="flex w-full flex-col gap-4">
           <Link
             href="/admin/jobs"
             className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"

@@ -26,7 +26,7 @@ const NAV_LINKS: readonly NavLink[] = [
  * "Go to dashboard" action instead of "Log in" / "Get started". Collapses to a
  * hamburger sheet on small screens.
  */
-export function LandingNav() {
+export function LandingNav({ fluid = false }: { fluid?: boolean }) {
   const [open, setOpen] = useState(false);
   const { status, user, logout } = useAuth();
   const isAuthed = status === "authenticated" && user !== null;
@@ -36,7 +36,10 @@ export function LandingNav() {
     <header className="sticky top-0 z-30 border-b border-brand-line bg-white/95 backdrop-blur">
       <nav
         aria-label="Primary"
-        className="mx-auto flex max-w-[1240px] items-center gap-6 px-5 py-4 md:px-10"
+        className={cn(
+          "flex items-center gap-6 px-5 py-4 md:px-10",
+          fluid ? "w-full" : "mx-auto max-w-[1240px]",
+        )}
       >
         <Link href="/" aria-label="Head-Hunters home">
           <Logo />

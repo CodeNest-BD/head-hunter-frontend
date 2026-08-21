@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -43,6 +44,8 @@ interface JobFormProps {
   onSubmit: (input: JobWriteInput) => void;
   isSubmitting: boolean;
   submitLabel: string;
+  /** When provided, a Cancel button appears in the sticky action bar. */
+  onCancel?: () => void;
 }
 
 function toDefaults(job?: Job): JobFormValues {
@@ -60,24 +63,28 @@ function toDefaults(job?: Job): JobFormValues {
   };
 }
 
-/** A titled card that groups related fields — the form reads as sections. */
-function FormSection({
+/** A form section: title + hint on the left, fields on the right. */
+function Section({
   title,
   hint,
   children,
 }: {
   title: string;
   hint?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <section className="rounded-md border border-border/70 bg-card p-6 shadow-sm">
-      <h2 className="font-heading text-base font-extrabold tracking-tight text-foreground">
-        {title}
-      </h2>
-      {hint && <p className="mt-0.5 text-sm text-muted-foreground">{hint}</p>}
-      <div className="mt-5 flex flex-col gap-5">{children}</div>
-    </section>
+    <div className="grid gap-x-8 gap-y-4 p-5 sm:p-6 md:grid-cols-[minmax(0,15rem)_1fr]">
+      <div>
+        <h2 className="text-sm font-bold text-navy">{title}</h2>
+        {hint && (
+          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+            {hint}
+          </p>
+        )}
+      </div>
+      <div className="flex flex-col gap-4">{children}</div>
+    </div>
   );
 }
 
@@ -86,6 +93,7 @@ export function JobForm({
   onSubmit,
   isSubmitting,
   submitLabel,
+  onCancel,
 }: JobFormProps) {
   const { data: minFee } = useMinRecruiterFee();
   const {
@@ -124,186 +132,185 @@ export function JobForm({
   });
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-6">
-      <FormSection title="Basics" hint="What the role is and where it sits.">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="title">Job title</Label>
-          <Input
-            id="title"
-            placeholder="Senior Software Engineer"
-            {...register("title")}
-          />
-          {errors.title && (
-            <p className="text-xs text-destructive">{errors.title.message}</p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={submit} className="flex flex-col gap-4">
+      <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
+        <Section title="Basics" hint="What the role is and where it sits.">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="roleCategory">Role category</Label>
-            <Controller
-              control={control}
-              name="roleCategory"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="roleCategory">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLE_CATEGORIES.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {ROLE_CATEGORY_LABELS[category]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+            <Label htmlFor="title">Job title</Label>
+            <Input
+              id="title"
+              placeholder="Senior Software Engineer"
+              {...register("title")}
             />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="employmentType">Employment type</Label>
-            <Controller
-              control={control}
-              name="employmentType"
-              render={({ field }) => (
-                <Select
-                  value={field.value === "" ? undefined : field.value}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger id="employmentType">
-                    <SelectValue placeholder="Not specified" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EMPLOYMENT_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {EMPLOYMENT_TYPE_LABELS[type]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-        </div>
-      </FormSection>
-
-      <FormSection title="Location">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="locationState">State</Label>
-            <Controller
-              control={control}
-              name="locationState"
-              render={({ field }) => (
-                <Select
-                  value={field.value === "" ? NO_STATE_VALUE : field.value}
-                  onValueChange={(value) =>
-                    field.onChange(value === NO_STATE_VALUE ? "" : value)
-                  }
-                >
-                  <SelectTrigger id="locationState">
-                    <SelectValue placeholder="Select a state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NO_STATE_VALUE}>Any state</SelectItem>
-                    {US_STATES.map((state) => (
-                      <SelectItem key={state.code} value={state.code}>
-                        {state.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.locationState && (
-              <p className="text-xs text-destructive">
-                {errors.locationState.message}
-              </p>
+            {errors.title && (
+              <p className="text-xs text-destructive">{errors.title.message}</p>
             )}
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="locationCity">City</Label>
-            <Input
-              id="locationCity"
-              placeholder="San Francisco"
-              {...register("locationCity")}
-            />
-          </div>
-        </div>
 
-        <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-foreground">
-          <input
-            type="checkbox"
-            className="h-4 w-4 rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            {...register("isRemote")}
-          />
-          Remote
-        </label>
-      </FormSection>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="roleCategory">Role category</Label>
+              <Controller
+                control={control}
+                name="roleCategory"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="roleCategory">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLE_CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {ROLE_CATEGORY_LABELS[category]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
 
-      <FormSection
-        title="Compensation"
-        hint="The salary band for the candidate and the fee for the recruiter."
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="salaryMin">Salary minimum ($)</Label>
-            <Input
-              id="salaryMin"
-              inputMode="decimal"
-              {...register("salaryMin")}
-            />
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="employmentType">Employment type</Label>
+              <Controller
+                control={control}
+                name="employmentType"
+                render={({ field }) => (
+                  <Select
+                    value={field.value === "" ? undefined : field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger id="employmentType">
+                      <SelectValue placeholder="Not specified" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EMPLOYMENT_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {EMPLOYMENT_TYPE_LABELS[type]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="salaryMax">Salary maximum ($)</Label>
-            <Input
-              id="salaryMax"
-              inputMode="decimal"
-              {...register("salaryMax")}
-            />
-            {errors.salaryMax && (
-              <p className="text-xs text-destructive">
-                {errors.salaryMax.message}
-              </p>
-            )}
-          </div>
-        </div>
+        </Section>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="recruiterFee">Recruiter fee ($)</Label>
-          <p className="text-sm text-muted-foreground">
+        <Section title="Location" hint="Where the work happens.">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="locationState">State</Label>
+              <Controller
+                control={control}
+                name="locationState"
+                render={({ field }) => (
+                  <Select
+                    value={field.value === "" ? NO_STATE_VALUE : field.value}
+                    onValueChange={(value) =>
+                      field.onChange(value === NO_STATE_VALUE ? "" : value)
+                    }
+                  >
+                    <SelectTrigger id="locationState">
+                      <SelectValue placeholder="Select a state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_STATE_VALUE}>Any state</SelectItem>
+                      {US_STATES.map((state) => (
+                        <SelectItem key={state.code} value={state.code}>
+                          {state.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.locationState && (
+                <p className="text-xs text-destructive">
+                  {errors.locationState.message}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="locationCity">City</Label>
+              <Input
+                id="locationCity"
+                placeholder="San Francisco"
+                {...register("locationCity")}
+              />
+            </div>
+          </div>
+
+          <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-navy">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              {...register("isRemote")}
+            />
+            Remote
+          </label>
+        </Section>
+
+        <Section
+          title="Compensation"
+          hint="The salary band for the candidate and the fee for the recruiter."
+        >
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="salaryMin">Salary minimum ($)</Label>
+              <Input
+                id="salaryMin"
+                inputMode="decimal"
+                {...register("salaryMin")}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="salaryMax">Salary maximum ($)</Label>
+              <Input
+                id="salaryMax"
+                inputMode="decimal"
+                {...register("salaryMax")}
+              />
+              {errors.salaryMax && (
+                <p className="text-xs text-destructive">
+                  {errors.salaryMax.message}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="recruiterFee">Recruiter fee ($)</Label>
+              <Input
+                id="recruiterFee"
+                inputMode="decimal"
+                placeholder="10000"
+                {...register("recruiterFee")}
+              />
+              {errors.recruiterFee && (
+                <p className="text-xs text-destructive">
+                  {errors.recruiterFee.message}
+                </p>
+              )}
+            </div>
+          </div>
+          <p className="text-[13px] text-muted-foreground">
             What you will pay a recruiter for a successful hire.
             {minFee && (
               <>
                 {" "}
                 Publishing requires at least{" "}
-                <span className="font-semibold text-foreground">
+                <span className="font-semibold text-navy">
                   {formatMinor(minFee.amountMinor)}
                 </span>
                 .
               </>
             )}
           </p>
-          <Input
-            id="recruiterFee"
-            inputMode="decimal"
-            placeholder="10000"
-            {...register("recruiterFee")}
-          />
-          {errors.recruiterFee && (
-            <p className="text-xs text-destructive">
-              {errors.recruiterFee.message}
-            </p>
-          )}
-        </div>
-      </FormSection>
+        </Section>
 
-      <FormSection
-        title="Description"
-        hint="Sell the role — recruiters read this before deciding to work it."
-      >
-        <div className="flex flex-col gap-2">
+        <Section
+          title="Description"
+          hint="Sell the role — recruiters read this before deciding to work it."
+        >
           <Controller
             control={control}
             name="description"
@@ -320,13 +327,32 @@ export function JobForm({
               {errors.description.message}
             </p>
           )}
-        </div>
-      </FormSection>
+        </Section>
+      </div>
 
-      <div>
-        <Button type="submit" disabled={isSubmitting} className="font-bold">
-          {isSubmitting ? "Saving…" : submitLabel}
-        </Button>
+      {/* Sticky action bar so Save is always reachable in a long form. */}
+      <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-card-lg backdrop-blur sm:px-5">
+        <span className="text-sm text-muted-foreground">
+          {job
+            ? "Changes are live as soon as you save."
+            : "Save as a draft, then publish when you're ready."}
+        </span>
+        <div className="flex gap-2">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" size="sm" disabled={isSubmitting}>
+            {isSubmitting ? "Saving…" : submitLabel}
+          </Button>
+        </div>
       </div>
     </form>
   );

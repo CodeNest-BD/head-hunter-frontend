@@ -13,6 +13,7 @@ export { OtpForm } from "./components/OtpForm";
 export { ForgotPasswordForm } from "./components/ForgotPasswordForm";
 export { ResetPasswordForm } from "./components/ResetPasswordForm";
 export { RequireRole } from "./components/RequireRole";
+export { AccountSection } from "./components/AccountSection";
 export { GoogleAuthButton } from "./components/GoogleAuthButton";
 export { AuthProvider } from "./providers/AuthProvider";
 export { useAuth } from "./hooks/useAuth";

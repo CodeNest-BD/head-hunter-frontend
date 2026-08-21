@@ -10,7 +10,7 @@ export const metadata = {
 /** Public explore page: job cards for everyone, the live map for verified recruiters. */
 export default function ExploreJobsPage() {
   return (
-    <PublicShell>
+    <PublicShell fluid>
       <ExploreJobsView />
     </PublicShell>
   );

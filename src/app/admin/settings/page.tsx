@@ -7,7 +7,7 @@ import {
   RecruiterPricingCard,
 } from "@/features/admin";
 import { PHASE1_FREE } from "@/shared/config/featureFlags";
-import { PageHeader } from "@/shared/ui-components/brand";
+import { PageBanner } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 export default function AdminSettingsPage() {
@@ -21,7 +21,7 @@ export default function AdminSettingsPage() {
         ]}
       >
         <div className="flex flex-col gap-6">
-          <PageHeader
+          <PageBanner
             title="Settings"
             subtitle="Marketplace policy and admin accounts."
           />

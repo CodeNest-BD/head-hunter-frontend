@@ -6,6 +6,7 @@ import { AlertCircle, ArrowRight, Send } from "lucide-react";
 import { UnreadBadge } from "@/features/conversations/components/UnreadBadge";
 import { useMessageUnreadCounts } from "@/features/conversations/hooks/useMessageUnreadCounts";
 import { useJobs } from "@/features/jobs";
+import { PageBanner } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
@@ -52,6 +53,11 @@ const COLUMNS: ColumnDef[] = [
   { key: "actions", label: "Actions", required: true },
 ];
 
+/** Read a status's cross-page total from its own count query (limit 1). */
+function useStatusTotal(status: SubmissionStatus): number {
+  return useSubmissions({ status, limit: 1 }).data?.meta.total ?? 0;
+}
+
 /**
  * The recruiter's own submissions across every job. Candidate counts are
  * deliberately absent: fetching them per row would be N+1, so the count lives
@@ -77,6 +83,15 @@ export function SubmissionList() {
     q: q || undefined,
     status: parsedStatus.success ? parsedStatus.data : undefined,
   });
+
+  // Banner "where do I stand" counts, accurate across pages via per-status
+  // totals. There is no "hired" submission status — "advanced" is the furthest
+  // positive state — so the third metric reports Advanced.
+  const submittedTotal = useStatusTotal("submitted");
+  const underReviewTotal = useStatusTotal("under_review");
+  const advancedTotal = useStatusTotal("advanced");
+  const activeTotal = submittedTotal + underReviewTotal + advancedTotal;
+
   // Submissions carry only jobId. One jobs fetch builds a lookup, rather than a
   // request per row (mirrors the inbox).
   const jobs = useJobs({ limit: 100 });
@@ -113,127 +128,132 @@ export function SubmissionList() {
     </div>
   );
 
-  if (submissions.isError) {
-    return (
+  return (
+    <div className="flex flex-col gap-6">
+      <PageBanner
+        title="Submissions"
+        subtitle="Every candidate you've submitted, and where each one stands."
+        metrics={[
+          { label: "Active", value: activeTotal },
+          { label: "Under review", value: underReviewTotal },
+          { label: "Advanced", value: advancedTotal },
+        ]}
+      />
+
       <div className="flex flex-col gap-4">
         {toolbar}
-        <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-          <div className="flex items-center gap-2 font-medium">
-            <AlertCircle className="h-[18px] w-[18px]" />
-            Could not load your submissions.
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="self-start"
-            onClick={() => void submissions.refetch()}
-          >
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
-  return (
-    <div className="flex flex-col gap-4">
-      {toolbar}
-
-      {submissions.isPending ? (
-        <TableSkeleton />
-      ) : submissions.data.data.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-[#C9D0DF] bg-card px-6 py-14 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Send className="h-6 w-6" />
-          </span>
-          <div className="flex flex-col gap-1">
-            <p className="font-heading text-base font-semibold text-foreground">
-              No submissions found
-            </p>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Try a different search or filter, or{" "}
-              <Link
-                href="/explore-jobs"
-                className="font-medium text-primary underline-offset-2 hover:underline"
-              >
-                explore open jobs
-              </Link>
-              .
-            </p>
+        {submissions.isError ? (
+          <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+            <div className="flex items-center gap-2 font-medium">
+              <AlertCircle className="h-[18px] w-[18px]" />
+              Could not load your submissions.
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="self-start"
+              onClick={() => void submissions.refetch()}
+            >
+              Retry
+            </Button>
           </div>
-        </div>
-      ) : (
-        <div className={TABLE_CARD}>
-          <div className={TABLE_SCROLL}>
-            <table className={TABLE_EL}>
-              <thead className={TABLE_HEAD}>
-                <tr className={TABLE_HEAD_ROW}>
-                  <th className={TABLE_TH}>Job</th>
-                  {cols.isVisible("submitted") && (
-                    <th className={TABLE_TH}>Submitted</th>
-                  )}
-                  {cols.isVisible("status") && (
-                    <th className={TABLE_TH}>Status</th>
-                  )}
-                  <th className={TABLE_TH} />
-                </tr>
-              </thead>
-              <tbody className={TABLE_BODY}>
-                {submissions.data.data.map((submission) => (
-                  <tr key={submission.id} className={TABLE_ROW}>
-                    <td className={`${TABLE_TD} font-semibold text-navy`}>
-                      <span className="flex items-center gap-2">
-                        <Link
-                          href={`/jobs/${submission.jobId}`}
-                          className="hover:text-primary hover:underline"
-                        >
-                          {jobTitles.get(submission.jobId) ?? "—"}
-                        </Link>
-                        <UnreadBadge
-                          count={unreadCounts?.get(submission.id) ?? 0}
-                        />
-                      </span>
-                    </td>
+        ) : submissions.isPending ? (
+          <TableSkeleton />
+        ) : submissions.data.data.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-input bg-card px-6 py-14 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <Send className="h-6 w-6" />
+            </span>
+            <div className="flex flex-col gap-1">
+              <p className="font-heading text-base font-semibold text-navy">
+                No submissions found
+              </p>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                Try a different search or filter, or{" "}
+                <Link
+                  href="/explore-jobs"
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  explore open jobs
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className={TABLE_CARD}>
+            <div className={TABLE_SCROLL}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr className={TABLE_HEAD_ROW}>
+                    <th className={TABLE_TH}>Job</th>
                     {cols.isVisible("submitted") && (
-                      <td
-                        className={`${TABLE_TD} whitespace-nowrap tabular-nums text-brand-gray`}
-                      >
-                        {formatDate(submission.createdAt)}
-                      </td>
+                      <th className={TABLE_TH}>Submitted</th>
                     )}
                     {cols.isVisible("status") && (
-                      <td className={TABLE_TD}>
-                        <StatusBadge
-                          label={SUBMISSION_STATUS_LABELS[submission.status]}
-                          className={STATUS_STYLES[submission.status]}
-                        />
-                      </td>
+                      <th className={TABLE_TH}>Status</th>
                     )}
-                    <td className={`${TABLE_TD} text-right`}>
-                      <Link
-                        href={`/recruiter/submissions/${submission.id}`}
-                        className="inline-flex items-center gap-1 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
-                      >
-                        View
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </td>
+                    <th className={TABLE_TH} />
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className={TABLE_BODY}>
+                  {submissions.data.data.map((submission) => (
+                    <tr key={submission.id} className={TABLE_ROW}>
+                      <td className={`${TABLE_TD} font-semibold text-navy`}>
+                        <span className="flex items-center gap-2">
+                          <Link
+                            href={`/jobs/${submission.jobId}`}
+                            className="hover:text-primary hover:underline"
+                          >
+                            {jobTitles.get(submission.jobId) ?? "—"}
+                          </Link>
+                          <UnreadBadge
+                            count={unreadCounts?.get(submission.id) ?? 0}
+                          />
+                        </span>
+                      </td>
+                      {cols.isVisible("submitted") && (
+                        <td
+                          className={`${TABLE_TD} whitespace-nowrap tabular-nums text-brand-gray`}
+                        >
+                          {formatDate(submission.createdAt)}
+                        </td>
+                      )}
+                      {cols.isVisible("status") && (
+                        <td className={TABLE_TD}>
+                          <StatusBadge
+                            label={SUBMISSION_STATUS_LABELS[submission.status]}
+                            className={STATUS_STYLES[submission.status]}
+                          />
+                        </td>
+                      )}
+                      <td className={`${TABLE_TD} text-right`}>
+                        <Link
+                          href={`/recruiter/submissions/${submission.id}`}
+                          className="inline-flex items-center gap-1 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                        >
+                          View
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <TablePager
+              page={page}
+              totalPages={submissions.data.meta.totalPages}
+              total={submissions.data.meta.total}
+              pageSize={limit}
+              onPage={setPage}
+              onPageSize={changeLimit}
+            />
           </div>
-          <TablePager
-            page={page}
-            totalPages={submissions.data.meta.totalPages}
-            total={submissions.data.meta.total}
-            pageSize={limit}
-            onPage={setPage}
-            onPageSize={changeLimit}
-          />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

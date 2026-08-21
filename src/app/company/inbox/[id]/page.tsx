@@ -133,17 +133,17 @@ function SubmissionInfoHeader({ submission }: { submission: Submission }) {
   const updateStatus = useUpdateSubmissionStatus(submission.id);
 
   return (
-    <div className="flex flex-col gap-5 rounded-md border border-border/70 bg-card p-5 shadow-sm">
+    <div className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
             <UserRound className="h-5 w-5" />
           </span>
           <div className="flex flex-col gap-0.5">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
               Submitted by
             </p>
-            <p className="font-heading text-base font-semibold text-foreground">
+            <p className="font-heading text-base font-semibold text-navy">
               {recruiterDisplayName(submission.recruiter)}
             </p>
             {submission.recruiter?.yearsExperience !== null &&
