@@ -16,6 +16,7 @@ import {
   MapPin,
   Minus,
   Plus,
+  RotateCcw,
   Search,
   X,
 } from "lucide-react";
@@ -51,6 +52,12 @@ interface UsJobMapProps {
   readonly stats: ReadonlyMap<string, StateStat>;
   readonly selection: MapSelection;
   readonly onSelect: (selection: MapSelection) => void;
+  /**
+   * Embedded in a page-owned card: hides the city combobox and the internal
+   * legend (the card supplies its own header + legend) and fixes the map to a
+   * contained height instead of the full aspect ratio.
+   */
+  readonly embedded?: boolean;
 }
 
 /** Pre-projected city dots in the 960x600 frame; computed once at module load. */
@@ -120,7 +127,12 @@ function StatePopup({
   );
 }
 
-export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
+export function UsJobMap({
+  stats,
+  selection,
+  onSelect,
+  embedded = false,
+}: UsJobMapProps) {
   const titleId = useId();
   const [hoveredState, setHoveredState] = useState<string | null>(null);
   const [comboOpen, setComboOpen] = useState(false);
@@ -269,53 +281,60 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         : "All states";
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={cn("flex flex-col", !embedded && "gap-4")}>
       {/* Toolbar: searchable city combobox, selection chip, clear. */}
-      <div className="flex flex-wrap items-center gap-3">
-        <CityCombobox
-          open={comboOpen}
-          onOpenChange={setComboOpen}
-          query={cityQuery}
-          onQueryChange={setCityQuery}
-          cities={filteredCities}
-          selectedCity={selectedCity}
-          selectedState={selectedState}
-          onPick={(city) => {
-            handleCityClick(city);
-            setComboOpen(false);
-          }}
-        />
+      {!embedded && (
+        <div className="flex flex-wrap items-center gap-3">
+          <CityCombobox
+            open={comboOpen}
+            onOpenChange={setComboOpen}
+            query={cityQuery}
+            onQueryChange={setCityQuery}
+            cities={filteredCities}
+            selectedCity={selectedCity}
+            selectedState={selectedState}
+            onPick={(city) => {
+              handleCityClick(city);
+              setComboOpen(false);
+            }}
+          />
 
-        {selection.kind !== "none" && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
-            <MapPin className="h-3.5 w-3.5" />
-            {selectionLabel}
-            <button
+          {selection.kind !== "none" && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
+              <MapPin className="h-3.5 w-3.5" />
+              {selectionLabel}
+              <button
+                type="button"
+                aria-label="Clear selection"
+                onClick={() => onSelect({ kind: "none" })}
+                className="rounded-full p-0.5 transition-colors hover:bg-primary/20"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {selection.kind !== "none" && (
+            <Button
               type="button"
-              aria-label="Clear selection"
+              variant="ghost"
+              size="sm"
               onClick={() => onSelect({ kind: "none" })}
-              className="rounded-full p-0.5 transition-colors hover:bg-primary/20"
             >
-              <X className="h-3 w-3" />
-            </button>
-          </span>
-        )}
-
-        {selection.kind !== "none" && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onSelect({ kind: "none" })}
-          >
-            Clear selection
-          </Button>
-        )}
-      </div>
+              Clear selection
+            </Button>
+          )}
+        </div>
+      )}
 
       <div
         ref={wrapRef}
-        className="relative overflow-hidden rounded-md border border-border bg-card shadow-card"
+        className={cn(
+          "relative overflow-hidden",
+          embedded
+            ? "h-[420px] md:h-[500px]"
+            : "rounded-md border border-border bg-card shadow-card",
+        )}
       >
         {/* Faint blue tint behind the map — keeps the canvas light. */}
         <div
@@ -346,13 +365,24 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
           >
             <Minus className="h-4 w-4" />
           </MapControlButton>
+          <MapControlButton
+            label="Reset view"
+            onClick={() => {
+              setZoom(MIN_ZOOM);
+              setPan({ x: 0, y: 0 });
+            }}
+            disabled={zoom <= MIN_ZOOM}
+          >
+            <RotateCcw className="h-4 w-4" />
+          </MapControlButton>
         </div>
 
         <svg
           ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
           className={cn(
-            "relative block h-auto w-full touch-none",
+            "relative block w-full touch-none",
+            embedded ? "h-full" : "h-auto",
             zoom > MIN_ZOOM && (isDragging ? "cursor-grabbing" : "cursor-grab"),
           )}
           role="group"
@@ -483,21 +513,23 @@ export function UsJobMap({ stats, selection, onSelect }: UsJobMapProps) {
         </svg>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-3 text-xs text-muted-foreground">
-          <span className="font-medium text-navy">Open roles</span>
-          <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#EEF4FD]" />
-            None
+        {!embedded && (
+          <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-3 text-xs text-muted-foreground">
+            <span className="font-medium text-navy">Open roles</span>
+            <div className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-[3px] border border-border bg-[#EEF4FD]" />
+              None
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-[3px] border border-border bg-[#E0E8F3]" />
+              Has roles
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-[3px] border border-[#034AEF] bg-[#B4DBFD]" />
+              Selected
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] border border-border bg-[#E0E8F3]" />
-            Has roles
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-[3px] border border-[#034AEF] bg-[#B4DBFD]" />
-            Selected
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
