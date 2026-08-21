@@ -54,6 +54,7 @@ function categoryOf(type: string): Category {
   if (
     t.includes("verif") ||
     t.includes("account") ||
+    t.includes("follow") ||
     t.includes("subscription") ||
     t.includes("payout") ||
     t.includes("placement") ||
