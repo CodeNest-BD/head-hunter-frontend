@@ -1,4 +1,5 @@
-import { ExploreJobsShell } from "@/features/jobs/components/ExploreJobsShell";
+import { PublicShell } from "@/components/landing/PublicShell";
+import { ExploreJobsView } from "@/features/jobs/components/ExploreJobsView";
 
 export const metadata = {
   title: "Explore Jobs — Head-Hunters",
@@ -6,11 +7,11 @@ export const metadata = {
     "Browse live roles and the recruiter fee each company is offering. Recruiters work the map; companies set the price.",
 };
 
-/**
- * Explore page for guests and signed-in users alike. This stays a server
- * component so the metadata above is still emitted for crawlers; the shell
- * choice happens client-side, where the session is known.
- */
+/** Public explore page: job cards for everyone, the live map for verified recruiters. */
 export default function ExploreJobsPage() {
-  return <ExploreJobsShell />;
+  return (
+    <PublicShell fluid>
+      <ExploreJobsView />
+    </PublicShell>
+  );
 }

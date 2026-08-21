@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Loader2, Lock, Search, SearchX } from "lucide-react";
 
-import { useAuth } from "@/features/auth";
 import { useVerificationGate } from "@/features/recruiters";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -84,8 +83,6 @@ const INITIAL_FILTERS: Filters = {
  */
 export function ExploreJobsView() {
   const { isApproved, status } = useVerificationGate();
-  const { status: sessionStatus, user } = useAuth();
-  const signedIn = sessionStatus === "authenticated" && user !== null;
   // A recruiter whose status is anything but verified reads as "pending" (an
   // explanation to wait); a guest or other non-recruiter reads as a sign-up
   // prompt instead — `status` is undefined for every non-recruiter.
@@ -135,33 +132,18 @@ export function ExploreJobsView() {
       : "All States";
 
   return (
-    <div className={signedIn ? "w-full pb-12" : "w-full px-5 pb-20 md:px-10"}>
-      {/* The pitch is for people who have not signed up yet. Someone already
-          signed in came to work the map, so they get a one-line heading
-          instead of a screen of marketing copy to scroll past. */}
-      {signedIn ? (
-        <section className="pb-6">
-          <h1 className="font-heading text-2xl font-extrabold tracking-[-0.02em] text-navy">
-            Job map
-          </h1>
-          <p className="mt-1 text-sm text-brand-gray">
-            Pick a state to see the roles open there and the fee each company is
-            offering.
-          </p>
-        </section>
-      ) : (
-        <section className="pb-10 pt-12 text-center">
-          <h1 className="mx-auto max-w-3xl font-heading text-4xl font-extrabold tracking-[-0.02em] text-navy md:text-5xl">
-            Set Your Price.{" "}
-            <span className="text-primary">Hire the Right Talent.</span>
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-brand-gray">
-            Empower your recruitment by defining your own success fee. We
-            connect companies with top-tier recruiters willing to find your
-            perfect match within your budget.
-          </p>
-        </section>
-      )}
+    <div className="w-full px-5 pb-20 md:px-10">
+      <section className="pb-10 pt-12 text-center">
+        <h1 className="mx-auto max-w-3xl font-heading text-4xl font-extrabold tracking-[-0.02em] text-navy md:text-5xl">
+          Set Your Price.{" "}
+          <span className="text-primary">Hire the Right Talent.</span>
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl text-brand-gray">
+          Empower your recruitment by defining your own success fee. We connect
+          companies with top-tier recruiters willing to find your perfect match
+          within your budget.
+        </p>
+      </section>
 
       <MapSection
         isApproved={isApproved}
