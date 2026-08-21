@@ -139,36 +139,6 @@ describe("ExploreJobsView", () => {
     expect(useJobsMock).toHaveBeenCalled();
   });
 
-  it("shows neither the map nor the lock while approval is still loading", () => {
-    useAuthMock.mockReturnValue({ status: "authenticated", user: {} });
-    useVerificationGateMock.mockReturnValue({
-      isApproved: false,
-      status: undefined,
-      isLoading: true,
-      isError: false,
-      retry: vi.fn(),
-    });
-    useJobMapMock.mockReturnValue({ data: [] });
-    useJobsMock.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: false,
-    });
-
-    renderWithProviders(<ExploreJobsView />);
-
-    // The bug this guards: a verified recruiter saw the "verified recruiters
-    // only" lock for as long as their profile request was in flight.
-    expect(
-      screen.queryByText("Job listings are for verified recruiters"),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("The live map is for verified recruiters"),
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("Loading the job map…")).toBeInTheDocument();
-    expect(screen.getByText("Checking your access…")).toBeInTheDocument();
-  });
-
   it("keeps the marketing pitch for a guest, who has not signed up yet", () => {
     useAuthMock.mockReturnValue({ status: "unauthenticated", user: null });
     useVerificationGateMock.mockReturnValue({

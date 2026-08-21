@@ -28,16 +28,13 @@ export interface VerifiedRecruiterState {
  * enabled only for a signed-in recruiter.
  */
 export function useIsVerifiedRecruiter(): VerifiedRecruiterState {
-  const { status, user } = useAuth();
+  const { user } = useAuth();
   const isRecruiter = user?.role === "recruiter";
-  // The user lands in the store before the access token is usable, so firing on
-  // the role alone sent this request during boot and got a 401 back.
-  const sessionReady = status === "authenticated";
 
   const profile = useQuery({
     queryKey: recruiterKeys.myProfile,
     queryFn: fetchMyRecruiterProfile,
-    enabled: isRecruiter && sessionReady,
+    enabled: isRecruiter,
     staleTime: 60 * 1000,
   });
 
@@ -47,10 +44,7 @@ export function useIsVerifiedRecruiter(): VerifiedRecruiterState {
     isRecruiter,
     isVerified: verificationStatus === "verified",
     verificationStatus,
-    // A disabled query is pending but not loading, so the booting window has to
-    // be reported explicitly — otherwise callers read an undecided gate as a
-    // decided "not verified" and flash the locked state at a verified recruiter.
-    isLoading: isRecruiter && (!sessionReady || profile.isLoading),
+    isLoading: isRecruiter && profile.isLoading,
     isError: isRecruiter && profile.isError,
     refetch: () => void profile.refetch(),
   };
