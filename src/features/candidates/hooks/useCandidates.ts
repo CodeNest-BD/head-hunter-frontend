@@ -13,6 +13,7 @@ import {
   uploadToPresignedUrl,
   type CandidateInput,
 } from "../api/candidates";
+import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { candidateKeys } from "../keys";
 import type { CandidateStatus } from "../schemas";
 
@@ -20,6 +21,10 @@ export function useCandidates(submissionId: string) {
   return useQuery({
     queryKey: candidateKeys.forSubmission(submissionId),
     queryFn: () => fetchCandidates(submissionId),
+    // The company moves a candidate's status, so the recruiter's copy has to
+    // learn about a change it did not make.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 

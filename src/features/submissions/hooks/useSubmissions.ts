@@ -36,6 +36,10 @@ export function useSubmission(id: string) {
   return useQuery({
     queryKey: submissionKeys.detail(id),
     queryFn: () => fetchSubmission(id),
+    // The counterparty moves the submission's status; the list already polls,
+    // and an open detail page should not be staler than the list behind it.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
