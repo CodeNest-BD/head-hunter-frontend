@@ -37,7 +37,6 @@ import type { JobWriteInput } from "../api/jobs";
 // Radix Select items can't take an empty-string value, so the "clear the
 // state" option needs a sentinel that this form translates to/from "" —
 // the value `locationState` actually holds, since it's optional.
-const NO_STATE_VALUE = "any";
 
 interface JobFormProps {
   job?: Job;
@@ -181,7 +180,7 @@ export function JobForm({
                     onValueChange={field.onChange}
                   >
                     <SelectTrigger id="employmentType">
-                      <SelectValue placeholder="Not specified" />
+                      <SelectValue placeholder="Select employment type" />
                     </SelectTrigger>
                     <SelectContent>
                       {EMPLOYMENT_TYPES.map((type) => (
@@ -193,6 +192,11 @@ export function JobForm({
                   </Select>
                 )}
               />
+              {errors.employmentType && (
+                <p className="text-xs text-destructive">
+                  {errors.employmentType.message}
+                </p>
+              )}
             </div>
           </div>
         </Section>
@@ -206,16 +210,13 @@ export function JobForm({
                 name="locationState"
                 render={({ field }) => (
                   <Select
-                    value={field.value === "" ? NO_STATE_VALUE : field.value}
-                    onValueChange={(value) =>
-                      field.onChange(value === NO_STATE_VALUE ? "" : value)
-                    }
+                    value={field.value === "" ? undefined : field.value}
+                    onValueChange={field.onChange}
                   >
                     <SelectTrigger id="locationState">
                       <SelectValue placeholder="Select a state" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NO_STATE_VALUE}>Any state</SelectItem>
                       {US_STATES.map((state) => (
                         <SelectItem key={state.code} value={state.code}>
                           {state.name}
@@ -232,7 +233,7 @@ export function JobForm({
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="locationCity">City</Label>
+              <Label htmlFor="locationCity">City (optional)</Label>
               <Input
                 id="locationCity"
                 placeholder="San Francisco"
@@ -257,7 +258,7 @@ export function JobForm({
         >
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="salaryMin">Salary minimum ($)</Label>
+              <Label htmlFor="salaryMin">Salary minimum ($) (optional)</Label>
               <Input
                 id="salaryMin"
                 inputMode="decimal"
@@ -265,7 +266,7 @@ export function JobForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="salaryMax">Salary maximum ($)</Label>
+              <Label htmlFor="salaryMax">Salary maximum ($) (optional)</Label>
               <Input
                 id="salaryMax"
                 inputMode="decimal"

@@ -3,10 +3,10 @@ import { jobFormSchema } from "./schemas";
 
 const valid = {
   title: "Senior Software Engineer",
-  description: "",
+  description: "<p>We are hiring a senior engineer.</p>",
   roleCategory: "engineering" as const,
-  employmentType: "" as const,
-  locationState: "",
+  employmentType: "full_time" as const,
+  locationState: "CA",
   locationCity: "",
   isRemote: false,
   salaryMin: "",
@@ -40,8 +40,24 @@ describe("jobFormSchema", () => {
     expect(errorPaths({ locationState: "CAL" })).toContain("locationState");
   });
 
-  it("accepts an omitted state code", () => {
-    expect(errorPaths({ locationState: "" })).toEqual([]);
+  it("requires a state, because the job map skips rows without one", () => {
+    expect(errorPaths({ locationState: "" })).toContain("locationState");
+  });
+
+  it("requires a description, which is what recruiters read before pitching", () => {
+    expect(errorPaths({ description: "   " })).toContain("description");
+  });
+
+  it("requires an employment type", () => {
+    expect(errorPaths({ employmentType: "" })).toContain("employmentType");
+  });
+
+  it("leaves the salary band optional", () => {
+    expect(errorPaths({ salaryMin: "", salaryMax: "" })).toEqual([]);
+  });
+
+  it("leaves the city optional", () => {
+    expect(errorPaths({ locationCity: "" })).toEqual([]);
   });
 
   it("rejects a salary maximum below the minimum", () => {
