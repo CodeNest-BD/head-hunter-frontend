@@ -32,6 +32,7 @@ import {
   type EmploymentType,
   type RoleCategory,
 } from "../schemas";
+import { BrandGlow } from "@/shared/ui-components/brand";
 import { DecorativeUsMap } from "@/components/landing/DecorativeUsMap";
 import { US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
 import { PublicJobCard } from "./PublicJobCard";
@@ -166,48 +167,28 @@ export function ExploreJobsView() {
       : "All States";
   const total = jobs.data?.meta.total ?? 0;
 
+  // The map derives its remote/flexible count from the platform-wide open total.
   const openRoles = stats.data?.openJobs ?? total;
-  const statesHiring = stats.data?.statesCovered ?? 0;
-  const lowestFeeMinor =
-    visible.length > 0
-      ? Math.min(...visible.map((job) => job.recruiterFeeMinor))
-      : null;
 
   return (
     <div className="w-full">
-      {/* Hero band */}
-      <div className="border-b border-brand-line bg-white px-5 py-8 md:px-10">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="min-w-0">
-            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-primary">
-              Employer marketplace
-            </p>
-            <h1 className="mt-2 font-heading text-3xl font-extrabold tracking-[-0.02em] text-navy md:text-4xl">
-              Set Your Price.{" "}
-              <span className="text-primary">Hire the Right Talent.</span>
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-brand-gray md:text-base">
-              Define your own success fee and connect with top-tier recruiters
-              willing to find your perfect match within your budget.
-            </p>
-          </div>
-          <div className="flex shrink-0 gap-3">
-            <StatCard label="Open roles" value={openRoles} />
-            <StatCard label="States hiring" value={statesHiring} />
-            <StatCard
-              label="Lowest fee"
-              value={
-                lowestFeeMinor === null
-                  ? "—"
-                  : lowestFeeMinor === 0
-                    ? "Free"
-                    : formatMinor(lowestFeeMinor)
-              }
-              highlight
-            />
-          </div>
+      {/* Hero band — navy, centered */}
+      <header className="relative overflow-hidden bg-navy px-5 py-12 text-center md:px-10 md:py-14">
+        <BrandGlow />
+        <div className="relative mx-auto flex max-w-3xl flex-col items-center">
+          <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/60">
+            Employer marketplace
+          </p>
+          <h1 className="mt-3 font-heading text-3xl font-extrabold tracking-[-0.02em] text-white md:text-4xl">
+            Set Your Price.{" "}
+            <span className="text-primary">Hire the Right Talent.</span>
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm text-white/65 md:text-base">
+            Define your own success fee and connect with top-tier recruiters
+            willing to find your perfect match within your budget.
+          </p>
         </div>
-      </div>
+      </header>
 
       {/* Body */}
       <div className="bg-secondary px-5 py-8 md:px-10">
@@ -288,39 +269,6 @@ export function ExploreJobsView() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  highlight = false,
-}: {
-  label: string;
-  value: ReactNode;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-md border px-4 py-3 text-center",
-        highlight
-          ? "border-primary/30 bg-primary/5"
-          : "border-brand-line bg-white",
-      )}
-    >
-      <p
-        className={cn(
-          "font-heading text-2xl font-extrabold tabular-nums",
-          highlight ? "text-primary" : "text-navy",
-        )}
-      >
-        {value}
-      </p>
-      <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-gray">
-        {label}
-      </p>
     </div>
   );
 }
