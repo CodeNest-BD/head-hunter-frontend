@@ -157,10 +157,8 @@ export function useConversationRealtime(
       void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
     };
 
-    // Offers, interviews and candidate status all move on this submission, and
-    // the party who did not act has no mutation of their own to learn from. The
-    // frame carries no state — everything is re-read through REST, so a missed
-    // one self-heals on the next poll.
+    // The party who did not act has no mutation of their own to learn from. The
+    // frame carries no state, so a missed one self-heals on the next poll.
     const onNegotiationChanged = (payload: unknown): void => {
       if (!isNegotiationChangedFrame(payload)) {
         return;

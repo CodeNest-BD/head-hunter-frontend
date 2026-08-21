@@ -101,10 +101,7 @@ describe("ProposeSlotsForm", () => {
     // 60 min is the default, so the window ends at 10:00.
     expect(screen.getByText(/9:00 AM – 10:00 AM/)).toBeInTheDocument();
 
-    await userEvent.selectOptions(
-      screen.getByLabelText("Length"),
-      "30",
-    );
+    await userEvent.selectOptions(screen.getByLabelText("Length"), "30");
 
     expect(screen.getByText(/9:00 AM – 9:30 AM/)).toBeInTheDocument();
   });

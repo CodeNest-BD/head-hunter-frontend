@@ -46,18 +46,12 @@ function toSelectedDate(day: string): Date | undefined {
 }
 
 /**
- * 1-5 candidate windows for one interview. Used both by the company's
- * scheduling entry point (the first batch) and `ProposalCard`'s "Propose new
- * times" (every batch after).
+ * 1-5 candidate windows for one interview. Used by the company's scheduling
+ * entry point and by `ProposalCard`'s "Propose new times".
  *
- * Shaped around how the job is actually done: pick the length once for the
- * batch, then a day, then as many start times on that day as wanted — moving to
- * another day keeps everything already chosen. The previous form repeated a
- * day/start/length trio per slot, so proposing five times meant re-picking the
- * same length five times and rendering five month grids.
- *
- * The submitted shape is unchanged: each selection still becomes one
- * `{startAt, endAt}` pair, so the schema and API contract are untouched.
+ * Day, start time and length sit on one row; each Add appends to the list below,
+ * and length applies to the whole batch. Every selection still becomes one
+ * `{startAt, endAt}` pair, so the API contract is unchanged.
  */
 export function ProposeSlotsForm({
   interviewId,

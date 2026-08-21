@@ -7,7 +7,11 @@ import { AlertCircle, ArrowLeft, Send, Wallet } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { RequireApprovedRecruiter, useAuth } from "@/features/auth";
-import { EMPLOYMENT_TYPE_LABELS, ROLE_CATEGORY_LABELS, useJob } from "@/features/jobs";
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  ROLE_CATEGORY_LABELS,
+  useJob,
+} from "@/features/jobs";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { useCreateOrOpenSubmission } from "@/features/submissions";
 import { PublicShell } from "@/components/landing/PublicShell";

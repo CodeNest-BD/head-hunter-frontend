@@ -7,18 +7,12 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { ExploreJobsView } from "./ExploreJobsView";
 
 /**
- * One page, two shells.
+ * One page, two shells: guests get the marketing chrome and sign-up path,
+ * signed-in users get their sidebar.
  *
- * Guests need the marketing chrome and the sign-up path. Signed-in users need
- * their sidebar: the job map is a sidebar destination for recruiters, and
- * rendering it inside the public shell dropped them onto a page with no
- * navigation out of it.
- *
- * While the session is still booting neither shell is rendered. This page is
- * public, so the auth provider lets it through immediately — which meant a
- * reload painted the full marketing hero and then swapped it for the dashboard
- * once the silent refresh landed. A neutral frame is briefer and does not lie
- * about who is looking.
+ * Neither renders while the session boots. This route is public, so the auth
+ * provider lets it through immediately — without the hold, a reload painted the
+ * marketing hero and then swapped it for the dashboard.
  */
 export function ExploreJobsShell() {
   const { status, user } = useAuth();
