@@ -5,17 +5,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { useSpecializationsField } from "@/shared/hooks/useSpecializationsField";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { useUpdateMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 import {
-  SPECIALIZATIONS,
-  SPECIALIZATION_LABELS,
   recruiterProfileFormSchema,
   type RecruiterProfile,
   type RecruiterProfileFormValues,
-  type Specialization,
 } from "../schemas";
 
 /** A labelled form section: title + description on the left, fields on the right. */
@@ -37,6 +35,96 @@ function Section({
         </p>
       </div>
       <div className="flex flex-col gap-4">{children}</div>
+    </div>
+  );
+}
+
+interface SpecializationsChipsProps {
+  value: string[];
+  onChange: (next: string[]) => void;
+  formError?: string;
+}
+
+/** Its own component (not inlined in the Controller's render prop) so
+ * `useSpecializationsField` is called from a proper component, not a plain
+ * callback. */
+function SpecializationsChips({
+  value,
+  onChange,
+  formError,
+}: SpecializationsChipsProps) {
+  const {
+    chips,
+    isAdding,
+    draft,
+    setDraft,
+    error,
+    toggle,
+    openAdd,
+    cancelAdd,
+    commitAdd,
+  } = useSpecializationsField({ value, onChange });
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div className="flex flex-wrap items-center gap-2">
+        {chips.map((chip) => {
+          const checked = value.includes(chip.value);
+          return (
+            <button
+              key={chip.value}
+              type="button"
+              aria-pressed={checked}
+              onClick={() => toggle(chip.value)}
+              className={cn(
+                "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
+                checked
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-border text-muted-foreground hover:border-input hover:text-navy",
+              )}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+        {!isAdding && (
+          <button
+            type="button"
+            onClick={openAdd}
+            className="rounded-full border border-dashed border-border px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-input hover:text-navy"
+          >
+            + Add
+          </button>
+        )}
+      </div>
+      {isAdding && (
+        <div className="flex items-center gap-2">
+          <Input
+            autoFocus
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                commitAdd();
+              }
+              if (event.key === "Escape") cancelAdd();
+            }}
+            placeholder="Add a specialization"
+            aria-label="Custom specialization"
+            className="h-9 max-w-[16rem]"
+          />
+          <Button type="button" size="sm" variant="outline" onClick={commitAdd}>
+            Add
+          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={cancelAdd}>
+            Cancel
+          </Button>
+        </div>
+      )}
+      {(error ?? formError) && (
+        <p className="text-xs text-destructive">{error ?? formError}</p>
+      )}
     </div>
   );
 }
@@ -149,35 +237,11 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
             control={control}
             name="specializations"
             render={({ field }) => (
-              <div className="flex flex-wrap gap-2">
-                {SPECIALIZATIONS.map((item) => {
-                  const checked = field.value.includes(item);
-                  return (
-                    <button
-                      key={item}
-                      type="button"
-                      aria-pressed={checked}
-                      onClick={() =>
-                        field.onChange(
-                          checked
-                            ? field.value.filter(
-                                (v: Specialization) => v !== item,
-                              )
-                            : [...field.value, item],
-                        )
-                      }
-                      className={cn(
-                        "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
-                        checked
-                          ? "border-primary bg-primary/5 text-primary"
-                          : "border-border text-muted-foreground hover:border-input hover:text-navy",
-                      )}
-                    >
-                      {SPECIALIZATION_LABELS[item]}
-                    </button>
-                  );
-                })}
-              </div>
+              <SpecializationsChips
+                value={field.value}
+                onChange={field.onChange}
+                formError={errors.specializations?.message}
+              />
             )}
           />
         </Section>

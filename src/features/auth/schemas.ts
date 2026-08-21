@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { specializationsSchema } from "@/shared/utils/specializations";
 import { signupRoleSchema, type SignupRole } from "./types";
 
 export const signInSchema = z.object({
@@ -6,35 +7,6 @@ export const signInSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 export type SignInFormData = z.infer<typeof signInSchema>;
-
-/** Mirrors the backend recruiter_specialization enum. */
-export const RECRUITER_SPECIALIZATIONS = [
-  "accounting",
-  "finance",
-  "human_resources",
-  "technology",
-  "pharma",
-  "skilled_trades",
-  "medical",
-] as const;
-export const recruiterSpecializationSchema = z.enum(RECRUITER_SPECIALIZATIONS);
-export type RecruiterSpecialization = z.infer<
-  typeof recruiterSpecializationSchema
->;
-
-/** Human labels; the API speaks snake_case enums. */
-export const RECRUITER_SPECIALIZATION_LABELS: Record<
-  RecruiterSpecialization,
-  string
-> = {
-  accounting: "Accounting",
-  finance: "Finance",
-  human_resources: "Human resources",
-  technology: "Technology",
-  pharma: "Pharma",
-  skilled_trades: "Skilled trades",
-  medical: "Medical",
-};
 
 export interface PasswordRequirement {
   readonly key: "length" | "uppercase" | "lowercase" | "number" | "special";
@@ -145,7 +117,7 @@ export const signUpSchema = z
       .refine((value) => value === "" || /^(\d|[1-7]\d|80)$/.test(value), {
         message: "Enter a number of years between 0 and 80",
       }),
-    specializations: z.array(recruiterSpecializationSchema),
+    specializations: specializationsSchema,
     references: z
       .array(signUpReferenceSchema)
       .max(MAX_SIGNUP_REFERENCES, "At most 3 references"),
@@ -205,7 +177,7 @@ export type SignUpPayload =
   | (SignUpPayloadBase & {
       role: Extract<SignupRole, "recruiter">;
       yearsExperience?: number;
-      specializations?: RecruiterSpecialization[];
+      specializations?: string[];
       references?: SignUpReferencePayload[];
     });
 

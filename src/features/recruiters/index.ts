@@ -20,7 +20,5 @@ export { recruiterKeys } from "./keys";
 export type {
   RecruiterProfile,
   RecruiterReference,
-  Specialization,
   VerificationStatus,
 } from "./schemas";
-export { SPECIALIZATION_LABELS } from "./schemas";

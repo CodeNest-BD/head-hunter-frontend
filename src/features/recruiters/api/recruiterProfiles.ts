@@ -6,7 +6,6 @@ import {
   type ReapplyRecruiterVerificationResult,
   type RecruiterProfile,
   type RecruiterReference,
-  type Specialization,
 } from "../schemas";
 
 /** null clears a field; an omitted key leaves it unchanged. */
@@ -16,7 +15,7 @@ export interface UpdateRecruiterProfileInput {
   state?: string | null;
   zip?: string | null;
   yearsExperience?: number | null;
-  specializations?: Specialization[] | null;
+  specializations?: string[] | null;
 }
 
 export interface CreateReferenceInput {

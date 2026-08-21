@@ -1,27 +1,5 @@
 import { z } from "zod";
-
-/** Mirrors the backend recruiter_specialization enum. */
-export const SPECIALIZATIONS = [
-  "accounting",
-  "finance",
-  "human_resources",
-  "technology",
-  "pharma",
-  "skilled_trades",
-  "medical",
-] as const;
-export const specializationSchema = z.enum(SPECIALIZATIONS);
-export type Specialization = z.infer<typeof specializationSchema>;
-
-export const SPECIALIZATION_LABELS: Record<Specialization, string> = {
-  accounting: "Accounting",
-  finance: "Finance",
-  human_resources: "Human resources",
-  technology: "Technology",
-  pharma: "Pharma",
-  skilled_trades: "Skilled trades",
-  medical: "Medical",
-};
+import { specializationsSchema } from "@/shared/utils/specializations";
 
 export const SUBSCRIPTION_STATUSES = [
   "none",
@@ -58,7 +36,8 @@ export const recruiterProfileSchema = z.object({
   state: z.string().nullable(),
   zip: z.string().nullable(),
   yearsExperience: z.number().nullable(),
-  specializations: z.array(specializationSchema).nullable(),
+  // Free-text display labels stored by the backend, not an enum — render as-is.
+  specializations: z.array(z.string()).nullable(),
   subscriptionStatus: subscriptionStatusSchema,
   // Tolerant: a backend that predates verification reads as "pending".
   verificationStatus: verificationStatusSchema.catch("pending"),
@@ -96,7 +75,7 @@ export const recruiterProfileFormSchema = z.object({
         (Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 80),
       { message: "Enter a whole number of years between 0 and 80" },
     ),
-  specializations: z.array(specializationSchema),
+  specializations: specializationsSchema,
 });
 export type RecruiterProfileFormValues = z.infer<
   typeof recruiterProfileFormSchema

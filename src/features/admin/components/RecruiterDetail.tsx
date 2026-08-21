@@ -8,6 +8,7 @@ import { AlertCircle, BadgeCheck, BadgeX, Trash2 } from "lucide-react";
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { formatMinor } from "@/shared/utils/money";
+import { getSpecializationLabel } from "@/shared/utils/specializations";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -305,7 +306,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
               </span>
               <span className="text-sm text-navy">
                 {data.specializations && data.specializations.length > 0
-                  ? data.specializations.join(", ")
+                  ? data.specializations.map(getSpecializationLabel).join(", ")
                   : "—"}
               </span>
             </div>
