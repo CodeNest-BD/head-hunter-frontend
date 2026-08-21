@@ -30,6 +30,11 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
   const [open, setOpen] = useState(false);
   const { status, user, logout } = useAuth();
   const isAuthed = status === "authenticated" && user !== null;
+  // Until the silent boot refresh resolves we do not yet know whether the
+  // visitor is signed in, so we must not render the signed-out CTAs — that is
+  // what made a logged-in user briefly see "Log In / Sign Up" on the landing
+  // page. Render a neutral placeholder during boot instead.
+  const booting = status === "booting";
   const navItems = user ? NAV_BY_ROLE[user.role] : [];
 
   return (
@@ -60,7 +65,12 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          {isAuthed ? (
+          {booting ? (
+            <span
+              aria-hidden="true"
+              className="h-9 w-24 animate-pulse rounded-md bg-brand-line"
+            />
+          ) : isAuthed ? (
             <UserMenu />
           ) : (
             <>
@@ -107,7 +117,12 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
             </a>
           ))}
           <div className="mt-2 flex flex-col gap-1">
-            {isAuthed ? (
+            {booting ? (
+              <span
+                aria-hidden="true"
+                className="mx-2 my-1 h-9 animate-pulse rounded-md bg-brand-line"
+              />
+            ) : isAuthed ? (
               <>
                 {user && (
                   <div className="mb-1 px-2 py-1.5">
