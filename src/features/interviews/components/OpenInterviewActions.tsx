@@ -90,16 +90,8 @@ export function OpenInterviewActions({
         <ProposeSlotsForm
           interviewId={interview.id}
           onDone={() => setPanel("none")}
+          onCancel={() => setPanel("none")}
         />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={() => setPanel("none")}
-        >
-          Cancel
-        </Button>
       </div>
     );
   }

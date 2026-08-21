@@ -210,16 +210,8 @@ export function ProposalCard({
         <ProposeSlotsForm
           interviewId={interviewId}
           onDone={() => setShowProposeForm(false)}
+          onCancel={() => setShowProposeForm(false)}
         />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="self-start"
-          onClick={() => setShowProposeForm(false)}
-        >
-          Cancel
-        </Button>
       </div>
     );
   }

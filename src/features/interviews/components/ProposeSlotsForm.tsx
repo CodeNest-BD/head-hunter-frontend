@@ -2,8 +2,9 @@
 
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as Popover from "@radix-ui/react-popover";
 import { format, startOfToday } from "date-fns";
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle, CalendarIcon, X } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
 import { Calendar } from "@/shared/ui-components/controls/calendar";
@@ -29,6 +30,9 @@ export interface ProposeSlotsFormProps {
   /** Called once the batch is proposed successfully — the caller decides what
    * "done" means (close the panel, collapse back into the thread, etc.). */
   onDone: () => void;
+  /** Renders a Cancel beside the submit when provided, so the two actions share
+   * a row instead of the caller stacking its own button underneath. */
+  onCancel?: () => void;
 }
 
 const DAY_FORMAT = "yyyy-MM-dd";
@@ -55,6 +59,7 @@ function isCompleteSlot(slot: ProposeSlotFormValues): boolean {
 export function ProposeSlotsForm({
   interviewId,
   onDone,
+  onCancel,
 }: ProposeSlotsFormProps) {
   const proposeSlots = useProposeSlots(interviewId);
   const {
@@ -108,26 +113,65 @@ export function ProposeSlotsForm({
               )}
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div className="flex flex-col gap-1">
+                <Label htmlFor={`slots.${index}.day`}>Day</Label>
                 <Controller
                   control={control}
                   name={`slots.${index}.day`}
-                  render={({ field: dayField }) => (
-                    <Calendar
-                      mode="single"
-                      selected={toSelectedDate(dayField.value)}
-                      defaultMonth={
-                        toSelectedDate(dayField.value) ?? firstSelectableDay
-                      }
-                      disabled={{ before: firstSelectableDay }}
-                      onSelect={(date) =>
-                        dayField.onChange(date ? format(date, DAY_FORMAT) : "")
-                      }
-                      className="rounded-md border border-input p-2"
-                      aria-label={`Day for time ${index + 1}`}
-                    />
-                  )}
+                  render={({ field: dayField }) => {
+                    const selected = toSelectedDate(dayField.value);
+                    return (
+                      // The calendar lives in a popover rather than inline: a
+                      // permanently rendered month grid dominated the card and
+                      // pushed the actions below the fold.
+                      <Popover.Root>
+                        <Popover.Trigger asChild>
+                          <button
+                            type="button"
+                            id={`slots.${index}.day`}
+                            className="flex h-9 items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          >
+                            <span
+                              className={
+                                selected
+                                  ? "text-foreground"
+                                  : "text-muted-foreground"
+                              }
+                            >
+                              {selected
+                                ? format(selected, "EEE, d MMM yyyy")
+                                : "Pick a day"}
+                            </span>
+                            <CalendarIcon
+                              className="h-4 w-4 shrink-0 text-muted-foreground"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </Popover.Trigger>
+                        <Popover.Portal>
+                          <Popover.Content
+                            align="start"
+                            sideOffset={4}
+                            className="z-50 rounded-md border border-border bg-card p-2 shadow-card-lg focus:outline-none"
+                          >
+                            <Calendar
+                              mode="single"
+                              selected={selected}
+                              defaultMonth={selected ?? firstSelectableDay}
+                              disabled={{ before: firstSelectableDay }}
+                              onSelect={(date) =>
+                                dayField.onChange(
+                                  date ? format(date, DAY_FORMAT) : "",
+                                )
+                              }
+                              aria-label={`Day for time ${index + 1}`}
+                            />
+                          </Popover.Content>
+                        </Popover.Portal>
+                      </Popover.Root>
+                    );
+                  }}
                 />
                 {slotErrors?.day && (
                   <p className="text-xs text-destructive">
@@ -136,7 +180,7 @@ export function ProposeSlotsForm({
                 )}
               </div>
 
-              <div className="flex flex-1 flex-col gap-2">
+              <>
                 <div className="flex flex-col gap-1">
                   <Label htmlFor={`slots.${index}.startTime`}>Start</Label>
                   <NativeSelect
@@ -173,14 +217,14 @@ export function ProposeSlotsForm({
                     ))}
                   </NativeSelect>
                 </div>
-
-                {slot && isCompleteSlot(slot) && (
-                  <p className="text-xs font-medium text-foreground">
-                    {formatSlotWindow(slot)}
-                  </p>
-                )}
-              </div>
+              </>
             </div>
+
+            {slot && isCompleteSlot(slot) && (
+              <p className="text-xs font-medium text-foreground">
+                {formatSlotWindow(slot)}
+              </p>
+            )}
           </div>
         );
       })}
@@ -201,14 +245,16 @@ export function ProposeSlotsForm({
         </Button>
       )}
 
-      <Button
-        type="submit"
-        size="sm"
-        className="self-start"
-        disabled={proposeSlots.isPending}
-      >
-        {proposeSlots.isPending ? "Proposing…" : "Propose times"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="submit" size="sm" disabled={proposeSlots.isPending}>
+          {proposeSlots.isPending ? "Proposing…" : "Propose times"}
+        </Button>
+        {onCancel && (
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+      </div>
 
       {proposeSlots.isError && (
         <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
