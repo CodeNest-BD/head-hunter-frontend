@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2, Lock, Search, SearchX } from "lucide-react";
 
@@ -131,35 +131,53 @@ export function ExploreJobsView() {
     setPage(1);
   };
 
+  // The map sits above the list, so picking a state brings the now-filtered
+  // results into view instead of leaving the change off-screen below the map.
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const handleSelect = (selection: MapSelection): void => {
+    setFilter({ selection });
+    if (selection.kind !== "none") {
+      requestAnimationFrame(() =>
+        resultsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        }),
+      );
+    }
+  };
+
   const headline =
     selectedState !== undefined
       ? (US_STATE_NAME_BY_CODE[selectedState] ?? selectedState)
       : "All States";
 
   return (
-    <div className="w-full px-5 pb-20 md:px-10">
-      <section className="pb-10 pt-12 text-center">
-        <h1 className="mx-auto max-w-3xl font-heading text-4xl font-extrabold tracking-[-0.02em] text-navy md:text-5xl">
+    <div className="w-full px-5 pb-16 md:px-10">
+      <section className="pb-6 pt-8 text-center">
+        <h1 className="mx-auto max-w-3xl font-heading text-3xl font-extrabold tracking-[-0.02em] text-navy md:text-4xl">
           Set Your Price.{" "}
           <span className="text-primary">Hire the Right Talent.</span>
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-brand-gray">
-          Empower your recruitment by defining your own success fee. We connect
-          companies with top-tier recruiters willing to find your perfect match
-          within your budget.
+        <p className="mx-auto mt-3 max-w-2xl text-sm text-brand-gray md:text-base">
+          Define your own success fee and connect with top-tier recruiters
+          willing to find your perfect match within your budget.
         </p>
       </section>
 
-      <MapSection
-        isVerified={isVerified}
-        isRecruiter={isRecruiter}
-        verificationStatus={verificationStatus}
-        listParams={listParams}
-        selection={filters.selection}
-        onSelect={(selection) => setFilter({ selection })}
-      />
+      {/* Map stays a contained focal element (not full-screen tall); the
+          results list sits below it and full-width. */}
+      <div className="mx-auto w-full max-w-4xl">
+        <MapSection
+          isVerified={isVerified}
+          isRecruiter={isRecruiter}
+          verificationStatus={verificationStatus}
+          listParams={listParams}
+          selection={filters.selection}
+          onSelect={handleSelect}
+        />
+      </div>
 
-      <section className="mt-12">
+      <section ref={resultsRef} className="mt-10 scroll-mt-24">
         {/* State + result counts on the left, sort toggle on the right. */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
@@ -467,7 +485,7 @@ function CardsGrid({
 
   return (
     <div className="mt-8 flex flex-col gap-6">
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {data.data.map((job: PublicJobCardData) => (
           <PublicJobCard key={job.id} job={job} />
         ))}
