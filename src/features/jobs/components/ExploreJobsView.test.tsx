@@ -9,6 +9,15 @@ vi.mock("@/features/recruiters", () => ({
   useVerificationGate: () => useVerificationGateMock(),
 }));
 
+// The view reads the session to decide between the marketing hero and the
+// signed-in heading; mocked so this file needs no Redux store.
+const useAuthMock = vi.fn<
+  () => { status: string; user: Record<string, never> | null }
+>(() => ({ status: "authenticated", user: {} }));
+vi.mock("@/features/auth", () => ({
+  useAuth: () => useAuthMock(),
+}));
+
 const useJobsMock = vi.fn();
 const useJobMapMock = vi.fn();
 vi.mock("../hooks/useJobs", () => ({
@@ -63,7 +72,9 @@ describe("ExploreJobsView", () => {
     expect(
       screen.getByText("Job listings are for verified recruiters"),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Senior Backend Engineer")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Senior Backend Engineer"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Acme Inc.")).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText("Job title…")).not.toBeInTheDocument();
     expect(useJobsMock).not.toHaveBeenCalled();
@@ -126,5 +137,53 @@ describe("ExploreJobsView", () => {
       screen.queryByText("Job listings are for verified recruiters"),
     ).not.toBeInTheDocument();
     expect(useJobsMock).toHaveBeenCalled();
+  });
+
+  it("keeps the marketing pitch for a guest, who has not signed up yet", () => {
+    useAuthMock.mockReturnValue({ status: "unauthenticated", user: null });
+    useVerificationGateMock.mockReturnValue({
+      isApproved: false,
+      status: undefined,
+      isLoading: false,
+      isError: false,
+      retry: vi.fn(),
+    });
+    useJobMapMock.mockReturnValue({ data: [] });
+    useJobsMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderWithProviders(<ExploreJobsView />);
+
+    expect(screen.getByText(/Set Your Price/)).toBeInTheDocument();
+  });
+
+  it("replaces the pitch with a working heading once signed in", () => {
+    useAuthMock.mockReturnValue({ status: "authenticated", user: {} });
+    useVerificationGateMock.mockReturnValue({
+      isApproved: true,
+      status: "verified",
+      isLoading: false,
+      isError: false,
+      retry: vi.fn(),
+    });
+    useJobMapMock.mockReturnValue({ data: [] });
+    useJobsMock.mockReturnValue({
+      data: {
+        data: [sampleJob()],
+        meta: { page: 1, limit: 12, total: 1, totalPages: 1 },
+      },
+      isLoading: false,
+      isError: false,
+    });
+
+    renderWithProviders(<ExploreJobsView />);
+
+    expect(screen.queryByText(/Set Your Price/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Job map" }),
+    ).toBeInTheDocument();
   });
 });
