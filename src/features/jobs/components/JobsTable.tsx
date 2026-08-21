@@ -272,20 +272,12 @@ export function JobsTable() {
                                   href={`/company/inbox/job/${job.id}`}
                                   className="inline-flex items-center gap-1.5 transition-colors hover:underline"
                                 >
-                                  {subs.fresh > 0 ? (
-                                    <>
-                                      <span className="font-semibold text-primary">
-                                        {subs.fresh} new
-                                      </span>
-                                      {subs.total > subs.fresh && (
-                                        <span className="text-brand-gray">
-                                          of {subs.total}
-                                        </span>
-                                      )}
-                                    </>
-                                  ) : (
-                                    <span className="text-brand-gray">
-                                      {subs.total}
+                                  <span className="font-semibold text-navy">
+                                    {subs.total}
+                                  </span>
+                                  {subs.fresh > 0 && (
+                                    <span className="font-semibold text-primary">
+                                      ({subs.fresh} new)
                                     </span>
                                   )}
                                 </Link>
