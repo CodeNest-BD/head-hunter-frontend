@@ -288,28 +288,25 @@ export function DashboardLayout({
             <Breadcrumb items={resolvedCrumbs} />
           </div>
         )}
-        {/* Global site links, right after the breadcrumb, shown to every
-         * signed-in user on app pages (public pages get the marketing nav). */}
-        <nav
-          aria-label="Site"
-          className="hidden items-center gap-5 md:flex lg:ml-2"
-        >
-          <Link
-            href="/#how"
-            className="text-sm font-semibold text-navy transition-colors hover:text-primary"
-          >
-            How It Works
-          </Link>
-          <Link
-            href="/explore-jobs"
-            className="text-sm font-semibold text-navy transition-colors hover:text-primary"
-          >
-            Explore Jobs
-          </Link>
-        </nav>
-
-        {/* Role affordances stay pinned to the right. */}
+        {/* Role affordances, plus the global site links, stay pinned to the
+         * right — the same gap-3 spacing applies throughout the cluster. */}
         <div className="ml-auto flex items-center gap-3">
+          {/* Global site links, shown to every signed-in user on app pages
+           * (public pages get the marketing nav). */}
+          <nav aria-label="Site" className="hidden items-center gap-3 md:flex">
+            <Link
+              href="/#how"
+              className="text-sm font-semibold text-navy transition-colors hover:text-primary"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="/explore-jobs"
+              className="text-sm font-semibold text-navy transition-colors hover:text-primary"
+            >
+              Explore Jobs
+            </Link>
+          </nav>
           {user?.role === "company" && <CompanyTopBarActions />}
           {user?.role === "admin" && <AdminTopBarPending />}
         </div>
