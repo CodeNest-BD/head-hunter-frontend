@@ -281,15 +281,9 @@ function CandidateListSection({
         )}
       </div>
 
-      {candidates.map((candidate) => (
-        <CandidateItem
-          key={candidate.id}
-          candidate={candidate}
-          submissionId={submissionId}
-          negotiationState={negotiationState.get(candidate.id) ?? null}
-        />
-      ))}
-
+      {/* Above the existing candidates, not after them: opening the form from the
+          header would otherwise put it below however many candidates are already
+          listed, out of view. */}
       {isAdding && (
         <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-5 shadow-card">
           <CandidateForm
@@ -299,6 +293,15 @@ function CandidateListSection({
           />
         </div>
       )}
+
+      {candidates.map((candidate) => (
+        <CandidateItem
+          key={candidate.id}
+          candidate={candidate}
+          submissionId={submissionId}
+          negotiationState={negotiationState.get(candidate.id) ?? null}
+        />
+      ))}
     </div>
   );
 }
