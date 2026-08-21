@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp, FileText, Paperclip } from "lucide-react";
+import { Download, Eye, FileText } from "lucide-react";
 
-import { Button } from "@/shared/ui-components/controls/button";
 import { FilePreviewDialog } from "@/shared/ui-components/feedback/FilePreviewDialog";
 import { formatSize } from "@/shared/utils/formatSize";
 import { useAttachments } from "../hooks/useCandidates";
@@ -24,89 +22,76 @@ function isPdf(file: {
   );
 }
 
+const ACTION_CLASS =
+  "flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-primary";
+
 interface CandidateAttachmentsProps {
   candidateId: string;
 }
 
 /**
- * Collapsible attachment list for one candidate. Fetched only once expanded —
- * every fetch mints fresh presigned URLs, so there is no point requesting
- * links nobody opens.
+ * One candidate's files, always loaded — each row is the file name plus a view
+ * and a download action. Nothing renders when there are no attachments, so a
+ * candidate without files costs no vertical space.
  */
 export function CandidateAttachments({
   candidateId,
 }: CandidateAttachmentsProps) {
-  const [showFiles, setShowFiles] = useState(false);
-  const attachments = useAttachments(candidateId, showFiles);
+  const attachments = useAttachments(candidateId, true);
+
+  if (attachments.isPending) {
+    return <p className="text-sm text-muted-foreground">Loading files…</p>;
+  }
+  if (attachments.isError) {
+    return <p className="text-sm text-destructive">Could not load files.</p>;
+  }
+  if (!attachments.data?.length) {
+    return null;
+  }
 
   return (
-    <div>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => setShowFiles((open) => !open)}
-      >
-        <Paperclip className="h-4 w-4" />
-        {showFiles ? "Hide attachments" : "Show attachments"}
-        {showFiles ? (
-          <ChevronUp className="h-4 w-4" />
-        ) : (
-          <ChevronDown className="h-4 w-4" />
-        )}
-      </Button>
+    <ul className="flex flex-col gap-1.5">
+      {attachments.data.map((file) => (
+        <li
+          key={file.id}
+          className="flex items-center gap-2 rounded-md border border-border/60 bg-background/50 px-3 py-2 text-sm"
+        >
+          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate text-foreground">
+            {file.fileName}
+            <span className="ml-2 text-xs tabular-nums text-muted-foreground">
+              {formatSize(file.sizeBytes)}
+            </span>
+          </span>
 
-      {showFiles && (
-        <div className="mt-3 rounded-md border border-border/60 bg-background/50 p-3 text-sm">
-          {attachments.isPending && (
-            <p className="text-muted-foreground">Loading attachments…</p>
+          {isPdf(file) && file.previewUrl && (
+            <FilePreviewDialog
+              previewUrl={file.previewUrl}
+              downloadUrl={file.downloadUrl}
+              fileName={file.fileName}
+              sizeBytes={file.sizeBytes}
+            >
+              <button
+                type="button"
+                title="View"
+                aria-label={`View ${file.fileName}`}
+                className={ACTION_CLASS}
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+            </FilePreviewDialog>
           )}
-          {attachments.isError && (
-            <p className="text-destructive">Could not load attachments.</p>
-          )}
-          {attachments.data?.length === 0 && (
-            <p className="text-muted-foreground">No attachments.</p>
-          )}
-          <ul className="flex flex-col gap-1.5">
-            {attachments.data?.map((file) => {
-              const linkClassName =
-                "truncate text-left text-primary underline-offset-2 hover:underline";
-              return (
-                <li key={file.id} className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  {/* Presigned links, valid ~15 minutes from this fetch. A PDF
-                      opens in the preview dialog; anything else downloads,
-                      since the browser cannot render it inline anyway. */}
-                  {isPdf(file) && file.previewUrl ? (
-                    <FilePreviewDialog
-                      previewUrl={file.previewUrl}
-                      downloadUrl={file.downloadUrl}
-                      fileName={file.fileName}
-                      sizeBytes={file.sizeBytes}
-                    >
-                      <button type="button" className={linkClassName}>
-                        {file.fileName}
-                      </button>
-                    </FilePreviewDialog>
-                  ) : (
-                    <a
-                      href={file.downloadUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={linkClassName}
-                    >
-                      {file.fileName}
-                    </a>
-                  )}
-                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                    {formatSize(file.sizeBytes)}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-    </div>
+
+          <a
+            href={file.downloadUrl}
+            title="Download"
+            aria-label={`Download ${file.fileName}`}
+            className={ACTION_CLASS}
+          >
+            <Download className="h-4 w-4" />
+          </a>
+        </li>
+      ))}
+    </ul>
   );
 }
