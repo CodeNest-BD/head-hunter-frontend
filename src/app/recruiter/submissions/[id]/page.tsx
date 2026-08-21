@@ -127,17 +127,8 @@ function CandidateItem({
           submissionId={submissionId}
           candidate={candidate}
           onDone={() => setMode("view")}
+          onCancel={() => setMode("view")}
         />
-        <div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setMode("view")}
-          >
-            Cancel
-          </Button>
-        </div>
       </div>
     );
   }
@@ -304,17 +295,8 @@ function CandidateListSection({
           <CandidateForm
             submissionId={submissionId}
             onDone={() => setIsAdding(false)}
+            onCancel={() => setIsAdding(false)}
           />
-          <div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsAdding(false)}
-            >
-              Cancel
-            </Button>
-          </div>
         </div>
       )}
     </div>

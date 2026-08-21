@@ -24,6 +24,9 @@ interface CandidateFormProps {
   submissionId: string;
   candidate?: Candidate;
   onDone: () => void;
+  /** Renders a Cancel beside the submit when provided, so the two actions share
+   * a row instead of the caller stacking its own button underneath. */
+  onCancel?: () => void;
 }
 
 /** null when the file is acceptable; otherwise the reason to show the user. */
@@ -86,6 +89,7 @@ export function CandidateForm({
   submissionId,
   candidate,
   onDone,
+  onCancel,
 }: CandidateFormProps) {
   const submitCandidate = useSubmitCandidate(submissionId);
   const updateCandidate = useUpdateCandidate(submissionId);
@@ -260,7 +264,7 @@ export function CandidateForm({
         </div>
       )}
 
-      <div>
+      <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" disabled={submitDisabled}>
           {candidate
             ? updateCandidate.isPending
@@ -270,6 +274,11 @@ export function CandidateForm({
               ? "Submitting…"
               : "Submit candidate"}
         </Button>
+        {onCancel && (
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
       </div>
     </form>
   );
