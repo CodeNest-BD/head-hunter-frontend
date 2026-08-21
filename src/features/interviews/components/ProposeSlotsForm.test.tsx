@@ -65,26 +65,36 @@ describe("ProposeSlotsForm", () => {
     ).toBeDisabled();
   });
 
-  it("adds a chosen start time to the offer, and removes it when chosen again", async () => {
+  it("adds the chosen start time to the offer, and removes it from the list", async () => {
     renderForm();
     await pickADay();
 
-    const nineAm = screen.getByRole("button", { name: "9:00 AM" });
-    await userEvent.click(nineAm);
+    // 9:00 AM is the default selection, so adding needs no dropdown change.
+    await userEvent.click(screen.getByRole("button", { name: /add time/i }));
     expect(
       screen.getByText(`1 of ${MAX_PROPOSAL_SLOTS} selected`),
     ).toBeInTheDocument();
 
-    await userEvent.click(nineAm);
+    await userEvent.click(screen.getByRole("button", { name: /^Remove / }));
     expect(
       screen.getByText(`0 of ${MAX_PROPOSAL_SLOTS} selected`),
     ).toBeInTheDocument();
   });
 
+  it("will not offer the same time twice", async () => {
+    renderForm();
+    await pickADay();
+
+    await userEvent.click(screen.getByRole("button", { name: /add time/i }));
+
+    expect(screen.getByText("Already offered")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /add time/i })).toBeDisabled();
+  });
+
   it("applies a length change to times already chosen, so the batch stays consistent", async () => {
     renderForm();
     await pickADay();
-    await userEvent.click(screen.getByRole("button", { name: "9:00 AM" }));
+    await userEvent.click(screen.getByRole("button", { name: /add time/i }));
 
     // 60 min is the default, so the window ends at 10:00.
     expect(screen.getByText(/9:00 AM – 10:00 AM/)).toBeInTheDocument();
@@ -97,7 +107,7 @@ describe("ProposeSlotsForm", () => {
   it("submits every chosen window as a start/end pair", async () => {
     renderForm();
     await pickADay();
-    await userEvent.click(screen.getByRole("button", { name: "9:00 AM" }));
+    await userEvent.click(screen.getByRole("button", { name: /add time/i }));
 
     fireEvent.submit(screen.getByRole("button", { name: "Propose times" }));
 

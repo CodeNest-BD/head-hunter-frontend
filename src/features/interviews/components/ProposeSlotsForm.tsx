@@ -5,12 +5,13 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as Popover from "@radix-ui/react-popover";
 import { format, startOfToday } from "date-fns";
-import { AlertCircle, CalendarIcon, Check, X } from "lucide-react";
+import { AlertCircle, CalendarIcon, Check, Plus, X } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
 import { Calendar } from "@/shared/ui-components/controls/calendar";
 import { FilterChip } from "@/shared/ui-components/controls/filter-chip";
 import { Label } from "@/shared/ui-components/controls/label";
+import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
 import { useProposeSlots } from "../hooks/useInterviews";
 import {
   MAX_PROPOSAL_SLOTS,
@@ -82,6 +83,7 @@ export function ProposeSlotsForm({
   // past — the server owns that rule, so this only stops the obvious half.
   const firstSelectableDay = startOfToday();
   const [day, setDay] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
   const [duration, setDuration] =
     useState<SlotDurationMinutes>(DEFAULT_DURATION);
 
@@ -93,13 +95,11 @@ export function ProposeSlotsForm({
       (field) => field.day === day && field.startTime === startTime,
     );
 
-  const toggleTime = (startTime: string): void => {
-    const existing = indexOfSlot(startTime);
-    if (existing >= 0) {
-      remove(existing);
-      return;
-    }
-    if (atMax) {
+  const alreadyOffered = indexOfSlot(startTime) >= 0;
+  const canAdd = day !== "" && !atMax && !alreadyOffered;
+
+  const addTime = (): void => {
+    if (!canAdd) {
       return;
     }
     append({ day, startTime, durationMinutes: duration });
@@ -182,39 +182,52 @@ export function ProposeSlotsForm({
         </Popover.Root>
       </div>
 
-      {/* Times appear only once there is a day to attach them to — that is the
-          point of the step order, and it keeps the form short until then. */}
+      {/* A dropdown rather than a grid of every quarter-hour: the day already
+          narrows the choice, and 96 chips made the form scroll. Multiple times
+          are still supported — each pick is added to the list below. */}
       {day && (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <Label>
-              Start times on{" "}
-              {selectedDate && format(selectedDate, "EEE, d MMM")}
+            <Label htmlFor="propose-start-time">
+              Start time on {selectedDate && format(selectedDate, "EEE, d MMM")}
             </Label>
             <span className="text-xs tabular-nums text-muted-foreground">
               {fields.length} of {MAX_PROPOSAL_SLOTS} selected
             </span>
           </div>
-          <div className="grid max-h-48 grid-cols-3 gap-1.5 overflow-y-auto rounded-md border border-input p-2 sm:grid-cols-4">
-            {SLOT_TIME_OPTIONS.map((option) => {
-              const selected = indexOfSlot(option.value) >= 0;
-              // At the cap, only already-chosen times stay live, so the way
-              // forward is to deselect one rather than hunt for a control that
-              // silently does nothing.
-              const inert = atMax && !selected;
-              return (
-                <FilterChip
-                  key={option.value}
-                  active={selected}
-                  onClick={() => toggleTime(option.value)}
-                  className={`justify-center px-2 py-1.5 text-xs ${
-                    inert ? "pointer-events-none opacity-40" : ""
-                  }`}
-                >
+          <div className="flex flex-wrap items-center gap-2">
+            <NativeSelect
+              id="propose-start-time"
+              className="w-auto"
+              value={startTime}
+              onChange={(event) => setStartTime(event.target.value)}
+            >
+              {SLOT_TIME_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
                   {option.label}
-                </FilterChip>
-              );
-            })}
+                </option>
+              ))}
+            </NativeSelect>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!canAdd}
+              onClick={addTime}
+            >
+              <Plus className="h-4 w-4" />
+              Add time
+            </Button>
+            {alreadyOffered && (
+              <span className="text-xs text-muted-foreground">
+                Already offered
+              </span>
+            )}
+            {atMax && !alreadyOffered && (
+              <span className="text-xs text-muted-foreground">
+                Remove one to offer a different time
+              </span>
+            )}
           </div>
         </div>
       )}
