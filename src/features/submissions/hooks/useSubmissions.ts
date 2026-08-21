@@ -17,6 +17,7 @@ import {
   type InboxRecruitersParams,
   type SubmissionListParams,
 } from "../api/submissions";
+import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { submissionKeys } from "../keys";
 import type { SubmissionStatus } from "../schemas";
 
@@ -26,6 +27,8 @@ export function useSubmissions(params: SubmissionListParams) {
     queryFn: () => fetchSubmissions(params),
     // Keep the current page visible while the next page/filter loads.
     placeholderData: keepPreviousData,
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -91,6 +94,9 @@ export function useInboxJobs(params: InboxJobsParams) {
     queryKey: submissionKeys.inboxJobs(params),
     queryFn: () => fetchInboxJobs(params),
     placeholderData: keepPreviousData,
+    // Carries the per-job new-candidate and unread counts.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -102,5 +108,8 @@ export function useInboxRecruiters(
     queryKey: submissionKeys.inboxRecruiters(jobId, params),
     queryFn: () => fetchInboxRecruiters(jobId, params),
     placeholderData: keepPreviousData,
+    // Carries the per-recruiter unread and candidate counts.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }

@@ -19,6 +19,7 @@ import {
   type SendMessageInput,
   type ThreadParams,
 } from "../api/conversations";
+import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { conversationKeys } from "../keys";
 import type { ConversationRealtimeStatus } from "./useConversationRealtime";
 
@@ -70,6 +71,10 @@ export function useMessageUnreadCount() {
   return useQuery({
     queryKey: conversationKeys.unreadCount,
     queryFn: fetchMessageUnreadCount,
+    // Drives the app-wide Submissions/Inbox badge, which is mounted on every
+    // page — without a poll it fetched once per navigation and then went stale.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 

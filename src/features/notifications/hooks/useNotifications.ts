@@ -7,6 +7,7 @@ import {
   markNotificationUnread,
   type NotificationListParams,
 } from "../api/notifications";
+import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { notificationKeys } from "../keys";
 
 /**
@@ -23,9 +24,6 @@ import { notificationKeys } from "../keys";
  * `refetchOnWindowFocus: false`). `refetchIntervalInBackground` is left off, so
  * a hidden tab stops polling and the focus refetch covers coming back to it.
  */
-const UNREAD_COUNT_POLL_MS = 30_000;
-const LIST_POLL_MS = 60_000;
-
 export function useNotifications(
   params: NotificationListParams,
   enabled = true,
@@ -34,7 +32,7 @@ export function useNotifications(
     queryKey: notificationKeys.list(params),
     queryFn: () => fetchNotifications(params),
     enabled,
-    refetchInterval: LIST_POLL_MS,
+    refetchInterval: REALTIME_POLL_MS,
     refetchOnWindowFocus: true,
   });
 }
@@ -43,7 +41,7 @@ export function useUnreadCount() {
   return useQuery({
     queryKey: notificationKeys.unreadCount,
     queryFn: fetchUnreadCount,
-    refetchInterval: UNREAD_COUNT_POLL_MS,
+    refetchInterval: REALTIME_POLL_MS,
     refetchOnWindowFocus: true,
   });
 }

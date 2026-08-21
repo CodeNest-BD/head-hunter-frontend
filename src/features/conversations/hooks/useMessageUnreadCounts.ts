@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { fetchMessageUnreadCounts } from "../api/conversations";
+import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { conversationKeys } from "../keys";
 
 /**
@@ -18,6 +19,7 @@ export function useMessageUnreadCounts() {
     // would mean a user sitting on the inbox sees nothing until they navigate
     // away and back.
     refetchOnWindowFocus: true,
+    refetchInterval: REALTIME_POLL_MS,
     select: (counts) =>
       new Map(counts.map((count) => [count.submissionId, count.unread])),
   });
