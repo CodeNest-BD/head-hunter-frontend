@@ -60,7 +60,6 @@ function sendOfferErrorMessage(error: unknown): string {
 
 const EMPTY_VALUES: SendOfferFormValues = {
   salary: "",
-  jobTitle: "",
   startDate: "",
   notes: "",
 };
@@ -112,7 +111,6 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
       {
         candidateId,
         salaryMinor,
-        jobTitle: values.jobTitle.trim() || undefined,
         startDate: values.startDate.trim() || undefined,
         notes: values.notes.trim() || undefined,
       },
@@ -127,24 +125,16 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
         className="flex flex-col gap-2.5 rounded-md border border-border/60 p-3"
       >
         <p className="text-sm font-medium text-foreground">Send offer</p>
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="send-offer-salary">Salary (USD/yr)</Label>
-            <Input
-              id="send-offer-salary"
-              inputMode="decimal"
-              {...register("salary")}
-            />
-            {errors.salary && (
-              <p className="text-xs text-destructive">
-                {errors.salary.message}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="send-offer-title">Title</Label>
-            <Input id="send-offer-title" {...register("jobTitle")} />
-          </div>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="send-offer-salary">Salary (USD/yr)</Label>
+          <Input
+            id="send-offer-salary"
+            inputMode="decimal"
+            {...register("salary")}
+          />
+          {errors.salary && (
+            <p className="text-xs text-destructive">{errors.salary.message}</p>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="send-offer-start-date">Start date</Label>

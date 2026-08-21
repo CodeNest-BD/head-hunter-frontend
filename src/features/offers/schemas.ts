@@ -77,7 +77,8 @@ export const sendOfferFormSchema = z.object({
     .refine((value) => Number.isFinite(Number(value)) && Number(value) > 0, {
       message: "Enter a salary greater than 0",
     }),
-  jobTitle: z.string().trim(),
+  // No title field: the offer already belongs to one job, whose title the
+  // recruiter and candidate both see on the submission.
   startDate: z.string().trim(),
   notes: z.string().trim(),
 });

@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useWallet } from "@/features/billing";
 import { useMessageUnreadCount } from "@/features/conversations";
 import { useJobs } from "@/features/jobs";
@@ -99,8 +101,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
   return (
     <div className="flex flex-col gap-6">
       <PageBanner
-        size="lg"
-        eyebrow="Overview"
         title={`Hey ${firstName}`}
         subtitle={subtitleParts.join(" · ")}
       />
@@ -110,29 +110,51 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           tone="navy"
           label="Available to spend"
           value={formatMinor(wallet.data?.availableMinor)}
-          hint="before fees are reserved"
+          // `availableMinor` is balance MINUS reserved, so the old
+          // "before fees are reserved" said the opposite of what it is.
+          hint="free for new job fees"
+          href="/company/wallet"
         />
         <StatCard
           label="New submissions"
           value={inbox.isPending ? "—" : newSubmissions}
-          hint={`across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"}`}
+          hint={
+            newSubmissions === 0
+              ? "nothing waiting on you"
+              : `across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"}`
+          }
+          href="/company/inbox"
         />
         <StatCard
           label="Published jobs"
           value={published.isPending ? "—" : publishedTotal}
           hint={
-            noFeeCount > 0 ? `${noFeeCount} without a fee` : "all have a fee"
+            noFeeCount > 0
+              ? `${noFeeCount} without a fee`
+              : "live on the job map"
           }
+          href="/company/jobs"
         />
         <StatCard
           label="Reserved"
           value={formatMinor(wallet.data?.reservedMinor)}
           hint="held against live posts"
+          href="/company/wallet"
         />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title="Needs your attention">
+        <Panel
+          title="Needs your attention"
+          action={
+            <Link
+              href="/notifications"
+              className="text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+            >
+              View all
+            </Link>
+          }
+        >
           {attention.length > 0 ? (
             <div className="flex flex-col">
               {attention.slice(0, 5).map((item) => (
@@ -156,7 +178,12 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
                   className="border-b border-border/70 py-3.5 last:border-0"
                 >
                   <p className="text-sm font-medium text-navy">{note.title}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  {note.body && (
+                    <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
+                      {note.body}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {formatDateTime(note.createdAt)}
                   </p>
                 </li>

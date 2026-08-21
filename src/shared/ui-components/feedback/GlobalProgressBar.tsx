@@ -13,9 +13,19 @@ import { useIsFetching, useIsMutating } from "@tanstack/react-query";
  * toward ~90% while work is in flight, snaps to 100% when the last request
  * settles, then fades out. Purely presentational — it reads global state and
  * renders a fixed element above all app chrome.
+ *
+ * Background refetches are deliberately excluded. Counting every in-flight
+ * query made the bar flash on work the user never asked for: the conversation
+ * thread sets `refetchOnWindowFocus: true` plus a `refetchInterval` poll, so
+ * merely clicking back into the tab — or waiting on the timer — lit the bar
+ * while the screen already had its data. The predicate keeps only queries with
+ * nothing to show yet, which is what "loading" means to the person watching.
  */
 export function GlobalProgressBar() {
-  const busy = useIsFetching() + useIsMutating() > 0;
+  const loading = useIsFetching({
+    predicate: (query) => query.state.data === undefined,
+  });
+  const busy = loading + useIsMutating() > 0;
 
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(false);

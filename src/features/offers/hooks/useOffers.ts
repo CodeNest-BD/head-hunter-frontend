@@ -17,12 +17,15 @@ import {
   type CreateOfferInput,
   type OfferListParams,
 } from "../api/offers";
+import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { offerKeys } from "../keys";
 
 export function useOffer(id: string) {
   return useQuery({
     queryKey: offerKeys.detail(id),
     queryFn: () => fetchOffer(id),
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -30,6 +33,12 @@ export function useOffers(params: OfferListParams) {
   return useQuery({
     queryKey: offerKeys.list(params),
     queryFn: () => fetchOffers(params),
+    // Both sides act on the same offer, so this is not read-your-own-writes:
+    // invalidation on mutation only refreshes the party who clicked. Without a
+    // poll, a company that accepted left the recruiter's card showing
+    // "Awaiting response" with a Withdraw button until something remounted it.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 

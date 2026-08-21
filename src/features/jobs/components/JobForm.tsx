@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/shared/ui-components/controls/select";
 import { useMinRecruiterFee } from "@/features/billing";
+import { US_CITIES } from "@/shared/data/usCities";
 import { US_STATES } from "@/shared/data/usStatesGeo";
 import { sanitizeRichText } from "@/shared/libs/richText";
 import {
@@ -37,7 +38,6 @@ import type { JobWriteInput } from "../api/jobs";
 // Radix Select items can't take an empty-string value, so the "clear the
 // state" option needs a sentinel that this form translates to/from "" —
 // the value `locationState` actually holds, since it's optional.
-const NO_STATE_VALUE = "any";
 
 interface JobFormProps {
   job?: Job;
@@ -101,10 +101,17 @@ export function JobForm({
     control,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<JobFormValues>({
     resolver: zodResolver(jobFormSchema),
     defaultValues: toDefaults(job),
   });
+
+  const isRemote = watch("isRemote");
+  const locationState = watch("locationState");
+  const citiesInState = US_CITIES.filter(
+    (city) => city.state === locationState,
+  );
 
   const submit = handleSubmit((values) => {
     onSubmit({
@@ -181,7 +188,7 @@ export function JobForm({
                     onValueChange={field.onChange}
                   >
                     <SelectTrigger id="employmentType">
-                      <SelectValue placeholder="Not specified" />
+                      <SelectValue placeholder="Select employment type" />
                     </SelectTrigger>
                     <SelectContent>
                       {EMPLOYMENT_TYPES.map((type) => (
@@ -193,6 +200,11 @@ export function JobForm({
                   </Select>
                 )}
               />
+              {errors.employmentType && (
+                <p className="text-xs text-destructive">
+                  {errors.employmentType.message}
+                </p>
+              )}
             </div>
           </div>
         </Section>
@@ -200,22 +212,21 @@ export function JobForm({
         <Section title="Location" hint="Where the work happens.">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="locationState">State</Label>
+              <Label htmlFor="locationState">
+                State{isRemote ? " (optional)" : ""}
+              </Label>
               <Controller
                 control={control}
                 name="locationState"
                 render={({ field }) => (
                   <Select
-                    value={field.value === "" ? NO_STATE_VALUE : field.value}
-                    onValueChange={(value) =>
-                      field.onChange(value === NO_STATE_VALUE ? "" : value)
-                    }
+                    value={field.value === "" ? undefined : field.value}
+                    onValueChange={field.onChange}
                   >
                     <SelectTrigger id="locationState">
                       <SelectValue placeholder="Select a state" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={NO_STATE_VALUE}>Any state</SelectItem>
                       {US_STATES.map((state) => (
                         <SelectItem key={state.code} value={state.code}>
                           {state.name}
@@ -232,12 +243,25 @@ export function JobForm({
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="locationCity">City</Label>
+              <Label htmlFor="locationCity">City (optional)</Label>
+              {/* Suggestions, not a closed list: US_CITIES is a curated set of
+                  the largest cities plus state capitals, so a select would
+                  reject plenty of real places. A datalist narrows to the chosen
+                  state while still accepting anything typed. */}
               <Input
                 id="locationCity"
-                placeholder="San Francisco"
+                list="location-city-options"
+                autoComplete="off"
+                placeholder={
+                  locationState ? "Start typing a city" : "Pick a state first"
+                }
                 {...register("locationCity")}
               />
+              <datalist id="location-city-options">
+                {citiesInState.map((city) => (
+                  <option key={city.name} value={city.name} />
+                ))}
+              </datalist>
             </div>
           </div>
 
@@ -255,9 +279,12 @@ export function JobForm({
           title="Compensation"
           hint="The salary band for the candidate and the fee for the recruiter."
         >
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {/* The salary band and the recruiter fee are different money paid by
+              different parties to different people, so they get their own rows
+              rather than reading as three columns of one figure. */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="salaryMin">Salary minimum ($)</Label>
+              <Label htmlFor="salaryMin">Salary minimum ($) (optional)</Label>
               <Input
                 id="salaryMin"
                 inputMode="decimal"
@@ -265,7 +292,7 @@ export function JobForm({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="salaryMax">Salary maximum ($)</Label>
+              <Label htmlFor="salaryMax">Salary maximum ($) (optional)</Label>
               <Input
                 id="salaryMax"
                 inputMode="decimal"
@@ -277,20 +304,21 @@ export function JobForm({
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="recruiterFee">Recruiter fee ($)</Label>
-              <Input
-                id="recruiterFee"
-                inputMode="decimal"
-                placeholder="10000"
-                {...register("recruiterFee")}
-              />
-              {errors.recruiterFee && (
-                <p className="text-xs text-destructive">
-                  {errors.recruiterFee.message}
-                </p>
-              )}
-            </div>
+          </div>
+
+          <div className="flex max-w-xs flex-col gap-2">
+            <Label htmlFor="recruiterFee">Recruiter fee ($)</Label>
+            <Input
+              id="recruiterFee"
+              inputMode="decimal"
+              placeholder="10000"
+              {...register("recruiterFee")}
+            />
+            {errors.recruiterFee && (
+              <p className="text-xs text-destructive">
+                {errors.recruiterFee.message}
+              </p>
+            )}
           </div>
           <p className="text-[13px] text-muted-foreground">
             What you will pay a recruiter for a successful hire.

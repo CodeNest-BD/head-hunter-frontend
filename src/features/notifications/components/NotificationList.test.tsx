@@ -149,4 +149,34 @@ describe("NotificationList", () => {
 
     expect(await screen.findByText("Nothing yet")).toBeInTheDocument();
   });
+
+  it("marks an unlinked notification read from its own button", async () => {
+    // payout_sent resolves to no href, so the row is not clickable — its own
+    // button is the only way to mark it read.
+    fetchNotificationsMock.mockResolvedValue(
+      flatPaginated([item({ type: "payout_sent" })]),
+    );
+
+    renderList();
+    await screen.findByText("Payout sent");
+
+    await userEvent.click(
+      screen.getByRole("button", { name: 'Mark "Payout sent" as read' }),
+    );
+
+    expect(markReadMock).toHaveBeenCalledWith("n-1");
+  });
+
+  it("offers no mark-read button on an already-read notification", async () => {
+    fetchNotificationsMock.mockResolvedValue(
+      flatPaginated([item({ type: "payout_sent", readAt: new Date() })]),
+    );
+
+    renderList();
+    await screen.findByText("Payout sent");
+
+    expect(
+      screen.queryByRole("button", { name: /as read$/ }),
+    ).not.toBeInTheDocument();
+  });
 });

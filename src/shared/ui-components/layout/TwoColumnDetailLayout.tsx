@@ -52,7 +52,11 @@ export function TwoColumnDetailLayout({
     <div className={cn("flex w-full flex-col gap-6", PAGE_HEIGHT_CLASSNAME)}>
       {header && <div className="shrink-0">{header}</div>}
       <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-2">
-        <div className="flex min-h-0 flex-col gap-6 overflow-y-auto lg:h-full">
+        {/* `self-start` on this column only, not `items-start` on the grid: this
+            side should be as tall as its content, so a short submission leaves no
+            blank band under it, while the thread on the right must keep filling
+            the height to pin its composer to the bottom. */}
+        <div className="flex min-h-0 flex-col gap-6 overflow-y-auto lg:max-h-full lg:self-start">
           {left}
         </div>
         <div className="min-h-0 lg:h-full">{right}</div>

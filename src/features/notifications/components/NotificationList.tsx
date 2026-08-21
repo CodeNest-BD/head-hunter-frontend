@@ -7,6 +7,7 @@ import {
   Bell,
   BellOff,
   Briefcase,
+  Check,
   CheckCheck,
   MessageSquare,
   ShieldCheck,
@@ -53,6 +54,7 @@ function categoryOf(type: string): Category {
   if (
     t.includes("verif") ||
     t.includes("account") ||
+    t.includes("follow") ||
     t.includes("subscription") ||
     t.includes("payout") ||
     t.includes("placement") ||
@@ -118,9 +120,13 @@ function groupByDay(items: readonly Notification[], now: Date): DayGroup[] {
 function NotificationRow({
   item,
   onOpen,
+  onMarkRead,
+  isMarkingRead,
 }: {
   item: Notification;
   onOpen: (id: string) => void;
+  onMarkRead: (id: string) => void;
+  isMarkingRead: boolean;
 }) {
   const { user } = useAuth();
   const href = user ? notificationHref(item, user.role) : null;
@@ -128,18 +134,15 @@ function NotificationRow({
   const { Icon, tone } = iconFor(item.type);
 
   const rowClassName = cn(
-    "relative flex items-start gap-3 px-4 py-3.5 transition-colors",
+    "relative flex items-start transition-colors",
     unread ? "bg-primary/[0.04]" : "hover:bg-secondary/50",
   );
+  // The link and the mark-read button are siblings, never nested: a <button>
+  // inside an <a> is invalid markup and clicking it would navigate the row.
+  const bodyClassName = "flex min-w-0 flex-1 items-start gap-3 py-3.5 pl-4";
 
   const content = (
     <>
-      {unread && (
-        <span
-          aria-hidden="true"
-          className="absolute left-0 top-0 h-full w-[3px] bg-primary"
-        />
-      )}
       <span
         aria-hidden="true"
         className={cn(
@@ -150,27 +153,14 @@ function NotificationRow({
         <Icon className="h-[18px] w-[18px]" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3">
-          <p
-            className={cn(
-              "text-sm text-navy",
-              unread ? "font-semibold" : "font-medium",
-            )}
-          >
-            {item.title}
-          </p>
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {formatTime(item.createdAt)}
-            </span>
-            {unread && (
-              <span
-                aria-label="Unread"
-                className="h-2 w-2 shrink-0 rounded-full bg-primary"
-              />
-            )}
-          </div>
-        </div>
+        <p
+          className={cn(
+            "flex h-5 items-center text-sm text-navy",
+            unread ? "font-semibold" : "font-medium",
+          )}
+        >
+          {item.title}
+        </p>
         {item.body && (
           <p className="mt-0.5 text-sm text-muted-foreground">{item.body}</p>
         )}
@@ -178,13 +168,56 @@ function NotificationRow({
     </>
   );
 
-  if (!href) {
-    return <div className={rowClassName}>{content}</div>;
-  }
   return (
-    <Link href={href} className={rowClassName} onClick={() => onOpen(item.id)}>
-      {content}
-    </Link>
+    <div className={rowClassName}>
+      {unread && (
+        <span
+          aria-hidden="true"
+          className="absolute left-0 top-0 h-full w-[3px] bg-primary"
+        />
+      )}
+      {href ? (
+        <Link
+          href={href}
+          className={bodyClassName}
+          onClick={() => onOpen(item.id)}
+        >
+          {content}
+        </Link>
+      ) : (
+        <div className={bodyClassName}>{content}</div>
+      )}
+      {/* Time, unread dot and the mark-read control share one cluster on the
+          first text line. Every slot keeps its width when empty, so the
+          timestamps stay in a column whether a row is read or unread. */}
+      <div className="flex shrink-0 items-start gap-2 py-3.5 pr-4">
+        <span className="flex h-5 items-center text-xs tabular-nums text-muted-foreground">
+          {formatTime(item.createdAt)}
+        </span>
+        <span className="flex h-5 w-2 items-center justify-center">
+          {unread && (
+            <span
+              aria-label="Unread"
+              className="h-2 w-2 rounded-full bg-primary"
+            />
+          )}
+        </span>
+        {unread ? (
+          <button
+            type="button"
+            title="Mark as read"
+            aria-label={`Mark "${item.title}" as read`}
+            disabled={isMarkingRead}
+            onClick={() => onMarkRead(item.id)}
+            className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground transition-colors hover:text-primary disabled:opacity-40"
+          >
+            <Check className="h-4 w-4" />
+          </button>
+        ) : (
+          <span aria-hidden="true" className="h-5 w-5" />
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -310,6 +343,8 @@ export function NotificationList() {
                       <NotificationRow
                         item={item}
                         onOpen={(id) => markRead.mutate(id)}
+                        onMarkRead={(id) => markRead.mutate(id)}
+                        isMarkingRead={markRead.isPending}
                       />
                     </li>
                   ))}

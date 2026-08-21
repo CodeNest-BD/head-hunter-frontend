@@ -4,10 +4,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
 import { LandingNav } from "./LandingNav";
 
-// Control the auth lifecycle state directly; UserMenu also reads useAuth from
-// this same mocked module, so the authenticated case renders without a store.
+// Control the auth lifecycle state directly; UserMenu (and, via
+// useVerificationGate, the recruiters feature's session read) also resolve
+// to this same mock, so the authenticated case renders without a store.
+// Mocked at both specifiers since useIsVerifiedRecruiter imports the concrete
+// hook module directly rather than the barrel.
 const useAuthMock = vi.fn();
 vi.mock("@/features/auth", () => ({
+  useAuth: () => useAuthMock(),
+}));
+vi.mock("@/features/auth/hooks/useAuth", () => ({
   useAuth: () => useAuthMock(),
 }));
 

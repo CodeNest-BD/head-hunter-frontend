@@ -1,10 +1,11 @@
 import { apiClient } from "@/shared/libs/apiClient";
 import {
+  reapplyRecruiterVerificationResponseSchema,
   recruiterProfileSchema,
   recruiterReferenceSchema,
+  type ReapplyRecruiterVerificationResult,
   type RecruiterProfile,
   type RecruiterReference,
-  type Specialization,
 } from "../schemas";
 
 /** null clears a field; an omitted key leaves it unchanged. */
@@ -14,7 +15,7 @@ export interface UpdateRecruiterProfileInput {
   state?: string | null;
   zip?: string | null;
   yearsExperience?: number | null;
-  specializations?: Specialization[] | null;
+  specializations?: string[] | null;
 }
 
 export interface CreateReferenceInput {
@@ -55,6 +56,18 @@ export async function addReference(
 /** DELETE /v1/recruiter-profiles/me/references/:id */
 export async function removeReference(id: string): Promise<void> {
   await apiClient.delete(`/recruiter-profiles/me/references/${id}`);
+}
+
+/**
+ * POST /v1/recruiter-profiles/me/reapply
+ *
+ * Legal only from `rejected`; the server 409s from `pending` or `verified`.
+ */
+export async function reapplyRecruiterVerification(): Promise<ReapplyRecruiterVerificationResult> {
+  const { data } = await apiClient.post<unknown>(
+    "/recruiter-profiles/me/reapply",
+  );
+  return reapplyRecruiterVerificationResponseSchema.parse(data);
 }
 
 /**

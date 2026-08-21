@@ -40,8 +40,12 @@ export function CandidateCard({
 
   return (
     <Card className="border-border/70 transition-colors hover:border-border">
-      <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
-        <div className="flex flex-col gap-1">
+      {/* Only the status select sits beside the name. The interview and offer
+          actions moved into the body: both expand into full-width panels, so
+          stacking them here made a tall right column next to a two-line left
+          one — the empty band this card used to carry. */}
+      <CardHeader className="flex-row items-center justify-between gap-4 space-y-0 p-4">
+        <div className="flex min-w-0 flex-col gap-0.5">
           <CardTitle className="font-heading tracking-tight">
             {candidate.fullName}
           </CardTitle>
@@ -55,41 +59,30 @@ export function CandidateCard({
             {candidate.phone ? ` · ${candidate.phone}` : ""}
           </CardDescription>
         </div>
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor={`candidate-status-${candidate.id}`}
-              className="text-xs font-medium text-muted-foreground"
-            >
-              Status
-            </label>
-            <select
-              id={`candidate-status-${candidate.id}`}
-              aria-label={`Status for ${candidate.fullName}`}
-              value={candidate.status}
-              disabled={updateStatus.isPending}
-              onChange={(event) =>
-                updateStatus.mutate({
-                  id: candidate.id,
-                  status: event.target.value as CandidateStatus,
-                })
-              }
-              className="h-9 shrink-0 rounded-md border border-input bg-card px-3 text-sm text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {CANDIDATE_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {CANDIDATE_STATUS_LABELS[status]}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <ScheduleInterviewAction candidateId={candidate.id} />
-          <SendOfferForm candidateId={candidate.id} />
+        <div className="shrink-0">
+          <select
+            id={`candidate-status-${candidate.id}`}
+            aria-label={`Status for ${candidate.fullName}`}
+            value={candidate.status}
+            disabled={updateStatus.isPending}
+            onChange={(event) =>
+              updateStatus.mutate({
+                id: candidate.id,
+                status: event.target.value as CandidateStatus,
+              })
+            }
+            className="h-9 shrink-0 rounded-md border border-input bg-card px-3 text-sm text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {CANDIDATE_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {CANDIDATE_STATUS_LABELS[status]}
+              </option>
+            ))}
+          </select>
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-3">
+      <CardContent className="flex flex-col gap-3 p-4 pt-0">
         <NegotiationStateBadges
           interview={negotiationState?.interview ?? null}
           offer={negotiationState?.offer ?? null}
@@ -99,6 +92,9 @@ export function CandidateCard({
           negotiationState={negotiationState}
           viewerParty="company"
         />
+
+        <ScheduleInterviewAction candidateId={candidate.id} />
+        <SendOfferForm candidateId={candidate.id} />
 
         <CandidateFields candidate={candidate} />
 

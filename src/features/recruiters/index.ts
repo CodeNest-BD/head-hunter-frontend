@@ -10,15 +10,15 @@ export {
   useAddReference,
   useDevActivateSubscription,
   useMyRecruiterProfile,
+  useReapplyRecruiterVerification,
   useRemoveReference,
   useUpdateMyRecruiterProfile,
 } from "./hooks/useRecruiterProfile";
 export { useIsVerifiedRecruiter } from "./hooks/useIsVerifiedRecruiter";
+export { useVerificationGate } from "./hooks/useVerificationGate";
 export { recruiterKeys } from "./keys";
 export type {
   RecruiterProfile,
   RecruiterReference,
-  Specialization,
   VerificationStatus,
 } from "./schemas";
-export { SPECIALIZATION_LABELS } from "./schemas";

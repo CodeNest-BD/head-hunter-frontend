@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Check, X } from "lucide-react";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { useSpecializationsField } from "@/shared/hooks/useSpecializationsField";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { PasswordInput } from "@/shared/ui-components/controls/password-input";
@@ -24,8 +25,6 @@ import {
   toSignUpPayload,
   MAX_SIGNUP_REFERENCES,
   PASSWORD_REQUIREMENTS,
-  RECRUITER_SPECIALIZATIONS,
-  RECRUITER_SPECIALIZATION_LABELS,
   type SignUpFormData,
 } from "../schemas";
 import { signUp } from "../api/auth";
@@ -86,6 +85,98 @@ function PasswordChecklist({ control, id }: PasswordChecklistProps) {
         );
       })}
     </ul>
+  );
+}
+
+interface SpecializationsChipsProps {
+  value: string[];
+  onChange: (next: string[]) => void;
+  formError?: string;
+}
+
+/** Its own component (not inlined in the Controller's render prop) so
+ * `useSpecializationsField` is called from a proper component, not a plain
+ * callback. */
+function SpecializationsChips({
+  value,
+  onChange,
+  formError,
+}: SpecializationsChipsProps) {
+  const {
+    chips,
+    isAdding,
+    draft,
+    setDraft,
+    error,
+    toggle,
+    openAdd,
+    cancelAdd,
+    commitAdd,
+  } = useSpecializationsField({ value, onChange });
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      <span className="text-sm font-medium leading-none text-foreground">
+        Specializations {optionalHint}
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {chips.map((specialization) => {
+          const active = value.includes(specialization.value);
+          return (
+            <button
+              key={specialization.value}
+              type="button"
+              onClick={() => toggle(specialization.value)}
+              aria-pressed={active}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                active
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground",
+              )}
+            >
+              {specialization.label}
+            </button>
+          );
+        })}
+        {!isAdding && (
+          <button
+            type="button"
+            onClick={openAdd}
+            className="rounded-full border border-dashed border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            + Add
+          </button>
+        )}
+      </div>
+      {isAdding && (
+        <div className="flex items-center gap-2">
+          <Input
+            autoFocus
+            type="text"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                commitAdd();
+              }
+              if (event.key === "Escape") cancelAdd();
+            }}
+            placeholder="Add a specialization"
+            aria-label="Custom specialization"
+            className="h-9"
+          />
+          <Button type="button" size="sm" variant="outline" onClick={commitAdd}>
+            Add
+          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={cancelAdd}>
+            Cancel
+          </Button>
+        </div>
+      )}
+      <FieldError message={error ?? formError} />
+    </div>
   );
 }
 
@@ -333,39 +424,11 @@ export function SignUpForm() {
             control={control}
             name="specializations"
             render={({ field }) => (
-              <div className="flex flex-col gap-2.5">
-                <span className="text-sm font-medium leading-none text-foreground">
-                  Specializations {optionalHint}
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {RECRUITER_SPECIALIZATIONS.map((specialization) => {
-                    const active = field.value.includes(specialization);
-                    return (
-                      <button
-                        key={specialization}
-                        type="button"
-                        onClick={() =>
-                          field.onChange(
-                            active
-                              ? field.value.filter((s) => s !== specialization)
-                              : [...field.value, specialization],
-                          )
-                        }
-                        aria-pressed={active}
-                        className={cn(
-                          "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                          active
-                            ? "border-primary bg-primary/15 text-primary"
-                            : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:text-foreground",
-                        )}
-                      >
-                        {RECRUITER_SPECIALIZATION_LABELS[specialization]}
-                      </button>
-                    );
-                  })}
-                </div>
-                <FieldError message={errors.specializations?.message} />
-              </div>
+              <SpecializationsChips
+                value={field.value}
+                onChange={field.onChange}
+                formError={errors.specializations?.message}
+              />
             )}
           />
 

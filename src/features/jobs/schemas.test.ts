@@ -3,10 +3,10 @@ import { jobFormSchema } from "./schemas";
 
 const valid = {
   title: "Senior Software Engineer",
-  description: "",
+  description: "<p>We are hiring a senior engineer.</p>",
   roleCategory: "engineering" as const,
-  employmentType: "" as const,
-  locationState: "",
+  employmentType: "full_time" as const,
+  locationState: "CA",
   locationCity: "",
   isRemote: false,
   salaryMin: "",
@@ -40,8 +40,36 @@ describe("jobFormSchema", () => {
     expect(errorPaths({ locationState: "CAL" })).toContain("locationState");
   });
 
-  it("accepts an omitted state code", () => {
-    expect(errorPaths({ locationState: "" })).toEqual([]);
+  it("requires a state on an on-site role, because the job map skips rows without one", () => {
+    expect(errorPaths({ locationState: "", isRemote: false })).toContain(
+      "locationState",
+    );
+  });
+
+  it("does not require a state on a remote role, which has none to give", () => {
+    expect(errorPaths({ locationState: "", isRemote: true })).toEqual([]);
+  });
+
+  it("still rejects a malformed state code on a remote role", () => {
+    expect(errorPaths({ locationState: "CAL", isRemote: true })).toContain(
+      "locationState",
+    );
+  });
+
+  it("requires a description, which is what recruiters read before pitching", () => {
+    expect(errorPaths({ description: "   " })).toContain("description");
+  });
+
+  it("requires an employment type", () => {
+    expect(errorPaths({ employmentType: "" })).toContain("employmentType");
+  });
+
+  it("leaves the salary band optional", () => {
+    expect(errorPaths({ salaryMin: "", salaryMax: "" })).toEqual([]);
+  });
+
+  it("leaves the city optional", () => {
+    expect(errorPaths({ locationCity: "" })).toEqual([]);
   });
 
   it("rejects a salary maximum below the minimum", () => {

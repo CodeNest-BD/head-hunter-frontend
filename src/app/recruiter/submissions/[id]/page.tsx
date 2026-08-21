@@ -38,7 +38,7 @@ import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationS
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDetailLayout";
-import { RequireRole } from "@/features/auth";
+import { RequireApprovedRecruiter, RequireRole } from "@/features/auth";
 
 const MAX_CANDIDATES = 5;
 
@@ -127,17 +127,8 @@ function CandidateItem({
           submissionId={submissionId}
           candidate={candidate}
           onDone={() => setMode("view")}
+          onCancel={() => setMode("view")}
         />
-        <div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setMode("view")}
-          >
-            Cancel
-          </Button>
-        </div>
       </div>
     );
   }
@@ -248,18 +239,18 @@ function CandidateListSection({
               {candidates.length} of {MAX_CANDIDATES} slots used
             </p>
           </div>
-          {!isAdding && (
-            <Button
-              type="button"
-              size="sm"
-              disabled={disabled}
-              title={disabledReason}
-              onClick={() => setIsAdding(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Add candidate
-            </Button>
-          )}
+          {/* Stays put while the form is open — hiding it made the header change
+              shape on click, and it is the anchor the form appears under. */}
+          <Button
+            type="button"
+            size="sm"
+            disabled={disabled}
+            title={disabledReason}
+            onClick={() => setIsAdding(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Add candidate
+          </Button>
         </div>
 
         {/* One segment per slot — fills as candidates are added. */}
@@ -290,6 +281,19 @@ function CandidateListSection({
         )}
       </div>
 
+      {/* Above the existing candidates, not after them: opening the form from the
+          header would otherwise put it below however many candidates are already
+          listed, out of view. */}
+      {isAdding && (
+        <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-5 shadow-card">
+          <CandidateForm
+            submissionId={submissionId}
+            onDone={() => setIsAdding(false)}
+            onCancel={() => setIsAdding(false)}
+          />
+        </div>
+      )}
+
       {candidates.map((candidate) => (
         <CandidateItem
           key={candidate.id}
@@ -298,25 +302,6 @@ function CandidateListSection({
           negotiationState={negotiationState.get(candidate.id) ?? null}
         />
       ))}
-
-      {isAdding && (
-        <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-5 shadow-card">
-          <CandidateForm
-            submissionId={submissionId}
-            onDone={() => setIsAdding(false)}
-          />
-          <div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsAdding(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -398,25 +383,31 @@ export default function SubmissionDetailPage() {
   return (
     <RequireRole role="recruiter">
       <DashboardLayout wide="detail">
-        <TwoColumnDetailLayout
-          header={
-            <div className="flex flex-col gap-6">
-              <Link
-                href="/recruiter/submissions"
-                className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to submissions
-              </Link>
-              <PageHeader
-                title="Submission detail"
-                subtitle="Track your candidates and the job you submitted them to."
-              />
-            </div>
-          }
-          left={<SubmissionDetailLeftColumn submissionId={params.id} />}
-          right={<Thread submissionId={params.id} />}
-        />
+        {/* Keeps the submission/candidates queries and the conversation
+         * socket from ever mounting for an unapproved recruiter — both live
+         * inside `left`/`right` below, which `RequireApprovedRecruiter`
+         * swaps out entirely rather than rendering hidden. */}
+        <RequireApprovedRecruiter>
+          <TwoColumnDetailLayout
+            header={
+              <div className="flex flex-col gap-6">
+                <Link
+                  href="/recruiter/submissions"
+                  className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to submissions
+                </Link>
+                <PageHeader
+                  title="Submission detail"
+                  subtitle="Track your candidates and the job you submitted them to."
+                />
+              </div>
+            }
+            left={<SubmissionDetailLeftColumn submissionId={params.id} />}
+            right={<Thread submissionId={params.id} />}
+          />
+        </RequireApprovedRecruiter>
       </DashboardLayout>
     </RequireRole>
   );

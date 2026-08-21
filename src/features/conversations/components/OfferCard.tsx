@@ -66,14 +66,12 @@ function negotiationErrorMessage(error: unknown): string {
 
 interface CounterFormValues {
   salary: string;
-  jobTitle: string;
   startDate: string;
   notes: string;
 }
 
 const EMPTY_COUNTER_FORM: CounterFormValues = {
   salary: "",
-  jobTitle: "",
   startDate: "",
   notes: "",
 };
@@ -131,7 +129,6 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
     counterOffer.mutate(
       {
         salaryMinor: counterSalaryMinor,
-        jobTitle: counterForm.jobTitle.trim() || undefined,
         startDate: counterForm.startDate || undefined,
         notes: counterForm.notes.trim() || undefined,
       },
@@ -226,34 +223,19 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
 
       {counterpartyCanRespond && showCounterForm && (
         <div className="flex flex-col gap-2.5">
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="offer-counter-salary">New salary (USD/yr)</Label>
-              <Input
-                id="offer-counter-salary"
-                inputMode="decimal"
-                value={counterForm.salary}
-                onChange={(event) =>
-                  setCounterForm((form) => ({
-                    ...form,
-                    salary: event.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="offer-counter-title">Title</Label>
-              <Input
-                id="offer-counter-title"
-                value={counterForm.jobTitle}
-                onChange={(event) =>
-                  setCounterForm((form) => ({
-                    ...form,
-                    jobTitle: event.target.value,
-                  }))
-                }
-              />
-            </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="offer-counter-salary">New salary (USD/yr)</Label>
+            <Input
+              id="offer-counter-salary"
+              inputMode="decimal"
+              value={counterForm.salary}
+              onChange={(event) =>
+                setCounterForm((form) => ({
+                  ...form,
+                  salary: event.target.value,
+                }))
+              }
+            />
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="offer-counter-start-date">Start date</Label>

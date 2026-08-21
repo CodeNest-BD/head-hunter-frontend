@@ -98,6 +98,7 @@ export const attachmentSchema = z.object({
   contentType: z.string().nullable(),
   sizeBytes: z.number().nullable(),
   downloadUrl: z.string(),
+  previewUrl: z.string().optional(),
   createdAt: z.coerce.date(),
 });
 export type Attachment = z.infer<typeof attachmentSchema>;

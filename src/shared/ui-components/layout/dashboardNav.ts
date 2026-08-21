@@ -5,6 +5,7 @@ import {
   Building2,
   Inbox,
   LayoutDashboard,
+  MapPinned,
   type LucideIcon,
   Send,
   Settings,
@@ -46,6 +47,11 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   ],
   recruiter: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    // Second, right after the dashboard: browsing the map is the recruiter's
+    // main job. It was previously reachable only from the desktop top bar,
+    // which the mobile drawer does not render — so on a phone the map, and
+    // with it the whole marketplace, had no route at all.
+    { href: "/explore-jobs", label: "Job map", icon: MapPinned },
     { href: "/companies", label: "Companies", icon: Building2 },
     {
       href: "/notifications",
@@ -83,3 +89,25 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ],
 };
+
+/** Labels an unapproved recruiter may still reach. Mirrors the server's allow-list. */
+const UNAPPROVED_RECRUITER_LABELS = ["Notifications", "My profile"] as const;
+
+/**
+ * Approval-aware nav selector. `UserMenu` and `SidebarContent` both read
+ * through this instead of `NAV_BY_ROLE` directly, so reducing an unapproved
+ * recruiter's navigation fixes the dropdown and the sidebar in one change.
+ * Companies and admins are never reduced.
+ */
+export function navForRole(
+  role: Role,
+  isApproved: boolean,
+): readonly NavItem[] {
+  const items = NAV_BY_ROLE[role];
+  if (role !== "recruiter" || isApproved) {
+    return items;
+  }
+  return items.filter((item) =>
+    (UNAPPROVED_RECRUITER_LABELS as readonly string[]).includes(item.label),
+  );
+}

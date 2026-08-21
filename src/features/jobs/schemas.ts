@@ -52,6 +52,10 @@ export const jobSchema = z.object({
   status: jobStatusSchema,
   publishedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
+  // Present when GET /v1/jobs is browsed marketplace-wide (recruiters,
+  // admins); absent when a company reads back its own jobs, which already
+  // know whose they are. Tolerant so either shape parses.
+  companyName: z.string().nullable().catch(null),
 });
 export type Job = z.infer<typeof jobSchema>;
 
@@ -88,12 +92,26 @@ export const EMPLOYMENT_TYPE_LABELS: Record<EmploymentType, string> = {
 export const jobFormSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required"),
+    // The editor normalises an empty document to "", so min(1) really does mean
+    // "has text" rather than "has markup".
     description: z
       .string()
       .trim()
+      .min(1, "A description is required — recruiters read it before pitching")
       .max(20000, "Description is too long (20,000 characters max)"),
     roleCategory: roleCategorySchema,
-    employmentType: employmentTypeSchema.or(z.literal("")),
+    // Kept as a union with "" so the form can start empty; the refine is what
+    // makes it required, and RHF's default value still type-checks.
+    employmentType: employmentTypeSchema
+      .or(z.literal(""))
+      // `value.length > 0` rather than `value !== ""`: the latter reads as a type
+      // guard, so zod narrows "" out of the inferred type and the form's empty
+      // default stops type-checking.
+      .refine((value) => value.length > 0, {
+        message: "Pick an employment type",
+      }),
+    // Two letters when given; whether it may be omitted depends on isRemote,
+    // which a field-level rule cannot see — see the superRefine below.
     locationState: z
       .string()
       .trim()
@@ -120,7 +138,19 @@ export const jobFormSchema = z
       return max >= min;
     },
     { message: "Maximum must be at least the minimum", path: ["salaryMax"] },
-  );
+  )
+  // A located role needs its state: the job map groups by it and skips rows
+  // without one, so a stateless on-site job is invisible on the marketplace's
+  // main discovery surface. A remote role has no state to give.
+  .superRefine((values, ctx) => {
+    if (!values.isRemote && values.locationState === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["locationState"],
+        message: "Pick a state, or mark the role remote",
+      });
+    }
+  });
 export type JobFormValues = z.infer<typeof jobFormSchema>;
 
 /** One row of GET /v1/jobs/map — the per-state aggregate behind the job map. */

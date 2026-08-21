@@ -95,10 +95,7 @@ export function JobsTable() {
   // Submissions live on the inbox rows, not the job; one fetch builds a lookup.
   const inbox = useInboxJobs({ page: 1, limit: 100 });
   const submissionsByJob = new Map(
-    (inbox.data?.data ?? []).map((row) => [
-      row.jobId,
-      { total: row.submissionCount, fresh: row.newSubmissionCount },
-    ]),
+    (inbox.data?.data ?? []).map((row) => [row.jobId, row.submissionCount]),
   );
 
   const toolbar = (
@@ -262,14 +259,20 @@ export function JobsTable() {
                           )}
                           {cols.isVisible("submissions") && (
                             <td className={`${TABLE_TD} tabular-nums`}>
-                              {subs && subs.fresh > 0 ? (
-                                <span className="font-semibold text-primary">
-                                  {subs.fresh} new
-                                </span>
+                              {/* Just the total: the untriaged count lives in the
+                                  inbox, which is where you act on it, and the
+                                  number links straight there. */}
+                              {subs !== undefined && subs > 0 ? (
+                                <Link
+                                  href={`/company/inbox/job/${job.id}`}
+                                  className="inline-flex items-center gap-1.5 transition-colors hover:underline"
+                                >
+                                  <span className="font-semibold text-navy">
+                                    {subs}
+                                  </span>
+                                </Link>
                               ) : (
-                                <span className="text-brand-gray">
-                                  {subs?.total ?? 0}
-                                </span>
+                                <span className="text-brand-gray">0</span>
                               )}
                             </td>
                           )}

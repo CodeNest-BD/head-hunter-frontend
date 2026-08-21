@@ -6,12 +6,11 @@ import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft, Send, Wallet } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-import { useAuth } from "@/features/auth";
+import { RequireApprovedRecruiter, useAuth } from "@/features/auth";
 import {
   EMPLOYMENT_TYPE_LABELS,
   ROLE_CATEGORY_LABELS,
   useJob,
-  usePublicJob,
 } from "@/features/jobs";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { useCreateOrOpenSubmission } from "@/features/submissions";
@@ -206,10 +205,53 @@ function RecruiterCta({ jobId }: { jobId: string }) {
   );
 }
 
-/** Signed-in view: authed endpoint (role visibility rules), dashboard chrome. */
-function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
+/**
+ * Fetches and renders the job itself. Deliberately kept as a child mounted
+ * only inside `RequireApprovedRecruiter` (see `AuthedJobDetail`) rather than
+ * called at that component's own top level — an unapproved recruiter must
+ * never fire this request at all, not just have its result hidden, or they'd
+ * still eat a 403 toast on every visit.
+ */
+function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
   const { data: job, isPending, isError, refetch } = useJob(jobId);
 
+  return (
+    <>
+      <PageHeader
+        title={job?.title ?? "Job detail"}
+        subtitle="The fee, the role, and everything you need before you submit a candidate."
+        className="mb-0"
+      />
+      {isPending ? (
+        <DetailSkeleton />
+      ) : isError || !job ? (
+        <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
+          <div className="flex items-center gap-2 font-medium">
+            <AlertCircle className="h-[18px] w-[18px]" />
+            Could not load this job. It may have expired or been closed.
+          </div>
+          <button
+            type="button"
+            className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
+            onClick={() => void refetch()}
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <JobBody
+          job={job}
+          cta={role === "recruiter" ? <RecruiterCta jobId={jobId} /> : null}
+        />
+      )}
+    </>
+  );
+}
+
+/** Signed-in view: authed endpoint (role visibility rules), dashboard chrome.
+ * `RequireApprovedRecruiter` is a no-op for company/admin callers (it always
+ * reports approved for non-recruiters). */
+function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
   return (
     <DashboardLayout wide="detail">
       <div className="flex w-full flex-col gap-4">
@@ -220,42 +262,22 @@ function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
           <ArrowLeft className="h-4 w-4" />
           Back to explore jobs
         </Link>
-        <PageHeader
-          title={job?.title ?? "Job detail"}
-          subtitle="The fee, the role, and everything you need before you submit a candidate."
-          className="mb-0"
-        />
-        {isPending ? (
-          <DetailSkeleton />
-        ) : isError || !job ? (
-          <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
-            <div className="flex items-center gap-2 font-medium">
-              <AlertCircle className="h-[18px] w-[18px]" />
-              Could not load this job. It may have expired or been closed.
-            </div>
-            <button
-              type="button"
-              className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
-              onClick={() => void refetch()}
-            >
-              Retry
-            </button>
-          </div>
-        ) : (
-          <JobBody
-            job={job}
-            cta={role === "recruiter" ? <RecruiterCta jobId={jobId} /> : null}
-          />
-        )}
+        <RequireApprovedRecruiter>
+          <AuthedJobBody jobId={jobId} role={role} />
+        </RequireApprovedRecruiter>
       </div>
     </DashboardLayout>
   );
 }
 
-/** Guest view: public endpoint, marketing chrome, sign-up CTA. */
-function GuestJobDetail({ jobId }: { jobId: string }) {
-  const { data: job, isPending, isError } = usePublicJob(jobId);
-
+/**
+ * Guest view: the public job-detail endpoint is gone, so a signed-out visitor
+ * is never shown job data (title, company, fee) here — just the marketing
+ * shell and a sign-up CTA, reusing the same card chrome and CTA button this
+ * page already used for its "role no longer available" and recruiter sign-up
+ * states.
+ */
+function GuestJobDetail() {
   return (
     <PublicShell>
       <div className="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-12 md:px-0">
@@ -266,48 +288,21 @@ function GuestJobDetail({ jobId }: { jobId: string }) {
           <ArrowLeft className="h-4 w-4" />
           Back to explore jobs
         </Link>
-        {isPending ? (
-          <DetailSkeleton />
-        ) : isError || !job ? (
-          <div className="rounded-md border border-border bg-card p-10 text-center">
-            <p className="font-heading text-lg font-extrabold text-navy">
-              This role is no longer available
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              It may have been filled or expired.{" "}
-              <Link
-                href="/explore-jobs"
-                className="font-medium text-primary underline-offset-2 hover:underline"
-              >
-                Browse open jobs
-              </Link>
-              .
-            </p>
-          </div>
-        ) : (
-          <>
-            <div>
-              <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-navy">
-                {job.title}
-                <span className="text-primary">.</span>
-              </h1>
-              {job.companyName && (
-                <p className="mt-1 text-muted-foreground">{job.companyName}</p>
-              )}
-            </div>
-            <JobBody
-              job={job}
-              cta={
-                <Button asChild className="w-full font-bold">
-                  <Link href="/signup">
-                    <Send className="h-[18px] w-[18px]" />
-                    Sign up to submit candidates
-                  </Link>
-                </Button>
-              }
-            />
-          </>
-        )}
+        <div className="rounded-md border border-border bg-card p-10 text-center">
+          <p className="font-heading text-lg font-extrabold text-navy">
+            Sign up to view this job
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Create a recruiter account and get verified to see the role, the
+            company and the recruiter fee, and to submit candidates.
+          </p>
+          <Button asChild className="mt-6 font-bold">
+            <Link href="/signup">
+              <Send className="h-[18px] w-[18px]" />
+              Sign up as a recruiter
+            </Link>
+          </Button>
+        </div>
       </div>
     </PublicShell>
   );
@@ -330,5 +325,5 @@ export default function JobDetailPage() {
   if (status === "authenticated" && user) {
     return <AuthedJobDetail jobId={params.id} role={user.role} />;
   }
-  return <GuestJobDetail jobId={params.id} />;
+  return <GuestJobDetail />;
 }

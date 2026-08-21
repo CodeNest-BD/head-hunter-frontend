@@ -20,12 +20,15 @@ import {
   type ProposeSlotsInput,
   type RecordOutcomeInput,
 } from "../api/interviews";
+import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { interviewKeys } from "../keys";
 
 export function useInterview(id: string) {
   return useQuery({
     queryKey: interviewKeys.detail(id),
     queryFn: () => fetchInterview(id),
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -33,6 +36,10 @@ export function useInterviews(params: InterviewListParams) {
   return useQuery({
     queryKey: interviewKeys.list(params),
     queryFn: () => fetchInterviews(params),
+    // The counterparty confirms slots, counters and records outcomes, so the
+    // card has to learn about changes it did not make — see useOffers.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 

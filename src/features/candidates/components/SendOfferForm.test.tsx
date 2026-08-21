@@ -93,7 +93,6 @@ describe("SendOfferForm", () => {
       await screen.findByRole("button", { name: /send offer/i }),
     );
     await user.type(screen.getByLabelText(/salary/i), "150000");
-    await user.type(screen.getByLabelText(/title/i), "Staff Engineer");
     await user.type(screen.getByLabelText(/notes/i), "Relocation covered.");
     await user.click(screen.getByRole("button", { name: /^send offer$/i }));
 
@@ -102,11 +101,22 @@ describe("SendOfferForm", () => {
         expect.objectContaining({
           candidateId: "candidate-1",
           salaryMinor: 15000000,
-          jobTitle: "Staff Engineer",
           notes: "Relocation covered.",
         }),
       );
     });
+  });
+
+  it("asks for no job title — the offer already belongs to one job", async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(<SendOfferForm candidateId="candidate-1" />);
+
+    await user.click(
+      await screen.findByRole("button", { name: /send offer/i }),
+    );
+
+    expect(screen.queryByLabelText(/title/i)).not.toBeInTheDocument();
   });
 
   it("requires a salary before it will submit", async () => {
