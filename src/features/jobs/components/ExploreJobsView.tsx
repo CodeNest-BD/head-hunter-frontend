@@ -83,7 +83,7 @@ const INITIAL_FILTERS: Filters = {
  * already treats every non-recruiter as approved.
  */
 export function ExploreJobsView() {
-  const { isApproved, status } = useVerificationGate();
+  const { isApproved, status, isLoading: gateLoading } = useVerificationGate();
   const { status: sessionStatus, user } = useAuth();
   const signedIn = sessionStatus === "authenticated" && user !== null;
   // A recruiter whose status is anything but verified reads as "pending" (an
@@ -165,6 +165,7 @@ export function ExploreJobsView() {
 
       <MapSection
         isApproved={isApproved}
+        gateLoading={gateLoading}
         pending={pending}
         listParams={listParams}
         selection={filters.selection}
@@ -172,7 +173,9 @@ export function ExploreJobsView() {
       />
 
       <section className="mt-12">
-        {isApproved ? (
+        {gateLoading ? (
+          <GateLoadingPanel label="Checking your access…" />
+        ) : isApproved ? (
           <JobsSection
             filters={filters}
             setFilter={setFilter}
@@ -229,12 +232,15 @@ function VerificationLockedMessage({
 
 function MapSection({
   isApproved,
+  gateLoading,
   pending,
   listParams,
   selection,
   onSelect,
 }: {
   isApproved: boolean;
+  /** Approval is not decided yet — neither the live map nor the lock is right. */
+  gateLoading: boolean;
   pending: boolean;
   listParams: {
     roleCategory?: string;
@@ -245,6 +251,13 @@ function MapSection({
   selection: MapSelection;
   onSelect: (selection: MapSelection) => void;
 }) {
+  // Loading is checked before approval: while the profile is in flight
+  // `isApproved` is false, which used to render the "verified recruiters only"
+  // lock to a verified recruiter for as long as the request took.
+  if (gateLoading) {
+    return <GateLoadingPanel label="Loading the job map…" tall />;
+  }
+
   if (!isApproved) {
     return (
       <section className="relative overflow-hidden rounded-md border border-brand-line bg-white p-6 shadow-card">
@@ -319,6 +332,26 @@ function LiveMap({
 /** The locked stand-in for the job grid: same message component and card
  * chrome the empty/error states below already use, so an unapproved visitor
  * sees an explanation instead of any title, company or fee. */
+/** Shown while approval is still being decided, in place of both the map and
+ * the job list, so neither the live view nor the lock is claimed too early. */
+function GateLoadingPanel({
+  label,
+  tall = false,
+}: {
+  label: string;
+  tall?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-center rounded-md border border-brand-line bg-white shadow-card ${
+        tall ? "h-[420px]" : "p-10"
+      }`}
+    >
+      <p className="animate-pulse text-sm text-brand-gray">{label}</p>
+    </div>
+  );
+}
+
 function JobsLockedSection({ pending }: { pending: boolean }) {
   return (
     <div className="mt-8 flex items-center justify-center rounded-md border border-brand-line bg-white p-10 shadow-card">

@@ -55,7 +55,10 @@ describe("useVerificationGate", () => {
   });
 
   it("approves a non-recruiter without ever fetching a recruiter profile", () => {
-    useAuthMock.mockReturnValue({ user: { role: "company" } });
+    useAuthMock.mockReturnValue({
+      status: "authenticated",
+      user: { role: "company" },
+    });
 
     const { result } = renderHook(() => useVerificationGate(), { wrapper });
 
@@ -70,10 +73,11 @@ describe("useVerificationGate", () => {
   });
 
   it("approves a verified recruiter", async () => {
-    useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
-    fetchMyRecruiterProfileMock.mockResolvedValue(
-      recruiterProfile("verified"),
-    );
+    useAuthMock.mockReturnValue({
+      status: "authenticated",
+      user: { role: "recruiter" },
+    });
+    fetchMyRecruiterProfileMock.mockResolvedValue(recruiterProfile("verified"));
 
     const { result } = renderHook(() => useVerificationGate(), { wrapper });
 
@@ -84,7 +88,10 @@ describe("useVerificationGate", () => {
   });
 
   it("withholds approval from a pending recruiter", async () => {
-    useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
+    useAuthMock.mockReturnValue({
+      status: "authenticated",
+      user: { role: "recruiter" },
+    });
     fetchMyRecruiterProfileMock.mockResolvedValue(recruiterProfile("pending"));
 
     const { result } = renderHook(() => useVerificationGate(), { wrapper });
@@ -96,10 +103,11 @@ describe("useVerificationGate", () => {
   });
 
   it("withholds approval from a rejected recruiter", async () => {
-    useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
-    fetchMyRecruiterProfileMock.mockResolvedValue(
-      recruiterProfile("rejected"),
-    );
+    useAuthMock.mockReturnValue({
+      status: "authenticated",
+      user: { role: "recruiter" },
+    });
+    fetchMyRecruiterProfileMock.mockResolvedValue(recruiterProfile("rejected"));
 
     const { result } = renderHook(() => useVerificationGate(), { wrapper });
 
@@ -110,7 +118,10 @@ describe("useVerificationGate", () => {
   });
 
   it("surfaces a failed profile fetch as isError, distinct from a decided status", async () => {
-    useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
+    useAuthMock.mockReturnValue({
+      status: "authenticated",
+      user: { role: "recruiter" },
+    });
     fetchMyRecruiterProfileMock.mockRejectedValue(new Error("network down"));
 
     const { result } = renderHook(() => useVerificationGate(), { wrapper });
@@ -119,5 +130,21 @@ describe("useVerificationGate", () => {
     expect(result.current.status).toBeUndefined();
     expect(result.current.isApproved).toBe(false);
     expect(result.current.isError).toBe(true);
+  });
+
+  it("reports approval as undecided while the session is still booting", async () => {
+    // The regression this guards: the profile request fired on the role alone,
+    // 401'd during boot, and the undecided gate read as a decided "not
+    // verified" — flashing the locked marketplace at a verified recruiter.
+    useAuthMock.mockReturnValue({
+      status: "booting",
+      user: { role: "recruiter" },
+    });
+
+    const { result } = renderHook(() => useVerificationGate(), { wrapper });
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.isApproved).toBe(false);
+    expect(fetchMyRecruiterProfileMock).not.toHaveBeenCalled();
   });
 });
