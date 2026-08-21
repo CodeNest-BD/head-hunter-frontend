@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { useFollowedCompanies } from "@/features/companies";
-import { usePublicJobs } from "@/features/jobs";
+import { useJobs } from "@/features/jobs";
 import { useNotifications } from "@/features/notifications";
 import { useRecruiterWallet } from "@/features/billing";
 import { useSubmissions } from "@/features/submissions";
@@ -29,7 +29,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   const submissions = useSubmissions({ limit: 50 });
   const wallet = useRecruiterWallet();
   const followed = useFollowedCompanies({ limit: 50 });
-  const openRoles = usePublicJobs({ limit: 5, sortBy: "publishedAt" });
+  const openRoles = useJobs({ limit: 5, sortBy: "publishedAt" });
   const activity = useNotifications({ limit: 6 });
 
   const specializations = profile.data?.specializations ?? [];

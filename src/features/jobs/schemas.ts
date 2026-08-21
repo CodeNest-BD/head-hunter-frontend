@@ -52,6 +52,10 @@ export const jobSchema = z.object({
   status: jobStatusSchema,
   publishedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
+  // Present when GET /v1/jobs is browsed marketplace-wide (recruiters,
+  // admins); absent when a company reads back its own jobs, which already
+  // know whose they are. Tolerant so either shape parses.
+  companyName: z.string().nullable().catch(null),
 });
 export type Job = z.infer<typeof jobSchema>;
 

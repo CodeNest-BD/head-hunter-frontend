@@ -22,6 +22,9 @@ export interface JobListParams extends JobFilterParams {
   page?: number;
   limit?: number;
   status?: JobStatus;
+  /** Marketplace browsing only (explore-jobs, the recruiter dashboard); a
+   * company's own job list doesn't sort. */
+  sortBy?: "publishedAt" | "recruiterFeeMinor";
 }
 
 /** null clears a field; an omitted key leaves it unchanged. */
