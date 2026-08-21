@@ -95,10 +95,7 @@ export function JobsTable() {
   // Submissions live on the inbox rows, not the job; one fetch builds a lookup.
   const inbox = useInboxJobs({ page: 1, limit: 100 });
   const submissionsByJob = new Map(
-    (inbox.data?.data ?? []).map((row) => [
-      row.jobId,
-      { total: row.submissionCount, fresh: row.newSubmissionCount },
-    ]),
+    (inbox.data?.data ?? []).map((row) => [row.jobId, row.submissionCount]),
   );
 
   const toolbar = (
@@ -262,24 +259,17 @@ export function JobsTable() {
                           )}
                           {cols.isVisible("submissions") && (
                             <td className={`${TABLE_TD} tabular-nums`}>
-                              {/* "new" is the count still sitting in `submitted`
-                                  — candidates nobody has triaged yet. The total
-                                  stays visible beside it: showing only the new
-                                  count made a job with five submissions read as
-                                  two. Both link into that job's inbox. */}
-                              {subs && subs.total > 0 ? (
+                              {/* Just the total: the untriaged count lives in the
+                                  inbox, which is where you act on it, and the
+                                  number links straight there. */}
+                              {subs !== undefined && subs > 0 ? (
                                 <Link
                                   href={`/company/inbox/job/${job.id}`}
                                   className="inline-flex items-center gap-1.5 transition-colors hover:underline"
                                 >
                                   <span className="font-semibold text-navy">
-                                    {subs.total}
+                                    {subs}
                                   </span>
-                                  {subs.fresh > 0 && (
-                                    <span className="font-semibold text-primary">
-                                      ({subs.fresh} new)
-                                    </span>
-                                  )}
                                 </Link>
                               ) : (
                                 <span className="text-brand-gray">0</span>

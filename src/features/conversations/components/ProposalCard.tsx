@@ -84,11 +84,11 @@ function ConfirmedTime({ start, end }: { start: string; end: string }) {
 function ReadOnlySlots({ slots }: { slots: SlotOption[] }) {
   if (slots.length === 0) return null;
   return (
-    <ul className="flex flex-col gap-1.5">
+    <ul className="flex flex-col gap-1">
       {slots.map((slot) => (
         <li
           key={slot.id}
-          className="rounded-md border border-input px-3 py-2 text-sm text-muted-foreground"
+          className="rounded-md border border-input px-3 py-1.5 text-sm text-muted-foreground"
         >
           {formatDateTime(slot.startAt)} – {formatDateTime(slot.endAt)}
         </li>
@@ -114,7 +114,7 @@ function SlotRadioGroup({
 }: SlotRadioGroupProps) {
   const groupName = useId();
   return (
-    <fieldset className="flex flex-col gap-2">
+    <fieldset className="flex flex-col gap-1">
       <legend className="text-xs font-medium text-muted-foreground">
         Choose a time
       </legend>
@@ -124,7 +124,7 @@ function SlotRadioGroup({
           <label
             key={slot.id}
             className={cn(
-              "flex cursor-pointer items-center gap-2 rounded-md border border-input px-3 py-2 text-sm text-foreground transition-colors hover:border-primary/50",
+              "flex cursor-pointer items-center gap-2 rounded-md border border-input px-3 py-1.5 text-sm text-foreground transition-colors hover:border-primary/50",
               selectedSlotId === slot.id && "border-primary bg-primary/10",
             )}
           >
@@ -203,7 +203,7 @@ export function ProposalCard({
 
   if (showProposeForm) {
     return (
-      <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-4">
+      <div className="flex flex-col gap-2.5 rounded-md border border-border/70 bg-card p-3">
         <p className="text-sm font-semibold text-foreground">
           Propose new times
         </p>
@@ -217,7 +217,7 @@ export function ProposalCard({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-4">
+    <div className="flex flex-col gap-2.5 rounded-md border border-border/70 bg-card p-3">
       <div className="flex flex-col gap-0.5">
         <p className="text-sm font-semibold text-foreground">{title}</p>
         {note && <p className="text-sm text-muted-foreground">{note}</p>}

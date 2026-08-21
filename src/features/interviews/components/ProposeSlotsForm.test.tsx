@@ -87,7 +87,9 @@ describe("ProposeSlotsForm", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /add time/i }));
 
-    expect(screen.getByText("Already offered")).toBeInTheDocument();
+    expect(
+      screen.getByText("That time is already offered"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /add time/i })).toBeDisabled();
   });
 
@@ -99,7 +101,10 @@ describe("ProposeSlotsForm", () => {
     // 60 min is the default, so the window ends at 10:00.
     expect(screen.getByText(/9:00 AM – 10:00 AM/)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "30 min" }));
+    await userEvent.selectOptions(
+      screen.getByLabelText("Length"),
+      "30",
+    );
 
     expect(screen.getByText(/9:00 AM – 9:30 AM/)).toBeInTheDocument();
   });

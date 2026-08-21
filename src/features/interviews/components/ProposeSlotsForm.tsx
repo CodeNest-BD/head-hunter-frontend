@@ -9,7 +9,6 @@ import { AlertCircle, CalendarIcon, Check, Plus, X } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
 import { Calendar } from "@/shared/ui-components/controls/calendar";
-import { FilterChip } from "@/shared/ui-components/controls/filter-chip";
 import { Label } from "@/shared/ui-components/controls/label";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
 import { useProposeSlots } from "../hooks/useInterviews";
@@ -121,116 +120,113 @@ export function ProposeSlotsForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label>How long is each interview?</Label>
-        <div className="flex flex-wrap gap-2">
-          {SLOT_DURATION_OPTIONS.map((minutes) => (
-            <FilterChip
-              key={minutes}
-              active={duration === minutes}
-              onClick={() => changeDuration(minutes)}
-              className="px-3 py-1.5 text-xs"
-            >
-              {minutes} min
-            </FilterChip>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="propose-day">Which day?</Label>
-        <Popover.Root>
-          <Popover.Trigger asChild>
-            <button
-              type="button"
-              id="propose-day"
-              className="flex h-9 w-full max-w-xs items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <span
-                className={
-                  selectedDate ? "text-foreground" : "text-muted-foreground"
-                }
+      {/* Day, start time and length on one line: three short controls that are
+          always chosen together, and stacking them pushed the actions below the
+          fold. Length applies to the whole batch, so it is re-stamped onto
+          anything already added. */}
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="flex min-w-[11rem] flex-1 flex-col gap-1">
+          <Label htmlFor="propose-day">Day</Label>
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <button
+                type="button"
+                id="propose-day"
+                className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                {selectedDate
-                  ? format(selectedDate, "EEE, d MMM yyyy")
-                  : "Pick a day"}
-              </span>
-              <CalendarIcon
-                className="h-4 w-4 shrink-0 text-muted-foreground"
-                aria-hidden="true"
-              />
-            </button>
-          </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Content
-              align="start"
-              sideOffset={4}
-              className="z-50 rounded-md border border-border bg-card p-2 shadow-card-lg focus:outline-none"
-            >
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                defaultMonth={selectedDate ?? firstSelectableDay}
-                disabled={{ before: firstSelectableDay }}
-                onSelect={(date) =>
-                  setDay(date ? format(date, DAY_FORMAT) : "")
-                }
-                aria-label="Day to offer times on"
-              />
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
+                <span
+                  className={
+                    selectedDate ? "text-foreground" : "text-muted-foreground"
+                  }
+                >
+                  {selectedDate
+                    ? format(selectedDate, "EEE, d MMM yyyy")
+                    : "Pick a day"}
+                </span>
+                <CalendarIcon
+                  className="h-4 w-4 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              </button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                align="start"
+                sideOffset={4}
+                className="z-50 rounded-md border border-border bg-card p-2 shadow-card-lg focus:outline-none"
+              >
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  defaultMonth={selectedDate ?? firstSelectableDay}
+                  disabled={{ before: firstSelectableDay }}
+                  onSelect={(date) =>
+                    setDay(date ? format(date, DAY_FORMAT) : "")
+                  }
+                  aria-label="Day to offer times on"
+                />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="propose-start-time">Start time</Label>
+          <NativeSelect
+            id="propose-start-time"
+            className="w-auto"
+            value={startTime}
+            onChange={(event) => setStartTime(event.target.value)}
+          >
+            {SLOT_TIME_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="propose-duration">Length</Label>
+          <NativeSelect
+            id="propose-duration"
+            className="w-auto"
+            value={String(duration)}
+            onChange={(event) =>
+              changeDuration(Number(event.target.value) as SlotDurationMinutes)
+            }
+          >
+            {SLOT_DURATION_OPTIONS.map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {minutes} min
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-9"
+          disabled={!canAdd}
+          onClick={addTime}
+        >
+          <Plus className="h-4 w-4" />
+          Add time
+        </Button>
       </div>
 
-      {/* A dropdown rather than a grid of every quarter-hour: the day already
-          narrows the choice, and 96 chips made the form scroll. Multiple times
-          are still supported — each pick is added to the list below. */}
-      {day && (
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <Label htmlFor="propose-start-time">
-              Start time on {selectedDate && format(selectedDate, "EEE, d MMM")}
-            </Label>
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {fields.length} of {MAX_PROPOSAL_SLOTS} selected
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <NativeSelect
-              id="propose-start-time"
-              className="w-auto"
-              value={startTime}
-              onChange={(event) => setStartTime(event.target.value)}
-            >
-              {SLOT_TIME_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </NativeSelect>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!canAdd}
-              onClick={addTime}
-            >
-              <Plus className="h-4 w-4" />
-              Add time
-            </Button>
-            {alreadyOffered && (
-              <span className="text-xs text-muted-foreground">
-                Already offered
-              </span>
-            )}
-            {atMax && !alreadyOffered && (
-              <span className="text-xs text-muted-foreground">
-                Remove one to offer a different time
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span className="tabular-nums">
+          {fields.length} of {MAX_PROPOSAL_SLOTS} selected
+        </span>
+        {alreadyOffered && <span>That time is already offered</span>}
+        {atMax && !alreadyOffered && (
+          <span>Remove one to offer a different time</span>
+        )}
+        {!day && <span>Choose a day first</span>}
+      </div>
 
       {fields.length > 0 && (
         <div className="flex flex-col gap-1.5">
