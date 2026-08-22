@@ -12,8 +12,8 @@ interface LogoProps {
  * Head-Hunters brand lockup, drawn from the client's logo file
  * (public/assets/brand/logo.png): a crosshair mark — light-blue ring and
  * ticks (#4F80E6) around a primary-blue core (#034AEF) — next to the
- * "Head-Hunters" wordmark with a grey ".com". Wordmark ink adapts to the
- * surface.
+ * "Head-Hunters" wordmark with a primary-blue hyphen and a grey ".com".
+ * Wordmark ink adapts to the surface.
  */
 export function Logo({
   markOnly = false,
@@ -53,7 +53,7 @@ export function Logo({
       {!markOnly && (
         <span className="font-heading text-[19px] font-extrabold leading-none tracking-[-0.02em]">
           <span className={tone === "onDark" ? "text-white" : "text-navy"}>
-            Head-Hunters
+            Head<span className="text-primary">-</span>Hunters
           </span>
           <span
             className={
