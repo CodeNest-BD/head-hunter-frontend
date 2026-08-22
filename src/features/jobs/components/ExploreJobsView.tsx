@@ -22,7 +22,7 @@ import {
 } from "@/shared/ui-components/controls/select";
 
 import type { PublicJobCard as PublicJobCardData } from "../publicSchemas";
-import { usePublicJobs, usePublicJobStats } from "../hooks/usePublicJobs";
+import { usePublicJobs } from "../hooks/usePublicJobs";
 import { useJobMap } from "../hooks/useJobs";
 import {
   EMPLOYMENT_TYPES,
@@ -34,12 +34,31 @@ import {
 } from "../schemas";
 import { BrandGlow } from "@/shared/ui-components/brand";
 import { DecorativeUsMap } from "@/components/landing/DecorativeUsMap";
-import { US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
+import { US_STATES, US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
+import { useStateCities } from "../hooks/useStateCities";
+import { CityCombobox } from "./CityCombobox";
 import { PublicJobCard } from "./PublicJobCard";
 import { UsJobMap, type MapSelection } from "./UsJobMap";
 
 const PAGE_SIZE = 12;
 const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
+
+// City and employment aren't server filters, so when either is active we fetch
+// the whole (state-scoped) result set in one page and refine + paginate it
+// client-side. 100 is the backend's max page size — a comfortable ceiling for a
+// single state's open roles.
+const CLIENT_FILTER_FETCH_LIMIT = 100;
+
+/**
+ * Match a Census place name against a job's free-text city: case-insensitive and
+ * tolerant of the trailing "City" that some legal names carry — the dataset
+ * lists Boise as "Boise City", but jobs record it as "Boise".
+ */
+const normalizeCityName = (name: string): string =>
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+city$/, "");
 
 interface FeeBucket {
   value: string;
@@ -94,7 +113,7 @@ const INITIAL_FILTERS: Filters = {
  * as either rows or cards. Modelled on the employer-marketplace reference.
  */
 export function ExploreJobsView() {
-  const { isVerified, isRecruiter, verificationStatus } =
+  const { isVerified, isRecruiter, verificationStatus, isLoading } =
     useIsVerifiedRecruiter();
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
   const [view, setView] = useState<ResultView>("cards");
@@ -107,12 +126,16 @@ export function ExploreJobsView() {
     FEE_BUCKETS[0];
   const selectedState =
     filters.selection.kind === "none" ? undefined : filters.selection.state;
+  const selectedCity =
+    filters.selection.kind === "city" ? filters.selection.city : undefined;
   const isRemote =
     filters.workMode === "remote"
       ? true
       : filters.workMode === "onsite"
         ? false
         : undefined;
+
+  const clientFilterActive = Boolean(selectedCity || filters.employment);
 
   const listParams = useMemo(
     () => ({
@@ -126,7 +149,7 @@ export function ExploreJobsView() {
       locationState: selectedState,
       isRemote,
       sortBy: filters.sort,
-      limit,
+      limit: clientFilterActive ? CLIENT_FILTER_FETCH_LIMIT : limit,
     }),
     [
       filters.roleCategory,
@@ -136,11 +159,14 @@ export function ExploreJobsView() {
       selectedState,
       isRemote,
       limit,
+      clientFilterActive,
     ],
   );
 
-  const jobs = usePublicJobs({ ...listParams, page });
-  const stats = usePublicJobStats();
+  const jobs = usePublicJobs({
+    ...listParams,
+    page: clientFilterActive ? 1 : page,
+  });
 
   const setFilter = (patch: Partial<Filters>): void => {
     setFilters((prev) => ({ ...prev, ...patch }));
@@ -162,20 +188,38 @@ export function ExploreJobsView() {
     }
   };
 
-  // Employment has no server filter, so refine the loaded page client-side.
+  // Refine the fetched rows by the client-only filters (employment, city).
   const rows = jobs.data?.data ?? [];
-  const visible = filters.employment
-    ? rows.filter((job) => job.employmentType === filters.employment)
-    : rows;
+  const cityKey = selectedCity ? normalizeCityName(selectedCity) : undefined;
+  const filtered = rows.filter((job) => {
+    if (filters.employment && job.employmentType !== filters.employment) {
+      return false;
+    }
+    if (cityKey && normalizeCityName(job.locationCity ?? "") !== cityKey) {
+      return false;
+    }
+    return true;
+  });
+
+  // With a client filter active we hold the full result set, so slice the page
+  // and derive the counts from the filtered rows; otherwise the server already
+  // returned exactly one page with authoritative totals.
+  const pageStart = (page - 1) * limit;
+  const visible = clientFilterActive
+    ? filtered.slice(pageStart, pageStart + limit)
+    : filtered;
+  const total = clientFilterActive
+    ? filtered.length
+    : (jobs.data?.meta.total ?? 0);
+  const totalPages = clientFilterActive
+    ? Math.max(1, Math.ceil(filtered.length / limit))
+    : (jobs.data?.meta.totalPages ?? 1);
 
   const headline =
-    selectedState !== undefined
+    selectedCity ??
+    (selectedState !== undefined
       ? (US_STATE_NAME_BY_CODE[selectedState] ?? selectedState)
-      : "All States";
-  const total = jobs.data?.meta.total ?? 0;
-
-  // The map derives its remote/flexible count from the platform-wide open total.
-  const openRoles = stats.data?.openJobs ?? total;
+      : "All States");
 
   return (
     <div className="w-full">
@@ -209,10 +253,10 @@ export function ExploreJobsView() {
 
           <div className="flex min-w-0 flex-col gap-6">
             <MapCard
+              isLoading={isLoading}
               isVerified={isVerified}
               isRecruiter={isRecruiter}
               verificationStatus={verificationStatus}
-              openRoles={openRoles}
               listParams={listParams}
               selection={filters.selection}
               onSelect={handleSelect}
@@ -281,7 +325,9 @@ export function ExploreJobsView() {
 
               <ResultsBody
                 query={jobs}
-                visible={visible}
+                items={visible}
+                total={total}
+                totalPages={totalPages}
                 view={view}
                 page={page}
                 pageSize={limit}
@@ -326,6 +372,11 @@ function FilterPill({
   );
 }
 
+/** State filter options (incl. DC), alphabetical by name; "all" clears it. */
+const STATE_OPTIONS = [...US_STATES]
+  .map((state) => ({ code: state.code, name: state.name }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
 function FiltersPanel({
   filters,
   onChange,
@@ -335,6 +386,13 @@ function FiltersPanel({
   onChange: (patch: Partial<Filters>) => void;
   onClear: () => void;
 }) {
+  // The city filter is scoped to the chosen state: no state → nothing to pick.
+  const stateCode =
+    filters.selection.kind === "none" ? undefined : filters.selection.state;
+  const cityOptions = useStateCities(stateCode);
+  const cityValue =
+    filters.selection.kind === "city" ? filters.selection.city : null;
+
   return (
     <aside className="h-fit rounded-md border border-brand-line bg-white p-5 shadow-card lg:sticky lg:top-24">
       <div className="flex items-center justify-between">
@@ -363,6 +421,59 @@ function FiltersPanel({
               className="pl-9"
             />
           </div>
+        </div>
+
+        <div>
+          <Label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+            State
+          </Label>
+          <Select
+            value={
+              filters.selection.kind === "none"
+                ? "all"
+                : filters.selection.state
+            }
+            onValueChange={(value) =>
+              onChange({
+                selection:
+                  value === "all"
+                    ? { kind: "none" }
+                    : { kind: "state", state: value },
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All states" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All states</SelectItem>
+              {STATE_OPTIONS.map((state) => (
+                <SelectItem key={state.code} value={state.code}>
+                  {state.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+            City
+          </Label>
+          <CityCombobox
+            cities={cityOptions}
+            value={cityValue}
+            disabled={!stateCode}
+            onChange={(city) => {
+              if (!stateCode) return;
+              onChange({
+                selection:
+                  city === null
+                    ? { kind: "state", state: stateCode }
+                    : { kind: "city", state: stateCode, city },
+              });
+            }}
+          />
         </div>
 
         <div>
@@ -470,22 +581,27 @@ interface MapListParams {
 }
 
 function MapCard({
+  isLoading,
   isVerified,
   isRecruiter,
   verificationStatus,
-  openRoles,
   listParams,
   selection,
   onSelect,
 }: {
+  isLoading: boolean;
   isVerified: boolean;
   isRecruiter: boolean;
   verificationStatus: string | null;
-  openRoles: number;
   listParams: MapListParams;
   selection: MapSelection;
   onSelect: (selection: MapSelection) => void;
 }) {
+  // Session/verification is still resolving — show a loader rather than briefly
+  // flashing the locked overlay to a recruiter who is in fact verified.
+  if (isLoading) {
+    return <LoadingMapCard />;
+  }
   if (!isVerified) {
     return (
       <LockedMapCard
@@ -495,7 +611,6 @@ function MapCard({
   }
   return (
     <LiveMapCard
-      openRoles={openRoles}
       listParams={listParams}
       selection={selection}
       onSelect={onSelect}
@@ -513,15 +628,6 @@ function LegendDot({ size }: { size: number }) {
       className="inline-block shrink-0 rounded-full border border-[#2658CF] bg-[#4F80E6]/45"
       style={{ width: size, height: size }}
     />
-  );
-}
-
-function MapLegend({ remote }: { remote: number | null }) {
-  if (remote === null || remote <= 0) return null;
-  return (
-    <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-navy">
-      {remote} remote / flexible
-    </span>
   );
 }
 
@@ -549,12 +655,10 @@ function BubbleSizeLegend() {
 
 /** Mounted only for verified recruiters — guests never fire /jobs/map. */
 function LiveMapCard({
-  openRoles,
   listParams,
   selection,
   onSelect,
 }: {
-  openRoles: number;
   listParams: MapListParams;
   selection: MapSelection;
   onSelect: (selection: MapSelection) => void;
@@ -566,11 +670,10 @@ function LiveMapCard({
     q: listParams.q,
   });
 
-  // The map rows are now per state *and* city, so fold them back into per-state
-  // totals (fee weighted by role count) for the fills, popup and remote pill.
-  const { stats, statesWithRoles } = useMemo(() => {
+  // The map rows are per state *and* city; fold them back into per-state totals
+  // (fee weighted by role count) for the fills and hover popup.
+  const stats = useMemo(() => {
     const acc = new Map<string, { openRoles: number; feeWeighted: number }>();
-    let withRoles = 0;
     for (const entry of map.data ?? []) {
       const prev = acc.get(entry.locationState) ?? {
         openRoles: 0,
@@ -579,7 +682,6 @@ function LiveMapCard({
       prev.openRoles += entry.openRoles;
       prev.feeWeighted += entry.averageFeeMinor * entry.openRoles;
       acc.set(entry.locationState, prev);
-      withRoles += entry.openRoles;
     }
     const byState = new Map<
       string,
@@ -591,11 +693,8 @@ function LiveMapCard({
         averageFeeMinor: roles > 0 ? Math.round(feeWeighted / roles) : 0,
       });
     }
-    return { stats: byState, statesWithRoles: withRoles };
+    return byState;
   }, [map.data]);
-
-  // Roles not pinned to a state (remote / flexible), inferred from the total.
-  const remote = map.data ? Math.max(0, openRoles - statesWithRoles) : null;
 
   return (
     <section className="overflow-hidden rounded-md border border-brand-line bg-white shadow-card">
@@ -608,7 +707,6 @@ function LiveMapCard({
             Click a state or city bubble to load its roles
           </span>
         </div>
-        <MapLegend remote={remote} />
       </div>
       <div className="relative p-4 sm:p-5">
         <UsJobMap
@@ -619,6 +717,25 @@ function LiveMapCard({
           onSelect={onSelect}
         />
         <BubbleSizeLegend />
+      </div>
+    </section>
+  );
+}
+
+/** Shown while the session/verification query resolves — no locked flash. */
+function LoadingMapCard() {
+  return (
+    <section className="overflow-hidden rounded-md border border-brand-line bg-white shadow-card">
+      <div className={MAP_HEADER}>
+        <div>
+          <span className="font-heading text-base font-bold text-navy">
+            Where roles are open
+          </span>{" "}
+          <span className="text-sm text-brand-gray">Loading your map…</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-center px-4 py-24 sm:px-5">
+        <Loader2 className="h-6 w-6 animate-spin text-brand-gray" />
       </div>
     </section>
   );
@@ -636,7 +753,6 @@ function LockedMapCard({ pending }: { pending: boolean }) {
             The live map is for verified recruiters
           </span>
         </div>
-        <MapLegend remote={null} />
       </div>
       <div className="relative p-4 sm:p-5">
         <div className="pointer-events-none select-none opacity-60 blur-[3px]">
@@ -712,7 +828,9 @@ function SegmentedToggle<T extends string>({
 
 function ResultsBody({
   query,
-  visible,
+  items,
+  total,
+  totalPages,
   view,
   page,
   pageSize,
@@ -720,7 +838,9 @@ function ResultsBody({
   onPageSize,
 }: {
   query: ReturnType<typeof usePublicJobs>;
-  visible: PublicJobCardData[];
+  items: PublicJobCardData[];
+  total: number;
+  totalPages: number;
   view: ResultView;
   page: number;
   pageSize: number;
@@ -743,7 +863,7 @@ function ResultsBody({
       </div>
     );
   }
-  if (visible.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="mt-8 flex flex-col items-center gap-2 rounded-md border border-dashed border-brand-line bg-white p-12 text-center">
         <SearchX className="h-7 w-7 text-brand-gray-light" />
@@ -761,7 +881,7 @@ function ResultsBody({
     <div className="mt-6 flex flex-col gap-6">
       {view === "cards" ? (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {visible.map((job) => (
+          {items.map((job) => (
             <PublicJobCard key={job.id} job={job} />
           ))}
         </div>
@@ -774,7 +894,7 @@ function ResultsBody({
             <span className="text-right">Posted</span>
           </div>
           <ul className="divide-y divide-brand-line">
-            {visible.map((job) => (
+            {items.map((job) => (
               <JobRow key={job.id} job={job} />
             ))}
           </ul>
@@ -784,8 +904,8 @@ function ResultsBody({
       <div className="rounded-md border border-brand-line bg-white shadow-card">
         <TablePager
           page={page}
-          totalPages={data.meta.totalPages}
-          total={data.meta.total}
+          totalPages={totalPages}
+          total={total}
           pageSize={pageSize}
           onPage={onPage}
           onPageSize={onPageSize}
