@@ -23,7 +23,14 @@ const AUTH_ROUTES = new Set([
 // Routes that render without a session: auth pages plus the marketing and
 // explore surfaces. /jobs/* matches by prefix — every job detail page is
 // public (guests see the read-only view; roles keep their own affordances).
-const PUBLIC_ROUTES = new Set(["/", "/explore-jobs", "/jobs", ...AUTH_ROUTES]);
+const PUBLIC_ROUTES = new Set([
+  "/",
+  "/explore-jobs",
+  "/jobs",
+  "/terms",
+  "/privacy",
+  ...AUTH_ROUTES,
+]);
 
 function isPublicRoute(pathname: string | null): boolean {
   if (!pathname) return false;
