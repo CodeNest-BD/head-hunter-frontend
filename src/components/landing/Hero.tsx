@@ -20,15 +20,12 @@ export function Hero() {
       <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 pb-16 pt-14 md:px-10 md:pb-20 lg:grid-cols-[1fr_1.05fr]">
         <div className="[animation:fadeUp_500ms_ease_both]">
           <h1 className="mb-6 font-heading text-hero text-navy">
-            Set Your Own Price.{" "}
-            <span className="text-primary">Hire the Right Talent.</span>
+            You Set the Price. We Connect You to the{" "}
+            <span className="text-primary">Best.</span>
           </h1>
-          <p className="mb-3 max-w-xl text-lg leading-relaxed text-brand-slate">
-            Companies name their own price for professional recruiting services.
-          </p>
           <p className="mb-9 max-w-xl text-lg leading-relaxed text-brand-slate">
-            Industry-experienced recruiters find open jobs, send great
-            candidates, and get paid to work on their own terms.
+            Companies name their price for recruiting services. Recruiters find
+            open jobs and get paid what you&rsquo;re willing to offer.
           </p>
           <div className="flex flex-col gap-3.5 sm:flex-row">
             <LandingCta
