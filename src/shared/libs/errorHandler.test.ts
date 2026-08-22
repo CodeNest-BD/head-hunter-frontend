@@ -1,7 +1,7 @@
 import { AxiosError, AxiosHeaders } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { describe, expect, it } from "vitest";
-import { handleError } from "./errorHandler";
+import { handleError, remainingMessages } from "./errorHandler";
 
 /**
  * Builds a real AxiosError carrying the given response body, mirroring what
@@ -44,29 +44,21 @@ describe("handleError", () => {
     expect(apiError.message).not.toContain(";");
   });
 
-  it("keeps every sentence and the per-field detail available for form display", () => {
+  it("keeps every sentence the backend sent, not just the headline", () => {
     const error = axiosErrorWithBody({
       statusCode: 400,
       error: "Bad Request",
-      message: ["Salary must be under $1,000,000,000"],
-      fields: [
-        {
-          field: "salaryMaxMinor",
-          messages: ["Salary must be under $1,000,000,000"],
-          reasons: ["max"],
-        },
+      message: [
+        "Salary must be under $1,000,000,000",
+        "An interview must end after it starts",
       ],
     });
 
     const apiError = handleError(error);
 
-    expect(apiError.messages).toEqual(["Salary must be under $1,000,000,000"]);
-    expect(apiError.fields).toEqual([
-      {
-        field: "salaryMaxMinor",
-        messages: ["Salary must be under $1,000,000,000"],
-        reasons: ["max"],
-      },
+    expect(apiError.messages).toEqual([
+      "Salary must be under $1,000,000,000",
+      "An interview must end after it starts",
     ]);
   });
 
@@ -94,7 +86,9 @@ describe("handleError", () => {
     expect(apiError.message).toBe(
       "Something went wrong on our end. This has been logged.",
     );
-    expect(apiError.message).not.toMatch(/stack|trace|exception|at\s+\w+\.\w+/i);
+    expect(apiError.message).not.toMatch(
+      /stack|trace|exception|at\s+\w+\.\w+/i,
+    );
   });
 
   it("falls back to a human sentence for a 500 with an unrecognised body", () => {
@@ -107,5 +101,52 @@ describe("handleError", () => {
 
     expect(apiError.message).toBe("Something went wrong. Please try again.");
     expect(apiError.message).not.toContain("<html>");
+  });
+});
+
+describe("remainingMessages", () => {
+  it("reports the sentences the headline could not carry", () => {
+    const apiError = handleError(
+      axiosErrorWithBody({
+        statusCode: 400,
+        error: "Bad Request",
+        message: [
+          "Salary must be under $1,000,000,000",
+          "An interview must end after it starts",
+          "Pick a start date of today or later",
+        ],
+      }),
+    );
+
+    expect(remainingMessages(apiError)).toBe(
+      "An interview must end after it starts. Pick a start date of today or later.",
+    );
+  });
+
+  it("has nothing to add when the backend sent a single sentence", () => {
+    const apiError = handleError(
+      axiosErrorWithBody({
+        statusCode: 409,
+        error: "Conflict",
+        message: "This candidate already has an offer awaiting a response.",
+      }),
+    );
+
+    expect(remainingMessages(apiError)).toBeUndefined();
+  });
+
+  it("names no field paths or property names", () => {
+    const apiError = handleError(
+      axiosErrorWithBody({
+        statusCode: 400,
+        error: "Bad Request",
+        message: ["Salary is required", "Recruiter fee is required"],
+      }),
+    );
+
+    const description = remainingMessages(apiError);
+
+    expect(description).toBe("Recruiter fee is required.");
+    expect(description).not.toMatch(/Minor|[a-z][A-Z]|\bfields?\b/);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { offerSchema, sendOfferFormSchema } from "./schemas";
+import { offerSchema, offerTermsFormSchema } from "./schemas";
 
 const offer = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -53,13 +53,16 @@ const sendOfferForm = {
 const sendOfferErrorMessages = (
   overrides: Record<string, unknown>,
 ): string[] => {
-  const result = sendOfferFormSchema.safeParse({ ...sendOfferForm, ...overrides });
+  const result = offerTermsFormSchema.safeParse({
+    ...sendOfferForm,
+    ...overrides,
+  });
   return result.success ? [] : result.error.issues.map((i) => i.message);
 };
 
-describe("sendOfferFormSchema", () => {
+describe("offerTermsFormSchema", () => {
   it("accepts a plain positive salary", () => {
-    expect(sendOfferFormSchema.safeParse(sendOfferForm).success).toBe(true);
+    expect(offerTermsFormSchema.safeParse(sendOfferForm).success).toBe(true);
   });
 
   it("still rejects a salary of 0 or below", () => {

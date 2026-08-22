@@ -124,18 +124,24 @@ export const jobFormSchema = z
     salaryMin: z
       .string()
       .trim()
-      .refine((v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0), {
-        message: "Enter an amount of 0 or more",
-      })
+      .refine(
+        (v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0),
+        {
+          message: "Enter an amount of 0 or more",
+        },
+      )
       .refine((v) => v === "" || Number(v) <= MAX_MONEY_MAJOR, {
         message: `Salary must be under ${MAX_MONEY_MAJOR_LABEL}`,
       }),
     salaryMax: z
       .string()
       .trim()
-      .refine((v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0), {
-        message: "Enter an amount of 0 or more",
-      })
+      .refine(
+        (v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0),
+        {
+          message: "Enter an amount of 0 or more",
+        },
+      )
       .refine((v) => v === "" || Number(v) <= MAX_MONEY_MAJOR, {
         message: `Salary must be under ${MAX_MONEY_MAJOR_LABEL}`,
       }),

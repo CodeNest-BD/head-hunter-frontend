@@ -14,12 +14,10 @@ import { ReviewCta } from "@/features/reviews";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
-import { Input } from "@/shared/ui-components/controls/input";
-import { Label } from "@/shared/ui-components/controls/label";
-import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { formatDate } from "@/shared/utils/formatDate";
-import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
+import { formatMinor } from "@/shared/utils/money";
 import type { ConversationEvent } from "../schemas";
+import { CounterOfferForm, type CounterOfferTerms } from "./CounterOfferForm";
 
 export type OfferEventData = Extract<
   NonNullable<ConversationEvent["data"]>,
@@ -64,18 +62,6 @@ function negotiationErrorMessage(error: unknown): string {
   }
 }
 
-interface CounterFormValues {
-  salary: string;
-  startDate: string;
-  notes: string;
-}
-
-const EMPTY_COUNTER_FORM: CounterFormValues = {
-  salary: "",
-  startDate: "",
-  notes: "",
-};
-
 /**
  * The actionable offer entry in a job's conversation thread. State — which
  * actions are available — comes entirely from `data.offerStatus` compared
@@ -95,8 +81,6 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
     createdBy,
   } = data;
   const [showCounterForm, setShowCounterForm] = useState(false);
-  const [counterForm, setCounterForm] =
-    useState<CounterFormValues>(EMPTY_COUNTER_FORM);
   const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
 
   const acceptOffer = useAcceptOffer(offerId);
@@ -111,8 +95,6 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
   const counterpartyCanRespond = isSent && !isCreator;
   const creatorCanWithdraw = isSent && isCreator;
 
-  const counterSalaryMinor = majorInputToMinor(counterForm.salary);
-
   const mutationError =
     acceptOffer.error ??
     declineOffer.error ??
@@ -124,21 +106,10 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
     counterOffer.isError ||
     withdrawOffer.isError;
 
-  const submitCounter = (): void => {
-    if (counterSalaryMinor === null) return;
-    counterOffer.mutate(
-      {
-        salaryMinor: counterSalaryMinor,
-        startDate: counterForm.startDate || undefined,
-        notes: counterForm.notes.trim() || undefined,
-      },
-      {
-        onSuccess: () => {
-          setShowCounterForm(false);
-          setCounterForm(EMPTY_COUNTER_FORM);
-        },
-      },
-    );
+  const submitCounter = (terms: CounterOfferTerms): void => {
+    counterOffer.mutate(terms, {
+      onSuccess: () => setShowCounterForm(false),
+    });
   };
 
   return (
@@ -222,70 +193,11 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
       )}
 
       {counterpartyCanRespond && showCounterForm && (
-        <div className="flex flex-col gap-2.5">
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="offer-counter-salary">New salary (USD/yr)</Label>
-            <Input
-              id="offer-counter-salary"
-              inputMode="decimal"
-              value={counterForm.salary}
-              onChange={(event) =>
-                setCounterForm((form) => ({
-                  ...form,
-                  salary: event.target.value,
-                }))
-              }
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="offer-counter-start-date">Start date</Label>
-            <Input
-              id="offer-counter-start-date"
-              type="date"
-              value={counterForm.startDate}
-              onChange={(event) =>
-                setCounterForm((form) => ({
-                  ...form,
-                  startDate: event.target.value,
-                }))
-              }
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="offer-counter-notes">Notes</Label>
-            <Textarea
-              id="offer-counter-notes"
-              value={counterForm.notes}
-              onChange={(event) =>
-                setCounterForm((form) => ({
-                  ...form,
-                  notes: event.target.value,
-                }))
-              }
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              disabled={counterSalaryMinor === null || counterOffer.isPending}
-              onClick={submitCounter}
-            >
-              {counterOffer.isPending ? "Sending…" : "Send counter"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setShowCounterForm(false);
-                setCounterForm(EMPTY_COUNTER_FORM);
-              }}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
+        <CounterOfferForm
+          isPending={counterOffer.isPending}
+          onSubmit={submitCounter}
+          onCancel={() => setShowCounterForm(false)}
+        />
       )}
 
       {creatorCanWithdraw && !confirmingWithdraw && (

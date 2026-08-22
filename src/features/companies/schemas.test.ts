@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
 import { companyProfileFormSchema } from "./schemas";
 
 const valid = {
@@ -47,5 +48,27 @@ describe("companyProfileFormSchema", () => {
     expect(
       errorPaths({ commissionMin: "5000", commissionMax: "5000" }),
     ).toEqual([]);
+  });
+
+  it("rejects a commission beyond the platform ceiling, on either end", () => {
+    const beyond = String(MAX_MONEY_MAJOR + 1);
+
+    expect(errorPaths({ commissionMin: beyond })).toContain("commissionMin");
+    expect(errorPaths({ commissionMax: beyond })).toContain("commissionMax");
+  });
+
+  it("rejects a commission that is not a number", () => {
+    expect(errorPaths({ commissionMin: "a lot" })).toContain("commissionMin");
+  });
+
+  it("says how much is too much in words, not in minor units", () => {
+    const result = companyProfileFormSchema.safeParse({
+      ...valid,
+      commissionMax: String(MAX_MONEY_MAJOR + 1),
+    });
+
+    expect(result.success).toBe(false);
+    const message = result.success ? "" : result.error.issues[0].message;
+    expect(message).toBe(`Commission must be under ${MAX_MONEY_MAJOR_LABEL}`);
   });
 });

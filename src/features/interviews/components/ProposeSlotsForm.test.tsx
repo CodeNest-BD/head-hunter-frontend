@@ -151,12 +151,67 @@ describe("ProposeSlotsForm", () => {
     renderForm();
     await pickADay();
 
+    // `fireEvent.submit` is used deliberately below: it proves the pick is
+    // staged before validation runs, which a click cannot isolate. The button
+    // must also genuinely be clickable in this state, or that would pass on a
+    // form no user could actually submit.
+    expect(screen.getByRole("button", { name: "Propose times" })).toBeEnabled();
+
     // No "Add time" click — the day + default 9:00 AM pick alone is submitted.
     fireEvent.submit(screen.getByRole("button", { name: "Propose times" }));
 
     await vi.waitFor(() => expect(mutateMock).toHaveBeenCalled());
     const [payload] = mutateMock.mock.calls[0];
     expect(payload.slots).toHaveLength(1);
+  });
+
+  it("submits the five already chosen when a sixth time is showing in the dropdown", async () => {
+    renderForm();
+    await pickADay();
+
+    const startTime = screen.getByLabelText("Start time");
+    // 9:00 AM is already selected, so the first Add needs no change; every
+    // later one has to move the dropdown, since a duplicate cannot be added.
+    for (const time of ["09:00", "10:00", "11:00", "12:00", "13:00"]) {
+      await userEvent.selectOptions(startTime, time);
+      await userEvent.click(screen.getByRole("button", { name: /add time/i }));
+    }
+    expect(
+      screen.getByText(
+        `${MAX_PROPOSAL_SLOTS} of ${MAX_PROPOSAL_SLOTS} selected`,
+      ),
+    ).toBeInTheDocument();
+
+    // A sixth, un-added time left showing in the dropdown must not be staged
+    // by the submit: the batch is full, and appending it would push the form
+    // past the schema's max with nothing the user could do to recover.
+    await userEvent.selectOptions(startTime, "14:00");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Propose times" }),
+    );
+
+    await vi.waitFor(() => expect(mutateMock).toHaveBeenCalledTimes(1));
+    const [payload] = mutateMock.mock.calls[0];
+    expect(payload.slots).toHaveLength(MAX_PROPOSAL_SLOTS);
+    expect(
+      screen.getByText(
+        `${MAX_PROPOSAL_SLOTS} of ${MAX_PROPOSAL_SLOTS} selected`,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("says what is wrong rather than going quiet when the batch is empty", async () => {
+    renderForm();
+
+    // No day picked, so there is nothing to stage and the array-level rule is
+    // the only thing that can fail. Its message lands on the array's root,
+    // which the form has to read explicitly to show anything at all.
+    fireEvent.submit(screen.getByRole("button", { name: "Propose times" }));
+
+    expect(
+      await screen.findByText("Propose at least 1 time"),
+    ).toBeInTheDocument();
+    expect(mutateMock).not.toHaveBeenCalled();
   });
 
   it("does not offer a start time that has already passed today", async () => {

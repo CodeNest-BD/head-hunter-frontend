@@ -158,6 +158,11 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                 placeholder="3000"
                 {...register("commissionMin")}
               />
+              {errors.commissionMin && (
+                <p className="text-xs text-destructive">
+                  {errors.commissionMin.message}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="commissionMax">Maximum ($)</Label>

@@ -5,12 +5,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { conversationKeys } from "../keys";
 
-const { getConversationSocketMock } = vi.hoisted(() => ({
+const { getConversationSocketMock, useAppSelectorMock } = vi.hoisted(() => ({
   getConversationSocketMock: vi.fn(),
+  useAppSelectorMock: vi.fn(),
 }));
 
 vi.mock("@/lib/socket", () => ({
   getConversationSocket: getConversationSocketMock,
+}));
+
+// The shared socket hook subscribes to the access token so a refused handshake
+// can be retried once the store has a fresh one — this stand-in lets a test
+// move the token without a real store/Provider.
+vi.mock("@/shared/store/hooks", () => ({
+  useAppSelector: useAppSelectorMock,
 }));
 
 // Imported after the mock so the hook picks up the mocked module.
@@ -66,6 +74,7 @@ describe("useUnreadRealtime", () => {
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
+    useAppSelectorMock.mockReturnValue("access-token-1");
   });
 
   it("does nothing when the socket is unconfigured", () => {
@@ -118,6 +127,52 @@ describe("useUnreadRealtime", () => {
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: conversationKeys.unreadCounts,
     });
+  });
+
+  it("reconnects when the gateway refuses the handshake, with no thread mounted to do it", async () => {
+    const fake = createFakeSocket();
+    getConversationSocketMock.mockReturnValue(fake.socket);
+
+    renderUnreadRealtime(queryClient);
+    expect(fake.socket.connect).toHaveBeenCalledTimes(1);
+
+    // The badges live on pages where no thread is mounted, so nothing else
+    // would revive this socket for the rest of the tab's life.
+    act(() => fake.emitToClient("disconnect", "io server disconnect"));
+
+    await vi.waitFor(() =>
+      expect(fake.socket.connect).toHaveBeenCalledTimes(2),
+    );
+  });
+
+  it("reconnects when the access token rotates", () => {
+    const fake = createFakeSocket();
+    getConversationSocketMock.mockReturnValue(fake.socket);
+
+    const { rerender } = renderUnreadRealtime(queryClient);
+    expect(fake.socket.connect).toHaveBeenCalledTimes(1);
+
+    useAppSelectorMock.mockReturnValue("access-token-2");
+    rerender();
+
+    expect(fake.socket.connect).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not reconnect again on a second refusal of the same token", async () => {
+    const fake = createFakeSocket();
+    getConversationSocketMock.mockReturnValue(fake.socket);
+
+    renderUnreadRealtime(queryClient);
+    act(() => fake.emitToClient("disconnect", "io server disconnect"));
+    await vi.waitFor(() =>
+      expect(fake.socket.connect).toHaveBeenCalledTimes(2),
+    );
+
+    // A still-invalid token must not loop handshake attempts against the
+    // gateway, which is not covered by the API's throttler.
+    act(() => fake.emitToClient("disconnect", "io server disconnect"));
+
+    expect(fake.socket.connect).toHaveBeenCalledTimes(2);
   });
 
   it("removes its listeners on unmount", () => {

@@ -263,6 +263,95 @@ describe("ProposalCard", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("offers the company both actions while its batch is the live one", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Availability proposed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "proposed",
+          interviewStatus: "proposed",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /propose new times/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^withdraw$/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("offers the company nothing on a batch superseded by newer times, even while the interview still awaits one", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Availability replaced by newer times"
+        note={null}
+        data={proposalData({
+          proposalStatus: "expired",
+          interviewStatus: "proposed",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("offers the recruiter nothing on a batch superseded by newer times", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Availability replaced by newer times"
+        note={null}
+        data={proposalData({
+          proposalStatus: "expired",
+          interviewStatus: "proposed",
+        })}
+        viewerParty="recruiter"
+      />,
+    );
+
+    expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("offers the company nothing on a confirmed batch", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Interview time confirmed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "confirmed",
+          interviewStatus: "scheduled",
+          confirmedSlotStart: "2026-09-01T16:00:00.000Z",
+          confirmedSlotEnd: "2026-09-01T17:00:00.000Z",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("offers the recruiter nothing on a counter-requested batch it is waiting on", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="New times requested"
+        note="Mornings only, please."
+        data={proposalData({
+          proposalStatus: "counter_requested",
+          interviewStatus: "proposed",
+        })}
+        viewerParty="recruiter"
+      />,
+    );
+
+    expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
   it("does not offer withdraw once the interview is canceled", () => {
     renderWithProviders(
       <ProposalCard

@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "@/features/auth";
@@ -9,12 +8,14 @@ import { candidateKeys } from "@/features/candidates/keys";
 import { interviewKeys } from "@/features/interviews/keys";
 import { offerKeys } from "@/features/offers/keys";
 import { submissionKeys } from "@/features/submissions/keys";
-import { getConversationSocket } from "@/lib/socket";
-import { useAppSelector } from "@/shared/store/hooks";
 import { CONVERSATION_EVENT } from "../events";
 import { conversationKeys } from "../keys";
+import {
+  useConversationSocket,
+  type ConversationSocketStatus,
+} from "./useConversationSocket";
 
-export type ConversationRealtimeStatus = "live" | "polling";
+export type ConversationRealtimeStatus = ConversationSocketStatus;
 
 export interface ConversationRealtimeState {
   status: ConversationRealtimeStatus;
@@ -81,7 +82,8 @@ const isNegotiationChangedFrame = (
  *
  * There is no token-refresh machinery here on purpose: the socket's `auth`
  * callback re-reads the access token before every reconnect, and socket.io owns
- * the backoff.
+ * the backoff. Connecting, and reviving a connection the gateway refused, is
+ * `useConversationSocket`'s concern — shared with `useUnreadRealtime`.
  */
 export function useConversationRealtime(
   submissionId: string,
@@ -89,47 +91,9 @@ export function useConversationRealtime(
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const currentUserId = user?.id;
-  const [status, setStatus] = useState<ConversationRealtimeStatus>("polling");
-  // Dependency-only: not read below. A gateway that refuses a stale token's
-  // handshake disconnects with reason "io server disconnect", which
-  // socket.io-client deliberately does not auto-retry, so the effect must
-  // re-run — and reconnect — once the store actually has a fresh token.
-  // Do not remove this as unused; it is what makes that retry happen at all.
-  const accessToken = useAppSelector((s) => s.auth.accessToken);
-  // Ref, not state: recording the last-refused token must not itself trigger
-  // a re-render or re-run this effect — only `accessToken` changing should.
-  const lastRefusedTokenRef = useRef<string | null | undefined>(undefined);
 
-  useEffect(() => {
-    const socket = getConversationSocket();
-    if (!socket) {
-      setStatus("polling");
-      return;
-    }
-
-    const onConnect = (): void => setStatus("live");
-    const onDisconnect = (reason: string): void => {
-      setStatus("polling");
-      // The gateway refuses a bad handshake with `client.disconnect(true)`,
-      // which reaches the client as this exact reason — the one disconnect
-      // socket.io-client will not retry on its own. But retrying unconditionally
-      // here would bypass socket.io's own reconnection backoff, which is the
-      // only thing bounding handshake attempt rate against the backend (this
-      // endpoint isn't covered by ThrottlerGuard) — a stale token that never
-      // gets refreshed would otherwise retry in a tight loop for as long as the
-      // tab is open. So retry only when the token has changed since the
-      // attempt that was just refused: that is the only condition under which
-      // the refusal's cause could plausibly be gone. Do not remove this guard.
-      if (
-        reason === "io server disconnect" &&
-        accessToken !== lastRefusedTokenRef.current
-      ) {
-        lastRefusedTokenRef.current = accessToken;
-        socket.connect();
-      }
-    };
-
-    const onMessageCreated = (payload: unknown): void => {
+  const status = useConversationSocket({
+    [CONVERSATION_EVENT.MESSAGE_CREATED]: (payload: unknown): void => {
       if (!isMessageCreatedFrame(payload)) {
         return;
       }
@@ -153,11 +117,11 @@ export function useConversationRealtime(
       // its own namespace and needs its own call.
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
       void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
-    };
+    },
 
     // The party who did not act has no mutation of their own to learn from. The
     // frame carries no state, so a missed one self-heals on the next poll.
-    const onNegotiationChanged = (payload: unknown): void => {
+    [CONVERSATION_EVENT.NEGOTIATION_CHANGED]: (payload: unknown): void => {
       if (!isNegotiationChangedFrame(payload)) {
         return;
       }
@@ -169,26 +133,8 @@ export function useConversationRealtime(
       void queryClient.invalidateQueries({ queryKey: candidateKeys.all });
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
       void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
-    };
-
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on(CONVERSATION_EVENT.MESSAGE_CREATED, onMessageCreated);
-    socket.on(CONVERSATION_EVENT.NEGOTIATION_CHANGED, onNegotiationChanged);
-    if (socket.connected) {
-      setStatus("live");
-    }
-    socket.connect();
-
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off(CONVERSATION_EVENT.MESSAGE_CREATED, onMessageCreated);
-      socket.off(CONVERSATION_EVENT.NEGOTIATION_CHANGED, onNegotiationChanged);
-      // The socket is shared app-wide and deliberately left connected; only this
-      // hook's listeners come off.
-    };
-  }, [submissionId, queryClient, currentUserId, accessToken]);
+    },
+  });
 
   return { status };
 }

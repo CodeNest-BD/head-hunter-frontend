@@ -3,34 +3,23 @@
 import { useId, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as Popover from "@radix-ui/react-popover";
-import { format, startOfToday } from "date-fns";
 import { HttpStatusCode } from "axios";
-import { AlertCircle, CalendarIcon } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 import {
-  sendOfferFormSchema,
+  offerTermsFormSchema,
   useCreateOffer,
   type OfferStatus,
-  type SendOfferFormValues,
+  type OfferTermsFormValues,
 } from "@/features/offers";
 import type { CandidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Calendar } from "@/shared/ui-components/controls/calendar";
+import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor } from "@/shared/utils/money";
-
-const DAY_FORMAT = "yyyy-MM-dd";
-
-/** A day string round-trips through the calendar as a local `Date`; an empty
- * (not-yet-picked) day has no date to select. Same helper as
- * `ProposeSlotsForm`'s `toSelectedDate`. */
-function toSelectedDate(day: string): Date | undefined {
-  return day ? new Date(`${day}T00:00`) : undefined;
-}
 
 export interface SendOfferFormProps {
   candidateId: string;
@@ -75,7 +64,7 @@ function sendOfferErrorMessage(error: unknown): string {
   }
 }
 
-const EMPTY_VALUES: SendOfferFormValues = {
+const EMPTY_VALUES: OfferTermsFormValues = {
   salary: "",
   startDate: "",
   notes: "",
@@ -113,13 +102,12 @@ export function SendOfferForm({
     watch,
     setValue,
     formState: { errors },
-  } = useForm<SendOfferFormValues>({
-    resolver: zodResolver(sendOfferFormSchema),
+  } = useForm<OfferTermsFormValues>({
+    resolver: zodResolver(offerTermsFormSchema),
     defaultValues: EMPTY_VALUES,
   });
 
   const startDate = watch("startDate");
-  const selectedStartDate = toSelectedDate(startDate);
 
   const closeForm = (): void => {
     setIsOpen(false);
@@ -160,53 +148,15 @@ export function SendOfferForm({
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="send-offer-start-date">Start date</Label>
-          <Popover.Root>
-            <Popover.Trigger asChild>
-              <button
-                type="button"
-                id="send-offer-start-date"
-                className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <span
-                  className={
-                    selectedStartDate
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                  }
-                >
-                  {selectedStartDate
-                    ? format(selectedStartDate, "EEE, d MMM yyyy")
-                    : "Pick a start date"}
-                </span>
-                <CalendarIcon
-                  className="h-4 w-4 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-              </button>
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Content
-                align="start"
-                sideOffset={4}
-                className="z-50 rounded-md border border-border bg-card p-2 shadow-card-lg focus:outline-none"
-              >
-                <Calendar
-                  mode="single"
-                  selected={selectedStartDate}
-                  defaultMonth={selectedStartDate ?? startOfToday()}
-                  disabled={{ before: startOfToday() }}
-                  onSelect={(date) =>
-                    setValue(
-                      "startDate",
-                      date ? format(date, DAY_FORMAT) : "",
-                      { shouldValidate: true },
-                    )
-                  }
-                  aria-label="Start date"
-                />
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover.Root>
+          <DayPickerField
+            id="send-offer-start-date"
+            value={startDate}
+            onChange={(day) =>
+              setValue("startDate", day, { shouldValidate: true })
+            }
+            placeholder="Pick a start date"
+            ariaLabel="Start date"
+          />
           {errors.startDate && (
             <p className="text-xs text-destructive">
               {errors.startDate.message}

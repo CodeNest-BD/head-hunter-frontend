@@ -1,9 +1,8 @@
-import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { getConversationSocket } from "@/lib/socket";
 import { CONVERSATION_EVENT } from "../events";
 import { conversationKeys } from "../keys";
+import { useConversationSocket } from "./useConversationSocket";
 
 /**
  * Keeps the unread badges live on every page, not just inside a thread.
@@ -16,42 +15,26 @@ import { conversationKeys } from "../keys";
  * the single source of truth and a dropped frame self-heals on the next event or
  * window focus.
  *
- * Also owns connecting the shared socket: `getConversationSocket()` returns it with
- * `autoConnect: false`, and outside a thread page `useConversationRealtime` isn't
- * mounted to do it — this is the one place guaranteed to run on every authenticated
- * page. `connect()` on an already-connected socket is a no-op, so this is safe to
- * run alongside a thread's own connect call.
+ * Connecting the shared socket, and reviving it after the gateway refuses a stale
+ * token's handshake, is `useConversationSocket`'s concern — shared with
+ * `useConversationRealtime` rather than restated here. That matters most on this
+ * hook's pages (inbox list, submissions, dashboard, jobs), where no thread is
+ * mounted to reconnect on its behalf and there is no longer a poll to mask it.
  */
 export function useUnreadRealtime(): void {
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const socket = getConversationSocket();
-    if (!socket) {
-      return;
-    }
+  const invalidateUnreadCounts = (): void => {
+    void queryClient.invalidateQueries({
+      queryKey: conversationKeys.unreadCount,
+    });
+    void queryClient.invalidateQueries({
+      queryKey: conversationKeys.unreadCounts,
+    });
+  };
 
-    const invalidateUnreadCounts = (): void => {
-      void queryClient.invalidateQueries({
-        queryKey: conversationKeys.unreadCount,
-      });
-      void queryClient.invalidateQueries({
-        queryKey: conversationKeys.unreadCounts,
-      });
-    };
-
-    socket.on(CONVERSATION_EVENT.MESSAGE_CREATED, invalidateUnreadCounts);
-    socket.on(CONVERSATION_EVENT.NEGOTIATION_CHANGED, invalidateUnreadCounts);
-    socket.connect();
-
-    return () => {
-      socket.off(CONVERSATION_EVENT.MESSAGE_CREATED, invalidateUnreadCounts);
-      socket.off(
-        CONVERSATION_EVENT.NEGOTIATION_CHANGED,
-        invalidateUnreadCounts,
-      );
-      // The socket is shared app-wide and deliberately left connected; only
-      // this hook's listeners come off.
-    };
-  }, [queryClient]);
+  useConversationSocket({
+    [CONVERSATION_EVENT.MESSAGE_CREATED]: invalidateUnreadCounts,
+    [CONVERSATION_EVENT.NEGOTIATION_CHANGED]: invalidateUnreadCounts,
+  });
 }

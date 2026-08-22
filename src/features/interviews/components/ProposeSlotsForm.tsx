@@ -3,12 +3,10 @@
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as Popover from "@radix-ui/react-popover";
-import { format, startOfToday } from "date-fns";
-import { AlertCircle, CalendarIcon, Check, Plus, X } from "lucide-react";
+import { AlertCircle, Check, Plus, X } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
-import { Calendar } from "@/shared/ui-components/controls/calendar";
+import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
 import { Label } from "@/shared/ui-components/controls/label";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
 import { useProposeSlots } from "../hooks/useInterviews";
@@ -36,14 +34,7 @@ export interface ProposeSlotsFormProps {
   onCancel?: () => void;
 }
 
-const DAY_FORMAT = "yyyy-MM-dd";
 const DEFAULT_DURATION: SlotDurationMinutes = 60;
-
-/** A day string round-trips through the calendar as a local `Date`; an empty
- * (not-yet-picked) day has no date to select. */
-function toSelectedDate(day: string): Date | undefined {
-  return day ? new Date(`${day}T00:00`) : undefined;
-}
 
 /**
  * 1-5 candidate windows for one interview. Used by the company's scheduling
@@ -72,15 +63,13 @@ export function ProposeSlotsForm({
     name: "slots",
   });
 
-  // Past days are off the calendar, but "today at 9am" can still be in the
-  // past — the server owns that rule, so this only stops the obvious half.
-  const firstSelectableDay = startOfToday();
+  // `DayPickerField` keeps past days off the calendar, but "today at 9am" can
+  // still be in the past — `selectableTimeOptions` below handles that half.
   const [day, setDay] = useState("");
   const [startTime, setStartTime] = useState("09:00");
   const [duration, setDuration] =
     useState<SlotDurationMinutes>(DEFAULT_DURATION);
 
-  const selectedDate = toSelectedDate(day);
   const atMax = fields.length >= MAX_PROPOSAL_SLOTS;
 
   // The whole-day list, narrowed to what is still ahead of now when `day` is
@@ -125,29 +114,25 @@ export function ProposeSlotsForm({
     );
   });
 
-  // A picked day + time is a complete one-slot proposal on its own — the
-  // backend accepts 1-5 slots, so "Add time" is an explicit add-another
-  // affordance, not a precondition. Staging the current pick here, before
-  // `onSubmit` (and the schema validation inside it) runs, means a user who
-  // never clicked "Add time" still submits what they chose instead of
-  // hitting "Propose at least 1 time".
-  const submitCurrentPick = (): void => {
-    if (
-      day !== "" &&
-      effectiveStartTime !== "" &&
-      indexOfSlot(effectiveStartTime) < 0
-    ) {
-      append({ day, startTime: effectiveStartTime, durationMinutes: duration });
-    }
-  };
-
   const canSubmit =
     fields.length > 0 || (day !== "" && effectiveStartTime !== "");
+  const slotsErrorMessage =
+    errors.slots?.root?.message ?? errors.slots?.message;
 
   return (
     <form
+      // A picked day + time is a complete one-slot proposal on its own — the
+      // backend accepts 1-5 slots, so "Add time" is an explicit add-another
+      // affordance, not a precondition. Staging the current pick through the
+      // same `addTime` the button uses, before `onSubmit` (and the schema
+      // validation inside it) runs, means a user who never clicked "Add time"
+      // still submits what they chose instead of hitting "Propose at least 1
+      // time" — while `canAdd` keeps a sixth slot from ever being appended
+      // past the schema's max, which no amount of error copy could recover
+      // from. Never re-inline these guards here: a second copy is what let
+      // the form dead-end at 6 slots.
       onSubmit={(event) => {
-        submitCurrentPick();
+        addTime();
         void onSubmit(event);
       }}
       className="flex flex-col gap-4"
@@ -159,47 +144,13 @@ export function ProposeSlotsForm({
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex min-w-[11rem] flex-1 flex-col gap-1">
           <Label htmlFor="propose-day">Day</Label>
-          <Popover.Root>
-            <Popover.Trigger asChild>
-              <button
-                type="button"
-                id="propose-day"
-                className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <span
-                  className={
-                    selectedDate ? "text-foreground" : "text-muted-foreground"
-                  }
-                >
-                  {selectedDate
-                    ? format(selectedDate, "EEE, d MMM yyyy")
-                    : "Pick a day"}
-                </span>
-                <CalendarIcon
-                  className="h-4 w-4 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-              </button>
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Content
-                align="start"
-                sideOffset={4}
-                className="z-50 rounded-md border border-border bg-card p-2 shadow-card-lg focus:outline-none"
-              >
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  defaultMonth={selectedDate ?? firstSelectableDay}
-                  disabled={{ before: firstSelectableDay }}
-                  onSelect={(date) =>
-                    setDay(date ? format(date, DAY_FORMAT) : "")
-                  }
-                  aria-label="Day to offer times on"
-                />
-              </Popover.Content>
-            </Popover.Portal>
-          </Popover.Root>
+          <DayPickerField
+            id="propose-day"
+            value={day}
+            onChange={setDay}
+            placeholder="Pick a day"
+            ariaLabel="Day to offer times on"
+          />
         </div>
 
         <div className="flex flex-col gap-1">
@@ -294,8 +245,11 @@ export function ProposeSlotsForm({
         </div>
       )}
 
-      {errors.slots?.message && (
-        <p className="text-xs text-destructive">{errors.slots.message}</p>
+      {/* An array-level issue (too few, too many) lands on `root`, not on the
+          field itself — reading only `errors.slots.message` silently swallowed
+          it and left the form looking inert. */}
+      {slotsErrorMessage && (
+        <p className="text-xs text-destructive">{slotsErrorMessage}</p>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
