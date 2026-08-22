@@ -31,6 +31,7 @@ import { useListState } from "@/shared/hooks/useListState";
 import { formatDate } from "@/shared/utils/formatDate";
 import { useInboxRecruiters } from "../hooks/useSubmissions";
 import {
+  SUBMISSION_STATUS_FILTER_OPTIONS,
   SUBMISSION_STATUS_LABELS,
   recruiterDisplayName,
   type SubmissionStatus,
@@ -89,12 +90,10 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
             value: status,
             onChange: changeStatus,
             allLabel: "All statuses",
-            options: (
-              Object.entries(SUBMISSION_STATUS_LABELS) as [
-                SubmissionStatus,
-                string,
-              ][]
-            ).map(([value, label]) => ({ value, label })),
+            // The filter offers all five: a submission recorded before the
+            // settable set was narrowed still carries `under_review` or
+            // `advanced`, and it has to stay findable.
+            options: [...SUBMISSION_STATUS_FILTER_OPTIONS],
           }}
         />
       </div>

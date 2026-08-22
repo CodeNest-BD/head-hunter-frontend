@@ -10,6 +10,11 @@ export const SUBMISSION_STATUSES = [
 export const submissionStatusSchema = z.enum(SUBMISSION_STATUSES);
 export type SubmissionStatus = z.infer<typeof submissionStatusSchema>;
 
+/**
+ * Complete on purpose: every status stays *displayable*, because rows already
+ * carry every one of them. Dropping an entry here would leave those rows with a
+ * blank badge.
+ */
 export const SUBMISSION_STATUS_LABELS: Record<SubmissionStatus, string> = {
   submitted: "Submitted",
   under_review: "Under review",
@@ -18,16 +23,45 @@ export const SUBMISSION_STATUS_LABELS: Record<SubmissionStatus, string> = {
   withdrawn: "Withdrawn",
 };
 
+/** Filtering is displayable too: all five, so no existing row is unfindable. */
+export const SUBMISSION_STATUS_FILTER_OPTIONS: readonly {
+  value: SubmissionStatus;
+  label: string;
+}[] = SUBMISSION_STATUSES.map((value) => ({
+  value,
+  label: SUBMISSION_STATUS_LABELS[value],
+}));
+
 /**
- * Statuses a company may move a submission to. `withdrawn` is the recruiter's
- * action, so it is deliberately absent.
+ * Displayable is the whole enum; *settable* is this subset — the statuses the
+ * platform actually reacts to. `submitted` is what the company inbox counts as
+ * new, and `rejected`/`withdrawn` close the submission to messages, interviews
+ * and further candidates. `under_review` and `advanced` gate nothing anywhere:
+ * they exist for historical rows only, so a picker offering them would be
+ * offering a choice with no effect. The API refuses them as well.
+ */
+export const SETTABLE_SUBMISSION_STATUSES = [
+  "submitted",
+  "rejected",
+  "withdrawn",
+] as const satisfies readonly SubmissionStatus[];
+export type SettableSubmissionStatus =
+  (typeof SETTABLE_SUBMISSION_STATUSES)[number];
+
+/**
+ * What a *company* may set: the settable statuses minus `withdrawn`, which is
+ * the recruiter's own exit from a submission and is refused for anyone else.
  */
 export const COMPANY_SETTABLE_STATUSES = [
   "submitted",
-  "under_review",
-  "advanced",
   "rejected",
-] as const satisfies readonly SubmissionStatus[];
+] as const satisfies readonly SettableSubmissionStatus[];
+export type CompanySettableStatus = (typeof COMPANY_SETTABLE_STATUSES)[number];
+
+export const isCompanySettableStatus = (
+  value: string,
+): value is CompanySettableStatus =>
+  COMPANY_SETTABLE_STATUSES.some((status) => status === value);
 
 /**
  * What a company may see about the submitting recruiter. Contact details are

@@ -14,11 +14,10 @@ import { candidateNegotiationState } from "@/features/conversations/utils/candid
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
 import {
-  COMPANY_SETTABLE_STATUSES,
   SUBMISSION_STATUS_LABELS,
+  SubmissionStatusPicker,
   recruiterDisplayName,
   useSubmission,
-  useUpdateSubmissionStatus,
   type Submission,
   type SubmissionStatus,
 } from "@/features/submissions";
@@ -130,8 +129,6 @@ function CandidateListSection({
 }
 
 function SubmissionInfoHeader({ submission }: { submission: Submission }) {
-  const updateStatus = useUpdateSubmissionStatus(submission.id);
-
   return (
     <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 shadow-card">
       {/* Two lines, not four: the name carries the status badge beside it and the
@@ -160,36 +157,7 @@ function SubmissionInfoHeader({ submission }: { submission: Submission }) {
         </div>
 
         <div className="shrink-0">
-          {/* The visible label is dropped: the select already carries an
-              aria-label, and the badge beside the name says what the status is. */}
-          <select
-            id="submission-status"
-            aria-label="Submission status"
-            value={
-              COMPANY_SETTABLE_STATUSES.includes(
-                submission.status as (typeof COMPANY_SETTABLE_STATUSES)[number],
-              )
-                ? submission.status
-                : ""
-            }
-            disabled={
-              updateStatus.isPending || submission.status === "withdrawn"
-            }
-            onChange={(event) =>
-              updateStatus.mutate(event.target.value as SubmissionStatus)
-            }
-            className="h-9 rounded-md border border-input bg-card px-3 text-sm text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {/* `withdrawn` is the recruiter's action, so it is not offered here. */}
-            {submission.status === "withdrawn" && (
-              <option value="">Withdrawn</option>
-            )}
-            {COMPANY_SETTABLE_STATUSES.map((value) => (
-              <option key={value} value={value}>
-                {SUBMISSION_STATUS_LABELS[value]}
-              </option>
-            ))}
-          </select>
+          <SubmissionStatusPicker submission={submission} />
         </div>
       </div>
 

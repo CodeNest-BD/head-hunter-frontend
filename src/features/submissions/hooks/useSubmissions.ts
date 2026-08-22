@@ -19,7 +19,7 @@ import {
 } from "../api/submissions";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { submissionKeys } from "../keys";
-import type { SubmissionStatus } from "../schemas";
+import type { SettableSubmissionStatus } from "../schemas";
 
 export function useSubmissions(params: SubmissionListParams) {
   return useQuery({
@@ -46,7 +46,7 @@ export function useSubmission(id: string) {
 export function useUpdateSubmissionStatus(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (status: SubmissionStatus) =>
+    mutationFn: (status: SettableSubmissionStatus) =>
       updateSubmissionStatus(id, status),
     onSuccess: (submission) => {
       queryClient.setQueryData(submissionKeys.detail(id), submission);

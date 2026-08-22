@@ -6,6 +6,7 @@ import {
   submissionSchema,
   type InboxJobRow,
   type InboxRecruiterRow,
+  type SettableSubmissionStatus,
   type Submission,
   type SubmissionStatus,
 } from "../schemas";
@@ -42,7 +43,7 @@ export async function fetchSubmission(id: string): Promise<Submission> {
  */
 export async function updateSubmissionStatus(
   id: string,
-  status: SubmissionStatus,
+  status: SettableSubmissionStatus,
 ): Promise<Submission> {
   const { data } = await apiClient.patch<unknown>(`/submissions/${id}`, {
     status,
