@@ -7,6 +7,7 @@
 export { JobForm } from "./components/JobForm";
 export { JobsTable } from "./components/JobsTable";
 export {
+  useCreateAndPublishJob,
   useCreateJob,
   useJob,
   useJobMap,

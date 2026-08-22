@@ -56,6 +56,28 @@ export function useCreateJob() {
   });
 }
 
+/**
+ * Create a job and publish it in one action (the "Publish" button on the new-job
+ * form). Publishing reserves the fee, so it can fail on insufficient funds — the
+ * draft is already saved, and the error surfaces so the company can top up and
+ * publish from the job page.
+ */
+export function useCreateAndPublishJob() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  return useMutation({
+    mutationFn: async (input: JobWriteInput) => {
+      const draft = await createJob(input);
+      return updateJob(draft.id, { status: "published" });
+    },
+    onSuccess: (job) => {
+      void queryClient.invalidateQueries({ queryKey: jobKeys.all });
+      toast.success("Job published. Recruiters can see it now.");
+      router.push(`/company/jobs/${job.id}`);
+    },
+  });
+}
+
 export function useUpdateJob(id: string) {
   const queryClient = useQueryClient();
   return useMutation({

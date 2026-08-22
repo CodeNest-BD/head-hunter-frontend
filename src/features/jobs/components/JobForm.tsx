@@ -41,7 +41,8 @@ import type { JobWriteInput } from "../api/jobs";
 
 interface JobFormProps {
   job?: Job;
-  onSubmit: (input: JobWriteInput) => void;
+  /** `intent` is "draft" for a plain save and "publish" for the Publish button. */
+  onSubmit: (input: JobWriteInput, intent: "draft" | "publish") => void;
   isSubmitting: boolean;
   submitLabel: string;
   /** When provided, a Cancel button appears in the sticky action bar. */
@@ -113,33 +114,34 @@ export function JobForm({
     (city) => city.state === locationState,
   );
 
-  const submit = handleSubmit((values) => {
-    onSubmit({
-      title: values.title,
-      // Sanitized at save as well as render — the editor is not a boundary.
-      description:
-        values.description === ""
-          ? undefined
-          : sanitizeRichText(values.description),
-      roleCategory: values.roleCategory,
-      employmentType:
-        values.employmentType === "" ? undefined : values.employmentType,
-      locationState:
-        values.locationState === ""
-          ? undefined
-          : values.locationState.toUpperCase(),
-      locationCity:
-        values.locationCity === "" ? undefined : values.locationCity,
-      isRemote: values.isRemote,
-      salaryMinMinor: majorInputToMinor(values.salaryMin),
-      salaryMaxMinor: majorInputToMinor(values.salaryMax),
-      // Required by the schema, so a plain conversion is safe here.
-      recruiterFeeMinor: majorToMinor(Number(values.recruiterFee)),
-    });
+  const toInput = (values: JobFormValues): JobWriteInput => ({
+    title: values.title,
+    // Sanitized at save as well as render — the editor is not a boundary.
+    description:
+      values.description === ""
+        ? undefined
+        : sanitizeRichText(values.description),
+    roleCategory: values.roleCategory,
+    employmentType:
+      values.employmentType === "" ? undefined : values.employmentType,
+    locationState:
+      values.locationState === ""
+        ? undefined
+        : values.locationState.toUpperCase(),
+    locationCity: values.locationCity === "" ? undefined : values.locationCity,
+    isRemote: values.isRemote,
+    salaryMinMinor: majorInputToMinor(values.salaryMin),
+    salaryMaxMinor: majorInputToMinor(values.salaryMax),
+    // Required by the schema, so a plain conversion is safe here.
+    recruiterFeeMinor: majorToMinor(Number(values.recruiterFee)),
   });
 
+  // Which action fired: the primary save (Enter or "Save") vs. "Publish".
+  const emit = (intent: "draft" | "publish") =>
+    handleSubmit((values) => onSubmit(toInput(values), intent));
+
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4">
+    <form onSubmit={emit("draft")} className="flex flex-col gap-4">
       <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
         <Section title="Basics" hint="What the role is and where it sits.">
           <div className="flex flex-col gap-2">
@@ -368,7 +370,7 @@ export function JobForm({
         <span className="text-sm text-muted-foreground">
           {job
             ? "Changes are live as soon as you save."
-            : "Save as a draft, then publish when you're ready."}
+            : "Save as a draft, or publish it live right away."}
         </span>
         <div className="flex gap-2">
           {onCancel && (
@@ -382,9 +384,31 @@ export function JobForm({
               Cancel
             </Button>
           )}
-          <Button type="submit" size="sm" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : submitLabel}
-          </Button>
+          {job ? (
+            <Button type="submit" size="sm" disabled={isSubmitting}>
+              {isSubmitting ? "Saving…" : submitLabel}
+            </Button>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={emit("draft")}
+                disabled={isSubmitting}
+              >
+                Save as draft
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={emit("publish")}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Working…" : "Publish job"}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </form>
