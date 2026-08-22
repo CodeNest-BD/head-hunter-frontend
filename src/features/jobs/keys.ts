@@ -1,4 +1,5 @@
 import type { JobFilterParams, JobListParams } from "./api/jobs";
+import type { PublicJobListParams } from "./api/publicJobs";
 
 export const jobKeys = {
   all: ["jobs"] as const,
@@ -7,8 +8,11 @@ export const jobKeys = {
   map: (params: JobFilterParams) => ["jobs", "map", params] as const,
 };
 
-/** The one surviving public query (the landing stats strip) lives under its
- * own root: never auth-invalidated. */
+/** Guest-facing queries live under their own root: never auth-invalidated. */
 export const publicJobKeys = {
+  all: ["public-jobs"] as const,
+  list: (params: PublicJobListParams) =>
+    ["public-jobs", "list", params] as const,
+  detail: (id: string) => ["public-jobs", "detail", id] as const,
   stats: ["public-jobs", "stats"] as const,
 };
