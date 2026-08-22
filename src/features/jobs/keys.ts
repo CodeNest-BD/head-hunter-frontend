@@ -15,4 +15,5 @@ export const publicJobKeys = {
     ["public-jobs", "list", params] as const,
   detail: (id: string) => ["public-jobs", "detail", id] as const,
   stats: ["public-jobs", "stats"] as const,
+  map: ["public-jobs", "map"] as const,
 };

@@ -3,9 +3,11 @@ import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   publicJobCardSchema,
   publicJobDetailSchema,
+  publicJobMapEntrySchema,
   publicJobStatsSchema,
   type PublicJobCard,
   type PublicJobDetail,
+  type PublicJobMapEntry,
   type PublicJobStats,
 } from "../publicSchemas";
 
@@ -50,4 +52,12 @@ export async function fetchPublicJobStats(): Promise<PublicJobStats> {
     suppressGlobalErrorToast: true,
   });
   return publicJobStatsSchema.parse(data);
+}
+
+/** GET /v1/public/jobs/map — per-state/city open-role counts for the landing map. */
+export async function fetchPublicJobMap(): Promise<PublicJobMapEntry[]> {
+  const { data } = await apiClient.get<unknown>("/public/jobs/map", {
+    suppressGlobalErrorToast: true,
+  });
+  return publicJobMapEntrySchema.array().parse(data);
 }

@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import {
   fetchPublicJob,
+  fetchPublicJobMap,
   fetchPublicJobs,
   fetchPublicJobStats,
   type PublicJobListParams,
@@ -30,6 +31,16 @@ export function usePublicJobStats() {
   return useQuery({
     queryKey: publicJobKeys.stats,
     queryFn: fetchPublicJobStats,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+}
+
+/** Public per-state/city open-role counts behind the landing map. */
+export function usePublicJobMap() {
+  return useQuery({
+    queryKey: publicJobKeys.map,
+    queryFn: fetchPublicJobMap,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });

@@ -33,6 +33,12 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { formatMinor } from "@/shared/utils/money";
 
+import {
+  resolveCityBubbles,
+  type CityMapBubble,
+  type CityMapRow,
+} from "../cityMapBubbles";
+
 /**
  * The map's current selection. A city selection carries its state so the jobs
  * list can filter by state server-side and by city on the client. Modelled as
@@ -48,19 +54,11 @@ interface StateStat {
   readonly averageFeeMinor: number;
 }
 
-/** A per-city aggregate row from useJobMap (city may be unrecorded). */
-interface CityDatum {
-  readonly locationState: string;
-  readonly locationCity: string | null;
-  readonly openRoles: number;
-  readonly averageFeeMinor: number;
-}
-
 interface UsJobMapProps {
   /** Per-state aggregates from useJobMap, keyed by 2-letter code. */
   readonly stats: ReadonlyMap<string, StateStat>;
   /** Per-city rows; each drawn as a demand bubble when its city can be placed. */
-  readonly cityData?: readonly CityDatum[];
+  readonly cityData?: readonly CityMapRow[];
   readonly selection: MapSelection;
   readonly onSelect: (selection: MapSelection) => void;
   /**
@@ -81,60 +79,6 @@ const PLOTTED_CITIES: readonly PlottedCity[] = US_CITIES.flatMap((city) => {
   const point = projectAlbersUsa(city.lng, city.lat);
   return point ? [{ ...city, x: point.x, y: point.y }] : [];
 });
-
-/** A placeable city + its projected point, resolved from a raw city string. */
-interface CityBubble {
-  readonly key: string;
-  readonly x: number;
-  readonly y: number;
-  readonly state: string;
-  readonly city: string;
-  readonly openRoles: number;
-  readonly averageFeeMinor: number;
-}
-
-const normalizeCity = (name: string): string => name.trim().toLowerCase();
-
-// Two lookups so a row places even when its (free-text) state is wrong: prefer
-// an exact name+state match, then fall back to the first city of that name.
-const CITY_BY_NAME_STATE = new Map<string, PlottedCity>();
-const CITY_BY_NAME = new Map<string, PlottedCity>();
-for (const city of PLOTTED_CITIES) {
-  CITY_BY_NAME_STATE.set(`${normalizeCity(city.name)}|${city.state}`, city);
-  if (!CITY_BY_NAME.has(normalizeCity(city.name))) {
-    CITY_BY_NAME.set(normalizeCity(city.name), city);
-  }
-}
-
-/** Resolve raw per-city rows to placeable bubbles, summing duplicates by point. */
-function resolveCityBubbles(rows: readonly CityDatum[]): CityBubble[] {
-  const byPoint = new Map<
-    string,
-    { hit: PlottedCity; openRoles: number; feeWeighted: number }
-  >();
-  for (const row of rows) {
-    if (!row.locationCity || row.openRoles <= 0) continue;
-    const norm = normalizeCity(row.locationCity);
-    const hit =
-      CITY_BY_NAME_STATE.get(`${norm}|${row.locationState}`) ??
-      CITY_BY_NAME.get(norm);
-    if (!hit) continue;
-    const key = `${hit.name}|${hit.state}`;
-    const prev = byPoint.get(key) ?? { hit, openRoles: 0, feeWeighted: 0 };
-    prev.openRoles += row.openRoles;
-    prev.feeWeighted += row.averageFeeMinor * row.openRoles;
-    byPoint.set(key, prev);
-  }
-  return [...byPoint.values()].map(({ hit, openRoles, feeWeighted }) => ({
-    key: `${hit.name}|${hit.state}`,
-    x: hit.x,
-    y: hit.y,
-    state: hit.state,
-    city: hit.name,
-    openRoles,
-    averageFeeMinor: openRoles > 0 ? Math.round(feeWeighted / openRoles) : 0,
-  }));
-}
 
 /** Bubble radius (SVG units) scaled by role volume — small→few, large→many. */
 function bubbleRadius(count: number): number {
@@ -171,11 +115,11 @@ function CityPopup({
   onLeave,
   onViewJobs,
 }: {
-  bubble: CityBubble | null;
+  bubble: CityMapBubble | null;
   anchor: { x: number; top: number; bottom: number } | null;
   onEnter: () => void;
   onLeave: () => void;
-  onViewJobs: (bubble: CityBubble) => void;
+  onViewJobs: (bubble: CityMapBubble) => void;
 }) {
   if (!bubble || !anchor) return null;
   // Flip below the bubble when there isn't room for the card above it.
@@ -230,7 +174,7 @@ export function UsJobMap({
 }: UsJobMapProps) {
   const titleId = useId();
   const [hoveredState, setHoveredState] = useState<string | null>(null);
-  const [hoveredCity, setHoveredCity] = useState<CityBubble | null>(null);
+  const [hoveredCity, setHoveredCity] = useState<CityMapBubble | null>(null);
   const [comboOpen, setComboOpen] = useState(false);
   const [cityQuery, setCityQuery] = useState("");
   // A single scale drives an SVG-space transform; pan is centered on the
@@ -399,7 +343,7 @@ export function UsJobMap({
       hideCityRef.current = null;
     }
   };
-  const showCity = (bubble: CityBubble, el: SVGCircleElement): void => {
+  const showCity = (bubble: CityMapBubble, el: SVGCircleElement): void => {
     cancelHideCity();
     const wrap = wrapRef.current?.getBoundingClientRect();
     const dot = el.getBoundingClientRect();
