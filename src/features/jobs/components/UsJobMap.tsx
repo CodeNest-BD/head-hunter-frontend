@@ -204,6 +204,8 @@ export function UsJobMap({
     top: number;
     bottom: number;
   } | null>(null);
+  // Cursor position (container px) for the state-name tooltip on hover.
+  const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -440,6 +442,17 @@ export function UsJobMap({
           }}
         />
 
+        {/* State-name tooltip: follows the cursor while hovering a state, but
+            yields to the richer city card when a bubble is hovered. */}
+        {hoveredState && !hoveredCity && pointer && (
+          <div
+            className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-brand-line bg-white px-2.5 py-1 text-[13px] font-semibold text-navy shadow-card-lg"
+            style={{ left: pointer.x, top: pointer.y - 12 }}
+          >
+            {US_STATE_NAME_BY_CODE[hoveredState] ?? hoveredState}
+          </div>
+        )}
+
         {/* City details card, anchored above (or below) the hovered bubble. */}
         <CityPopup
           bubble={hoveredCity}
@@ -493,10 +506,23 @@ export function UsJobMap({
           aria-labelledby={titleId}
           preserveAspectRatio="xMidYMid meet"
           onPointerDown={startDrag}
-          onPointerMove={moveDrag}
+          onPointerMove={(event) => {
+            moveDrag(event);
+            if (isDragging) return; // Don't fight a pan with hover tracking.
+            const rect = wrapRef.current?.getBoundingClientRect();
+            if (rect) {
+              setPointer({
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top,
+              });
+            }
+          }}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          onMouseLeave={() => setHoveredState(null)}
+          onMouseLeave={() => {
+            setHoveredState(null);
+            setPointer(null);
+          }}
         >
           <title id={titleId}>Interactive map of open roles by US state</title>
           <g
@@ -550,11 +576,7 @@ export function UsJobMap({
                       ? "drop-shadow(0 2px 6px rgba(3,74,239,0.28))"
                       : undefined,
                   }}
-                >
-                  <title>{`${name} — ${count} open ${
-                    count === 1 ? "role" : "roles"
-                  }${feeLabel}`}</title>
-                </path>
+                />
               );
             })}
 
