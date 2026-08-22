@@ -18,6 +18,7 @@ export {
 } from "./hooks/useConversation";
 export { useConversationRealtime } from "./hooks/useConversationRealtime";
 export { useMessageUnreadCounts } from "./hooks/useMessageUnreadCounts";
+export { useUnreadRealtime } from "./hooks/useUnreadRealtime";
 export type { ConversationRealtimeStatus } from "./hooks/useConversationRealtime";
 export { conversationKeys } from "./keys";
 export type { ConversationEvent, ConversationThread } from "./schemas";

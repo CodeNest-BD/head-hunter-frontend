@@ -10,21 +10,33 @@ import {
   interviewTypeSchema,
   OpenInterviewActions,
   useCreateInterview,
-  useInterviews,
   type Interview,
   type InterviewType,
 } from "@/features/interviews";
+import type {
+  CandidateNegotiationState,
+  InterviewBadge,
+} from "@/features/conversations/utils/candidateNegotiationState";
 import { Button } from "@/shared/ui-components/controls/button";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
 
 export interface ScheduleInterviewActionProps {
   candidateId: string;
+  /** This candidate's entry from `candidateNegotiationState`, or `null` when
+   * the candidate has neither an interview nor an offer yet — derived once
+   * per page from the page-level `useInterviews({ submissionId })` query,
+   * never fetched per candidate here. */
+  negotiationState: CandidateNegotiationState | null;
 }
 
 // One interview per candidate may be `proposed` (awaiting a time) or
 // `scheduled` (a time is confirmed) at a time — the same rule
 // `createInterview`'s 409 enforces server-side.
 const OPEN_INTERVIEW_STATUSES = new Set(["proposed", "scheduled"]);
+const OPEN_INTERVIEW_BADGE_KINDS = new Set<InterviewBadge["kind"]>([
+  "awaiting_time",
+  "scheduled",
+]);
 
 function isOpen(interview: Interview): boolean {
   return OPEN_INTERVIEW_STATUSES.has(interview.status);
@@ -37,35 +49,35 @@ function isOpen(interview: Interview): boolean {
  *
  * A candidate may only have one open interview, so this either starts one or
  * hands over to `OpenInterviewActions` for the one already open — the open
- * interview is read from this candidate's own interview list (there is no
- * "has open interview" endpoint, and the list is already scoped per-candidate)
- * falling back to the interview this very component just created, which the
- * list may not have refetched yet.
+ * interview is read from the `negotiationState` its parent already derived
+ * from the page-level interviews query (there is no "has open interview"
+ * endpoint) falling back to the interview this very component just created,
+ * which that data may not have refetched yet.
  */
 export function ScheduleInterviewAction({
   candidateId,
+  negotiationState,
 }: ScheduleInterviewActionProps) {
   const [interviewType, setInterviewType] = useState<InterviewType>("video");
-  const { data: interviews, isPending: interviewsPending } = useInterviews({
-    candidateId,
-    limit: 50,
-  });
   const createInterview = useCreateInterview();
 
-  const candidateInterviews = interviews?.data ?? [];
+  const latestInterviewRecord = negotiationState?.interviewRecord ?? null;
+  const currentOpenInterview =
+    negotiationState?.interview &&
+    OPEN_INTERVIEW_BADGE_KINDS.has(negotiationState.interview.kind)
+      ? latestInterviewRecord
+      : null;
   // React Query keeps a mutation's result until the component unmounts, so the
-  // created interview is only trusted while the list has yet to mention it at
-  // all — once the list knows about it, the list is the only source, and a
-  // withdrawal (which lands there as `canceled`) is not overruled by this
-  // now-stale snapshot.
+  // created interview is only trusted while the negotiation state has yet to
+  // mention it at all — once that data knows about it, it is the only source,
+  // and a withdrawal (which lands there as `canceled`) is not overruled by
+  // this now-stale snapshot.
   const created = createInterview.data;
   const pendingCreated =
-    created &&
-    isOpen(created) &&
-    !candidateInterviews.some((interview) => interview.id === created.id)
+    created && isOpen(created) && latestInterviewRecord?.id !== created.id
       ? created
       : undefined;
-  const openInterview = candidateInterviews.find(isOpen) ?? pendingCreated;
+  const openInterview = currentOpenInterview ?? pendingCreated;
 
   if (openInterview) {
     return (
@@ -107,7 +119,7 @@ export function ScheduleInterviewAction({
         <Button
           type="button"
           size="sm"
-          disabled={interviewsPending || createInterview.isPending}
+          disabled={createInterview.isPending}
           onClick={() => createInterview.mutate({ candidateId, interviewType })}
         >
           {createInterview.isPending ? "Scheduling…" : "Schedule interview"}

@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { fetchMessageUnreadCounts } from "../api/conversations";
-import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { conversationKeys } from "../keys";
 
 /**
@@ -13,13 +12,11 @@ export function useMessageUnreadCounts() {
     queryKey: conversationKeys.unreadCounts,
     queryFn: fetchMessageUnreadCounts,
     // Overrides the global refetchOnWindowFocus: false default (see
-    // useConversation.ts's thread query for the same override) — these
-    // badges are the only signal a message arrived now that message
-    // notifications no longer appear in the feed, so mount-only staleness
-    // would mean a user sitting on the inbox sees nothing until they navigate
-    // away and back.
+    // useConversation.ts's thread query for the same override) — this is the
+    // safety net for a dropped frame. useUnreadRealtime (mounted once in
+    // DashboardLayout) invalidates this on message.created/negotiation.changed,
+    // so it no longer needs its own poll.
     refetchOnWindowFocus: true,
-    refetchInterval: REALTIME_POLL_MS,
     select: (counts) =>
       new Map(counts.map((count) => [count.submissionId, count.unread])),
   });

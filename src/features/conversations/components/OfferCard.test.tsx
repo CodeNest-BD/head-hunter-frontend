@@ -1,8 +1,12 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
 import { ApiError } from "@/shared/libs/errorHandler";
-import { formatMinor } from "@/shared/utils/money";
+import {
+  formatMinor,
+  MAX_MONEY_MAJOR,
+  MAX_MONEY_MAJOR_LABEL,
+} from "@/shared/utils/money";
 import { OfferCard, type OfferEventData } from "./OfferCard";
 
 const useAcceptOfferMock = vi.fn();
@@ -237,7 +241,7 @@ describe("OfferCard", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("lets the counterparty open a counter form and submit a new salary", () => {
+  it("lets the counterparty open a counter form and submit a new salary", async () => {
     const counterMutate = vi.fn();
     useCounterOfferMock.mockReturnValue({
       mutate: counterMutate,
@@ -259,9 +263,92 @@ describe("OfferCard", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /send counter/i }));
 
-    expect(counterMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ salaryMinor: 15000000 }),
-      expect.anything(),
+    await waitFor(() =>
+      expect(counterMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ salaryMinor: 15000000 }),
+        expect.anything(),
+      ),
     );
+  });
+
+  // The counter is the same money field in the same negotiation as the opening
+  // offer, and the backend bounds it identically — so it is held to the same
+  // rules, with the same readable copy, rather than being left open.
+  it("refuses a counter salary above the platform ceiling, and says so", async () => {
+    const counterMutate = vi.fn();
+    useCounterOfferMock.mockReturnValue({
+      mutate: counterMutate,
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderWithProviders(
+      <OfferCard
+        data={offerData({ createdBy: "company" })}
+        viewerParty="recruiter"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^counter$/i }));
+    fireEvent.change(screen.getByLabelText(/new salary/i), {
+      target: { value: String(MAX_MONEY_MAJOR + 1) },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /send counter/i }));
+
+    expect(
+      await screen.findByText(`Salary must be under ${MAX_MONEY_MAJOR_LABEL}`),
+    ).toBeInTheDocument();
+    expect(counterMutate).not.toHaveBeenCalled();
+  });
+
+  it("refuses a counter with no salary at all, and says so", async () => {
+    const counterMutate = vi.fn();
+    useCounterOfferMock.mockReturnValue({
+      mutate: counterMutate,
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderWithProviders(
+      <OfferCard
+        data={offerData({ createdBy: "company" })}
+        viewerParty="recruiter"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^counter$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /send counter/i }));
+
+    expect(await screen.findByText("Salary is required")).toBeInTheDocument();
+    expect(counterMutate).not.toHaveBeenCalled();
+  });
+
+  it("keeps past days off the counter's start-date calendar", async () => {
+    vi.setSystemTime(new Date("2026-08-22T12:00:00"));
+
+    renderWithProviders(
+      <OfferCard
+        data={offerData({ createdBy: "company" })}
+        viewerParty="recruiter"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /^counter$/i }));
+    // A free-text date input let any past day through; the shared day field
+    // renders a calendar with everything before today disabled.
+    fireEvent.click(screen.getByText(/pick a start date/i));
+
+    const yesterday = document.querySelector<HTMLButtonElement>(
+      '[data-day="2026-08-21"] button',
+    );
+    expect(yesterday).toBeDisabled();
+    const today = document.querySelector<HTMLButtonElement>(
+      '[data-day="2026-08-22"] button',
+    );
+    expect(today).toBeEnabled();
+
+    vi.useRealTimers();
   });
 });

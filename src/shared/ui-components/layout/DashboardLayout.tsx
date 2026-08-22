@@ -16,7 +16,10 @@ import {
 import { useAuth } from "@/features/auth";
 import { useAdminRecruiters } from "@/features/admin/hooks/useAdmin";
 import { useWallet } from "@/features/billing/hooks/useBilling";
-import { useMessageUnreadCount } from "@/features/conversations";
+import {
+  useMessageUnreadCount,
+  useUnreadRealtime,
+} from "@/features/conversations";
 import { useUnreadCount } from "@/features/notifications";
 import { useVerificationGate } from "@/features/recruiters";
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -239,6 +242,12 @@ export function DashboardLayout({
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
+
+  // Global unread-badge subscription. DashboardLayout is mounted by each
+  // authenticated page itself (there is no shared app layout wrapping them),
+  // so exactly one instance renders at a time — this is the one call site,
+  // not a duplicate of the per-thread useConversationRealtime.
+  useUnreadRealtime();
 
   // Start expanded so the server HTML and first client render match (no
   // hydration mismatch); apply the stored choice on mount, then persist every

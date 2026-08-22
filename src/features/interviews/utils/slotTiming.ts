@@ -1,4 +1,4 @@
-import { addMinutes } from "date-fns";
+import { addMinutes, isSameDay } from "date-fns";
 
 import {
   formatDate,
@@ -43,6 +43,34 @@ function buildTimeOptions(): SlotTimeOption[] {
 }
 
 export const SLOT_TIME_OPTIONS: readonly SlotTimeOption[] = buildTimeOptions();
+
+/**
+ * The time options a user may actually pick for `day`. On a future day that is
+ * all of them; on today it is only times still ahead of `now`.
+ *
+ * Exists because the picker previously offered the whole day regardless, so an
+ * afternoon user was shown a default of 09:00 and the server correctly refused
+ * it — the rejection the "must start in the future" error was reporting.
+ *
+ * `now` is a parameter rather than read inside, so this is testable without
+ * faking the clock. It parses `${day}T${option.value}` as local time, matching
+ * `toSlotRange` exactly — the two must agree on what e.g. "09:00" means.
+ */
+export function selectableTimeOptions(
+  day: string,
+  now: Date,
+): readonly SlotTimeOption[] {
+  if (!day) {
+    return SLOT_TIME_OPTIONS;
+  }
+  const chosen = new Date(`${day}T00:00`);
+  if (!isSameDay(chosen, now)) {
+    return SLOT_TIME_OPTIONS;
+  }
+  return SLOT_TIME_OPTIONS.filter(
+    (option) => new Date(`${day}T${option.value}`) > now,
+  );
+}
 
 /**
  * The company's local day + start time + length → the UTC instants the API

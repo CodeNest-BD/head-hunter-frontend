@@ -7,14 +7,15 @@ import { HttpStatusCode } from "axios";
 import { AlertCircle } from "lucide-react";
 
 import {
-  sendOfferFormSchema,
+  offerTermsFormSchema,
   useCreateOffer,
-  useOffers,
   type OfferStatus,
-  type SendOfferFormValues,
+  type OfferTermsFormValues,
 } from "@/features/offers";
-import { isApiError } from "@/shared/libs/errorHandler";
+import type { CandidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
+import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
+import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
@@ -22,6 +23,11 @@ import { majorInputToMinor } from "@/shared/utils/money";
 
 export interface SendOfferFormProps {
   candidateId: string;
+  /** This candidate's entry from `candidateNegotiationState`, or `null` when
+   * the candidate has neither an interview nor an offer yet — derived once
+   * per page from the page-level `useOffers({ submissionId })` query, never
+   * fetched per candidate here. */
+  negotiationState: CandidateNegotiationState | null;
 }
 
 // At most one offer may be `sent` (awaiting a response) or `accepted` (the
@@ -54,11 +60,11 @@ function sendOfferErrorMessage(error: unknown): string {
     case HttpStatusCode.NotFound:
       return "This candidate could not be found on this submission.";
     default:
-      return error.message;
+      return allMessages(error);
   }
 }
 
-const EMPTY_VALUES: SendOfferFormValues = {
+const EMPTY_VALUES: OfferTermsFormValues = {
   salary: "",
   startDate: "",
   notes: "",
@@ -68,36 +74,40 @@ const EMPTY_VALUES: SendOfferFormValues = {
  * The company's entry point for the first offer on a candidate, alongside
  * `ScheduleInterviewAction` in `CandidateCard` — offering belongs with the
  * other decisions a company makes about a candidate. Detects an already-live
- * offer by reading this candidate's own offer list (there is no dedicated
- * "has a live offer" endpoint, the same reasoning `ScheduleInterviewAction`
- * documents for interviews) and disables itself with a readable reason
- * instead of letting the create endpoint's 409 surface raw.
+ * offer from the `negotiationState` its parent already derived from the
+ * page-level offers query (there is no dedicated "has a live offer" endpoint,
+ * the same reasoning `ScheduleInterviewAction` documents for interviews) and
+ * disables itself with a readable reason instead of letting the create
+ * endpoint's 409 surface raw.
  *
  * Only ever creates the first offer — every counter after that happens from
  * `OfferCard` in the thread, which already knows which offer it supersedes.
  */
-export function SendOfferForm({ candidateId }: SendOfferFormProps) {
+export function SendOfferForm({
+  candidateId,
+  negotiationState,
+}: SendOfferFormProps) {
   const disabledReasonId = useId();
   const [isOpen, setIsOpen] = useState(false);
-  const { data: offers, isPending: offersPending } = useOffers({
-    candidateId,
-    limit: 50,
-  });
   const createOffer = useCreateOffer();
 
-  const liveOffer = offers?.data.find((offer) =>
-    LIVE_OFFER_STATUSES.has(offer.status),
-  );
+  const offerBadge = negotiationState?.offer ?? null;
+  const liveOffer =
+    offerBadge && LIVE_OFFER_STATUSES.has(offerBadge.kind) ? offerBadge : null;
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
-  } = useForm<SendOfferFormValues>({
-    resolver: zodResolver(sendOfferFormSchema),
+  } = useForm<OfferTermsFormValues>({
+    resolver: zodResolver(offerTermsFormSchema),
     defaultValues: EMPTY_VALUES,
   });
+
+  const startDate = watch("startDate");
 
   const closeForm = (): void => {
     setIsOpen(false);
@@ -138,11 +148,20 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="send-offer-start-date">Start date</Label>
-          <Input
+          <DayPickerField
             id="send-offer-start-date"
-            type="date"
-            {...register("startDate")}
+            value={startDate}
+            onChange={(day) =>
+              setValue("startDate", day, { shouldValidate: true })
+            }
+            placeholder="Pick a start date"
+            ariaLabel="Start date"
           />
+          {errors.startDate && (
+            <p className="text-xs text-destructive">
+              {errors.startDate.message}
+            </p>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="send-offer-notes">Notes</Label>
@@ -167,7 +186,7 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
   }
 
   const disabledReason = liveOffer
-    ? liveOfferDisabledReason(liveOffer.status)
+    ? liveOfferDisabledReason(liveOffer.kind)
     : null;
 
   return (
@@ -176,7 +195,7 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
         type="button"
         variant="outline"
         size="sm"
-        disabled={Boolean(disabledReason) || offersPending}
+        disabled={Boolean(disabledReason)}
         aria-describedby={disabledReason ? disabledReasonId : undefined}
         onClick={() => setIsOpen(true)}
       >

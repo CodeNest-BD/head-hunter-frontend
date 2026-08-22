@@ -1,6 +1,6 @@
 import { HttpStatusCode } from "axios";
 
-import { isApiError } from "@/shared/libs/errorHandler";
+import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 
 /**
  * The copy for every company-side scheduling write, kept in one module because
@@ -22,7 +22,7 @@ export function createInterviewErrorMessage(error: unknown): string {
     case HttpStatusCode.Conflict:
       return "This candidate already has an interview awaiting a time or scheduled.";
     default:
-      return error.message;
+      return allMessages(error);
   }
 }
 
@@ -41,7 +41,7 @@ export function proposeSlotsErrorMessage(error: unknown): string {
     case HttpStatusCode.Conflict:
       return "This interview is no longer awaiting a time.";
     default:
-      return error.message;
+      return allMessages(error);
   }
 }
 
@@ -61,6 +61,6 @@ export function withdrawInterviewErrorMessage(error: unknown): string {
     case HttpStatusCode.NotFound:
       return "This interview is no longer available — refresh and try again.";
     default:
-      return error.message;
+      return allMessages(error);
   }
 }

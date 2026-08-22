@@ -18,12 +18,12 @@ export {
   OFFER_STATUS_LABELS,
   OFFER_STATUSES,
   offerStatusSchema,
-  sendOfferFormSchema,
+  offerTermsFormSchema,
 } from "./schemas";
 export type {
   Offer,
   OfferParty,
   OfferStatus,
   PlacementDetails,
-  SendOfferFormValues,
+  OfferTermsFormValues,
 } from "./schemas";

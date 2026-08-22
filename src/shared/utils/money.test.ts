@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   formatMinor,
+  MAX_MONEY_MAJOR,
+  MAX_MONEY_MAJOR_LABEL,
+  MAX_SALARY_MAJOR,
+  MAX_SALARY_MAJOR_LABEL,
   majorInputToMinor,
   majorToMinor,
   minorToMajor,
@@ -68,5 +72,17 @@ describe("formatMinor", () => {
 
   it("renders a missing amount as a dash", () => {
     expect(formatMinor(null)).toBe("—");
+  });
+});
+
+describe("money bounds", () => {
+  it("labels the $1B hard safety ceiling to match the backend's own wording", () => {
+    expect(MAX_MONEY_MAJOR).toBe(1_000_000_000);
+    expect(MAX_MONEY_MAJOR_LABEL).toBe("$1,000,000,000");
+  });
+
+  it("labels the $10M salary plausibility ceiling", () => {
+    expect(MAX_SALARY_MAJOR).toBe(10_000_000);
+    expect(MAX_SALARY_MAJOR_LABEL).toBe("$10,000,000");
   });
 });

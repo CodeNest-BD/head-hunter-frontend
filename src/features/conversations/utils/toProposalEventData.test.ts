@@ -71,6 +71,8 @@ describe("proposalCardTitle", () => {
     expect(proposalCardTitle("proposed")).toBe("Availability proposed");
     expect(proposalCardTitle("counter_requested")).toBe("New times requested");
     expect(proposalCardTitle("confirmed")).toBe("Interview time confirmed");
-    expect(proposalCardTitle("expired")).toBe("Availability expired");
+    expect(proposalCardTitle("expired")).toBe(
+      "Availability replaced by newer times",
+    );
   });
 });

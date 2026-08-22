@@ -15,7 +15,7 @@ const PROPOSAL_CARD_TITLES: Record<
   proposed: "Availability proposed",
   counter_requested: "New times requested",
   confirmed: "Interview time confirmed",
-  expired: "Availability expired",
+  expired: "Availability replaced by newer times",
   unknown: "Availability update",
 };
 

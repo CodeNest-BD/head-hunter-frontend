@@ -75,9 +75,10 @@ export function useMessageUnreadCount() {
   return useQuery({
     queryKey: conversationKeys.unreadCount,
     queryFn: fetchMessageUnreadCount,
-    // Drives the app-wide Submissions/Inbox badge, which is mounted on every
-    // page — without a poll it fetched once per navigation and then went stale.
-    refetchInterval: REALTIME_POLL_MS,
+    // Drives the app-wide Submissions/Inbox badge, mounted on every page.
+    // useUnreadRealtime (mounted once in DashboardLayout) invalidates this on
+    // message.created/negotiation.changed, so this no longer polls — window
+    // focus stays as the safety net for a dropped frame.
     refetchOnWindowFocus: true,
   });
 }

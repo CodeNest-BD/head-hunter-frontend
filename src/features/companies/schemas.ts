@@ -1,5 +1,22 @@
 import { z } from "zod";
 
+import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
+
+/** One end of the advertised commission range, as the form holds it. Empty
+ * means "not published" rather than $0, which is why every rule is guarded on
+ * the empty string instead of the field being required. */
+const commissionAmount = z
+  .string()
+  .trim()
+  .refine(
+    (value) =>
+      value === "" || (Number.isFinite(Number(value)) && Number(value) >= 0),
+    { message: "Enter an amount of 0 or more" },
+  )
+  .refine((value) => value === "" || Number(value) <= MAX_MONEY_MAJOR, {
+    message: `Commission must be under ${MAX_MONEY_MAJOR_LABEL}`,
+  });
+
 /** GET /v1/company-profiles/me — the company's own, editable record. */
 export const companyProfileSchema = z.object({
   id: z.string(),
@@ -39,8 +56,11 @@ export const companyProfileFormSchema = z
       .url("Enter a full URL, including https://")
       .or(z.literal("")),
     description: z.string().trim(),
-    commissionMin: z.string().trim(),
-    commissionMax: z.string().trim(),
+    // Bounded the same way every other money field is: the backend rejects
+    // anything over MAX_MONEY_MINOR on both ends of this range, so an
+    // oversized figure is caught here rather than after a round-trip.
+    commissionMin: commissionAmount,
+    commissionMax: commissionAmount,
   })
   .refine(
     (values) => {

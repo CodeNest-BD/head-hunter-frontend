@@ -336,10 +336,26 @@ function SubmissionDetailLeftColumn({
 }) {
   const submissionQuery = useSubmission(submissionId);
   const candidatesQuery = useCandidates(submissionId);
-  const interviewsQuery = useInterviews({ submissionId });
-  const offersQuery = useOffers({ submissionId });
+  // `limit` is explicit rather than left to the API's default of 20: a
+  // submission caps at 5 candidates, but each can accumulate any number of
+  // interviews and offers over a negotiation, and the pickers below need the
+  // latest of each — not the first page of the oldest.
+  const interviewsQuery = useInterviews({ submissionId, limit: 100 });
+  const offersQuery = useOffers({ submissionId, limit: 100 });
 
-  if (submissionQuery.isPending || candidatesQuery.isPending) {
+  // Interviews and offers gate the skeleton too, even though a failure on
+  // either is non-fatal below: until they have resolved, `negotiationState` is
+  // empty, so every action would render enabled and a click on a candidate who
+  // already has a live offer or open interview would earn a raw 409 instead of
+  // the readable reason those controls exist to give. `isPending` is false on
+  // error, so a failure still degrades to an empty map rather than a stuck
+  // skeleton.
+  if (
+    submissionQuery.isPending ||
+    candidatesQuery.isPending ||
+    interviewsQuery.isPending ||
+    offersQuery.isPending
+  ) {
     return <LeftColumnSkeleton />;
   }
   if (submissionQuery.isError) {

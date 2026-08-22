@@ -1,4 +1,7 @@
+import { format, startOfToday, subDays } from "date-fns";
 import { z } from "zod";
+
+import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
 
 /**
  * Read live from `/v1/offers`, not replayed from a historical feed — an
@@ -62,24 +65,45 @@ export const offerSchema = z.object({
 export type Offer = z.infer<typeof offerSchema>;
 
 /**
- * `SendOfferForm`'s field values, strings throughout the same way
- * `candidateFormSchema` and `proposeSlotsFormSchema` keep form state — the
- * salary is converted to minor units at the submit boundary via
- * `majorInputToMinor`, never inline arithmetic. `salary` is required (a
- * company must name a number to send an offer); the rest mirror
- * `CreateOfferInput`'s optional fields.
+ * The terms one party puts on the table — shared by `SendOfferForm` (the
+ * opening offer) and `CounterOfferForm` (every counter after it). A counter
+ * names the same three things under the same backend bounds, so it reuses this
+ * rather than growing a near-duplicate free to drift out of step.
+ *
+ * Strings throughout, the same way `candidateFormSchema` and
+ * `proposeSlotsFormSchema` keep form state — the salary is converted to minor
+ * units at the submit boundary via `majorInputToMinor`, never inline
+ * arithmetic. `salary` is required (a party has to name a number); the rest
+ * mirror `CreateOfferInput`/`CounterOfferInput`'s optional fields.
  */
-export const sendOfferFormSchema = z.object({
+export const offerTermsFormSchema = z.object({
   salary: z
     .string()
     .trim()
     .min(1, "Salary is required")
     .refine((value) => Number.isFinite(Number(value)) && Number(value) > 0, {
       message: "Enter a salary greater than 0",
+    })
+    .refine((value) => Number(value) <= MAX_MONEY_MAJOR, {
+      message: `Salary must be under ${MAX_MONEY_MAJOR_LABEL}`,
     }),
   // No title field: the offer already belongs to one job, whose title the
   // recruiter and candidate both see on the submission.
-  startDate: z.string().trim(),
+  //
+  // Mirrors the backend's floor exactly: a `YYYY-MM-DD` string carries no
+  // offset, and real timezones span roughly UTC-12..UTC+14, so at any
+  // instant two calendar dates are somebody's "today". The floor is
+  // evaluated per validation, not once at module load, so it never goes
+  // stale in a long-running process.
+  startDate: z
+    .string()
+    .trim()
+    .refine(
+      (value) =>
+        value === "" ||
+        value >= format(subDays(startOfToday(), 1), "yyyy-MM-dd"),
+      { message: "Pick a start date of today or later" },
+    ),
   notes: z.string().trim(),
 });
-export type SendOfferFormValues = z.infer<typeof sendOfferFormSchema>;
+export type OfferTermsFormValues = z.infer<typeof offerTermsFormSchema>;

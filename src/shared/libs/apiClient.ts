@@ -4,7 +4,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { toast } from "sonner";
-import { ApiError, handleError } from "./errorHandler";
+import { ApiError, handleError, remainingMessages } from "./errorHandler";
 import { tryAuthRefreshRetry } from "./authRefreshInterceptor";
 
 // Per-request guards. `suppressGlobalErrorToast` lets a caller own its own
@@ -82,7 +82,14 @@ const buildResponseErrorHandler =
     const apiError = handleError(error);
     const config = axios.isAxiosError(error) ? error.config : undefined;
     if (!config?.suppressGlobalErrorToast) {
-      toast.error("Request failed", { description: apiError.message });
+      // The parsed message is already a readable sentence (see errorHandler) —
+      // it belongs in the title, not buried in a generic "Request failed"
+      // heading with the real information demoted to the description. The
+      // description carries the sentences that would not fit in a title, so a
+      // validation error naming several problems reports all of them.
+      toast.error(apiError.message, {
+        description: remainingMessages(apiError),
+      });
     }
     throw apiError;
   };

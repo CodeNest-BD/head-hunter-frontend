@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { HttpStatusCode } from "axios";
 import { AlertCircle } from "lucide-react";
 
-import { isApiError } from "@/shared/libs/errorHandler";
+import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { useSendMessage } from "../hooks/useConversation";
@@ -36,7 +36,7 @@ function sendMessageErrorMessage(error: unknown): string {
     case HttpStatusCode.TooManyRequests:
       return "You're sending messages too quickly. Please wait a moment and try again.";
     default:
-      return error.message;
+      return allMessages(error);
   }
 }
 

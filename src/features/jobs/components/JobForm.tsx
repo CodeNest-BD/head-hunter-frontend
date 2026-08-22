@@ -290,6 +290,11 @@ export function JobForm({
                 inputMode="decimal"
                 {...register("salaryMin")}
               />
+              {errors.salaryMin && (
+                <p className="text-xs text-destructive">
+                  {errors.salaryMin.message}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="salaryMax">Salary maximum ($) (optional)</Label>

@@ -47,6 +47,17 @@ describe("SubmissionHeader", () => {
     expect(mutateMock).toHaveBeenCalledWith("withdrawn");
   });
 
+  it("names a stored status the platform no longer lets anyone set", () => {
+    renderWithProviders(
+      <SubmissionHeader
+        submission={{ ...submission, status: "under_review" }}
+        jobTitle="Senior Engineer"
+      />,
+    );
+
+    expect(screen.getByText("Under review")).toBeInTheDocument();
+  });
+
   it("hides the withdraw action when the submission is already withdrawn", () => {
     renderWithProviders(
       <SubmissionHeader

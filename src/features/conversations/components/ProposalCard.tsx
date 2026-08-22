@@ -11,7 +11,7 @@ import {
   useCounterRequest,
   withdrawInterviewErrorMessage,
 } from "@/features/interviews";
-import { isApiError } from "@/shared/libs/errorHandler";
+import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
@@ -57,7 +57,7 @@ function schedulingErrorMessage(error: unknown): string {
     case HttpStatusCode.Conflict:
       return "This proposal is no longer open.";
     default:
-      return error.message;
+      return allMessages(error);
   }
 }
 
@@ -65,6 +65,54 @@ interface SlotOption {
   id: string;
   startAt: string;
   endAt: string;
+}
+
+/**
+ * What the viewer may do with *this* card — one value rather than a boolean
+ * per button, because the choice is mutually exclusive and the booleans it
+ * replaces disagreed about scope: "Withdraw" was gated only on the
+ * interview's status, which the timeline stamps identically onto every
+ * proposal event, so it rendered on superseded batches while its neighbour
+ * correctly hid itself.
+ *
+ * - `recruiter-respond`: confirm one of these times, or ask for others.
+ * - `company-manage`: replace these times, or withdraw the interview.
+ * - `none`: pure history — a superseded, confirmed or dead-interview card.
+ */
+type CardActions = "none" | "recruiter-respond" | "company-manage";
+
+/**
+ * Both halves of a conjunction have to hold: this card's own batch must still
+ * be awaiting a decision, *and* the interview must still be awaiting a time.
+ * Neither implies the other — the backend only expires batches still in
+ * `proposed`, so a `counter_requested` one outlives a later batch being
+ * proposed and confirmed, and that stale card must not offer a Withdraw that
+ * cancels an already-scheduled interview.
+ *
+ * So the interview gate is `=== "proposed"` rather than "not canceled or
+ * completed": that also rules out `scheduled` and the schema's `unknown`
+ * fallback, neither of which is a state this card can safely act in.
+ */
+function availableActions(
+  viewerParty: ProposalCardProps["viewerParty"],
+  proposalStatus: ProposalEventData["proposalStatus"],
+  interviewStatus: ProposalEventData["interviewStatus"],
+): CardActions {
+  if (interviewStatus !== "proposed") return "none";
+
+  switch (proposalStatus) {
+    // The recruiter picks from an untouched batch; once they have asked for
+    // other times the ball is the company's, which can propose a fresh batch
+    // — or withdraw — from either open state.
+    case "proposed":
+      return viewerParty === "recruiter"
+        ? "recruiter-respond"
+        : "company-manage";
+    case "counter_requested":
+      return viewerParty === "company" ? "company-manage" : "none";
+    default:
+      return "none";
+  }
 }
 
 /** The agreed time is carried on the event payload itself
@@ -178,28 +226,19 @@ export function ProposalCard({
   const counterRequest = useCounterRequest(interviewId, availabilityProposalId);
   const cancelInterview = useCancelInterview(interviewId);
 
-  const isOpen = proposalStatus === "proposed";
   const isCounterRequested = proposalStatus === "counter_requested";
   const isConfirmed = proposalStatus === "confirmed";
-  // A batch can stay "proposed" or "counter_requested" right up to the moment
-  // the interview around it is canceled or completed — the proposal status
-  // alone doesn't say that, so every action below also checks this.
-  const isDeadInterview =
-    interviewStatus === "canceled" || interviewStatus === "completed";
-  const canAct = !isDeadInterview;
-  // Proposing a fresh batch only fails once the interview itself has left
-  // "awaiting a time" — which happens the moment a slot is confirmed, not
-  // when the recruiter merely asks for other times — so the company can
-  // still propose again from either open proposal state.
-  const companyCanProposeAgain =
-    viewerParty === "company" && (isOpen || isCounterRequested) && canAct;
-  const recruiterCanRespond = viewerParty === "recruiter" && isOpen && canAct;
+  const actions = availableActions(
+    viewerParty,
+    proposalStatus,
+    interviewStatus,
+  );
+  const recruiterCanRespond = actions === "recruiter-respond";
   // Only the company can create an interview, so the company is always the
-  // proposer — withdraw is its way out of the one-open-interview rule, and
-  // it stays offered through a counter-request since the interview is still
-  // "awaiting a time" right up until a slot is confirmed or it is canceled.
-  const companyCanWithdraw =
-    viewerParty === "company" && interviewStatus === "proposed";
+  // proposer: replacing these times and withdrawing are the two ways out of
+  // an open batch, and both stop being offered the moment the batch is
+  // superseded or the interview stops awaiting a time.
+  const companyCanManage = actions === "company-manage";
 
   if (showProposeForm) {
     return (
@@ -294,33 +333,28 @@ export function ProposalCard({
         </div>
       )}
 
-      {(companyCanProposeAgain || companyCanWithdraw) &&
-        !confirmingWithdraw && (
-          <div className="flex flex-wrap items-center gap-2">
-            {companyCanProposeAgain && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowProposeForm(true)}
-              >
-                Propose new times
-              </Button>
-            )}
-            {companyCanWithdraw && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmingWithdraw(true)}
-              >
-                Withdraw
-              </Button>
-            )}
-          </div>
-        )}
+      {companyCanManage && !confirmingWithdraw && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowProposeForm(true)}
+          >
+            Propose new times
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setConfirmingWithdraw(true)}
+          >
+            Withdraw
+          </Button>
+        </div>
+      )}
 
-      {companyCanWithdraw && confirmingWithdraw && (
+      {companyCanManage && confirmingWithdraw && (
         <ConfirmAction
           message="Withdraw this interview proposal? This cancels the interview and cannot be undone."
           confirmLabel="Confirm withdraw"
