@@ -11,6 +11,7 @@ import { offerKeys } from "@/features/offers/keys";
 import { submissionKeys } from "@/features/submissions/keys";
 import { getConversationSocket } from "@/lib/socket";
 import { useAppSelector } from "@/shared/store/hooks";
+import { CONVERSATION_EVENT } from "../events";
 import { conversationKeys } from "../keys";
 
 export type ConversationRealtimeStatus = "live" | "polling";
@@ -26,9 +27,6 @@ interface MessageCreatedFrame {
   senderUserId: string;
   createdAt: string;
 }
-
-const MESSAGE_CREATED = "message.created";
-const NEGOTIATION_CHANGED = "negotiation.changed";
 
 const isMessageCreatedFrame = (
   payload: unknown,
@@ -175,8 +173,8 @@ export function useConversationRealtime(
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-    socket.on(MESSAGE_CREATED, onMessageCreated);
-    socket.on(NEGOTIATION_CHANGED, onNegotiationChanged);
+    socket.on(CONVERSATION_EVENT.MESSAGE_CREATED, onMessageCreated);
+    socket.on(CONVERSATION_EVENT.NEGOTIATION_CHANGED, onNegotiationChanged);
     if (socket.connected) {
       setStatus("live");
     }
@@ -185,8 +183,8 @@ export function useConversationRealtime(
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
-      socket.off(MESSAGE_CREATED, onMessageCreated);
-      socket.off(NEGOTIATION_CHANGED, onNegotiationChanged);
+      socket.off(CONVERSATION_EVENT.MESSAGE_CREATED, onMessageCreated);
+      socket.off(CONVERSATION_EVENT.NEGOTIATION_CHANGED, onNegotiationChanged);
       // The socket is shared app-wide and deliberately left connected; only this
       // hook's listeners come off.
     };

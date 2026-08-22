@@ -22,7 +22,7 @@ import {
 import { proposeSlotsErrorMessage } from "../utils/interviewErrorMessages";
 import {
   formatSlotWindow,
-  SLOT_TIME_OPTIONS,
+  selectableTimeOptions,
   toSlotRange,
 } from "../utils/slotTiming";
 
@@ -83,19 +83,32 @@ export function ProposeSlotsForm({
   const selectedDate = toSelectedDate(day);
   const atMax = fields.length >= MAX_PROPOSAL_SLOTS;
 
-  const indexOfSlot = (startTime: string): number =>
-    fields.findIndex(
-      (field) => field.day === day && field.startTime === startTime,
-    );
+  // The whole-day list, narrowed to what is still ahead of now when `day` is
+  // today. `startTime` can go stale once its day was today and that time
+  // passed (or once no day is chosen and the day changes to today), so every
+  // read of "the time actually selected" goes through `effectiveStartTime`
+  // below rather than the raw state — a derivation instead of an effect that
+  // resets `startTime` on every `day`/tick change.
+  const timeOptions = selectableTimeOptions(day, new Date());
+  const effectiveStartTime = timeOptions.some(
+    (option) => option.value === startTime,
+  )
+    ? startTime
+    : (timeOptions[0]?.value ?? "");
+  const noTimesLeftToday = day !== "" && timeOptions.length === 0;
 
-  const alreadyOffered = indexOfSlot(startTime) >= 0;
-  const canAdd = day !== "" && !atMax && !alreadyOffered;
+  const indexOfSlot = (time: string): number =>
+    fields.findIndex((field) => field.day === day && field.startTime === time);
+
+  const alreadyOffered = indexOfSlot(effectiveStartTime) >= 0;
+  const canAdd =
+    day !== "" && effectiveStartTime !== "" && !atMax && !alreadyOffered;
 
   const addTime = (): void => {
     if (!canAdd) {
       return;
     }
-    append({ day, startTime, durationMinutes: duration });
+    append({ day, startTime: effectiveStartTime, durationMinutes: duration });
   };
 
   // Length belongs to the batch, so changing it re-stamps what is already
@@ -112,8 +125,33 @@ export function ProposeSlotsForm({
     );
   });
 
+  // A picked day + time is a complete one-slot proposal on its own — the
+  // backend accepts 1-5 slots, so "Add time" is an explicit add-another
+  // affordance, not a precondition. Staging the current pick here, before
+  // `onSubmit` (and the schema validation inside it) runs, means a user who
+  // never clicked "Add time" still submits what they chose instead of
+  // hitting "Propose at least 1 time".
+  const submitCurrentPick = (): void => {
+    if (
+      day !== "" &&
+      effectiveStartTime !== "" &&
+      indexOfSlot(effectiveStartTime) < 0
+    ) {
+      append({ day, startTime: effectiveStartTime, durationMinutes: duration });
+    }
+  };
+
+  const canSubmit =
+    fields.length > 0 || (day !== "" && effectiveStartTime !== "");
+
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+    <form
+      onSubmit={(event) => {
+        submitCurrentPick();
+        void onSubmit(event);
+      }}
+      className="flex flex-col gap-4"
+    >
       {/* Day, start time and length on one line: three short controls that are
           always chosen together, and stacking them pushed the actions below the
           fold. Length applies to the whole batch, so it is re-stamped onto
@@ -169,10 +207,11 @@ export function ProposeSlotsForm({
           <NativeSelect
             id="propose-start-time"
             className="w-auto"
-            value={startTime}
+            value={effectiveStartTime}
+            disabled={noTimesLeftToday}
             onChange={(event) => setStartTime(event.target.value)}
           >
-            {SLOT_TIME_OPTIONS.map((option) => (
+            {timeOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -220,6 +259,9 @@ export function ProposeSlotsForm({
           <span>Remove one to offer a different time</span>
         )}
         {!day && <span>Choose a day first</span>}
+        {noTimesLeftToday && (
+          <span>No times left today — pick another day.</span>
+        )}
       </div>
 
       {fields.length > 0 && (
@@ -260,7 +302,7 @@ export function ProposeSlotsForm({
         <Button
           type="submit"
           size="sm"
-          disabled={proposeSlots.isPending || fields.length === 0}
+          disabled={proposeSlots.isPending || !canSubmit}
         >
           {proposeSlots.isPending ? "Proposing…" : "Propose times"}
         </Button>

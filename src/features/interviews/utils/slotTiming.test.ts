@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { SLOT_TIME_STEP_MINUTES } from "../schemas";
-import { formatSlotWindow, SLOT_TIME_OPTIONS, toSlotRange } from "./slotTiming";
+import {
+  formatSlotWindow,
+  selectableTimeOptions,
+  SLOT_TIME_OPTIONS,
+  toSlotRange,
+} from "./slotTiming";
 
 describe("SLOT_TIME_OPTIONS", () => {
   it("covers a whole day at the configured step", () => {
@@ -81,5 +86,44 @@ describe("formatSlotWindow", () => {
         durationMinutes: 90,
       }),
     ).toBe("Aug 19, 2026, 11:30 PM – Aug 20, 2026, 1:00 AM");
+  });
+});
+
+describe("selectableTimeOptions", () => {
+  it("offers every time on a future day", () => {
+    const now = new Date("2026-08-22T14:30:00");
+
+    expect(selectableTimeOptions("2026-08-23", now)).toHaveLength(
+      SLOT_TIME_OPTIONS.length,
+    );
+  });
+
+  it("drops times that have already passed today", () => {
+    const now = new Date("2026-08-22T14:30:00");
+
+    const values = selectableTimeOptions("2026-08-22", now).map((o) => o.value);
+
+    expect(values).not.toContain("09:00");
+    expect(values).not.toContain("14:00");
+  });
+
+  it("keeps the rest of today available", () => {
+    const now = new Date("2026-08-22T14:30:00");
+
+    expect(
+      selectableTimeOptions("2026-08-22", now).map((o) => o.value),
+    ).toContain("15:00");
+  });
+
+  it("returns an empty list late at night, so the caller can say so", () => {
+    const now = new Date("2026-08-22T23:59:00");
+
+    expect(selectableTimeOptions("2026-08-22", now)).toHaveLength(0);
+  });
+
+  it("offers every time when no day is chosen yet", () => {
+    expect(
+      selectableTimeOptions("", new Date("2026-08-22T14:30:00")),
+    ).toHaveLength(SLOT_TIME_OPTIONS.length);
   });
 });

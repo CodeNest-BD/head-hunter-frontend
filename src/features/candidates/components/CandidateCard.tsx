@@ -93,8 +93,14 @@ export function CandidateCard({
           viewerParty="company"
         />
 
-        <ScheduleInterviewAction candidateId={candidate.id} />
-        <SendOfferForm candidateId={candidate.id} />
+        <ScheduleInterviewAction
+          candidateId={candidate.id}
+          negotiationState={negotiationState}
+        />
+        <SendOfferForm
+          candidateId={candidate.id}
+          negotiationState={negotiationState}
+        />
 
         <CandidateFields candidate={candidate} />
 

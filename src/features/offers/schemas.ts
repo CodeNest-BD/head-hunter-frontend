@@ -1,3 +1,4 @@
+import { format, startOfToday, subDays } from "date-fns";
 import { z } from "zod";
 
 /**
@@ -79,7 +80,21 @@ export const sendOfferFormSchema = z.object({
     }),
   // No title field: the offer already belongs to one job, whose title the
   // recruiter and candidate both see on the submission.
-  startDate: z.string().trim(),
+  //
+  // Mirrors the backend's floor exactly: a `YYYY-MM-DD` string carries no
+  // offset, and real timezones span roughly UTC-12..UTC+14, so at any
+  // instant two calendar dates are somebody's "today". The floor is
+  // evaluated per validation, not once at module load, so it never goes
+  // stale in a long-running process.
+  startDate: z
+    .string()
+    .trim()
+    .refine(
+      (value) =>
+        value === "" ||
+        value >= format(subDays(startOfToday(), 1), "yyyy-MM-dd"),
+      { message: "Pick a start date of today or later" },
+    ),
   notes: z.string().trim(),
 });
 export type SendOfferFormValues = z.infer<typeof sendOfferFormSchema>;

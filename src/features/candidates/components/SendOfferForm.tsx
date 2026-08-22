@@ -3,25 +3,42 @@
 import { useId, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import * as Popover from "@radix-ui/react-popover";
+import { format, startOfToday } from "date-fns";
 import { HttpStatusCode } from "axios";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CalendarIcon } from "lucide-react";
 
 import {
   sendOfferFormSchema,
   useCreateOffer,
-  useOffers,
   type OfferStatus,
   type SendOfferFormValues,
 } from "@/features/offers";
+import type { CandidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
+import { Calendar } from "@/shared/ui-components/controls/calendar";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor } from "@/shared/utils/money";
 
+const DAY_FORMAT = "yyyy-MM-dd";
+
+/** A day string round-trips through the calendar as a local `Date`; an empty
+ * (not-yet-picked) day has no date to select. Same helper as
+ * `ProposeSlotsForm`'s `toSelectedDate`. */
+function toSelectedDate(day: string): Date | undefined {
+  return day ? new Date(`${day}T00:00`) : undefined;
+}
+
 export interface SendOfferFormProps {
   candidateId: string;
+  /** This candidate's entry from `candidateNegotiationState`, or `null` when
+   * the candidate has neither an interview nor an offer yet — derived once
+   * per page from the page-level `useOffers({ submissionId })` query, never
+   * fetched per candidate here. */
+  negotiationState: CandidateNegotiationState | null;
 }
 
 // At most one offer may be `sent` (awaiting a response) or `accepted` (the
@@ -68,36 +85,41 @@ const EMPTY_VALUES: SendOfferFormValues = {
  * The company's entry point for the first offer on a candidate, alongside
  * `ScheduleInterviewAction` in `CandidateCard` — offering belongs with the
  * other decisions a company makes about a candidate. Detects an already-live
- * offer by reading this candidate's own offer list (there is no dedicated
- * "has a live offer" endpoint, the same reasoning `ScheduleInterviewAction`
- * documents for interviews) and disables itself with a readable reason
- * instead of letting the create endpoint's 409 surface raw.
+ * offer from the `negotiationState` its parent already derived from the
+ * page-level offers query (there is no dedicated "has a live offer" endpoint,
+ * the same reasoning `ScheduleInterviewAction` documents for interviews) and
+ * disables itself with a readable reason instead of letting the create
+ * endpoint's 409 surface raw.
  *
  * Only ever creates the first offer — every counter after that happens from
  * `OfferCard` in the thread, which already knows which offer it supersedes.
  */
-export function SendOfferForm({ candidateId }: SendOfferFormProps) {
+export function SendOfferForm({
+  candidateId,
+  negotiationState,
+}: SendOfferFormProps) {
   const disabledReasonId = useId();
   const [isOpen, setIsOpen] = useState(false);
-  const { data: offers, isPending: offersPending } = useOffers({
-    candidateId,
-    limit: 50,
-  });
   const createOffer = useCreateOffer();
 
-  const liveOffer = offers?.data.find((offer) =>
-    LIVE_OFFER_STATUSES.has(offer.status),
-  );
+  const offerBadge = negotiationState?.offer ?? null;
+  const liveOffer =
+    offerBadge && LIVE_OFFER_STATUSES.has(offerBadge.kind) ? offerBadge : null;
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<SendOfferFormValues>({
     resolver: zodResolver(sendOfferFormSchema),
     defaultValues: EMPTY_VALUES,
   });
+
+  const startDate = watch("startDate");
+  const selectedStartDate = toSelectedDate(startDate);
 
   const closeForm = (): void => {
     setIsOpen(false);
@@ -138,11 +160,58 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="send-offer-start-date">Start date</Label>
-          <Input
-            id="send-offer-start-date"
-            type="date"
-            {...register("startDate")}
-          />
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <button
+                type="button"
+                id="send-offer-start-date"
+                className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <span
+                  className={
+                    selectedStartDate
+                      ? "text-foreground"
+                      : "text-muted-foreground"
+                  }
+                >
+                  {selectedStartDate
+                    ? format(selectedStartDate, "EEE, d MMM yyyy")
+                    : "Pick a start date"}
+                </span>
+                <CalendarIcon
+                  className="h-4 w-4 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              </button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                align="start"
+                sideOffset={4}
+                className="z-50 rounded-md border border-border bg-card p-2 shadow-card-lg focus:outline-none"
+              >
+                <Calendar
+                  mode="single"
+                  selected={selectedStartDate}
+                  defaultMonth={selectedStartDate ?? startOfToday()}
+                  disabled={{ before: startOfToday() }}
+                  onSelect={(date) =>
+                    setValue(
+                      "startDate",
+                      date ? format(date, DAY_FORMAT) : "",
+                      { shouldValidate: true },
+                    )
+                  }
+                  aria-label="Start date"
+                />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+          {errors.startDate && (
+            <p className="text-xs text-destructive">
+              {errors.startDate.message}
+            </p>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="send-offer-notes">Notes</Label>
@@ -167,7 +236,7 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
   }
 
   const disabledReason = liveOffer
-    ? liveOfferDisabledReason(liveOffer.status)
+    ? liveOfferDisabledReason(liveOffer.kind)
     : null;
 
   return (
@@ -176,7 +245,7 @@ export function SendOfferForm({ candidateId }: SendOfferFormProps) {
         type="button"
         variant="outline"
         size="sm"
-        disabled={Boolean(disabledReason) || offersPending}
+        disabled={Boolean(disabledReason)}
         aria-describedby={disabledReason ? disabledReasonId : undefined}
         onClick={() => setIsOpen(true)}
       >
