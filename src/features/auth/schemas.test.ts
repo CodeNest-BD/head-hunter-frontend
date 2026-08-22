@@ -157,9 +157,9 @@ describe("signUpSchema", () => {
     expect(errorPaths({ linkedinUrl: "dana-whitfield" })).toContain(
       "linkedinUrl",
     );
-    expect(
-      errorPaths({ linkedinUrl: "https://linkedin.com/in/dana" }),
-    ).toEqual([]);
+    expect(errorPaths({ linkedinUrl: "https://linkedin.com/in/dana" })).toEqual(
+      [],
+    );
   });
 
   it("allows at most three references, each with a name", () => {

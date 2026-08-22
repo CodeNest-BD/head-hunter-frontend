@@ -187,7 +187,11 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="industry">Industry</Label>
-              <Input id="industry" placeholder="SaaS" {...register("industry")} />
+              <Input
+                id="industry"
+                placeholder="SaaS"
+                {...register("industry")}
+              />
               {errors.industry && (
                 <p className="text-xs text-destructive">
                   {errors.industry.message}
@@ -289,7 +293,11 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           <div className="grid grid-cols-[minmax(0,1fr)_6rem_8rem] gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="city">City</Label>
-              <Input id="city" placeholder="San Francisco" {...register("city")} />
+              <Input
+                id="city"
+                placeholder="San Francisco"
+                {...register("city")}
+              />
               {errors.city && (
                 <p className="text-xs text-destructive">
                   {errors.city.message}

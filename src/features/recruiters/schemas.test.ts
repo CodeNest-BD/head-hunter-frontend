@@ -71,9 +71,9 @@ describe("recruiterProfileFormSchema", () => {
   });
 
   it("accepts a firm with no specializations chosen", () => {
-    expect(errorPaths({ experiences: [firm({ specializations: [] })] })).toEqual(
-      [],
-    );
+    expect(
+      errorPaths({ experiences: [firm({ specializations: [] })] }),
+    ).toEqual([]);
   });
 
   it("rejects a LinkedIn value that is not a URL", () => {
