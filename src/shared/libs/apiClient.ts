@@ -82,7 +82,10 @@ const buildResponseErrorHandler =
     const apiError = handleError(error);
     const config = axios.isAxiosError(error) ? error.config : undefined;
     if (!config?.suppressGlobalErrorToast) {
-      toast.error("Request failed", { description: apiError.message });
+      // The parsed message is already a readable sentence (see errorHandler) —
+      // it belongs in the title, not buried in a generic "Request failed"
+      // heading with the real information demoted to the description.
+      toast.error(apiError.message);
     }
     throw apiError;
   };
