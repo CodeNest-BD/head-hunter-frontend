@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, BadgeDollarSign, Sparkles, Users } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
-import { JobForm, useCreateJob } from "@/features/jobs";
+import { JobForm, useCreateAndPublishJob, useCreateJob } from "@/features/jobs";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -28,6 +28,7 @@ const TIPS = [
 
 export default function NewJobPage() {
   const create = useCreateJob();
+  const createAndPublish = useCreateAndPublishJob();
 
   return (
     <RequireRole role="company">
@@ -42,13 +43,17 @@ export default function NewJobPage() {
           </Link>
           <PageHeader
             title="Post a job"
-            subtitle="Saved as a draft — you publish it from the job page, which is when recruiters are notified."
+            subtitle="Save it as a draft, or publish it live right away — publishing reserves the fee and notifies recruiters."
             className="mb-0"
           />
           <div className="grid items-start gap-6 lg:grid-cols-[1fr_300px]">
             <JobForm
-              onSubmit={(input) => create.mutate(input)}
-              isSubmitting={create.isPending}
+              onSubmit={(input, intent) =>
+                intent === "publish"
+                  ? createAndPublish.mutate(input)
+                  : create.mutate(input)
+              }
+              isSubmitting={create.isPending || createAndPublish.isPending}
               submitLabel="Save draft"
             />
             <aside className="top-24 flex flex-col gap-4 lg:sticky">
