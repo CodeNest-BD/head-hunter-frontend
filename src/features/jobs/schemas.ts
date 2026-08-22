@@ -123,9 +123,10 @@ export const jobFormSchema = z
   );
 export type JobFormValues = z.infer<typeof jobFormSchema>;
 
-/** One row of GET /v1/jobs/map — the per-state aggregate behind the job map. */
+/** One row of GET /v1/jobs/map — a per-state/city aggregate behind the job map. */
 export const jobMapEntrySchema = z.object({
   locationState: z.string(),
+  locationCity: z.string().nullable().catch(null),
   openRoles: z.number(),
   averageFeeMinor: z.number(),
 });

@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Loader2, Lock, Search, SearchX } from "lucide-react";
+import { LayoutGrid, List, Loader2, Lock, Search, SearchX } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
@@ -48,11 +48,18 @@ interface FeeBucket {
   feeMax?: number;
 }
 
+// Fees start at a $500 floor, so the buckets span that range upward (values in
+// minor units: $500 = 50_000).
 const FEE_BUCKETS: readonly FeeBucket[] = [
   { value: "any", label: "Any fee" },
-  { value: "free", label: "Free only", feeMax: 0 },
-  { value: "lt100", label: "Under $100", feeMax: 10_000 },
-  { value: "gte100", label: "$100 and up", feeMin: 10_000 },
+  { value: "500-1k", label: "$500 – $1,000", feeMin: 50_000, feeMax: 100_000 },
+  {
+    value: "1k-5k",
+    label: "$1,000 – $5,000",
+    feeMin: 100_000,
+    feeMax: 500_000,
+  },
+  { value: "gte5k", label: "$5,000+", feeMin: 500_000 },
 ];
 
 const ANY_CATEGORY = "all";
@@ -176,16 +183,14 @@ export function ExploreJobsView() {
       <header className="relative overflow-hidden bg-navy px-5 py-12 text-center md:px-10 md:py-14">
         <BrandGlow />
         <div className="relative mx-auto flex max-w-3xl flex-col items-center">
-          <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/60">
-            Employer marketplace
-          </p>
-          <h1 className="mt-3 font-heading text-3xl font-extrabold tracking-[-0.02em] text-white md:text-4xl">
+          <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-white md:text-4xl">
             Set Your Price.{" "}
             <span className="text-primary">Hire the Right Talent.</span>
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-white/65 md:text-base">
-            Define your own success fee and connect with top-tier recruiters
-            willing to find your perfect match within your budget.
+            Empower your recruitment by defining your own success fee. We
+            connect companies with top-tier recruiters willing to find your
+            perfect match within your budget.
           </p>
         </div>
       </header>
@@ -236,20 +241,41 @@ export function ExploreJobsView() {
                 <div className="flex items-center gap-2">
                   <SegmentedToggle
                     options={[
-                      { value: "rows", label: "Rows" },
-                      { value: "cards", label: "Cards" },
+                      {
+                        value: "rows",
+                        title: "Rows",
+                        label: <List className="h-4 w-4" />,
+                      },
+                      {
+                        value: "cards",
+                        title: "Cards",
+                        label: <LayoutGrid className="h-4 w-4" />,
+                      },
                     ]}
                     value={view}
                     onChange={setView}
                   />
-                  <SegmentedToggle
-                    options={[
-                      { value: "publishedAt", label: "Most recent" },
-                      { value: "recruiterFeeMinor", label: "Highest fee" },
-                    ]}
+                  <Select
                     value={filters.sort}
-                    onChange={(sort) => setFilter({ sort })}
-                  />
+                    onValueChange={(value) =>
+                      setFilter({
+                        sort:
+                          value === "recruiterFeeMinor"
+                            ? "recruiterFeeMinor"
+                            : "publishedAt",
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="publishedAt">Most recent</SelectItem>
+                      <SelectItem value="recruiterFeeMinor">
+                        Highest fee
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -480,26 +506,43 @@ function MapCard({
 const MAP_HEADER =
   "flex flex-col gap-3 border-b border-brand-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between";
 
-function MapLegend({ remote }: { remote: number | null }) {
+/** A translucent bordered dot echoing the map bubbles, at a legend size. */
+function LegendDot({ size }: { size: number }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-      <span className="flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded-[3px] bg-[#034AEF]" />
-        Selected
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded-[3px] bg-[#B4DBFD]" />
-        Has roles
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded-[3px] border border-border bg-[#EEF4FD]" />
-        None
-      </span>
-      {remote !== null && remote > 0 && (
-        <span className="rounded-full bg-secondary px-2.5 py-1 font-medium text-navy">
-          {remote} remote / flexible
+    <span
+      className="inline-block shrink-0 rounded-full border border-[#2658CF] bg-[#4F80E6]/45"
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
+function MapLegend({ remote }: { remote: number | null }) {
+  if (remote === null || remote <= 0) return null;
+  return (
+    <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-navy">
+      {remote} remote / flexible
+    </span>
+  );
+}
+
+/** The bubble-size key, shown as a card in the map's bottom-right (per the ref). */
+function BubbleSizeLegend() {
+  return (
+    <div className="pointer-events-none absolute bottom-4 right-4 rounded-md border border-brand-line bg-white/95 px-3 py-2 shadow-card backdrop-blur-sm">
+      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+        Open roles
+      </p>
+      <div className="flex items-end gap-3 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <LegendDot size={8} /> Few
         </span>
-      )}
+        <span className="flex items-center gap-1.5">
+          <LegendDot size={13} /> Moderate
+        </span>
+        <span className="flex items-center gap-1.5">
+          <LegendDot size={18} /> Many
+        </span>
+      </div>
     </div>
   );
 }
@@ -523,18 +566,30 @@ function LiveMapCard({
     q: listParams.q,
   });
 
+  // The map rows are now per state *and* city, so fold them back into per-state
+  // totals (fee weighted by role count) for the fills, popup and remote pill.
   const { stats, statesWithRoles } = useMemo(() => {
+    const acc = new Map<string, { openRoles: number; feeWeighted: number }>();
+    let withRoles = 0;
+    for (const entry of map.data ?? []) {
+      const prev = acc.get(entry.locationState) ?? {
+        openRoles: 0,
+        feeWeighted: 0,
+      };
+      prev.openRoles += entry.openRoles;
+      prev.feeWeighted += entry.averageFeeMinor * entry.openRoles;
+      acc.set(entry.locationState, prev);
+      withRoles += entry.openRoles;
+    }
     const byState = new Map<
       string,
       { openRoles: number; averageFeeMinor: number }
     >();
-    let withRoles = 0;
-    for (const entry of map.data ?? []) {
-      byState.set(entry.locationState, {
-        openRoles: entry.openRoles,
-        averageFeeMinor: entry.averageFeeMinor,
+    for (const [code, { openRoles: roles, feeWeighted }] of acc) {
+      byState.set(code, {
+        openRoles: roles,
+        averageFeeMinor: roles > 0 ? Math.round(feeWeighted / roles) : 0,
       });
-      if (entry.openRoles > 0) withRoles += entry.openRoles;
     }
     return { stats: byState, statesWithRoles: withRoles };
   }, [map.data]);
@@ -550,18 +605,20 @@ function LiveMapCard({
             Where roles are open
           </span>{" "}
           <span className="text-sm text-brand-gray">
-            Click a state to load its roles
+            Click a state or city bubble to load its roles
           </span>
         </div>
         <MapLegend remote={remote} />
       </div>
-      <div className="p-4 sm:p-5">
+      <div className="relative p-4 sm:p-5">
         <UsJobMap
           embedded
           stats={stats}
+          cityData={map.data}
           selection={selection}
           onSelect={onSelect}
         />
+        <BubbleSizeLegend />
       </div>
     </section>
   );
@@ -621,7 +678,8 @@ function SegmentedToggle<T extends string>({
   value,
   onChange,
 }: {
-  options: { value: T; label: string }[];
+  /** `title` labels icon-only options for screen readers and hover tooltips. */
+  options: { value: T; label: ReactNode; title?: string }[];
   value: T;
   onChange: (value: T) => void;
 }) {
@@ -634,9 +692,11 @@ function SegmentedToggle<T extends string>({
             key={option.value}
             type="button"
             aria-pressed={active}
+            aria-label={option.title}
+            title={option.title}
             onClick={() => onChange(option.value)}
             className={cn(
-              "rounded-[6px] px-3 py-1.5 text-sm font-semibold transition-colors",
+              "inline-flex items-center justify-center rounded-[6px] px-3 py-1.5 text-sm font-semibold transition-colors",
               active
                 ? "bg-white text-navy shadow-sm"
                 : "text-brand-gray hover:text-navy",
