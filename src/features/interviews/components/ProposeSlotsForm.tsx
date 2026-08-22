@@ -116,8 +116,11 @@ export function ProposeSlotsForm({
 
   const canSubmit =
     fields.length > 0 || (day !== "" && effectiveStartTime !== "");
-  const slotsErrorMessage =
-    errors.slots?.root?.message ?? errors.slots?.message;
+  // An array-level issue (too few, too many) lands on the array's own
+  // `message`. react-hook-form 7.53 populates `errors.slots.root` only for a
+  // field-array error set by hand through `setError`, which nothing here does,
+  // so the resolver's message is the only one there is to read.
+  const slotsErrorMessage = errors.slots?.message;
 
   return (
     <form
@@ -245,9 +248,6 @@ export function ProposeSlotsForm({
         </div>
       )}
 
-      {/* An array-level issue (too few, too many) lands on `root`, not on the
-          field itself — reading only `errors.slots.message` silently swallowed
-          it and left the form looking inert. */}
       {slotsErrorMessage && (
         <p className="text-xs text-destructive">{slotsErrorMessage}</p>
       )}

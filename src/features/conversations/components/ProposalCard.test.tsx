@@ -352,6 +352,57 @@ describe("ProposalCard", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("offers the company nothing on a counter-requested batch once a later time was scheduled", () => {
+    // Reachable: the backend only expires batches still in `proposed`, so a
+    // counter-requested one outlives a newer batch being confirmed. That card
+    // is history, and its Withdraw would cancel a scheduled interview.
+    renderWithProviders(
+      <ProposalCard
+        title="New times requested"
+        note="Mornings only, please."
+        data={proposalData({
+          proposalStatus: "counter_requested",
+          interviewStatus: "scheduled",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("offers the company nothing when the interview status is not recognised", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Availability proposed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "proposed",
+          interviewStatus: "unknown",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("offers the company nothing when the proposal status is not recognised, even while the interview awaits a time", () => {
+    renderWithProviders(
+      <ProposalCard
+        title="Availability proposed"
+        note={null}
+        data={proposalData({
+          proposalStatus: "unknown",
+          interviewStatus: "proposed",
+        })}
+        viewerParty="company"
+      />,
+    );
+
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
   it("does not offer withdraw once the interview is canceled", () => {
     renderWithProviders(
       <ProposalCard
@@ -368,6 +419,36 @@ describe("ProposalCard", () => {
     expect(
       screen.queryByRole("button", { name: /withdraw/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows every sentence of a validation failure, not just the first", () => {
+    // This card renders its errors inline and suppresses the global toast, so
+    // the toast's title/description split cannot carry the extra sentences —
+    // the inline copy has to.
+    useCounterRequestMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isError: true,
+      error: new ApiError("A note is required", {
+        statusCode: 400,
+        messages: ["A note is required", "Keep the note under 2000 characters"],
+      }),
+    });
+
+    renderWithProviders(
+      <ProposalCard
+        title="Availability proposed"
+        note={null}
+        data={proposalData()}
+        viewerParty="recruiter"
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "A note is required. Keep the note under 2000 characters.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("leaves the withdraw confirmation open and shows an error when cancellation fails", () => {

@@ -13,7 +13,7 @@ import {
   type OfferTermsFormValues,
 } from "@/features/offers";
 import type { CandidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
-import { isApiError } from "@/shared/libs/errorHandler";
+import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
 import { Input } from "@/shared/ui-components/controls/input";
@@ -60,7 +60,7 @@ function sendOfferErrorMessage(error: unknown): string {
     case HttpStatusCode.NotFound:
       return "This candidate could not be found on this submission.";
     default:
-      return error.message;
+      return allMessages(error);
   }
 }
 

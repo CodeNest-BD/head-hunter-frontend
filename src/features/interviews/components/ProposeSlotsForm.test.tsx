@@ -200,12 +200,12 @@ describe("ProposeSlotsForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("says what is wrong rather than going quiet when the batch is empty", async () => {
+  it("refuses an empty batch and names the minimum instead of submitting it", async () => {
     renderForm();
 
-    // No day picked, so there is nothing to stage and the array-level rule is
-    // the only thing that can fail. Its message lands on the array's root,
-    // which the form has to read explicitly to show anything at all.
+    // No day picked, so there is nothing to stage and the array-level minimum
+    // is the only rule that can fail — what this pins is that its message
+    // reaches the user and nothing is sent, not which key it arrives under.
     fireEvent.submit(screen.getByRole("button", { name: "Propose times" }));
 
     expect(

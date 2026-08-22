@@ -1,7 +1,7 @@
 import { AxiosError, AxiosHeaders } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { describe, expect, it } from "vitest";
-import { handleError, remainingMessages } from "./errorHandler";
+import { allMessages, handleError, remainingMessages } from "./errorHandler";
 
 /**
  * Builds a real AxiosError carrying the given response body, mirroring what
@@ -148,5 +148,38 @@ describe("remainingMessages", () => {
 
     expect(description).toBe("Recruiter fee is required.");
     expect(description).not.toMatch(/Minor|[a-z][A-Z]|\bfields?\b/);
+  });
+});
+
+describe("allMessages", () => {
+  it("keeps every sentence for a caller with only one line to render", () => {
+    const apiError = handleError(
+      axiosErrorWithBody({
+        statusCode: 400,
+        error: "Bad Request",
+        message: [
+          "Salary must be under $1,000,000,000",
+          "Pick a start date of today or later",
+        ],
+      }),
+    );
+
+    expect(allMessages(apiError)).toBe(
+      "Salary must be under $1,000,000,000. Pick a start date of today or later.",
+    );
+  });
+
+  it("leaves a single sentence exactly as the backend wrote it", () => {
+    const apiError = handleError(
+      axiosErrorWithBody({
+        statusCode: 409,
+        error: "Conflict",
+        message: "This interview is no longer awaiting a time.",
+      }),
+    );
+
+    expect(allMessages(apiError)).toBe(
+      "This interview is no longer awaiting a time.",
+    );
   });
 });

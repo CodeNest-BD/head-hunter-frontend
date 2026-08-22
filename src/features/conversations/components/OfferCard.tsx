@@ -11,7 +11,7 @@ import {
   useWithdrawOffer,
 } from "@/features/offers";
 import { ReviewCta } from "@/features/reviews";
-import { isApiError } from "@/shared/libs/errorHandler";
+import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -58,7 +58,7 @@ function negotiationErrorMessage(error: unknown): string {
     case HttpStatusCode.Conflict:
       return "This offer is no longer awaiting a response.";
     default:
-      return error.message;
+      return allMessages(error);
   }
 }
 

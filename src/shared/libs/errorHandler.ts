@@ -45,6 +45,11 @@ export class ApiError extends Error {
 
 export const isApiError = (e: unknown): e is ApiError => e instanceof ApiError;
 
+// The backend's messages are sentence fragments without terminators, so each
+// gets one — otherwise two of them run together into a single unreadable line.
+const terminated = (sentence: string): string =>
+  `${sentence.replace(/[.!?]$/, "")}.`;
+
 /**
  * The sentences a headline cannot carry: everything after the first, as one
  * readable block for a toast's description. `undefined` when the backend sent
@@ -60,10 +65,23 @@ export function remainingMessages(error: ApiError): string | undefined {
   if (!rest || rest.length === 0) {
     return undefined;
   }
-  // The backend's messages are sentence fragments without terminators, so each
-  // gets one — otherwise two of them run together into a single unreadable
-  // line.
-  return rest.map((sentence) => `${sentence.replace(/[.!?]$/, "")}.`).join(" ");
+  return rest.map(terminated).join(" ");
+}
+
+/**
+ * Everything the backend said, as one readable line: the headline sentence
+ * followed by the ones `remainingMessages` carries.
+ *
+ * For inline form errors, which have no toast's title/description split to
+ * spread several sentences over — rendering `error.message` alone there drops
+ * the rest of a validation 400 that names more than one problem, and every
+ * scheduling/offer/candidate write suppresses the global toast and renders
+ * inline. So each feature's error-copy helper routes its unmapped-status
+ * fallback through this rather than reading `message` directly.
+ */
+export function allMessages(error: ApiError): string {
+  const rest = remainingMessages(error);
+  return rest ? `${terminated(error.message)} ${rest}` : error.message;
 }
 
 // Backend error-response shapes. Validated rather than indexed so a malformed

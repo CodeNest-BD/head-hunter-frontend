@@ -11,7 +11,7 @@ import {
   useCounterRequest,
   withdrawInterviewErrorMessage,
 } from "@/features/interviews";
-import { isApiError } from "@/shared/libs/errorHandler";
+import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
@@ -57,7 +57,7 @@ function schedulingErrorMessage(error: unknown): string {
     case HttpStatusCode.Conflict:
       return "This proposal is no longer open.";
     default:
-      return error.message;
+      return allMessages(error);
   }
 }
 
@@ -70,9 +70,10 @@ interface SlotOption {
 /**
  * What the viewer may do with *this* card — one value rather than a boolean
  * per button, because the choice is mutually exclusive and the booleans it
- * replaces disagreed about scope: "Withdraw" was gated on the interview's
- * status, which the timeline stamps identically onto every proposal event, so
- * it rendered on superseded batches while its neighbour correctly hid itself.
+ * replaces disagreed about scope: "Withdraw" was gated only on the
+ * interview's status, which the timeline stamps identically onto every
+ * proposal event, so it rendered on superseded batches while its neighbour
+ * correctly hid itself.
  *
  * - `recruiter-respond`: confirm one of these times, or ask for others.
  * - `company-manage`: replace these times, or withdraw the interview.
@@ -81,25 +82,28 @@ interface SlotOption {
 type CardActions = "none" | "recruiter-respond" | "company-manage";
 
 /**
- * Every branch is scoped to this card's own `proposalStatus` first: only a
- * batch still awaiting a decision offers anything. `interviewStatus` can then
- * only take actions away, since a batch stays open right up to the moment the
- * interview around it is canceled or completed.
+ * Both halves of a conjunction have to hold: this card's own batch must still
+ * be awaiting a decision, *and* the interview must still be awaiting a time.
+ * Neither implies the other — the backend only expires batches still in
+ * `proposed`, so a `counter_requested` one outlives a later batch being
+ * proposed and confirmed, and that stale card must not offer a Withdraw that
+ * cancels an already-scheduled interview.
+ *
+ * So the interview gate is `=== "proposed"` rather than "not canceled or
+ * completed": that also rules out `scheduled` and the schema's `unknown`
+ * fallback, neither of which is a state this card can safely act in.
  */
 function availableActions(
   viewerParty: ProposalCardProps["viewerParty"],
   proposalStatus: ProposalEventData["proposalStatus"],
   interviewStatus: ProposalEventData["interviewStatus"],
 ): CardActions {
-  const isDeadInterview =
-    interviewStatus === "canceled" || interviewStatus === "completed";
-  if (isDeadInterview) return "none";
+  if (interviewStatus !== "proposed") return "none";
 
   switch (proposalStatus) {
     // The recruiter picks from an untouched batch; once they have asked for
-    // other times the ball is the company's, but the company can propose a
-    // fresh batch — or withdraw — from either open state, because the
-    // interview stays "awaiting a time" until a slot is actually confirmed.
+    // other times the ball is the company's, which can propose a fresh batch
+    // — or withdraw — from either open state.
     case "proposed":
       return viewerParty === "recruiter"
         ? "recruiter-respond"
@@ -232,7 +236,8 @@ export function ProposalCard({
   const recruiterCanRespond = actions === "recruiter-respond";
   // Only the company can create an interview, so the company is always the
   // proposer: replacing these times and withdrawing are the two ways out of
-  // an open batch, and both stop being offered the moment it is superseded.
+  // an open batch, and both stop being offered the moment the batch is
+  // superseded or the interview stops awaiting a time.
   const companyCanManage = actions === "company-manage";
 
   if (showProposeForm) {
