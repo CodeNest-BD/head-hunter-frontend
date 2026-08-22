@@ -18,7 +18,6 @@ const signedInAs = (role: "company" | "recruiter") => ({
   user: {
     id: "u1",
     email: "a@b.c",
-    username: "user_one",
     firstName: "User",
     lastName: "One",
     phone: null,

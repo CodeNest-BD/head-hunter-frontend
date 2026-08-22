@@ -66,6 +66,10 @@ export type SignUpReferenceValues = z.infer<typeof signUpReferenceSchema>;
  * strings where "" means unset (converted at submit by `toSignUpPayload`).
  * Role-conditional presence the object schema can't express — a company must
  * name itself — lives in the superRefine, matching the backend service check.
+ *
+ * No `username`: sign-in is by email and nothing ever looked an account up by
+ * handle, so the concept was dropped from the platform entirely rather than
+ * making the user invent a value with a failure mode they cannot predict.
  */
 export const signUpSchema = z
   .object({
@@ -88,12 +92,6 @@ export const signUpSchema = z
         /^[\p{L}\p{M}][\p{L}\p{M}'\-. ]*$/u,
         "Use letters, spaces, hyphens, apostrophes and periods only",
       ),
-    username: z
-      .string()
-      .trim()
-      .min(3, "Username must be at least 3 characters")
-      .max(30, "Username must be at most 30 characters")
-      .regex(/^[A-Za-z0-9_]+$/, "Use only letters, digits and underscores"),
     email: z.string().email("Enter a valid email address"),
     password: z
       .string()
@@ -109,6 +107,7 @@ export const signUpSchema = z
             "Include an uppercase letter, a lowercase letter, a number and a special character",
         },
       ),
+    confirmPassword: z.string(),
     phone: z.string().trim().max(32, "Keep it under 32 characters"),
     companyName: z.string().trim().max(160, "Keep it under 160 characters"),
     yearsExperience: z
@@ -135,6 +134,15 @@ export const signUpSchema = z
       .or(z.literal("")),
   })
   .superRefine((values, ctx) => {
+    // Checked here rather than on the field so it re-runs when either half
+    // changes; the backend enforces the same rule on SignUpDto.
+    if (values.confirmPassword !== values.password) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
+      });
+    }
     if (values.role === "company" && values.companyName === "") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -155,7 +163,7 @@ export interface SignUpReferencePayload {
 interface SignUpPayloadBase {
   email: string;
   password: string;
-  username: string;
+  confirmPassword: string;
   firstName: string;
   lastName: string;
   phone?: string;
@@ -197,7 +205,7 @@ export function toSignUpPayload(values: SignUpFormData): SignUpPayload {
   const base = {
     email: values.email,
     password: values.password,
-    username: values.username,
+    confirmPassword: values.confirmPassword,
     firstName: values.firstName,
     lastName: values.lastName,
     ...(values.phone === "" ? {} : { phone: values.phone }),

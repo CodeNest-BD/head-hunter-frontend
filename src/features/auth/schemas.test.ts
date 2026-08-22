@@ -5,9 +5,9 @@ const validCompany: SignUpFormData = {
   role: "company",
   firstName: "Jane",
   lastName: "Doe",
-  username: "jane_doe",
   email: "jane@acme.com",
   password: "S3cureP@ssw0rd",
+  confirmPassword: "S3cureP@ssw0rd",
   phone: "",
   companyName: "Acme Inc.",
   yearsExperience: "",
@@ -39,15 +39,25 @@ describe("signUpSchema", () => {
     expect(signUpSchema.safeParse(validRecruiter).success).toBe(true);
   });
 
+  it("rejects a confirmation that does not match the password", () => {
+    expect(errorPaths({ confirmPassword: "S3cureP@ssw0rd-typo" })).toContain(
+      "confirmPassword",
+    );
+  });
+
+  it("rejects an empty confirmation", () => {
+    expect(errorPaths({ confirmPassword: "" })).toContain("confirmPassword");
+  });
+
+  it("rejects a confirmation differing only in case", () => {
+    expect(errorPaths({ confirmPassword: "s3CUREp@SSW0RD" })).toContain(
+      "confirmPassword",
+    );
+  });
+
   it("requires a company name only for the company role", () => {
     expect(errorPaths({ companyName: "  " })).toContain("companyName");
     expect(errorPaths({ role: "recruiter", companyName: "" })).toEqual([]);
-  });
-
-  it("rejects a username that is too short or has illegal characters", () => {
-    expect(errorPaths({ username: "ab" })).toContain("username");
-    expect(errorPaths({ username: "jane doe" })).toContain("username");
-    expect(errorPaths({ username: "jane-doe" })).toContain("username");
   });
 
   it("rejects blank names", () => {
@@ -146,11 +156,25 @@ describe("toSignUpPayload", () => {
       role: "company",
       firstName: "Jane",
       lastName: "Doe",
-      username: "jane_doe",
       email: "jane@acme.com",
       password: "S3cureP@ssw0rd",
+      confirmPassword: "S3cureP@ssw0rd",
       companyName: "Acme Inc.",
     });
+  });
+
+  // The backend requires it on SignUpDto, so omitting it would 400 every
+  // sign-up rather than merely skipping a client-side check.
+  it("sends the confirmation to the API", () => {
+    expect(toSignUpPayload(validCompany).confirmPassword).toBe(
+      "S3cureP@ssw0rd",
+    );
+  });
+
+  // The column is gone from the backend; whitelist:true would strip the key
+  // silently, so this guards against it creeping back into the payload.
+  it("sends no username, which the platform no longer has", () => {
+    expect(toSignUpPayload(validCompany)).not.toHaveProperty("username");
   });
 
   it("omits empty optional fields and uppercases the state", () => {

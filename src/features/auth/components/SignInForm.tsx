@@ -132,14 +132,6 @@ export function SignInForm() {
         {isSubmitting ? "Signing in…" : "Sign in"}
       </Button>
 
-      <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          or continue with
-        </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-
       <GoogleAuthButton />
 
       <p className="text-center text-sm text-muted-foreground">

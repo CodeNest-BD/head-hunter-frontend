@@ -9,7 +9,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { forgotPassword } from "../api/auth";
 import { useAuth } from "../hooks/useAuth";
 
-/** A read-only identity field (email / username — not editable in-app). */
+/** A read-only identity field — not editable in-app. */
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -22,7 +22,7 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * Account identity: email and username (read-only — changing them needs
+ * Account identity: the email (read-only — changing it needs
  * re-verification and has no endpoint), plus a password change that reuses the
  * existing reset-by-email flow, since there is no logged-in change-password
  * endpoint.
@@ -53,14 +53,11 @@ export function AccountSection() {
         <div>
           <h2 className="text-sm font-bold text-navy">Account</h2>
           <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-            Your sign-in details. Email and username can&apos;t be changed here.
+            Your sign-in details. Your email can&apos;t be changed here.
           </p>
         </div>
         <div className="flex flex-col gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ReadOnlyField label="Email" value={user.email} />
-            <ReadOnlyField label="Username" value={user.username} />
-          </div>
+          <ReadOnlyField label="Email" value={user.email} />
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-navy">Password</span>
             <div>

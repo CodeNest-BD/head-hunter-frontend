@@ -36,7 +36,7 @@ const ROLE_OPTIONS: ReadonlyArray<{
   label: string;
   hint: string;
 }> = [
-  { value: "company", label: "Company", hint: "Hire recruiters" },
+  { value: "company", label: "Company", hint: "Hire talent" },
   { value: "recruiter", label: "Recruiter", hint: "Find placements" },
 ];
 
@@ -186,9 +186,9 @@ const DEFAULT_VALUES: SignUpFormData = {
   role: "company",
   firstName: "",
   lastName: "",
-  username: "",
   email: "",
   password: "",
+  confirmPassword: "",
   phone: "",
   companyName: "",
   yearsExperience: "",
@@ -327,20 +327,6 @@ export function SignUpForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="username">Username</Label>
-        <Input
-          id="username"
-          type="text"
-          autoComplete="username"
-          aria-invalid={errors.username ? true : undefined}
-          {...register("username")}
-          className={cn("h-11", errors.username && "border-destructive")}
-          placeholder="jane_doe"
-        />
-        <FieldError message={errors.username?.message} />
-      </div>
-
-      <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
         <Input
           id="email"
@@ -367,6 +353,19 @@ export function SignUpForm() {
         />
         <PasswordChecklist id={passwordRequirementsId} control={control} />
         <FieldError message={errors.password?.message} />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="confirmPassword">Re-type password</Label>
+        <PasswordInput
+          id="confirmPassword"
+          autoComplete="new-password"
+          aria-invalid={errors.confirmPassword ? true : undefined}
+          {...register("confirmPassword")}
+          className={cn("h-11", errors.confirmPassword && "border-destructive")}
+          placeholder="Repeat your password"
+        />
+        <FieldError message={errors.confirmPassword?.message} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -554,14 +553,6 @@ export function SignUpForm() {
       <Button type="submit" size="lg" disabled={isSubmitting} className="h-11">
         {isSubmitting ? "Creating account…" : "Create account"}
       </Button>
-
-      <div className="flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          or continue with
-        </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
 
       {/* Google signup carries the chosen role + name so the backend can
           provision a brand-new google user. */}
