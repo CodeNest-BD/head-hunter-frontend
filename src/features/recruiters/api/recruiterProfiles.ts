@@ -9,13 +9,27 @@ import {
 } from "../schemas";
 
 /** null clears a field; an omitted key leaves it unchanged. */
+/** One firm as the API takes it. */
+export interface RecruiterExperienceInput {
+  firmName: string;
+  years: number;
+  specializations?: string[];
+}
+
+/**
+ * PATCH body. An omitted key leaves the field alone; an explicit null clears
+ * it. `experiences` replaces the whole list, so omit it to leave the firms
+ * untouched and send [] to clear them.
+ */
 export interface UpdateRecruiterProfileInput {
   addressLine?: string | null;
   city?: string | null;
   state?: string | null;
   zip?: string | null;
-  yearsExperience?: number | null;
-  specializations?: string[] | null;
+  linkedinUrl?: string | null;
+  // Writes to the User row, and resets phoneVerified whenever it changes.
+  phone?: string | null;
+  experiences?: RecruiterExperienceInput[];
 }
 
 export interface CreateReferenceInput {

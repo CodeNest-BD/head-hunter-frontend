@@ -23,6 +23,7 @@ import { Label } from "@/shared/ui-components/controls/label";
 import {
   signUpSchema,
   toSignUpPayload,
+  MAX_SIGNUP_EXPERIENCES,
   MAX_SIGNUP_REFERENCES,
   PASSWORD_REQUIREMENTS,
   type SignUpFormData,
@@ -191,8 +192,8 @@ const DEFAULT_VALUES: SignUpFormData = {
   confirmPassword: "",
   phone: "",
   companyName: "",
-  yearsExperience: "",
-  specializations: [],
+  linkedinUrl: "",
+  experiences: [],
   references: [],
   addressLine: "",
   city: "",
@@ -218,6 +219,8 @@ export function SignUpForm() {
     append: appendReference,
     remove: removeReference,
   } = useFieldArray({ control, name: "references" });
+
+  const firms = useFieldArray({ control, name: "experiences" });
 
   const selectedRole = watch("role");
   // Google provisioning wants a display name; compose it from what's typed.
@@ -401,35 +404,110 @@ export function SignUpForm() {
       {selectedRole === "recruiter" && (
         <>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="yearsExperience">
-              Years of experience {optionalHint}
-            </Label>
+            <Label htmlFor="linkedinUrl">LinkedIn URL {optionalHint}</Label>
             <Input
-              id="yearsExperience"
+              id="linkedinUrl"
               type="text"
-              inputMode="numeric"
-              aria-invalid={errors.yearsExperience ? true : undefined}
-              {...register("yearsExperience")}
-              className={cn(
-                "h-11",
-                errors.yearsExperience && "border-destructive",
-              )}
-              placeholder="5"
+              aria-invalid={errors.linkedinUrl ? true : undefined}
+              {...register("linkedinUrl")}
+              className={cn("h-11", errors.linkedinUrl && "border-destructive")}
+              placeholder="https://www.linkedin.com/in/dana-whitfield"
             />
-            <FieldError message={errors.yearsExperience?.message} />
+            <FieldError message={errors.linkedinUrl?.message} />
           </div>
 
-          <Controller
-            control={control}
-            name="specializations"
-            render={({ field }) => (
-              <SpecializationsChips
-                value={field.value}
-                onChange={field.onChange}
-                formError={errors.specializations?.message}
-              />
+          <div className="flex flex-col gap-3">
+            <span className="text-sm font-medium leading-none text-foreground">
+              Staffing experience{" "}
+              <span className="font-normal text-muted-foreground">
+                (optional, up to {MAX_SIGNUP_EXPERIENCES} firms)
+              </span>
+            </span>
+
+            {firms.fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="flex flex-col gap-3 rounded-md border border-border p-4"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-sm font-semibold text-foreground">
+                    Firm {index + 1}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => firms.remove(index)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem]">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor={`experiences.${index}.firmName`}>
+                      Firm name
+                    </Label>
+                    <Input
+                      id={`experiences.${index}.firmName`}
+                      {...register(`experiences.${index}.firmName`)}
+                      className="h-11"
+                      placeholder="Robert Half"
+                    />
+                    <FieldError
+                      message={errors.experiences?.[index]?.firmName?.message}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor={`experiences.${index}.years`}>Years</Label>
+                    <Input
+                      id={`experiences.${index}.years`}
+                      inputMode="numeric"
+                      {...register(`experiences.${index}.years`)}
+                      className="h-11"
+                      placeholder="5"
+                    />
+                    <FieldError
+                      message={errors.experiences?.[index]?.years?.message}
+                    />
+                  </div>
+                </div>
+
+                <Controller
+                  control={control}
+                  name={`experiences.${index}.specializations`}
+                  render={({ field: chips }) => (
+                    <SpecializationsChips
+                      value={chips.value}
+                      onChange={chips.onChange}
+                      formError={
+                        errors.experiences?.[index]?.specializations?.message
+                      }
+                    />
+                  )}
+                />
+              </div>
+            ))}
+
+            {firms.fields.length < MAX_SIGNUP_EXPERIENCES && (
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    firms.append({
+                      firmName: "",
+                      years: "",
+                      specializations: [],
+                    })
+                  }
+                >
+                  + Add a firm
+                </Button>
+              </div>
             )}
-          />
+          </div>
 
           <div className="flex flex-col gap-3">
             <span className="text-sm font-medium leading-none text-foreground">

@@ -10,8 +10,8 @@ const validCompany: SignUpFormData = {
   confirmPassword: "S3cureP@ssw0rd",
   phone: "",
   companyName: "Acme Inc.",
-  yearsExperience: "",
-  specializations: [],
+  linkedinUrl: "",
+  experiences: [],
   references: [],
   addressLine: "",
   city: "",
@@ -110,15 +110,56 @@ describe("signUpSchema", () => {
     }
   });
 
-  it("accepts years of experience between 0 and 80, or empty", () => {
-    expect(errorPaths({ role: "recruiter", yearsExperience: "" })).toEqual([]);
-    expect(errorPaths({ role: "recruiter", yearsExperience: "5" })).toEqual([]);
-    expect(errorPaths({ role: "recruiter", yearsExperience: "81" })).toContain(
-      "yearsExperience",
+  it("accepts a recruiter listing no staffing firms", () => {
+    expect(errorPaths({ role: "recruiter", experiences: [] })).toEqual([]);
+  });
+
+  it("accepts up to five staffing firms", () => {
+    const firm = {
+      firmName: "Robert Half",
+      years: "5",
+      specializations: ["technology"],
+    };
+    expect(
+      errorPaths({ role: "recruiter", experiences: Array(5).fill(firm) }),
+    ).toEqual([]);
+    expect(
+      errorPaths({ role: "recruiter", experiences: Array(6).fill(firm) }),
+    ).toContain("experiences");
+  });
+
+  it("requires a firm name and plausible years on each entry", () => {
+    expect(
+      errorPaths({
+        role: "recruiter",
+        experiences: [{ firmName: "", years: "5", specializations: [] }],
+      }),
+    ).toContain("experiences.0.firmName");
+    expect(
+      errorPaths({
+        role: "recruiter",
+        experiences: [
+          { firmName: "Robert Half", years: "81", specializations: [] },
+        ],
+      }),
+    ).toContain("experiences.0.years");
+    expect(
+      errorPaths({
+        role: "recruiter",
+        experiences: [
+          { firmName: "Robert Half", years: "", specializations: [] },
+        ],
+      }),
+    ).toContain("experiences.0.years");
+  });
+
+  it("rejects a LinkedIn value that is not a URL", () => {
+    expect(errorPaths({ linkedinUrl: "dana-whitfield" })).toContain(
+      "linkedinUrl",
     );
-    expect(errorPaths({ role: "recruiter", yearsExperience: "abc" })).toContain(
-      "yearsExperience",
-    );
+    expect(
+      errorPaths({ linkedinUrl: "https://linkedin.com/in/dana" }),
+    ).toEqual([]);
   });
 
   it("allows at most three references, each with a name", () => {
@@ -193,23 +234,45 @@ describe("toSignUpPayload", () => {
     expect(payload).not.toHaveProperty("zip");
   });
 
-  it("converts recruiter experience to a number and keeps chosen specializations", () => {
+  it("converts each firm's years to a number and keeps its specializations", () => {
     const payload = toSignUpPayload({
       ...validRecruiter,
-      yearsExperience: "5",
-      specializations: ["technology", "finance"],
+      experiences: [
+        {
+          firmName: "Robert Half",
+          years: "5",
+          specializations: ["technology", "finance"],
+        },
+        { firmName: "Aerotek", years: "3", specializations: [] },
+      ],
     });
     expect(payload).toMatchObject({
       role: "recruiter",
-      yearsExperience: 5,
-      specializations: ["technology", "finance"],
+      experiences: [
+        {
+          firmName: "Robert Half",
+          years: 5,
+          specializations: ["technology", "finance"],
+        },
+        { firmName: "Aerotek", years: 3, specializations: [] },
+      ],
+    });
+  });
+
+  it("sends the LinkedIn URL when one was given", () => {
+    const payload = toSignUpPayload({
+      ...validRecruiter,
+      linkedinUrl: "https://www.linkedin.com/in/dana",
+    });
+    expect(payload).toMatchObject({
+      linkedinUrl: "https://www.linkedin.com/in/dana",
     });
   });
 
   it("omits recruiter optionals that were left empty", () => {
     const payload = toSignUpPayload(validRecruiter);
-    expect(payload).not.toHaveProperty("yearsExperience");
-    expect(payload).not.toHaveProperty("specializations");
+    expect(payload).not.toHaveProperty("experiences");
+    expect(payload).not.toHaveProperty("linkedinUrl");
     expect(payload).not.toHaveProperty("references");
   });
 

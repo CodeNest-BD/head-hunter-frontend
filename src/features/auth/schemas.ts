@@ -48,6 +48,25 @@ export const PASSWORD_REQUIREMENTS: readonly PasswordRequirement[] = [
 ];
 
 export const MAX_SIGNUP_REFERENCES = 3;
+/** The client's questionnaire repeats the firm block five times. */
+export const MAX_SIGNUP_EXPERIENCES = 5;
+
+/** One staffing firm, as the sign-up form holds it. */
+const signUpExperienceSchema = z.object({
+  firmName: z
+    .string()
+    .trim()
+    .min(1, "Firm name is required")
+    .max(160, "Keep it under 160 characters"),
+  years: z
+    .string()
+    .trim()
+    .refine((value) => /^(\d|[1-7]\d|80)$/.test(value), {
+      message: "Enter a number of years between 0 and 80",
+    }),
+  specializations: specializationsSchema,
+});
+export type SignUpExperienceValues = z.infer<typeof signUpExperienceSchema>;
 
 const signUpReferenceSchema = z.object({
   name: z
@@ -110,13 +129,14 @@ export const signUpSchema = z
     confirmPassword: z.string(),
     phone: z.string().trim().max(32, "Keep it under 32 characters"),
     companyName: z.string().trim().max(160, "Keep it under 160 characters"),
-    yearsExperience: z
+    linkedinUrl: z
       .string()
       .trim()
-      .refine((value) => value === "" || /^(\d|[1-7]\d|80)$/.test(value), {
-        message: "Enter a number of years between 0 and 80",
-      }),
-    specializations: specializationsSchema,
+      .url("Enter a full URL, including https://")
+      .or(z.literal("")),
+    experiences: z
+      .array(signUpExperienceSchema)
+      .max(MAX_SIGNUP_EXPERIENCES, `At most ${MAX_SIGNUP_EXPERIENCES} firms`),
     references: z
       .array(signUpReferenceSchema)
       .max(MAX_SIGNUP_REFERENCES, "At most 3 references"),
@@ -177,6 +197,12 @@ interface SignUpPayloadBase {
  * POST /auth/sign-up body. A discriminated union so role-specific fields
  * cannot leak across roles (SignupRole & UserRole agree on these literals).
  */
+export interface SignUpExperiencePayload {
+  firmName: string;
+  years: number;
+  specializations?: string[];
+}
+
 export type SignUpPayload =
   | (SignUpPayloadBase & {
       role: Extract<SignupRole, "company">;
@@ -184,8 +210,8 @@ export type SignUpPayload =
     })
   | (SignUpPayloadBase & {
       role: Extract<SignupRole, "recruiter">;
-      yearsExperience?: number;
-      specializations?: string[];
+      linkedinUrl?: string;
+      experiences?: SignUpExperiencePayload[];
       references?: SignUpReferencePayload[];
     });
 
@@ -222,12 +248,16 @@ export function toSignUpPayload(values: SignUpFormData): SignUpPayload {
   return {
     ...base,
     role: values.role,
-    ...(values.yearsExperience === ""
+    ...(values.linkedinUrl === "" ? {} : { linkedinUrl: values.linkedinUrl }),
+    ...(values.experiences.length === 0
       ? {}
-      : { yearsExperience: Number(values.yearsExperience) }),
-    ...(values.specializations.length === 0
-      ? {}
-      : { specializations: values.specializations }),
+      : {
+          experiences: values.experiences.map((firm) => ({
+            firmName: firm.firmName,
+            years: Number(firm.years),
+            specializations: firm.specializations,
+          })),
+        }),
     ...(values.references.length === 0
       ? {}
       : { references: values.references.map(toReferencePayload) }),
