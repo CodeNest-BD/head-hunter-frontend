@@ -4,11 +4,12 @@ import {
   Briefcase,
   Building2,
   DollarSign,
-  MapPinned,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
 import { usePublicJobStats } from "@/features/jobs";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 
 interface StatCell {
@@ -18,9 +19,10 @@ interface StatCell {
 }
 
 /**
- * The four marketplace numbers under the hero, live from the public stats
- * endpoint. Marketing must never break on an API hiccup: while loading or on
- * error the strip simply doesn't render.
+ * The marketplace numbers under the hero, live from the public stats endpoint —
+ * a single row of circular-icon stats (Open Jobs, Companies, Recruiters, Avg.
+ * Fee Offered). Marketing must never break on an API hiccup: while loading or
+ * on error the strip simply doesn't render.
  */
 export function StatsStrip() {
   const { data } = usePublicJobStats();
@@ -37,37 +39,44 @@ export function StatsStrip() {
     {
       icon: Building2,
       value: data.companiesHiring.toLocaleString("en-US"),
-      label: "Companies Hiring",
+      label: "Companies",
+    },
+    {
+      icon: Users,
+      value: data.recruiters.toLocaleString("en-US"),
+      label: "Recruiters",
     },
     {
       icon: DollarSign,
       value: formatMinor(data.averageFeeMinor),
       label: "Avg. Fee Offered",
     },
-    {
-      icon: MapPinned,
-      value: data.statesCovered.toLocaleString("en-US"),
-      label: "States with Open Roles",
-    },
   ];
 
   return (
-    <div aria-label="Marketplace statistics" className="grid grid-cols-2 gap-3">
-      {cells.map((cell) => {
+    <div
+      aria-label="Marketplace statistics"
+      className="grid grid-cols-2 gap-y-5 sm:grid-cols-4"
+    >
+      {cells.map((cell, index) => {
         const Icon = cell.icon;
         return (
           <div
             key={cell.label}
-            className="flex items-center gap-3 rounded-md border border-brand-line bg-white px-4 py-3 shadow-card"
+            className={cn(
+              "flex items-center gap-2.5",
+              // Vertical divider between the four stats on the single-row layout.
+              index > 0 && "sm:border-l sm:border-brand-line sm:pl-4",
+            )}
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/30 text-primary">
               <Icon className="h-[18px] w-[18px]" />
             </span>
             <div className="min-w-0">
-              <p className="truncate font-heading text-lg font-extrabold text-navy">
+              <p className="font-heading text-lg font-extrabold leading-none text-navy">
                 {cell.value}
               </p>
-              <p className="truncate text-xs text-brand-gray">{cell.label}</p>
+              <p className="mt-1 text-[11px] text-brand-gray">{cell.label}</p>
             </div>
           </div>
         );
