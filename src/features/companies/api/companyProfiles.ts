@@ -12,10 +12,24 @@ import {
  * while an explicit null clears it. Sending undefined would be dropped by
  * axios, so a cleared field would silently keep its old value.
  */
+/**
+ * PATCH body. Mirrors the backend UpdateCompanyProfileDto: an omitted key
+ * leaves the field alone, an explicit null clears it.
+ */
 export interface UpdateCompanyProfileInput {
   companyName?: string;
   website?: string | null;
   description?: string | null;
+  addressLine?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  industry?: string | null;
+  yearFounded?: number | null;
+  employeeSize?: string | null;
+  revenue?: string | null;
+  // Writes to the User row, and resets phoneVerified whenever it changes.
+  phone?: string | null;
   commissionRangeMinMinor?: number | null;
   commissionRangeMaxMinor?: number | null;
 }

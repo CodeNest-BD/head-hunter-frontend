@@ -5,13 +5,13 @@ const validCompany: SignUpFormData = {
   role: "company",
   firstName: "Jane",
   lastName: "Doe",
-  username: "jane_doe",
   email: "jane@acme.com",
   password: "S3cureP@ssw0rd",
+  confirmPassword: "S3cureP@ssw0rd",
   phone: "",
   companyName: "Acme Inc.",
-  yearsExperience: "",
-  specializations: [],
+  linkedinUrl: "",
+  experiences: [],
   references: [],
   addressLine: "",
   city: "",
@@ -39,15 +39,25 @@ describe("signUpSchema", () => {
     expect(signUpSchema.safeParse(validRecruiter).success).toBe(true);
   });
 
+  it("rejects a confirmation that does not match the password", () => {
+    expect(errorPaths({ confirmPassword: "S3cureP@ssw0rd-typo" })).toContain(
+      "confirmPassword",
+    );
+  });
+
+  it("rejects an empty confirmation", () => {
+    expect(errorPaths({ confirmPassword: "" })).toContain("confirmPassword");
+  });
+
+  it("rejects a confirmation differing only in case", () => {
+    expect(errorPaths({ confirmPassword: "s3CUREp@SSW0RD" })).toContain(
+      "confirmPassword",
+    );
+  });
+
   it("requires a company name only for the company role", () => {
     expect(errorPaths({ companyName: "  " })).toContain("companyName");
     expect(errorPaths({ role: "recruiter", companyName: "" })).toEqual([]);
-  });
-
-  it("rejects a username that is too short or has illegal characters", () => {
-    expect(errorPaths({ username: "ab" })).toContain("username");
-    expect(errorPaths({ username: "jane doe" })).toContain("username");
-    expect(errorPaths({ username: "jane-doe" })).toContain("username");
   });
 
   it("rejects blank names", () => {
@@ -100,14 +110,55 @@ describe("signUpSchema", () => {
     }
   });
 
-  it("accepts years of experience between 0 and 80, or empty", () => {
-    expect(errorPaths({ role: "recruiter", yearsExperience: "" })).toEqual([]);
-    expect(errorPaths({ role: "recruiter", yearsExperience: "5" })).toEqual([]);
-    expect(errorPaths({ role: "recruiter", yearsExperience: "81" })).toContain(
-      "yearsExperience",
+  it("accepts a recruiter listing no staffing firms", () => {
+    expect(errorPaths({ role: "recruiter", experiences: [] })).toEqual([]);
+  });
+
+  it("accepts up to five staffing firms", () => {
+    const firm = {
+      firmName: "Robert Half",
+      years: "5",
+      specializations: ["technology"],
+    };
+    expect(
+      errorPaths({ role: "recruiter", experiences: Array(5).fill(firm) }),
+    ).toEqual([]);
+    expect(
+      errorPaths({ role: "recruiter", experiences: Array(6).fill(firm) }),
+    ).toContain("experiences");
+  });
+
+  it("requires a firm name and plausible years on each entry", () => {
+    expect(
+      errorPaths({
+        role: "recruiter",
+        experiences: [{ firmName: "", years: "5", specializations: [] }],
+      }),
+    ).toContain("experiences.0.firmName");
+    expect(
+      errorPaths({
+        role: "recruiter",
+        experiences: [
+          { firmName: "Robert Half", years: "81", specializations: [] },
+        ],
+      }),
+    ).toContain("experiences.0.years");
+    expect(
+      errorPaths({
+        role: "recruiter",
+        experiences: [
+          { firmName: "Robert Half", years: "", specializations: [] },
+        ],
+      }),
+    ).toContain("experiences.0.years");
+  });
+
+  it("rejects a LinkedIn value that is not a URL", () => {
+    expect(errorPaths({ linkedinUrl: "dana-whitfield" })).toContain(
+      "linkedinUrl",
     );
-    expect(errorPaths({ role: "recruiter", yearsExperience: "abc" })).toContain(
-      "yearsExperience",
+    expect(errorPaths({ linkedinUrl: "https://linkedin.com/in/dana" })).toEqual(
+      [],
     );
   });
 
@@ -146,11 +197,25 @@ describe("toSignUpPayload", () => {
       role: "company",
       firstName: "Jane",
       lastName: "Doe",
-      username: "jane_doe",
       email: "jane@acme.com",
       password: "S3cureP@ssw0rd",
+      confirmPassword: "S3cureP@ssw0rd",
       companyName: "Acme Inc.",
     });
+  });
+
+  // The backend requires it on SignUpDto, so omitting it would 400 every
+  // sign-up rather than merely skipping a client-side check.
+  it("sends the confirmation to the API", () => {
+    expect(toSignUpPayload(validCompany).confirmPassword).toBe(
+      "S3cureP@ssw0rd",
+    );
+  });
+
+  // The column is gone from the backend; whitelist:true would strip the key
+  // silently, so this guards against it creeping back into the payload.
+  it("sends no username, which the platform no longer has", () => {
+    expect(toSignUpPayload(validCompany)).not.toHaveProperty("username");
   });
 
   it("omits empty optional fields and uppercases the state", () => {
@@ -169,23 +234,45 @@ describe("toSignUpPayload", () => {
     expect(payload).not.toHaveProperty("zip");
   });
 
-  it("converts recruiter experience to a number and keeps chosen specializations", () => {
+  it("converts each firm's years to a number and keeps its specializations", () => {
     const payload = toSignUpPayload({
       ...validRecruiter,
-      yearsExperience: "5",
-      specializations: ["technology", "finance"],
+      experiences: [
+        {
+          firmName: "Robert Half",
+          years: "5",
+          specializations: ["technology", "finance"],
+        },
+        { firmName: "Aerotek", years: "3", specializations: [] },
+      ],
     });
     expect(payload).toMatchObject({
       role: "recruiter",
-      yearsExperience: 5,
-      specializations: ["technology", "finance"],
+      experiences: [
+        {
+          firmName: "Robert Half",
+          years: 5,
+          specializations: ["technology", "finance"],
+        },
+        { firmName: "Aerotek", years: 3, specializations: [] },
+      ],
+    });
+  });
+
+  it("sends the LinkedIn URL when one was given", () => {
+    const payload = toSignUpPayload({
+      ...validRecruiter,
+      linkedinUrl: "https://www.linkedin.com/in/dana",
+    });
+    expect(payload).toMatchObject({
+      linkedinUrl: "https://www.linkedin.com/in/dana",
     });
   });
 
   it("omits recruiter optionals that were left empty", () => {
     const payload = toSignUpPayload(validRecruiter);
-    expect(payload).not.toHaveProperty("yearsExperience");
-    expect(payload).not.toHaveProperty("specializations");
+    expect(payload).not.toHaveProperty("experiences");
+    expect(payload).not.toHaveProperty("linkedinUrl");
     expect(payload).not.toHaveProperty("references");
   });
 

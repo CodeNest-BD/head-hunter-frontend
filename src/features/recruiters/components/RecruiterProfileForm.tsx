@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { useSpecializationsField } from "@/shared/hooks/useSpecializationsField";
@@ -11,6 +11,7 @@ import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { useUpdateMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 import {
+  MAX_EXPERIENCES,
   recruiterProfileFormSchema,
   type RecruiterProfile,
   type RecruiterProfileFormValues,
@@ -149,11 +150,17 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
       city: profile.city ?? "",
       state: profile.state ?? "",
       zip: profile.zip ?? "",
-      yearsExperience:
-        profile.yearsExperience === null ? "" : String(profile.yearsExperience),
-      specializations: profile.specializations ?? [],
+      linkedinUrl: profile.linkedinUrl ?? "",
+      phone: profile.phone ?? "",
+      experiences: profile.experiences.map((experience) => ({
+        firmName: experience.firmName,
+        years: String(experience.years),
+        specializations: experience.specializations,
+      })),
     },
   });
+
+  const firms = useFieldArray({ control, name: "experiences" });
 
   const onSubmit = handleSubmit((values) => {
     update.mutate(
@@ -163,10 +170,15 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
         city: values.city === "" ? null : values.city,
         state: values.state === "" ? null : values.state.toUpperCase(),
         zip: values.zip === "" ? null : values.zip,
-        yearsExperience:
-          values.yearsExperience === "" ? null : Number(values.yearsExperience),
-        specializations:
-          values.specializations.length === 0 ? null : values.specializations,
+        linkedinUrl: values.linkedinUrl === "" ? null : values.linkedinUrl,
+        phone: values.phone === "" ? null : values.phone,
+        // Sent whole: the API replaces the list rather than merging it, which
+        // is what makes removing a firm here actually remove it.
+        experiences: values.experiences.map((firm) => ({
+          firmName: firm.firmName,
+          years: Number(firm.years),
+          specializations: firm.specializations,
+        })),
       },
       { onSuccess: () => reset(values) },
     );
@@ -210,40 +222,154 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
         </Section>
 
         <Section
-          title="Experience"
-          description="Full years in a recruiting role."
+          title="Staffing experience"
+          description="The firms you have recruited for. Your total years and the sectors shown on your profile are added up from these."
         >
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="yearsExperience">Years</Label>
-            <Input
-              id="yearsExperience"
-              inputMode="numeric"
-              className="max-w-[10rem]"
-              {...register("yearsExperience")}
-            />
-            {errors.yearsExperience && (
-              <p className="text-xs text-destructive">
-                {errors.yearsExperience.message}
-              </p>
-            )}
-          </div>
+          {firms.fields.length === 0 && (
+            <p className="text-[13px] text-muted-foreground">
+              No firms listed yet. Add one so companies can see your track
+              record.
+            </p>
+          )}
+
+          {firms.fields.map((field, index) => (
+            <div
+              key={field.id}
+              className="flex flex-col gap-4 rounded-md border border-border p-4"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-sm font-semibold text-navy">
+                  Firm {index + 1}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => firms.remove(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`experiences.${index}.firmName`}>
+                    Firm name
+                  </Label>
+                  <Input
+                    id={`experiences.${index}.firmName`}
+                    placeholder="Robert Half"
+                    {...register(`experiences.${index}.firmName`)}
+                  />
+                  {errors.experiences?.[index]?.firmName && (
+                    <p className="text-xs text-destructive">
+                      {errors.experiences[index]?.firmName?.message}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`experiences.${index}.years`}>Years</Label>
+                  <Input
+                    id={`experiences.${index}.years`}
+                    inputMode="numeric"
+                    placeholder="5"
+                    {...register(`experiences.${index}.years`)}
+                  />
+                  {errors.experiences?.[index]?.years && (
+                    <p className="text-xs text-destructive">
+                      {errors.experiences[index]?.years?.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label>Specializations</Label>
+                <Controller
+                  control={control}
+                  name={`experiences.${index}.specializations`}
+                  render={({ field: chips }) => (
+                    <SpecializationsChips
+                      value={chips.value}
+                      onChange={chips.onChange}
+                      formError={
+                        errors.experiences?.[index]?.specializations?.message
+                      }
+                    />
+                  )}
+                />
+              </div>
+            </div>
+          ))}
+
+          {firms.fields.length < MAX_EXPERIENCES && (
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  firms.append({
+                    firmName: "",
+                    years: "",
+                    specializations: [],
+                  })
+                }
+              >
+                + Add another firm
+              </Button>
+            </div>
+          )}
+          {firms.fields.length >= MAX_EXPERIENCES && (
+            <p className="text-[13px] text-muted-foreground">
+              You can list up to {MAX_EXPERIENCES} firms.
+            </p>
+          )}
         </Section>
 
         <Section
-          title="Specializations"
-          description="Pick the sectors you place candidates in."
+          title="Contact"
+          description="Your phone is never shown to companies — they reach you through the platform."
         >
-          <Controller
-            control={control}
-            name="specializations"
-            render={({ field }) => (
-              <SpecializationsChips
-                value={field.value}
-                onChange={field.onChange}
-                formError={errors.specializations?.message}
-              />
+          <div className="flex flex-col gap-2 sm:max-w-sm">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="phone">Phone</Label>
+              {profile.phone !== null && (
+                <span
+                  className={cn(
+                    "text-xs font-medium",
+                    profile.phoneVerified
+                      ? "text-emerald-600"
+                      : "text-[#B4820A]",
+                  )}
+                >
+                  {profile.phoneVerified ? "Verified" : "Not verified"}
+                </span>
+              )}
+            </div>
+            <Input
+              id="phone"
+              inputMode="tel"
+              placeholder="+1-202-555-0100"
+              {...register("phone")}
+            />
+            {errors.phone && (
+              <p className="text-xs text-destructive">{errors.phone.message}</p>
             )}
-          />
+          </div>
+          <div className="flex flex-col gap-2 sm:max-w-sm">
+            <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
+            <Input
+              id="linkedinUrl"
+              placeholder="https://www.linkedin.com/in/dana-whitfield"
+              {...register("linkedinUrl")}
+            />
+            {errors.linkedinUrl && (
+              <p className="text-xs text-destructive">
+                {errors.linkedinUrl.message}
+              </p>
+            )}
+          </div>
         </Section>
       </div>
 

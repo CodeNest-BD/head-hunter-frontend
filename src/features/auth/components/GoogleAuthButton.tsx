@@ -22,6 +22,10 @@ interface GoogleAuthButtonProps {
  * Google sign-in via @react-oauth/google. On success we hand the ID-token
  * credential to the backend, then establish the session through the shared
  * useAuth flow (fetch profile → commit → route to dashboard).
+ *
+ * Owns its own "or continue with" divider. The divider used to sit in each
+ * form, which left it stranded above nothing whenever this component opted out
+ * of rendering — keeping the two together means one condition governs both.
  */
 export function GoogleAuthButton({ role, name }: GoogleAuthButtonProps) {
   const { establishSession } = useAuth();
@@ -66,19 +70,29 @@ export function GoogleAuthButton({ role, name }: GoogleAuthButtonProps) {
   };
 
   return (
-    <div
-      className="flex justify-center"
-      aria-busy={pending}
-      style={pending ? { opacity: 0.6, pointerEvents: "none" } : undefined}
-    >
-      <GoogleLogin
-        onSuccess={onSuccess}
-        onError={() =>
-          toast.error("Google sign-in failed", {
-            description: "Please try again.",
-          })
-        }
-      />
-    </div>
+    <>
+      <div className="flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          or continue with
+        </span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      <div
+        className="flex justify-center"
+        aria-busy={pending}
+        style={pending ? { opacity: 0.6, pointerEvents: "none" } : undefined}
+      >
+        <GoogleLogin
+          onSuccess={onSuccess}
+          onError={() =>
+            toast.error("Google sign-in failed", {
+              description: "Please try again.",
+            })
+          }
+        />
+      </div>
+    </>
   );
 }

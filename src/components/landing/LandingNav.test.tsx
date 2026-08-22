@@ -20,7 +20,6 @@ vi.mock("@/features/auth/hooks/useAuth", () => ({
 const authedUser = {
   id: "u1",
   email: "amy@example.com",
-  username: "amy",
   firstName: "Amy",
   lastName: "Lee",
   phone: null,

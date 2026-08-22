@@ -8,6 +8,15 @@ const valid = {
   description: "",
   commissionMin: "",
   commissionMax: "",
+  addressLine: "",
+  city: "",
+  state: "",
+  zip: "",
+  industry: "",
+  yearFounded: "",
+  employeeSize: "",
+  revenue: "",
+  phone: "",
 };
 
 const errorPaths = (overrides: Record<string, unknown>): string[] => {
@@ -18,6 +27,41 @@ const errorPaths = (overrides: Record<string, unknown>): string[] => {
 describe("companyProfileFormSchema", () => {
   it("accepts a profile with only a name", () => {
     expect(companyProfileFormSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("accepts the address and business details, all optional", () => {
+    expect(
+      errorPaths({
+        addressLine: "123 Market St",
+        city: "San Francisco",
+        state: "CA",
+        zip: "94103",
+        industry: "SaaS",
+        yearFounded: "2014",
+        employeeSize: "51-200",
+        revenue: "$50M",
+        phone: "+1-202-555-0100",
+      }),
+    ).toEqual([]);
+  });
+
+  it("rejects a state that is not a two-letter code", () => {
+    expect(errorPaths({ state: "California" })).toContain("state");
+  });
+
+  it("rejects a ZIP that is not 5 digits or ZIP+4", () => {
+    expect(errorPaths({ zip: "ABCDE" })).toContain("zip");
+    expect(errorPaths({ zip: "94103-1234" })).toEqual([]);
+  });
+
+  it("rejects a founding year in the future", () => {
+    expect(
+      errorPaths({ yearFounded: String(new Date().getFullYear() + 1) }),
+    ).toContain("yearFounded");
+  });
+
+  it("rejects a founding year before 1800", () => {
+    expect(errorPaths({ yearFounded: "1799" })).toContain("yearFounded");
   });
 
   it("rejects a blank company name", () => {
