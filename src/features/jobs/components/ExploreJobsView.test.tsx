@@ -18,7 +18,9 @@ vi.mock("../hooks/usePublicJobs", () => ({
   usePublicJobStats: () => usePublicJobStatsMock(),
 }));
 
-const useJobMapMock = vi.fn(() => ({ data: [] }));
+const useJobMapMock = vi.fn((_params?: unknown): { data: unknown[] } => ({
+  data: [],
+}));
 vi.mock("../hooks/useJobs", () => ({
   useJobMap: (params: unknown) => useJobMapMock(params),
 }));
