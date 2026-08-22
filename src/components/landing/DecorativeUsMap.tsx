@@ -1,93 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 
-import { projectAlbersUsa } from "@/shared/data/albersUsa";
-import { US_STATES, US_VIEWBOX } from "@/shared/data/usStatesGeo";
+import { usePublicJobMap } from "@/features/jobs";
+import {
+  resolveCityBubbles,
+  type CityMapBubble,
+} from "@/features/jobs/cityMapBubbles";
+import {
+  US_STATES,
+  US_STATE_NAME_BY_CODE,
+  US_VIEWBOX,
+} from "@/shared/data/usStatesGeo";
+import { formatMinor } from "@/shared/utils/money";
 
 /**
- * The hero's illustrative USA map. Static data on purpose (live per-state
- * numbers are reserved for verified recruiters), but interactive: hovering a
- * city bubble reveals its popup — the card is not permanently pinned. Bubble
- * positions use the same Albers projection as the real map, so each city sits
- * on its actual geography.
+ * The hero's USA map, driven by live per-city open-role counts from the public
+ * job-map endpoint. Bubble positions use the same Albers projection as the
+ * recruiter map, so each city sits on its actual geography; hovering a bubble
+ * reveals its popup. We show the busiest cities to keep the hero uncluttered.
  */
 
-interface SampleBubble {
-  city: string;
-  label: string;
-  state: string;
-  lat: number;
-  lng: number;
-  count: number;
-  avgPrice: string;
-  /** Bubble radius in the 960x600 frame. */
-  r: number;
+const MAX_BUBBLES = 8;
+
+/** Radius in the 960x600 frame — sqrt so a huge city can't dwarf a small one. */
+function bubbleRadius(count: number): number {
+  return Math.min(32, 12 + Math.sqrt(count) * 3.5);
 }
 
-const SAMPLE_BUBBLES: readonly SampleBubble[] = [
-  {
-    city: "New York",
-    label: "New York",
-    state: "NY",
-    lat: 40.7128,
-    lng: -74.006,
-    count: 432,
-    avgPrice: "$6,750",
-    r: 30,
-  },
-  {
-    city: "San Francisco",
-    label: "San Francisco",
-    state: "CA",
-    lat: 37.7749,
-    lng: -122.4194,
-    count: 213,
-    avgPrice: "$8,200",
-    r: 25,
-  },
-  {
-    city: "Austin",
-    label: "Austin",
-    state: "TX",
-    lat: 30.2672,
-    lng: -97.7431,
-    count: 156,
-    avgPrice: "$5,400",
-    r: 22,
-  },
-  {
-    city: "Chicago",
-    label: "Chicago",
-    state: "IL",
-    lat: 41.8781,
-    lng: -87.6298,
-    count: 187,
-    avgPrice: "$6,100",
-    r: 23,
-  },
-  {
-    city: "Miami",
-    label: "Miami",
-    state: "FL",
-    lat: 25.7617,
-    lng: -80.1918,
-    count: 98,
-    avgPrice: "$4,900",
-    r: 18,
-  },
-];
-
-const plotted = SAMPLE_BUBBLES.flatMap((bubble) => {
-  const point = projectAlbersUsa(bubble.lng, bubble.lat);
-  return point ? [{ ...bubble, x: point.x, y: point.y }] : [];
-});
-
-type PlottedBubble = (typeof plotted)[number];
-
 export function DecorativeUsMap() {
-  const [active, setActive] = useState<PlottedBubble | null>(null);
+  const { data } = usePublicJobMap();
+  const [active, setActive] = useState<CityMapBubble | null>(null);
+
+  const bubbles = useMemo(() => {
+    return resolveCityBubbles(data ?? [])
+      .sort((a, b) => b.openRoles - a.openRoles)
+      .slice(0, MAX_BUBBLES);
+  }, [data]);
 
   return (
     <div className="relative select-none">
@@ -95,7 +45,7 @@ export function DecorativeUsMap() {
         viewBox={`0 0 ${US_VIEWBOX.width} ${US_VIEWBOX.height}`}
         className="h-auto w-full"
         role="img"
-        aria-label="Illustrative map of open roles across the United States"
+        aria-label="Map of open roles across the United States"
       >
         {US_STATES.map((state) => (
           <path
@@ -106,30 +56,31 @@ export function DecorativeUsMap() {
             strokeWidth={1.1}
           />
         ))}
-        {plotted.map((bubble) => {
-          const isActive = active?.city === bubble.city;
+        {bubbles.map((bubble) => {
+          const isActive = active?.key === bubble.key;
+          const r = bubbleRadius(bubble.openRoles);
           return (
             <g
-              key={bubble.city}
+              key={bubble.key}
               className="cursor-pointer"
               onMouseEnter={() => setActive(bubble)}
               onMouseLeave={() =>
                 setActive((current) =>
-                  current?.city === bubble.city ? null : current,
+                  current?.key === bubble.key ? null : current,
                 )
               }
             >
               <circle
                 cx={bubble.x}
                 cy={bubble.y}
-                r={bubble.r + 8}
+                r={r + 8}
                 fill="#4F80E6"
                 opacity={isActive ? 0.24 : 0.16}
               />
               <circle
                 cx={bubble.x}
                 cy={bubble.y}
-                r={bubble.r}
+                r={r}
                 fill={isActive ? "#034AEF" : "#85B1F3"}
                 opacity={isActive ? 0.95 : 0.85}
               />
@@ -137,21 +88,21 @@ export function DecorativeUsMap() {
                 x={bubble.x}
                 y={bubble.y + 5}
                 textAnchor="middle"
-                fontSize={bubble.r >= 25 ? 17 : 14}
+                fontSize={r >= 25 ? 17 : 14}
                 fontWeight={800}
                 fill="#FFFFFF"
               >
-                {bubble.count}
+                {bubble.openRoles}
               </text>
               <text
                 x={bubble.x}
-                y={bubble.y + bubble.r + 18}
+                y={bubble.y + r + 18}
                 textAnchor="middle"
                 fontSize={13}
                 fontWeight={600}
                 fill="#323A52"
               >
-                {bubble.label}
+                {bubble.city}
               </text>
             </g>
           );
@@ -168,23 +119,25 @@ export function DecorativeUsMap() {
           }}
         >
           <p className="text-sm font-extrabold text-navy">
-            {active.label}, {active.state}
+            {active.city}, {US_STATE_NAME_BY_CODE[active.state] ?? active.state}
           </p>
           <p className="mt-0.5 text-sm font-bold text-primary">
-            {active.count} Open Roles
+            {active.openRoles} Open Roles
           </p>
           <p className="mt-2 text-xs text-brand-gray">Avg. Company Price</p>
-          <p className="text-xl font-extrabold text-navy">{active.avgPrice}</p>
+          <p className="text-xl font-extrabold text-navy">
+            {formatMinor(active.averageFeeMinor)}
+          </p>
         </div>
       )}
 
       <p className="mt-2 text-right text-[11px] font-medium uppercase tracking-[0.08em] text-brand-gray">
-        Illustrative preview ·{" "}
+        Live openings ·{" "}
         <Link
           href="/explore-jobs"
           className="text-brand-secondary underline-offset-2 hover:underline"
         >
-          see live jobs
+          explore jobs
         </Link>
       </p>
     </div>
