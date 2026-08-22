@@ -172,7 +172,12 @@ export function RichTextEditor({
           disabled={!editor.can().redo()}
         />
       </div>
-      <EditorContent editor={editor} />
+      {/* The toolbar above stays put (it's outside this scroll region), so it
+          acts as a sticky header while long content scrolls within a fixed
+          height instead of stretching the whole field. */}
+      <div className="max-h-[340px] overflow-y-auto">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }
