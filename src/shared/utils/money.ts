@@ -4,6 +4,38 @@
  * call sites — getting it wrong is a 100x error in a money field.
  */
 
+/**
+ * Mirrors the backend's MAX_MONEY_MINOR (100_000_000_000 minor units) hard
+ * ceiling, in the major units these forms collect — $1,000,000,000. Bound
+ * every money form field at this value so an oversized amount is rejected as
+ * the user types rather than surviving a round-trip to the API only to come
+ * back as a 400 (or, before that backend bound existed, as unrecoverable
+ * bigint overflow — see the incident this constant closes off).
+ */
+export const MAX_MONEY_MAJOR = 1_000_000_000;
+
+/**
+ * Formatted once here so every "must be under..." message across the money
+ * forms reads identically to the backend's own `MAX_MONEY_LABEL` — same
+ * amount, same formatting, no independently-typed "$1,000,000,000" literal
+ * to drift out of sync.
+ */
+export const MAX_MONEY_MAJOR_LABEL = formatMinor(majorToMinor(MAX_MONEY_MAJOR));
+
+/**
+ * A plausibility ceiling for an annual salary, in major units — $10,000,000.
+ * Far below MAX_MONEY_MAJOR, which is a safety bound (keeping values inside
+ * JavaScript's exact-integer range), not a realistic one. This one exists to
+ * catch the actual mistake: a held-down zero key. The incident that prompted
+ * it was an entry of $500,000,000,000,000 in a salary field.
+ */
+export const MAX_SALARY_MAJOR = 10_000_000;
+
+/** Formatted once here for the same reason as MAX_MONEY_MAJOR_LABEL. */
+export const MAX_SALARY_MAJOR_LABEL = formatMinor(
+  majorToMinor(MAX_SALARY_MAJOR),
+);
+
 /** 250000 -> 2500 */
 export function minorToMajor(minor: number): number {
   return minor / 100;

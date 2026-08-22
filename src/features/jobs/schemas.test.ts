@@ -19,6 +19,11 @@ const errorPaths = (overrides: Record<string, unknown>): string[] => {
   return result.success ? [] : result.error.issues.map((i) => i.path.join("."));
 };
 
+const errorMessages = (overrides: Record<string, unknown>): string[] => {
+  const result = jobFormSchema.safeParse({ ...valid, ...overrides });
+  return result.success ? [] : result.error.issues.map((i) => i.message);
+};
+
 describe("jobFormSchema", () => {
   it("accepts the minimum viable job", () => {
     expect(jobFormSchema.safeParse(valid).success).toBe(true);
@@ -84,5 +89,47 @@ describe("jobFormSchema", () => {
 
   it("rejects a role category outside the enum", () => {
     expect(errorPaths({ roleCategory: "wizardry" })).toContain("roleCategory");
+  });
+
+  it("accepts a recruiter fee at the $1,000,000,000 ceiling", () => {
+    expect(errorPaths({ recruiterFee: "1000000000" })).toEqual([]);
+  });
+
+  it("rejects a recruiter fee over the $1,000,000,000 ceiling", () => {
+    expect(errorMessages({ recruiterFee: "1000000001" })).toContain(
+      "Commission must be under $1,000,000,000",
+    );
+  });
+
+  it("rejects a recruiter fee given in exponent notation past the ceiling", () => {
+    expect(errorMessages({ recruiterFee: "1e20" })).toContain(
+      "Commission must be under $1,000,000,000",
+    );
+  });
+
+  it("accepts a salary minimum at the $1,000,000,000 ceiling", () => {
+    expect(errorPaths({ salaryMin: "1000000000", salaryMax: "1000000000" })).toEqual(
+      [],
+    );
+  });
+
+  it("rejects a salary minimum over the $1,000,000,000 ceiling", () => {
+    expect(errorMessages({ salaryMin: "1000000001" })).toContain(
+      "Salary must be under $1,000,000,000",
+    );
+  });
+
+  it("accepts a salary maximum at the $1,000,000,000 ceiling", () => {
+    expect(errorPaths({ salaryMin: "", salaryMax: "1000000000" })).toEqual([]);
+  });
+
+  it("rejects a salary maximum over the $1,000,000,000 ceiling", () => {
+    expect(errorMessages({ salaryMin: "", salaryMax: "1000000001" })).toContain(
+      "Salary must be under $1,000,000,000",
+    );
+  });
+
+  it("still rejects a negative salary minimum", () => {
+    expect(errorPaths({ salaryMin: "-5" })).toContain("salaryMin");
   });
 });

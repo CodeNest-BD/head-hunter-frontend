@@ -1,6 +1,8 @@
 import { format, startOfToday, subDays } from "date-fns";
 import { z } from "zod";
 
+import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
+
 /**
  * Read live from `/v1/offers`, not replayed from a historical feed — an
  * unrecognised value here means this client is genuinely out of date, so it
@@ -77,6 +79,9 @@ export const sendOfferFormSchema = z.object({
     .min(1, "Salary is required")
     .refine((value) => Number.isFinite(Number(value)) && Number(value) > 0, {
       message: "Enter a salary greater than 0",
+    })
+    .refine((value) => Number(value) <= MAX_MONEY_MAJOR, {
+      message: `Salary must be under ${MAX_MONEY_MAJOR_LABEL}`,
     }),
   // No title field: the offer already belongs to one job, whose title the
   // recruiter and candidate both see on the submission.

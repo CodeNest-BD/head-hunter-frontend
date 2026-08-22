@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
+
 export const JOB_STATUSES = [
   "draft",
   "published",
@@ -119,14 +121,38 @@ export const jobFormSchema = z
       .or(z.literal("")),
     locationCity: z.string().trim(),
     isRemote: z.boolean(),
-    salaryMin: z.string().trim(),
-    salaryMax: z.string().trim(),
+    salaryMin: z
+      .string()
+      .trim()
+      .refine((v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0), {
+        message: "Enter an amount of 0 or more",
+      })
+      .refine((v) => v === "" || Number(v) <= MAX_MONEY_MAJOR, {
+        message: `Salary must be under ${MAX_MONEY_MAJOR_LABEL}`,
+      }),
+    salaryMax: z
+      .string()
+      .trim()
+      .refine((v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0), {
+        message: "Enter an amount of 0 or more",
+      })
+      .refine((v) => v === "" || Number(v) <= MAX_MONEY_MAJOR, {
+        message: `Salary must be under ${MAX_MONEY_MAJOR_LABEL}`,
+      }),
+    // Bounded at MAX_MONEY_MAJOR only — the hard ceiling every money field
+    // shares. JobsService separately enforces an admin-tunable marketplace
+    // policy ceiling (currently $1,000,000) on top of this; that figure is
+    // NOT this form's business, so do not hardcode it here. A fee between
+    // this bound and the policy ceiling is refused by the API as a 400.
     recruiterFee: z
       .string()
       .trim()
       .min(1, "Recruiter fee is required")
       .refine((value) => Number.isFinite(Number(value)) && Number(value) >= 0, {
         message: "Enter a non-negative amount",
+      })
+      .refine((value) => Number(value) <= MAX_MONEY_MAJOR, {
+        message: `Commission must be under ${MAX_MONEY_MAJOR_LABEL}`,
       }),
   })
   .refine(

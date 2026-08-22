@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { offerSchema } from "./schemas";
+import { offerSchema, sendOfferFormSchema } from "./schemas";
 
 const offer = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -41,5 +41,46 @@ describe("offerSchema", () => {
   it("rejects an unrecognised status rather than guessing at it", () => {
     const parsed = offerSchema.safeParse({ ...offer, status: "expired" });
     expect(parsed.success).toBe(false);
+  });
+});
+
+const sendOfferForm = {
+  salary: "150000",
+  startDate: "",
+  notes: "",
+};
+
+const sendOfferErrorMessages = (
+  overrides: Record<string, unknown>,
+): string[] => {
+  const result = sendOfferFormSchema.safeParse({ ...sendOfferForm, ...overrides });
+  return result.success ? [] : result.error.issues.map((i) => i.message);
+};
+
+describe("sendOfferFormSchema", () => {
+  it("accepts a plain positive salary", () => {
+    expect(sendOfferFormSchema.safeParse(sendOfferForm).success).toBe(true);
+  });
+
+  it("still rejects a salary of 0 or below", () => {
+    expect(sendOfferErrorMessages({ salary: "0" })).toContain(
+      "Enter a salary greater than 0",
+    );
+  });
+
+  it("accepts a salary at the $1,000,000,000 ceiling", () => {
+    expect(sendOfferErrorMessages({ salary: "1000000000" })).toEqual([]);
+  });
+
+  it("rejects a salary over the $1,000,000,000 ceiling", () => {
+    expect(sendOfferErrorMessages({ salary: "1000000001" })).toContain(
+      "Salary must be under $1,000,000,000",
+    );
+  });
+
+  it("rejects a salary given in exponent notation past the ceiling", () => {
+    expect(sendOfferErrorMessages({ salary: "1e20" })).toContain(
+      "Salary must be under $1,000,000,000",
+    );
   });
 });

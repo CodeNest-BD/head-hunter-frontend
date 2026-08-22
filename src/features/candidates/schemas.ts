@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { MAX_SALARY_MAJOR, MAX_SALARY_MAJOR_LABEL } from "@/shared/utils/money";
+
 export const CANDIDATE_STATUSES = [
   "submitted",
   "reviewing",
@@ -79,6 +81,9 @@ export const candidateFormSchema = z.object({
     .trim()
     .refine((v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0), {
       message: "Enter an amount of 0 or more",
+    })
+    .refine((v) => v === "" || Number(v) <= MAX_SALARY_MAJOR, {
+      message: `Expected salary must be under ${MAX_SALARY_MAJOR_LABEL}`,
     }),
   noticePeriodDays: z
     .string()
