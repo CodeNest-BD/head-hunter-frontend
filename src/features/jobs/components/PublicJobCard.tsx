@@ -3,21 +3,22 @@ import { MapPin } from "lucide-react";
 
 import { formatMinor } from "@/shared/utils/money";
 
+import type { PublicJobCard as PublicJobCardData } from "../publicSchemas";
 import {
   EMPLOYMENT_TYPE_LABELS,
   ROLE_CATEGORY_LABELS,
-  type Job,
+  type EmploymentType,
   type RoleCategory,
 } from "../schemas";
 
-function locationLine(job: Job): string {
+function locationLine(job: PublicJobCardData): string {
   if (job.isRemote) return "Remote";
   const parts = [job.locationCity, job.locationState].filter(Boolean);
   return parts.length > 0 ? parts.join(", ") : "Location flexible";
 }
 
-function categoryLabel(roleCategory: RoleCategory): string {
-  return ROLE_CATEGORY_LABELS[roleCategory] ?? "Other";
+function categoryLabel(roleCategory: string): string {
+  return ROLE_CATEGORY_LABELS[roleCategory as RoleCategory] ?? "Other";
 }
 
 /** Compact "2d ago" relative time for the card's corner. */
@@ -39,22 +40,25 @@ function postedAgo(date: Date | null): string {
 }
 
 /** The employment type and work mode, as up to two neutral tag pills. */
-function tags(job: Job): string[] {
+function tags(job: PublicJobCardData): string[] {
   const out: string[] = [];
   if (job.employmentType) {
-    out.push(EMPLOYMENT_TYPE_LABELS[job.employmentType]);
+    out.push(
+      EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType] ??
+        job.employmentType,
+    );
   }
   out.push(job.isRemote ? "Remote" : "On-site");
   return out;
 }
 
 /**
- * One job card in the explore grid, per the client reference: a category
- * eyebrow and posted time, the title, company · location, work tags, then a
- * footer with the bold recruiter fee ("Free" at $0) and a View details
+ * One job card in the public explore grid, per the client reference: a
+ * category eyebrow and posted time, the title, company · location, work tags,
+ * then a footer with the bold recruiter fee ("Free" at $0) and a View details
  * action.
  */
-export function PublicJobCard({ job }: { job: Job }) {
+export function PublicJobCard({ job }: { job: PublicJobCardData }) {
   const isFree = job.recruiterFeeMinor === 0;
   const posted = postedAgo(job.publishedAt);
 
@@ -75,7 +79,7 @@ export function PublicJobCard({ job }: { job: Job }) {
         {job.title}
       </h3>
       <p className="mt-1.5 flex items-center gap-1.5 text-sm text-brand-gray">
-        <span className="truncate">{job.companyName ?? "A company"}</span>
+        <span className="truncate">{job.companyName}</span>
         <span aria-hidden="true">·</span>
         <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="truncate">{locationLine(job)}</span>

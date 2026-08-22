@@ -1,27 +1,25 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils";
-import type { Job } from "../schemas";
+import type { PublicJobCard } from "../publicSchemas";
 
-const useVerificationGateMock = vi.fn();
+// The explore page is public: everyone sees the job grid + hero; only the live
+// map is gated behind recruiter verification.
+const useIsVerifiedRecruiterMock = vi.fn();
 vi.mock("@/features/recruiters", () => ({
-  useVerificationGate: () => useVerificationGateMock(),
+  useIsVerifiedRecruiter: () => useIsVerifiedRecruiterMock(),
 }));
 
-// The view reads the session to decide between the marketing hero and the
-// signed-in heading; mocked so this file needs no Redux store.
-const useAuthMock = vi.fn<
-  () => { status: string; user: Record<string, never> | null }
->(() => ({ status: "authenticated", user: {} }));
-vi.mock("@/features/auth", () => ({
-  useAuth: () => useAuthMock(),
+const usePublicJobsMock = vi.fn();
+const usePublicJobStatsMock = vi.fn();
+vi.mock("../hooks/usePublicJobs", () => ({
+  usePublicJobs: (params: unknown) => usePublicJobsMock(params),
+  usePublicJobStats: () => usePublicJobStatsMock(),
 }));
 
-const useJobsMock = vi.fn();
-const useJobMapMock = vi.fn();
+const useJobMapMock = vi.fn(() => ({ data: [] }));
 vi.mock("../hooks/useJobs", () => ({
-  useJobs: (params: unknown) => useJobsMock(params),
   useJobMap: (params: unknown) => useJobMapMock(params),
 }));
 
@@ -36,184 +34,117 @@ vi.mock("./UsJobMap", () => ({
 // Imported after the mocks so the module graph picks them up.
 import { ExploreJobsView } from "./ExploreJobsView";
 
-function sampleJob(overrides: Partial<Job> = {}): Job {
+function samplePublicJob(
+  overrides: Partial<PublicJobCard> = {},
+): PublicJobCard {
   return {
     id: "job-1",
     title: "Senior Backend Engineer",
-    description: null,
-    employmentType: "full_time",
+    companyName: "Acme Inc.",
     roleCategory: "engineering",
+    employmentType: "full_time",
     locationState: "CA",
     locationCity: "San Francisco",
     isRemote: false,
     salaryMinMinor: null,
     salaryMaxMinor: null,
     recruiterFeeMinor: 500_000,
-    status: "published",
     publishedAt: new Date("2026-01-01"),
-    createdAt: new Date("2026-01-01"),
-    companyName: "Acme Inc.",
     ...overrides,
   };
 }
 
+function mockJobs(jobs: PublicJobCard[]): void {
+  usePublicJobsMock.mockReturnValue({
+    data: {
+      data: jobs,
+      meta: { page: 1, limit: 12, total: jobs.length, totalPages: 1 },
+    },
+    isLoading: false,
+    isError: false,
+  });
+}
+
 describe("ExploreJobsView", () => {
-  it("hides the job grid, toolbar and pager, and never fetches jobs, when the visitor is not approved", () => {
-    useVerificationGateMock.mockReturnValue({
-      isApproved: false,
-      status: undefined,
-      isLoading: false,
-      isError: false,
-      retry: vi.fn(),
-    });
-
-    renderWithProviders(<ExploreJobsView />);
-
-    expect(
-      screen.getByText("Job listings are for verified recruiters"),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText("Senior Backend Engineer"),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByText("Acme Inc.")).not.toBeInTheDocument();
-    expect(screen.queryByPlaceholderText("Job title…")).not.toBeInTheDocument();
-    expect(useJobsMock).not.toHaveBeenCalled();
-  });
-
-  it("shows a sign-up CTA (not a pending message) for a guest, and a pending message for an unverified recruiter", () => {
-    useVerificationGateMock.mockReturnValue({
-      isApproved: false,
-      status: undefined,
-      isLoading: false,
-      isError: false,
-      retry: vi.fn(),
-    });
-    const { unmount } = renderWithProviders(<ExploreJobsView />);
-    expect(
-      screen.getAllByRole("link", { name: "Sign Up as a Recruiter" }).length,
-    ).toBeGreaterThan(0);
-    unmount();
-
-    useVerificationGateMock.mockReturnValue({
-      isApproved: false,
-      status: "pending",
-      isLoading: false,
-      isError: false,
-      retry: vi.fn(),
-    });
-    renderWithProviders(<ExploreJobsView />);
-    expect(
-      screen.queryByRole("link", { name: "Sign Up as a Recruiter" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getAllByText(/awaiting verification/i).length,
-    ).toBeGreaterThan(0);
-  });
-
-  it("shows the job grid, toolbar and pager, and fetches via the authed jobs endpoint, once approved", () => {
-    useVerificationGateMock.mockReturnValue({
-      isApproved: true,
-      status: "verified",
-      isLoading: false,
-      isError: false,
-      retry: vi.fn(),
-    });
+  beforeEach(() => {
+    useIsVerifiedRecruiterMock.mockReset();
+    usePublicJobsMock.mockReset();
+    usePublicJobStatsMock.mockReset();
+    useJobMapMock.mockReset();
     useJobMapMock.mockReturnValue({ data: [] });
-    useJobsMock.mockReturnValue({
-      data: {
-        data: [sampleJob()],
-        meta: { page: 1, limit: 12, total: 1, totalPages: 1 },
-      },
-      isLoading: false,
-      isError: false,
+    usePublicJobStatsMock.mockReturnValue({
+      data: { openJobs: 1, statesCovered: 1 },
     });
-
-    renderWithProviders(<ExploreJobsView />);
-
-    expect(screen.getByText("Senior Backend Engineer")).toBeInTheDocument();
-    expect(screen.getByText("Acme Inc.")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Job title…")).toBeInTheDocument();
-    expect(
-      screen.queryByText("Job listings are for verified recruiters"),
-    ).not.toBeInTheDocument();
-    expect(useJobsMock).toHaveBeenCalled();
+    mockJobs([samplePublicJob()]);
   });
 
-  it("shows neither the map nor the lock while approval is still loading", () => {
-    useAuthMock.mockReturnValue({ status: "authenticated", user: {} });
-    useVerificationGateMock.mockReturnValue({
-      isApproved: false,
-      status: undefined,
-      isLoading: true,
-      isError: false,
-      retry: vi.fn(),
-    });
-    useJobMapMock.mockReturnValue({ data: [] });
-    useJobsMock.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: false,
-    });
-
-    renderWithProviders(<ExploreJobsView />);
-
-    // The bug this guards: a verified recruiter saw the "verified recruiters
-    // only" lock for as long as their profile request was in flight.
-    expect(
-      screen.queryByText("Job listings are for verified recruiters"),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText("The live map is for verified recruiters"),
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("Loading the job map…")).toBeInTheDocument();
-    expect(screen.getByText("Checking your access…")).toBeInTheDocument();
-  });
-
-  it("keeps the marketing pitch for a guest, who has not signed up yet", () => {
-    useAuthMock.mockReturnValue({ status: "unauthenticated", user: null });
-    useVerificationGateMock.mockReturnValue({
-      isApproved: false,
-      status: undefined,
-      isLoading: false,
-      isError: false,
-      retry: vi.fn(),
-    });
-    useJobMapMock.mockReturnValue({ data: [] });
-    useJobsMock.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      isError: false,
+  it("shows the marketing hero and the public job grid to everyone", () => {
+    useIsVerifiedRecruiterMock.mockReturnValue({
+      isRecruiter: false,
+      isVerified: false,
+      verificationStatus: null,
     });
 
     renderWithProviders(<ExploreJobsView />);
 
     expect(screen.getByText(/Set Your Price/)).toBeInTheDocument();
+    expect(screen.getByText("Senior Backend Engineer")).toBeInTheDocument();
+    expect(screen.getByText("Acme Inc.")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("Job title or company"),
+    ).toBeInTheDocument();
+    // Public browse endpoint, never the authed jobs endpoint.
+    expect(usePublicJobsMock).toHaveBeenCalled();
   });
 
-  it("replaces the pitch with a working heading once signed in", () => {
-    useAuthMock.mockReturnValue({ status: "authenticated", user: {} });
-    useVerificationGateMock.mockReturnValue({
-      isApproved: true,
-      status: "verified",
-      isLoading: false,
-      isError: false,
-      retry: vi.fn(),
-    });
-    useJobMapMock.mockReturnValue({ data: [] });
-    useJobsMock.mockReturnValue({
-      data: {
-        data: [sampleJob()],
-        meta: { page: 1, limit: 12, total: 1, totalPages: 1 },
-      },
-      isLoading: false,
-      isError: false,
+  it("locks the live map for a guest or unverified recruiter", () => {
+    useIsVerifiedRecruiterMock.mockReturnValue({
+      isRecruiter: false,
+      isVerified: false,
+      verificationStatus: null,
     });
 
     renderWithProviders(<ExploreJobsView />);
 
-    expect(screen.queryByText(/Set Your Price/)).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { level: 1, name: "Job map" }),
+      screen.getAllByText("The live map is for verified recruiters").length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByTestId("decorative-map")).toBeInTheDocument();
+    expect(screen.queryByTestId("live-map")).not.toBeInTheDocument();
+  });
+
+  it("shows the live map for a verified recruiter", () => {
+    useIsVerifiedRecruiterMock.mockReturnValue({
+      isRecruiter: true,
+      isVerified: true,
+      verificationStatus: "verified",
+    });
+
+    renderWithProviders(<ExploreJobsView />);
+
+    expect(screen.getByTestId("live-map")).toBeInTheDocument();
+    expect(
+      screen.queryByText("The live map is for verified recruiters"),
+    ).not.toBeInTheDocument();
+    // The grid is still public, so it shows regardless of verification.
+    expect(screen.getByText("Senior Backend Engineer")).toBeInTheDocument();
+  });
+
+  it("renders an empty state when no roles match, without crashing", () => {
+    useIsVerifiedRecruiterMock.mockReturnValue({
+      isRecruiter: false,
+      isVerified: false,
+      verificationStatus: null,
+    });
+    mockJobs([]);
+
+    renderWithProviders(<ExploreJobsView />);
+
+    expect(
+      screen.getByText("No open roles match these filters"),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Senior Backend Engineer"),
+    ).not.toBeInTheDocument();
   });
 });
