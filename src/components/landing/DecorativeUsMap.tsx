@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
-import { usePublicJobMap } from "@/features/jobs";
+import { usePublicJobMap } from "@/features/jobs/hooks/usePublicJobs";
 import {
   resolveCityBubbles,
   type CityMapBubble,
