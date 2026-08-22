@@ -17,7 +17,7 @@ import { StatsStrip } from "./StatsStrip";
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-background">
-      <div className="mx-auto grid max-w-[1240px] items-center gap-12 px-5 pb-16 pt-14 md:px-10 md:pb-20 lg:grid-cols-[1fr_1.05fr]">
+      <div className="mx-auto grid max-w-[1240px] items-end gap-12 px-5 pb-16 pt-14 md:px-10 md:pb-20 lg:grid-cols-[1fr_1.05fr]">
         <div className="[animation:fadeUp_500ms_ease_both]">
           <h1 className="mb-6 font-heading text-hero text-navy">
             You Set the Price. We Connect You to the{" "}

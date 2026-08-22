@@ -34,6 +34,7 @@ export const publicJobStatsSchema = z.object({
   companiesHiring: z.number().catch(0),
   averageFeeMinor: z.number().catch(0),
   statesCovered: z.number().catch(0),
+  recruiters: z.number().catch(0),
 });
 export type PublicJobStats = z.infer<typeof publicJobStatsSchema>;
 
