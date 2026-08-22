@@ -36,3 +36,12 @@ export const publicJobStatsSchema = z.object({
   statesCovered: z.number().catch(0),
 });
 export type PublicJobStats = z.infer<typeof publicJobStatsSchema>;
+
+/** One bubble on the public landing map — open-role counts per state/city. */
+export const publicJobMapEntrySchema = z.object({
+  locationState: z.string().catch(""),
+  locationCity: z.string().nullable().catch(null),
+  openRoles: z.number().catch(0),
+  averageFeeMinor: z.number().catch(0),
+});
+export type PublicJobMapEntry = z.infer<typeof publicJobMapEntrySchema>;
