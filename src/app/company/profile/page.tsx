@@ -6,6 +6,12 @@ import { AccountSection, RequireRole } from "@/features/auth";
 import { CompanyProfileForm, useMyCompanyProfile } from "@/features/companies";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/ui-components/controls/tabs";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 function ProfileSkeleton() {
@@ -55,10 +61,18 @@ function CompanyProfileContent() {
           </div>
         </div>
       ) : (
-        <>
-          <CompanyProfileForm profile={data} />
-          <AccountSection />
-        </>
+        <Tabs defaultValue="info">
+          <TabsList>
+            <TabsTrigger value="info">Company info</TabsTrigger>
+            <TabsTrigger value="password">Password change</TabsTrigger>
+          </TabsList>
+          <TabsContent value="info">
+            <CompanyProfileForm profile={data} />
+          </TabsContent>
+          <TabsContent value="password">
+            <AccountSection />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
