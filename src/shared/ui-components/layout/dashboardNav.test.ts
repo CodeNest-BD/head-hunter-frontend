@@ -9,34 +9,25 @@ describe("recruiter navigation", () => {
     expect(labels).toEqual(
       expect.arrayContaining([
         "Dashboard",
-        "Job map",
         "Companies",
-        "Notifications",
         "Submissions",
         "Wallet",
-        "My profile",
       ]),
     );
   });
 
-  it("reduces an unapproved recruiter to notifications and their profile", () => {
+  it("reduces an unapproved recruiter to the dashboard", () => {
     const labels = navForRole("recruiter", false).map((item) => item.label);
 
-    expect(labels).toEqual(["Notifications", "My profile"]);
+    expect(labels).toEqual(["Dashboard"]);
   });
 
-  it("gives an approved recruiter a route to the job map", () => {
-    const jobMap = navForRole("recruiter", true).find(
-      (item) => item.label === "Job map",
-    );
-
-    expect(jobMap?.href).toBe("/explore-jobs");
-  });
-
-  it("keeps the job map away from an unapproved recruiter", () => {
-    const labels = navForRole("recruiter", false).map((item) => item.label);
+  it("keeps top-bar destinations (job map, notifications, profile) out of the sidebar", () => {
+    const labels = navForRole("recruiter", true).map((item) => item.label);
 
     expect(labels).not.toContain("Job map");
+    expect(labels).not.toContain("Notifications");
+    expect(labels).not.toContain("My profile");
   });
 
   it("never reduces a company's navigation", () => {

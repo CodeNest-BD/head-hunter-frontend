@@ -18,9 +18,8 @@ export interface TwoColumnDetailLayoutProps {
 
 /**
  * The vertical space this layout can never use, on every page it renders
- * inside `DashboardLayout`: `main`'s `pt-20` (5rem — 4rem clearing the fixed
- * top bar, plus a 1rem gap) plus its `pb-16` (4rem) bottom padding. 5rem +
- * 4rem = 9rem.
+ * inside `DashboardLayout`: the fixed navbar (4rem) above `main`, plus
+ * `main`'s own `pt-6` (1.5rem) and `pb-16` (4rem). 4 + 1.5 + 4 = 9.5rem.
  *
  * This is the only viewport-relative number in this file, and the only
  * thing it has to know is `DashboardLayout`'s own chrome — never this page's
@@ -28,7 +27,7 @@ export interface TwoColumnDetailLayoutProps {
  * the columns size correctly regardless of what `header` turns out to be,
  * rather than also guessing its height here.
  */
-const PAGE_HEIGHT_CLASSNAME = "lg:h-[calc(100vh-9rem)]";
+const PAGE_HEIGHT_CLASSNAME = "lg:h-[calc(100vh-9.5rem)]";
 
 /**
  * Two-part detail page shell: an optional header block at natural height,

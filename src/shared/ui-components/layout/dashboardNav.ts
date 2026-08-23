@@ -1,16 +1,13 @@
 import {
   BadgeCheck,
-  Bell,
   Briefcase,
   Building2,
   Inbox,
   LayoutDashboard,
-  MapPinned,
   type LucideIcon,
   Send,
   Settings,
   Users,
-  UserRound,
   Wallet2,
 } from "lucide-react";
 
@@ -21,8 +18,8 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Show the unread-notifications, or unread-messages, badge on this item. */
-  badge?: "notifications" | "messages";
+  /** Show the unread-messages badge on this item (Inbox / Submissions). */
+  badge?: "messages";
 }
 
 /** Role-based primary navigation, shared by the sidebar and the user menu. */
@@ -36,29 +33,14 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       icon: Inbox,
       badge: "messages",
     },
-    {
-      href: "/notifications",
-      label: "Notifications",
-      icon: Bell,
-      badge: "notifications",
-    },
     { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
-    { href: "/company/profile", label: "Company profile", icon: Building2 },
   ],
   recruiter: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    // Second, right after the dashboard: browsing the map is the recruiter's
-    // main job. It was previously reachable only from the desktop top bar,
-    // which the mobile drawer does not render — so on a phone the map, and
-    // with it the whole marketplace, had no route at all.
-    { href: "/explore-jobs", label: "Job map", icon: MapPinned },
+    // "Explore Jobs" (the job map) lives in the global top bar and the mobile
+    // drawer's site links; Notifications and the profile live in the top bar
+    // (bell dropdown + user menu) — so none are repeated here.
     { href: "/companies", label: "Companies", icon: Building2 },
-    {
-      href: "/notifications",
-      label: "Notifications",
-      icon: Bell,
-      badge: "notifications",
-    },
     {
       href: "/recruiter/submissions",
       label: "Submissions",
@@ -77,7 +59,6 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
           },
         ]),
     { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
-    { href: "/recruiter/profile", label: "My profile", icon: UserRound },
   ],
   admin: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -90,8 +71,12 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   ],
 };
 
-/** Labels an unapproved recruiter may still reach. Mirrors the server's allow-list. */
-const UNAPPROVED_RECRUITER_LABELS = ["Notifications", "My profile"] as const;
+/**
+ * Sidebar labels an unapproved recruiter still sees. Notifications and the
+ * profile moved to the top bar (always available), so the reduced sidebar is
+ * just the dashboard, which hosts the verification-pending guidance.
+ */
+const UNAPPROVED_RECRUITER_LABELS = ["Dashboard"] as const;
 
 /**
  * Approval-aware nav selector. `UserMenu` and `SidebarContent` both read
