@@ -70,6 +70,11 @@ export async function updateJob(
   return jobSchema.parse(data);
 }
 
+/** DELETE /v1/jobs/:id — soft-deletes a job the caller owns (204). */
+export async function deleteJob(id: string): Promise<void> {
+  await apiClient.delete(`/jobs/${id}`);
+}
+
 /** GET /v1/jobs/map — not paginated; at most one row per US state. */
 export async function fetchJobMap(
   params: JobFilterParams,

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   createJob,
+  deleteJob,
   fetchJob,
   fetchJobMap,
   fetchJobs,
@@ -40,6 +41,21 @@ export function useJob(id: string) {
   return useQuery({
     queryKey: jobKeys.detail(id),
     queryFn: () => fetchJob(id),
+  });
+}
+
+/** Soft-delete a job the company owns; refreshes the jobs list on success. */
+export function useDeleteJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteJob(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: jobKeys.all });
+      toast.success("Job deleted");
+    },
+    onError: () => {
+      toast.error("Could not delete the job. Please try again.");
+    },
   });
 }
 
