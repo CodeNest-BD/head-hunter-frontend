@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LayoutGrid, List, Loader2, Lock, Search, SearchX } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+import { useAuth } from "@/features/auth";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -115,6 +116,9 @@ const INITIAL_FILTERS: Filters = {
 export function ExploreJobsView() {
   const { isVerified, isRecruiter, verificationStatus, isLoading } =
     useIsVerifiedRecruiter();
+  const { user } = useAuth();
+  // Admins see the live map too — they have full access to the marketplace.
+  const isAdmin = user?.role === "admin";
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
   const [view, setView] = useState<ResultView>("cards");
   const [page, setPage] = useState(1);
@@ -254,7 +258,7 @@ export function ExploreJobsView() {
           <div className="flex min-w-0 flex-col gap-6">
             <MapCard
               isLoading={isLoading}
-              isVerified={isVerified}
+              canViewMap={isVerified || isAdmin}
               isRecruiter={isRecruiter}
               verificationStatus={verificationStatus}
               listParams={listParams}
@@ -582,7 +586,7 @@ interface MapListParams {
 
 function MapCard({
   isLoading,
-  isVerified,
+  canViewMap,
   isRecruiter,
   verificationStatus,
   listParams,
@@ -590,7 +594,8 @@ function MapCard({
   onSelect,
 }: {
   isLoading: boolean;
-  isVerified: boolean;
+  /** Verified recruiters and admins may read the live map. */
+  canViewMap: boolean;
   isRecruiter: boolean;
   verificationStatus: string | null;
   listParams: MapListParams;
@@ -602,7 +607,7 @@ function MapCard({
   if (isLoading) {
     return <LoadingMapCard />;
   }
-  if (!isVerified) {
+  if (!canViewMap) {
     return (
       <LockedMapCard
         pending={isRecruiter && verificationStatus !== "verified"}
