@@ -6,17 +6,10 @@ import { ChevronDown, LogOut, UserRound } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { useMessageUnreadCount } from "@/features/conversations";
-import { useUnreadCount } from "@/features/notifications";
 import { useVerificationGate } from "@/features/recruiters";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { CountBadge } from "./CountBadge";
 import { navForRole } from "./dashboardNav";
-
-/** Live unread count for the notifications menu item (recruiter only). */
-function UnreadCount() {
-  const { data } = useUnreadCount();
-  return <CountBadge count={data} />;
-}
 
 /** Live unread count for the Inbox / Submissions menu item. */
 function UnreadMessageCount() {
@@ -93,7 +86,6 @@ export function UserMenu({ className }: { className?: string }) {
                 >
                   <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                   <span className="truncate">{item.label}</span>
-                  {item.badge === "notifications" && <UnreadCount />}
                   {item.badge === "messages" && <UnreadMessageCount />}
                 </Link>
               </DropdownMenu.Item>
