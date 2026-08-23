@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Briefcase, Plus } from "lucide-react";
+import {
+  AlertCircle,
+  Briefcase,
+  Eye,
+  MoreHorizontal,
+  Plus,
+  SquarePen,
+  Trash2,
+} from "lucide-react";
 
 // Deep-imported (not via the feature barrels): JobsTable is exported from the
 // jobs barrel, and the submissions barrel imports back from jobs — the barrel
@@ -31,6 +39,13 @@ import {
   TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 import { useListState } from "@/shared/hooks/useListState";
+import { Button } from "@/shared/ui-components/controls/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/ui-components/controls/popover";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import {
@@ -38,7 +53,7 @@ import {
   jobStatusSchema,
   type RoleCategory,
 } from "../schemas";
-import { useJobs } from "../hooks/useJobs";
+import { useDeleteJob, useJobs } from "../hooks/useJobs";
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
@@ -60,6 +75,100 @@ const COLUMNS: ColumnDef[] = [
 const CATEGORY_OPTIONS = (
   Object.entries(ROLE_CATEGORY_LABELS) as [RoleCategory, string][]
 ).map(([value, label]) => ({ value, label }));
+
+/**
+ * Per-row actions behind a kebab menu: View (the public-style detail), Edit,
+ * and a two-step Delete (soft-delete) so the destructive action needs a
+ * deliberate confirm.
+ */
+function JobRowActions({ jobId }: { jobId: string }) {
+  const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const del = useDeleteJob();
+
+  const itemClass =
+    "flex w-full items-center gap-2.5 rounded-sm px-2.5 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent";
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setConfirming(false);
+      }}
+    >
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="Job actions"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <MoreHorizontal className="h-[18px] w-[18px]" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-44 p-1">
+        {confirming ? (
+          <div className="p-2">
+            <p className="mb-2.5 text-xs text-muted-foreground">
+              Delete this job? This can&apos;t be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirming(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={del.isPending}
+                onClick={() =>
+                  del.mutate(jobId, { onSuccess: () => setOpen(false) })
+                }
+              >
+                {del.isPending ? "Deleting…" : "Delete"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Link
+              href={`/jobs/${jobId}`}
+              onClick={() => setOpen(false)}
+              className={itemClass}
+            >
+              <Eye className="h-4 w-4 text-muted-foreground" />
+              View
+            </Link>
+            <Link
+              href={`/company/jobs/${jobId}`}
+              onClick={() => setOpen(false)}
+              className={itemClass}
+            >
+              <SquarePen className="h-4 w-4 text-muted-foreground" />
+              Edit
+            </Link>
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className={cn(
+                itemClass,
+                "text-destructive hover:bg-destructive/10",
+              )}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </button>
+          </>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function JobsTable() {
   const {
@@ -228,8 +337,10 @@ export function JobsTable() {
                       return (
                         <tr key={job.id} className={TABLE_ROW}>
                           <td className={TABLE_TD}>
+                            {/* Title opens the job's public-style detail view;
+                                the row's Edit action is where you change it. */}
                             <Link
-                              href={`/company/jobs/${job.id}`}
+                              href={`/jobs/${job.id}`}
                               className="font-semibold text-navy transition-colors hover:text-primary"
                             >
                               {job.title}
@@ -277,13 +388,9 @@ export function JobsTable() {
                             </td>
                           )}
                           <td className={`${TABLE_TD} text-right`}>
-                            <Link
-                              href={`/company/jobs/${job.id}`}
-                              className="inline-flex items-center gap-1 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
-                            >
-                              Edit
-                              <span aria-hidden="true">→</span>
-                            </Link>
+                            <div className="flex justify-end">
+                              <JobRowActions jobId={job.id} />
+                            </div>
                           </td>
                         </tr>
                       );
