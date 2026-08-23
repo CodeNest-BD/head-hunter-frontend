@@ -20,6 +20,8 @@ export function Logo({ tone = "light", className }: LogoProps) {
   const onDark = tone === "onDark";
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
+      {/* The mark is the same coloured crosshair on every surface — the blue
+          ring reads on both light and navy — so only the wordmark ink adapts. */}
       <Image
         src="/assets/brand/logo-mark.png"
         alt=""
@@ -27,11 +29,7 @@ export function Logo({ tone = "light", className }: LogoProps) {
         width={292}
         height={298}
         priority
-        className={cn(
-          "h-7 w-auto select-none",
-          // On navy panels the coloured mark loses contrast; render it white.
-          onDark && "brightness-0 invert",
-        )}
+        className="h-7 w-auto select-none"
       />
       <span className="font-heading text-[19px] font-extrabold leading-none tracking-[-0.02em]">
         <span className={onDark ? "text-white" : "text-navy"}>
