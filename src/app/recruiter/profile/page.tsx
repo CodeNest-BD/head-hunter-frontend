@@ -10,6 +10,12 @@ import {
 } from "@/features/recruiters";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/ui-components/controls/tabs";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -64,11 +70,21 @@ function RecruiterProfileContent() {
           onRetry={() => void refetch()}
         />
       ) : (
-        <>
-          <RecruiterProfileForm profile={data} />
-          <ReferencesSection references={data.references} />
-          <AccountSection />
-        </>
+        <Tabs defaultValue="info">
+          <TabsList>
+            <TabsTrigger value="info">Personal info</TabsTrigger>
+            <TabsTrigger value="password">Password change</TabsTrigger>
+          </TabsList>
+          <TabsContent value="info">
+            <div className="flex flex-col gap-6">
+              <RecruiterProfileForm profile={data} />
+              <ReferencesSection references={data.references} />
+            </div>
+          </TabsContent>
+          <TabsContent value="password">
+            <AccountSection />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

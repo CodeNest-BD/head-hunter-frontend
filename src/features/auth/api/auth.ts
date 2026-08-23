@@ -100,3 +100,19 @@ export async function resetPassword(input: {
   );
   successResponse.parse(data);
 }
+
+/**
+ * POST /auth/change-password → 200 { success: true }. Authenticated. 401 when
+ * the current password is wrong; 400 for a Google-only account.
+ */
+export async function changePassword(input: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<void> {
+  const { data } = await apiClient.post<unknown>(
+    "/auth/change-password",
+    input,
+    { suppressGlobalErrorToast: true },
+  );
+  successResponse.parse(data);
+}

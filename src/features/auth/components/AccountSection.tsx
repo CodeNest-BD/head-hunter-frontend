@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
-import { KeyRound } from "lucide-react";
 
+import { isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
-import { forgotPassword } from "../api/auth";
+import { Label } from "@/shared/ui-components/controls/label";
+import { PasswordInput } from "@/shared/ui-components/controls/password-input";
+import { changePassword } from "../api/auth";
 import { useAuth } from "../hooks/useAuth";
 
 /** A read-only identity field — not editable in-app. */
@@ -21,29 +24,75 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
   );
 }
 
+// Mirrors the sign-up / reset password rule so every screen agrees on validity.
+const schema = z
+  .object({
+    currentPassword: z.string().min(1, "Enter your current password"),
+    newPassword: z
+      .string()
+      .min(8, "At least 8 characters")
+      .max(72, "At most 72 characters")
+      .regex(/^(?=.*\p{Ll})(?=.*\p{Lu})(?=.*\d)(?=.*[^\p{L}\p{N}])/u, {
+        message:
+          "Include an uppercase letter, a lowercase letter, a number and a special character",
+      }),
+    confirmPassword: z.string().min(1, "Confirm your new password"),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: "Passwords don’t match",
+    path: ["confirmPassword"],
+  })
+  .refine((values) => values.newPassword !== values.currentPassword, {
+    message: "Choose a password different from your current one",
+    path: ["newPassword"],
+  });
+type FormData = z.infer<typeof schema>;
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-[13px] text-destructive">{message}</p>;
+}
+
 /**
- * Account identity: the email (read-only — changing it needs
- * re-verification and has no endpoint), plus a password change that reuses the
- * existing reset-by-email flow, since there is no logged-in change-password
- * endpoint.
+ * Account identity: the email (read-only — changing it needs re-verification
+ * and has no endpoint) plus an in-app password change (current + new +
+ * confirm) that verifies the current password server-side.
  */
 export function AccountSection() {
   const { user } = useAuth();
-  const router = useRouter();
-  const [sending, setSending] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
+
   if (!user) return null;
 
-  const changePassword = async () => {
-    setSending(true);
+  const onSubmit = async (data: FormData): Promise<void> => {
     try {
-      await forgotPassword(user.email);
-      toast("Check your email", {
-        description: "We sent a code to reset your password.",
+      await changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
       });
-      router.push(`/reset-password?email=${encodeURIComponent(user.email)}`);
-    } catch {
-      toast.error("Could not start the password reset. Please try again.");
-      setSending(false);
+      toast.success("Password updated", {
+        description: "Use your new password next time you sign in.",
+      });
+      reset();
+    } catch (error) {
+      // 401 means the current password was wrong — surface it on that field.
+      if (isApiError(error) && error.statusCode === 401) {
+        setError("currentPassword", {
+          message: "Current password is incorrect",
+        });
+        return;
+      }
+      toast.error("Could not change your password", {
+        description: isApiError(error)
+          ? error.message
+          : "Something went wrong. Please try again.",
+      });
     }
   };
 
@@ -58,24 +107,44 @@ export function AccountSection() {
         </div>
         <div className="flex flex-col gap-4">
           <ReadOnlyField label="Email" value={user.email} />
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-navy">Password</span>
+
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-4 border-t border-border pt-4"
+          >
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="currentPassword">Current password</Label>
+              <PasswordInput
+                id="currentPassword"
+                autoComplete="current-password"
+                {...register("currentPassword")}
+              />
+              <FieldError message={errors.currentPassword?.message} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="newPassword">New password</Label>
+              <PasswordInput
+                id="newPassword"
+                autoComplete="new-password"
+                {...register("newPassword")}
+              />
+              <FieldError message={errors.newPassword?.message} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="confirmPassword">Confirm new password</Label>
+              <PasswordInput
+                id="confirmPassword"
+                autoComplete="new-password"
+                {...register("confirmPassword")}
+              />
+              <FieldError message={errors.confirmPassword?.message} />
+            </div>
             <div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={sending}
-                onClick={() => void changePassword()}
-              >
-                <KeyRound className="h-4 w-4" />
-                {sending ? "Sending…" : "Change password"}
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting ? "Updating…" : "Update password"}
               </Button>
             </div>
-            <p className="text-[13px] text-muted-foreground">
-              We&apos;ll email a code, then take you to set a new password.
-            </p>
-          </div>
+          </form>
         </div>
       </div>
     </section>
