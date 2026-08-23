@@ -11,6 +11,12 @@ vi.mock("@/features/recruiters", () => ({
   useIsVerifiedRecruiter: () => useIsVerifiedRecruiterMock(),
 }));
 
+// The view reads the role to open the live map for admins; default to a guest.
+const useAuthMock = vi.fn();
+vi.mock("@/features/auth", () => ({
+  useAuth: () => useAuthMock(),
+}));
+
 const usePublicJobsMock = vi.fn();
 const usePublicJobStatsMock = vi.fn();
 vi.mock("../hooks/usePublicJobs", () => ({
@@ -70,6 +76,8 @@ function mockJobs(jobs: PublicJobCard[]): void {
 describe("ExploreJobsView", () => {
   beforeEach(() => {
     useIsVerifiedRecruiterMock.mockReset();
+    useAuthMock.mockReset();
+    useAuthMock.mockReturnValue({ user: null });
     usePublicJobsMock.mockReset();
     usePublicJobStatsMock.mockReset();
     useJobMapMock.mockReset();
@@ -130,6 +138,22 @@ describe("ExploreJobsView", () => {
     ).not.toBeInTheDocument();
     // The grid is still public, so it shows regardless of verification.
     expect(screen.getByText("Senior Backend Engineer")).toBeInTheDocument();
+  });
+
+  it("shows the live map for an admin (not a verified recruiter)", () => {
+    useIsVerifiedRecruiterMock.mockReturnValue({
+      isRecruiter: false,
+      isVerified: false,
+      verificationStatus: null,
+    });
+    useAuthMock.mockReturnValue({ user: { role: "admin" } });
+
+    renderWithProviders(<ExploreJobsView />);
+
+    expect(screen.getByTestId("live-map")).toBeInTheDocument();
+    expect(
+      screen.queryByText("The live map is for verified recruiters"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders an empty state when no roles match, without crashing", () => {
