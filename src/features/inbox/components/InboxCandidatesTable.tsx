@@ -1,9 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowRight, Users } from "lucide-react";
 
 import { UnreadBadge } from "@/features/conversations/components/UnreadBadge";
+import {
+  CANDIDATE_STATUSES,
+  CANDIDATE_STATUS_LABELS,
+  type CandidateStatus,
+} from "@/features/candidates/schemas";
 import { Button } from "@/shared/ui-components/controls/button";
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -29,37 +35,51 @@ import {
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { useListState } from "@/shared/hooks/useListState";
 import { formatDate } from "@/shared/utils/formatDate";
-import { useInboxRecruiters } from "../hooks/useSubmissions";
+import type { InboxSide } from "../api/inbox";
+import { useInboxCandidates } from "../hooks/useInbox";
 import {
-  SUBMISSION_STATUS_FILTER_OPTIONS,
-  SUBMISSION_STATUS_LABELS,
+  INBOX_CANDIDATE_SORTS,
   recruiterDisplayName,
-  type SubmissionStatus,
+  type InboxCandidateSort,
 } from "../schemas";
 
-const STATUS_STYLES: Record<SubmissionStatus, string> = {
+const STATUS_STYLES: Record<CandidateStatus, string> = {
   submitted: "bg-primary/15 text-primary",
-  under_review: "text-[#92610C] bg-[#FBF3DF]",
-  advanced: "text-[#17734E] bg-[#E7F4EC]",
-  rejected: "bg-[#FBEAEA] text-[#9B3535]",
-  withdrawn: "bg-[#EEF1F6] text-[#616676]",
+  reviewing: "text-[#92610C] bg-[#FBF3DF]",
+  interviewing: "text-[#92610C] bg-[#FBF3DF]",
+  offered: "text-[#17734E] bg-[#E7F4EC]",
+  hired: "text-[#17734E] bg-[#E7F4EC]",
+  passed: "bg-[#FBEAEA] text-[#9B3535]",
 };
 
-const COLUMNS: ColumnDef[] = [
-  { key: "recruiter", label: "Recruiter", required: true },
-  { key: "rating", label: "Rating" },
-  { key: "candidates", label: "Candidates" },
-  { key: "submitted", label: "Submitted" },
-  { key: "status", label: "Status" },
-  { key: "actions", label: "Actions", required: true },
-];
+const STATUS_FILTER_OPTIONS = CANDIDATE_STATUSES.map((status) => ({
+  value: status,
+  label: CANDIDATE_STATUS_LABELS[status],
+}));
+
+/** Narrows the toolbar's plain string back to a sort this table understands. */
+const isCandidateSort = (value: string): value is InboxCandidateSort =>
+  (INBOX_CANDIDATE_SORTS as readonly string[]).includes(value);
+
+const SORT_LABELS: Record<InboxCandidateSort, string> = {
+  submittedAt: "Newest first",
+  recruiterRating: "Best-rated recruiter",
+  candidateName: "Candidate name",
+  status: "Status",
+};
 
 /**
- * Level 2 of the company inbox: the recruiters who submitted to one job,
- * best-reviewed first (the server sorts by rating). Each row opens the
- * existing conversation workspace for that submission.
+ * Level 2 of either inbox: one row per candidate on the selected job — one
+ * thread, one row. The counterparty is a column rather than a level of its own,
+ * so the company still sees who sent each candidate.
  */
-export function InboxRecruitersTable({ jobId }: { jobId: string }) {
+export function InboxCandidatesTable({
+  side,
+  jobId,
+}: {
+  side: InboxSide;
+  jobId: string;
+}) {
   const {
     page,
     setPage,
@@ -71,13 +91,40 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
     limit,
     changeLimit,
   } = useListState();
-  const cols = useVisibleColumns("company.inbox.recruiters.columns", COLUMNS);
-  const { data, isPending, isError, refetch } = useInboxRecruiters(jobId, {
-    page,
-    limit,
-    q: q || undefined,
-    status: status || undefined,
-  });
+  const isCompany = side === "company";
+  const cols = useVisibleColumns(`${side}.inbox.candidates.columns`, [
+    { key: "candidate", label: "Candidate", required: true },
+    ...(isCompany
+      ? [
+          { key: "recruiter", label: "Recruiter" },
+          { key: "rating", label: "Rating" },
+        ]
+      : [{ key: "company", label: "Company" }]),
+    { key: "submitted", label: "Submitted" },
+    { key: "status", label: "Status" },
+    { key: "actions", label: "Actions", required: true },
+  ] satisfies ColumnDef[]);
+
+  // Sort lives beside the filters rather than on the column headers: the
+  // server owns the ordering (rating is a join it alone can do), so a header
+  // click would imply a client-side sort that never happens.
+  const [sortBy, setSortBy] = useState<InboxCandidateSort>("submittedAt");
+  const { data, isPending, isError, refetch } = useInboxCandidates(
+    side,
+    jobId,
+    {
+      page,
+      limit,
+      q: q || undefined,
+      status: status || undefined,
+      sortBy,
+    },
+  );
+
+  const threadHref = (candidateId: string): string =>
+    isCompany
+      ? `/company/inbox/${candidateId}`
+      : `/recruiter/inbox/${candidateId}`;
 
   const toolbar = (
     <div className={TABLE_TOOLBAR}>
@@ -85,15 +132,30 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
         <ListToolbar
           query={qInput}
           onQueryChange={setQInput}
-          placeholder="Search recruiters by name…"
+          placeholder={
+            isCompany
+              ? "Search by candidate or recruiter name…"
+              : "Search by candidate name…"
+          }
           filter={{
             value: status,
             onChange: changeStatus,
             allLabel: "All statuses",
-            // The filter offers all five: a submission recorded before the
-            // settable set was narrowed still carries `under_review` or
-            // `advanced`, and it has to stay findable.
-            options: [...SUBMISSION_STATUS_FILTER_OPTIONS],
+            options: STATUS_FILTER_OPTIONS,
+          }}
+          extraFilter={{
+            value: sortBy,
+            onChange: (next) => {
+              // "" is the toolbar's "no selection", which for a sort means the
+              // default rather than an absent one.
+              setSortBy(isCandidateSort(next) ? next : "submittedAt");
+              setPage(1);
+            },
+            allLabel: SORT_LABELS.submittedAt,
+            options: INBOX_CANDIDATE_SORTS.filter(
+              (s) =>
+                s !== "submittedAt" && (isCompany || s !== "recruiterRating"),
+            ).map((s) => ({ value: s, label: SORT_LABELS[s] })),
           }}
         />
       </div>
@@ -112,7 +174,7 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
         <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
           <div className="flex items-center gap-2 font-medium">
             <AlertCircle className="h-[18px] w-[18px]" />
-            Could not load the recruiters for this job.
+            Could not load the candidates for this job.
           </div>
           <Button
             type="button"
@@ -140,11 +202,12 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
             <Users className="h-6 w-6" />
           </span>
           <p className="font-heading text-base font-semibold text-foreground">
-            No recruiters found
+            No candidates found
           </p>
           <p className="max-w-sm text-sm text-muted-foreground">
-            When a recruiter submits candidates, they appear here —
-            best-reviewed first.
+            {isCompany
+              ? "When a recruiter sends someone to this job, they appear here — newest first."
+              : "Candidates you send to this job appear here, each with its own conversation."}
           </p>
         </div>
       ) : (
@@ -153,12 +216,15 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
             <table className={TABLE_EL}>
               <thead className={TABLE_HEAD}>
                 <tr className={TABLE_HEAD_ROW}>
-                  <th className={TABLE_TH}>Recruiter</th>
-                  {cols.isVisible("rating") && (
+                  <th className={TABLE_TH}>Candidate</th>
+                  {isCompany && cols.isVisible("recruiter") && (
+                    <th className={TABLE_TH}>Recruiter</th>
+                  )}
+                  {isCompany && cols.isVisible("rating") && (
                     <th className={TABLE_TH}>Rating</th>
                   )}
-                  {cols.isVisible("candidates") && (
-                    <th className={TABLE_TH}>Candidates</th>
+                  {!isCompany && cols.isVisible("company") && (
+                    <th className={TABLE_TH}>Company</th>
                   )}
                   {cols.isVisible("submitted") && (
                     <th className={TABLE_TH}>Submitted</th>
@@ -171,19 +237,26 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
               </thead>
               <tbody className={TABLE_BODY}>
                 {data.data.map((row) => (
-                  <tr key={row.submissionId} className={TABLE_ROW}>
+                  <tr key={row.candidateId} className={TABLE_ROW}>
                     <td className={`${TABLE_TD} font-semibold text-navy`}>
                       <span className="flex items-center gap-2">
-                        {recruiterDisplayName(row.recruiter)}
-                        {row.recruiter?.yearsExperience != null && (
-                          <span className="text-xs font-normal text-brand-gray">
-                            {row.recruiter.yearsExperience} yrs
-                          </span>
-                        )}
+                        {row.candidateName}
                         <UnreadBadge count={row.unreadMessages} />
                       </span>
                     </td>
-                    {cols.isVisible("rating") && (
+                    {isCompany && cols.isVisible("recruiter") && (
+                      <td className={`${TABLE_TD} text-navy`}>
+                        <span className="flex items-center gap-2">
+                          {recruiterDisplayName(row.recruiter)}
+                          {row.recruiter?.yearsExperience != null && (
+                            <span className="text-xs font-normal text-brand-gray">
+                              {row.recruiter.yearsExperience} yrs
+                            </span>
+                          )}
+                        </span>
+                      </td>
+                    )}
+                    {isCompany && cols.isVisible("rating") && (
                       <td className={`${TABLE_TD} whitespace-nowrap`}>
                         <RatingStars
                           value={row.recruiter?.ratingAvg ?? null}
@@ -191,9 +264,9 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
                         />
                       </td>
                     )}
-                    {cols.isVisible("candidates") && (
-                      <td className={`${TABLE_TD} tabular-nums text-navy`}>
-                        {row.candidateCount}
+                    {!isCompany && cols.isVisible("company") && (
+                      <td className={`${TABLE_TD} text-navy`}>
+                        {row.companyName ?? "—"}
                       </td>
                     )}
                     {cols.isVisible("submitted") && (
@@ -206,14 +279,14 @@ export function InboxRecruitersTable({ jobId }: { jobId: string }) {
                     {cols.isVisible("status") && (
                       <td className={TABLE_TD}>
                         <StatusBadge
-                          label={SUBMISSION_STATUS_LABELS[row.status]}
+                          label={CANDIDATE_STATUS_LABELS[row.status]}
                           className={STATUS_STYLES[row.status]}
                         />
                       </td>
                     )}
                     <td className={`${TABLE_TD} text-right`}>
                       <Link
-                        href={`/company/inbox/${row.submissionId}`}
+                        href={threadHref(row.candidateId)}
                         className="inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                       >
                         Open conversation

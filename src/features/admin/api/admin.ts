@@ -134,13 +134,13 @@ const THREAD_SORT_ORDER: ThreadSortOrder = "DESC";
 /** Thread events fetched per page (independent of the directory page size). */
 const THREAD_PAGE_SIZE = 20;
 
-/** GET /v1/admin/conversations/:submissionId — one page of the thread, paged by the hook. */
+/** GET /v1/admin/conversations/:candidateId — one page of the thread, paged by the hook. */
 export async function fetchConversation(
-  submissionId: string,
+  candidateId: string,
   page: number,
 ): Promise<ConversationThread> {
   const { data } = await apiClient.get<unknown>(
-    `/admin/conversations/${submissionId}`,
+    `/admin/conversations/${candidateId}`,
     { params: { page, limit: THREAD_PAGE_SIZE, sortOrder: THREAD_SORT_ORDER } },
   );
   return conversationThreadSchema.parse(data);

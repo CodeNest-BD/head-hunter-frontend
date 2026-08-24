@@ -26,12 +26,12 @@ describe("deriveBreadcrumbs", () => {
 
   it("labels an id segment as Details rather than showing the raw id", () => {
     const crumbs = deriveBreadcrumbs(
-      "/recruiter/submissions/3f1c2b90-1a2b-4c3d-8e9f-000000000000",
+      "/recruiter/inbox/3f1c2b90-1a2b-4c3d-8e9f-000000000000",
     );
     expect(crumbs.at(-1)).toEqual({ label: "Details", href: undefined });
     expect(crumbs).toContainEqual({
-      label: "Submissions",
-      href: "/recruiter/submissions",
+      label: "Inbox",
+      href: "/recruiter/inbox",
     });
   });
 

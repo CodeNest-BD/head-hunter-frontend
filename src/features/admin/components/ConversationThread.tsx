@@ -17,12 +17,12 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminConversation } from "../hooks/useAdmin";
 import {
-  SUBMISSION_LABELS,
+  CANDIDATE_LABELS,
   type ConversationEvent,
   type ConversationThread as ConversationThreadPage,
 } from "../schemas";
 import { DetailSkeleton } from "./DetailPrimitives";
-import { SUBMISSION_STATUS_STYLES } from "./statusStyles";
+import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
 
 const EVENT_ICON: Record<ConversationEvent["type"], LucideIcon> = {
   submission: Send,
@@ -119,15 +119,22 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
               {header.recruiter.name}
             </span>
             <StatusBadge
-              label={SUBMISSION_LABELS[header.status] ?? header.status}
+              label={
+                CANDIDATE_LABELS[header.candidate.status] ??
+                header.candidate.status
+              }
               className={
-                SUBMISSION_STATUS_STYLES[header.status] ??
+                CANDIDATE_STATUS_STYLES[header.candidate.status] ??
                 "bg-muted text-muted-foreground"
               }
             />
           </div>
           <p className="text-sm text-muted-foreground">
-            Role:{" "}
+            Candidate:{" "}
+            <span className="font-medium text-navy">
+              {header.candidate.fullName}
+            </span>{" "}
+            · Role:{" "}
             <span className="font-medium text-navy">{header.job.title}</span>
           </p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">

@@ -12,16 +12,16 @@ import { useSendMessage } from "../hooks/useConversation";
 const MAX_BODY_LENGTH = 4000;
 
 export interface MessageComposerProps {
-  submissionId: string;
-  /** Tags the message to one candidate; omitted sends a role-level message. */
-  candidateId?: string;
-  /** Display name for the scope indicator below; ignored when `candidateId`
-   * is omitted. */
+  /** The thread. A conversation is one candidate. */
+  candidateId: string;
+  /** Display name for the scope indicator below. */
   candidateName?: string;
+  /** False once the candidate is passed on: readable, closed to new messages. */
+  acceptsMessages?: boolean;
 }
 
 /**
- * 409 (submission withdrawn/rejected) and 429 (30/minute throttle) are both
+ * 409 (the candidate was passed on) and 429 (30/minute throttle) are both
  * reachable outcomes of sending, so each gets a specific inline message
  * instead of a generic failure — mirrors the status-driven error messages in
  * features/auth's sign-in form.
@@ -32,7 +32,7 @@ function sendMessageErrorMessage(error: unknown): string {
   }
   switch (error.statusCode) {
     case HttpStatusCode.Conflict:
-      return "This submission is closed, so no new messages can be sent.";
+      return "This candidate was passed on, so the conversation is closed.";
     case HttpStatusCode.TooManyRequests:
       return "You're sending messages too quickly. Please wait a moment and try again.";
     default:
@@ -42,28 +42,24 @@ function sendMessageErrorMessage(error: unknown): string {
 
 /** Textarea + send button for one thread, disabled while a send is pending. */
 export function MessageComposer({
-  submissionId,
   candidateId,
   candidateName,
+  acceptsMessages = true,
 }: MessageComposerProps) {
   const scopeDescriptionId = useId();
   const [body, setBody] = useState("");
-  const sendMessage = useSendMessage(submissionId);
+  const sendMessage = useSendMessage(candidateId);
 
   const trimmed = body.trim();
-  // A quiet status cue, not a warning: the candidate filter above decides
-  // where a sent message lands, and this is the only place that says so
-  // before the send happens, since the tag isn't editable afterwards.
-  const scopeLabel = candidateId
+  // A quiet status cue, not a warning: it names who this conversation is
+  // about, which matters now that every candidate has a thread of their own.
+  const scopeLabel = acceptsMessages
     ? `Sending about ${candidateName ?? "this candidate"}`
-    : "Sending to the whole thread";
+    : "This candidate was passed on — the conversation is closed";
 
   const handleSend = (): void => {
     if (!trimmed) return;
-    sendMessage.mutate(
-      { body: trimmed, candidateId },
-      { onSuccess: () => setBody("") },
-    );
+    sendMessage.mutate({ body: trimmed }, { onSuccess: () => setBody("") });
   };
 
   return (
@@ -76,7 +72,7 @@ export function MessageComposer({
         onChange={(event) => setBody(event.target.value)}
         maxLength={MAX_BODY_LENGTH}
         placeholder="Write a message…"
-        disabled={sendMessage.isPending}
+        disabled={sendMessage.isPending || !acceptsMessages}
         aria-label="Message"
         aria-describedby={scopeDescriptionId}
       />
@@ -87,7 +83,9 @@ export function MessageComposer({
         <Button
           type="button"
           size="sm"
-          disabled={sendMessage.isPending || trimmed.length === 0}
+          disabled={
+            sendMessage.isPending || trimmed.length === 0 || !acceptsMessages
+          }
           onClick={handleSend}
         >
           {sendMessage.isPending ? "Sending…" : "Send"}

@@ -2,7 +2,7 @@ import type { Crumb } from "./Breadcrumb";
 
 /**
  * Human labels for known path segments. Anything not listed is title-cased
- * from the slug, and id-looking segments (a job/submission id) become
+ * from the slug, and id-looking segments (a job/candidate id) become
  * "Details" rather than showing a raw uuid in the trail.
  */
 const SEGMENT_LABELS: Record<string, string> = {
@@ -18,7 +18,6 @@ const SEGMENT_LABELS: Record<string, string> = {
   inbox: "Inbox",
   wallet: "Wallet",
   profile: "Profile",
-  submissions: "Submissions",
   subscription: "Subscription",
   notifications: "Notifications",
   new: "New",
@@ -38,7 +37,7 @@ const LINKABLE_PATHS = new Set<string>([
   "/company/inbox",
   "/company/wallet",
   "/company/profile",
-  "/recruiter/submissions",
+  "/recruiter/inbox",
   "/recruiter/profile",
   "/admin/recruiters",
   "/admin/companies",

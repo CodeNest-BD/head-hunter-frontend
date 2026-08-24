@@ -82,11 +82,13 @@ function offer(overrides: Partial<Offer> & { id: string }): Offer {
 function candidate(overrides: Partial<Candidate> = {}): Candidate {
   return {
     id: "candidate-1",
-    submissionId: "submission-1",
+    jobId: "job-1",
+    recruiterProfileId: "rec-1",
     fullName: "Dana Lee",
     email: "dana@example.com",
     phone: null,
     overview: null,
+    pitch: null,
     linkedinUrl: null,
     yearsOfExperience: null,
     currentCompany: null,
@@ -101,11 +103,7 @@ function candidate(overrides: Partial<Candidate> = {}): Candidate {
 describe("CandidateCard", () => {
   it("shows an explicit empty state for both badges when the candidate has no negotiation history", () => {
     renderWithProviders(
-      <CandidateCard
-        candidate={candidate()}
-        submissionId="submission-1"
-        negotiationState={null}
-      />,
+      <CandidateCard candidate={candidate()} negotiationState={null} />,
     );
 
     expect(screen.getByText(/Interview:/)).toHaveTextContent(
@@ -118,7 +116,6 @@ describe("CandidateCard", () => {
     renderWithProviders(
       <CandidateCard
         candidate={candidate()}
-        submissionId="submission-1"
         negotiationState={{
           interview: { kind: "awaiting_time" },
           offer: { kind: "sent", salaryMinor: 13000000 },
@@ -143,7 +140,6 @@ describe("CandidateCard", () => {
     renderWithProviders(
       <CandidateCard
         candidate={candidate()}
-        submissionId="submission-1"
         negotiationState={{
           interview: { kind: "awaiting_time" },
           offer: { kind: "sent", salaryMinor: null },

@@ -9,10 +9,10 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminConversations } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
-import { SUBMISSION_LABELS } from "../schemas";
+import { CANDIDATE_LABELS } from "../schemas";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
-import { SUBMISSION_STATUS_STYLES } from "./statusStyles";
+import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
 function formatDateTime(iso: string): string {
@@ -109,7 +109,7 @@ export function ConversationsTable() {
                       scope="col"
                       className="px-5 py-3 text-center font-semibold"
                     >
-                      Candidates
+                      Messages
                     </th>
                     <th scope="col" className="px-5 py-3 font-semibold">
                       Status
@@ -122,12 +122,12 @@ export function ConversationsTable() {
                 <tbody>
                   {data.data.map((c) => (
                     <tr
-                      key={c.submissionId}
+                      key={c.candidateId}
                       className={`relative ${BODY_ROW_CLASS}`}
                     >
                       <td className="px-5 py-3">
                         <Link
-                          href={`/admin/conversations/${c.submissionId}`}
+                          href={`/admin/conversations/${c.candidateId}`}
                           className="font-medium text-navy after:absolute after:inset-0 hover:text-primary focus-visible:underline focus-visible:outline-none"
                         >
                           {c.companyName}
@@ -144,13 +144,13 @@ export function ConversationsTable() {
                         </span>
                       </td>
                       <td className="px-5 py-3 text-center tabular-nums text-navy">
-                        {c.candidateCount}
+                        {c.messageCount}
                       </td>
                       <td className="px-5 py-3">
                         <StatusBadge
-                          label={SUBMISSION_LABELS[c.status] ?? c.status}
+                          label={CANDIDATE_LABELS[c.status] ?? c.status}
                           className={
-                            SUBMISSION_STATUS_STYLES[c.status] ??
+                            CANDIDATE_STATUS_STYLES[c.status] ??
                             "bg-muted text-muted-foreground"
                           }
                         />

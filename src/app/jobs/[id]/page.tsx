@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { AlertCircle, ArrowLeft, Send, Wallet } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -13,7 +13,6 @@ import {
   useJob,
 } from "@/features/jobs";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
-import { useCreateOrOpenSubmission } from "@/features/submissions";
 import { PublicShell } from "@/components/landing/PublicShell";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -154,26 +153,15 @@ function JobBody({ job, cta }: { job: JobView; cta: ReactNode }) {
  * intents.
  */
 function SubmitCandidatesButton({ jobId }: { jobId: string }) {
-  const router = useRouter();
-  const createOrOpenSubmission = useCreateOrOpenSubmission();
-
+  // Sending a candidate IS the act that puts a recruiter on a job now, so
+  // there is nothing to "open" first — this goes straight to the job's
+  // candidate list, where the form to add one lives.
   return (
-    <Button
-      type="button"
-      className="w-full"
-      disabled={createOrOpenSubmission.isPending}
-      onClick={() =>
-        createOrOpenSubmission.mutate(
-          { jobId },
-          {
-            onSuccess: (submission) =>
-              router.push(`/recruiter/submissions/${submission.id}`),
-          },
-        )
-      }
-    >
-      <Send className="h-[18px] w-[18px]" />
-      {createOrOpenSubmission.isPending ? "Opening…" : "Submit candidates"}
+    <Button asChild type="button" className="w-full">
+      <Link href={`/recruiter/inbox/job/${jobId}`}>
+        <Send className="h-[18px] w-[18px]" />
+        Submit candidates
+      </Link>
     </Button>
   );
 }

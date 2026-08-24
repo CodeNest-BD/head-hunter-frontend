@@ -102,14 +102,14 @@ describe("NotificationList", () => {
   it("clicking a routable item marks it read and links to its page", async () => {
     fetchNotificationsMock.mockResolvedValue(
       flatPaginated([
-        item({ type: "offer_accepted", data: { submissionId: "sub-1" } }),
+        item({ type: "offer_accepted", data: { candidateId: "cand-1" } }),
       ]),
     );
 
     renderList();
     const link = await screen.findByRole("link");
 
-    expect(link).toHaveAttribute("href", "/company/inbox/sub-1");
+    expect(link).toHaveAttribute("href", "/company/inbox/cand-1");
     await userEvent.click(link);
     expect(markReadMock).toHaveBeenCalledWith("n-1");
   });
@@ -130,7 +130,7 @@ describe("NotificationList", () => {
     fetchNotificationsMock.mockResolvedValue(
       flatPaginated([
         item({ type: "job_published" }),
-        item({ type: "offer_accepted", data: { submissionId: "sub-1" } }),
+        item({ type: "offer_accepted", data: { candidateId: "cand-1" } }),
       ]),
     );
 

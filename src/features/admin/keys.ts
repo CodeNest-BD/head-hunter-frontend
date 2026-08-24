@@ -23,8 +23,8 @@ export const adminKeys = {
   company: (userId: string) => ["admin", "company", userId] as const,
   conversations: (params: AdminListParams) =>
     ["admin", "conversations", params] as const,
-  conversation: (submissionId: string) =>
-    ["admin", "conversation", submissionId] as const,
+  conversation: (candidateId: string) =>
+    ["admin", "conversation", candidateId] as const,
   jobs: (params: AdminListParams) => ["admin", "jobs", params] as const,
   pricing: ["admin", "pricing"] as const,
   minRecruiterFee: ["admin", "min-recruiter-fee"] as const,

@@ -24,7 +24,6 @@ import {
 
 interface CandidateCardProps {
   candidate: Candidate;
-  submissionId: string;
   /** This candidate's entry from `candidateNegotiationState`, or `null` when
    * the candidate has neither an interview nor an offer yet — the caller
    * derives the map once per page, never per card. */
@@ -33,10 +32,9 @@ interface CandidateCardProps {
 
 export function CandidateCard({
   candidate,
-  submissionId,
   negotiationState,
 }: CandidateCardProps) {
-  const updateStatus = useUpdateCandidateStatus(submissionId);
+  const updateStatus = useUpdateCandidateStatus(candidate.jobId);
 
   return (
     <Card className="border-border/70 transition-colors hover:border-border">

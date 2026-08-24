@@ -46,14 +46,14 @@ const POLL_INTERVAL_FALLBACK_MS = REALTIME_POLL_MS;
  * the self-healing fallback, so a dropped event is never a lost message.
  */
 export function useConversationThread(
-  submissionId: string,
+  candidateId: string,
   params: ThreadParams = {},
   realtimeStatus: ConversationRealtimeStatus = "polling",
 ) {
   return useInfiniteQuery({
-    queryKey: conversationKeys.thread(submissionId, params),
+    queryKey: conversationKeys.thread(candidateId, params),
     queryFn: ({ pageParam }) =>
-      fetchConversationThread(submissionId, { ...params, page: pageParam }),
+      fetchConversationThread(candidateId, { ...params, page: pageParam }),
     initialPageParam: FIRST_PAGE,
     // Switching the candidate filter changes the query key, which without this
     // would blank an already-fetched thread to a skeleton. The old events stay
@@ -83,10 +83,10 @@ export function useMessageUnreadCount() {
   });
 }
 
-export function useSendMessage(submissionId: string) {
+export function useSendMessage(candidateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: SendMessageInput) => sendMessage(submissionId, input),
+    mutationFn: (input: SendMessageInput) => sendMessage(candidateId, input),
     // A new message changes both the thread (it has a new entry) and the
     // notifications badge, so both key sets are invalidated together.
     onSuccess: () => {
@@ -96,10 +96,10 @@ export function useSendMessage(submissionId: string) {
   });
 }
 
-export function useMarkThreadRead(submissionId: string) {
+export function useMarkThreadRead(candidateId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => markThreadRead(submissionId),
+    mutationFn: () => markThreadRead(candidateId),
     // Read state appears nowhere in ConversationEventDto, so refetching the
     // thread itself can never change what renders — only the unread count and
     // the notifications badge actually reflect it.

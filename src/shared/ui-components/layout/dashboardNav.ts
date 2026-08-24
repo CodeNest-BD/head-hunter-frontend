@@ -19,7 +19,7 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Show the unread-messages badge on this item (Inbox / Submissions). */
+  /** Show the unread-messages badge on this item (either side's Inbox). */
   badge?: "messages";
 }
 
@@ -44,8 +44,8 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     // is repeated here.
     { href: "/companies", label: "Companies", icon: Building2 },
     {
-      href: "/recruiter/submissions",
-      label: "Submissions",
+      href: "/recruiter/inbox",
+      label: "Inbox",
       icon: Send,
       badge: "messages",
     },
@@ -68,7 +68,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/admin/recruiters", label: "Recruiters", icon: Users },
     { href: "/admin/companies", label: "Companies", icon: Building2 },
     { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
-    // Conversations are consolidated under Jobs: a job's submission count
+    // Conversations are consolidated under Jobs: a job's candidate count
     // links into the conversations view, so no separate nav item.
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ],

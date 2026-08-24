@@ -11,22 +11,22 @@ const notification = (type: string, data: Record<string, unknown> | null) => ({
 });
 
 describe("notificationHref", () => {
-  it("sends a company to the inbox review page", () => {
+  it("sends a company to the candidate review page", () => {
     expect(
       notificationHref(
-        notification("offer_accepted", { submissionId: "sub-1" }),
+        notification("offer_accepted", { candidateId: "cand-1" }),
         "company",
       ),
-    ).toBe("/company/inbox/sub-1");
+    ).toBe("/company/inbox/cand-1");
   });
 
-  it("sends a recruiter to their own submission page for the same event", () => {
+  it("sends a recruiter to their own candidate page for the same event", () => {
     expect(
       notificationHref(
-        notification("offer_accepted", { submissionId: "sub-1" }),
+        notification("offer_accepted", { candidateId: "cand-1" }),
         "recruiter",
       ),
-    ).toBe("/recruiter/submissions/sub-1");
+    ).toBe("/recruiter/inbox/cand-1");
   });
 
   it("sends a recruiter to the job for a followed-company post", () => {
@@ -62,7 +62,7 @@ describe("notificationHref", () => {
   it("returns null for an admin rather than falling back to the recruiter route", () => {
     expect(
       notificationHref(
-        notification("offer_accepted", { submissionId: "sub-1" }),
+        notification("offer_accepted", { candidateId: "cand-1" }),
         "admin",
       ),
     ).toBeNull();

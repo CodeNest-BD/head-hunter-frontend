@@ -10,7 +10,7 @@ describe("recruiter navigation", () => {
       expect.arrayContaining([
         "Dashboard",
         "Companies",
-        "Submissions",
+        "Inbox",
         "Wallet",
         "Profile",
       ]),

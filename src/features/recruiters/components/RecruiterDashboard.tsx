@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useJobs } from "@/features/jobs";
 import { useNotifications } from "@/features/notifications";
 import { useRecruiterWallet } from "@/features/billing";
-import { useSubmissions } from "@/features/submissions";
+import { useInboxJobs } from "@/features/inbox";
 import { PageBanner } from "@/shared/ui-components/brand";
 import {
   AttentionRow,
@@ -17,15 +17,9 @@ import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { useMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 
-/** In-flight submissions — everything that isn't closed out. */
-const ACTIVE_STATUSES = new Set(["submitted", "under_review", "advanced"]);
-/** Under-review submissions older than this read as "stalled". */
-const STALL_DAYS = 7;
-const DAY_MS = 86_400_000;
-
 export function RecruiterDashboard({ firstName }: { firstName: string }) {
   const profile = useMyRecruiterProfile();
-  const submissions = useSubmissions({ limit: 50 });
+  const inbox = useInboxJobs("recruiter", { limit: 50 });
   const wallet = useRecruiterWallet();
   const openRoles = useJobs({ limit: 5, sortBy: "publishedAt" });
   const activity = useNotifications({ limit: 6 });
@@ -34,25 +28,31 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   const verificationStatus = profile.data?.verificationStatus;
   const yearsExperience = profile.data?.yearsExperience ?? null;
 
-  const subs = submissions.data?.data ?? [];
-  const activeCount = subs.filter((s) => ACTIVE_STATUSES.has(s.status)).length;
-  const underReview = subs.filter((s) => s.status === "under_review");
-  const stalled = underReview.filter(
-    (s) => Date.now() - s.updatedAt.getTime() > STALL_DAYS * DAY_MS,
+  const inboxJobs = inbox.data?.data ?? [];
+  // One row per job you have someone on; the counts are already per job, so
+  // the totals are a sum rather than a second query.
+  const candidateCount = inboxJobs.reduce(
+    (sum, job) => sum + job.candidateCount,
+    0,
+  );
+  const awaitingReview = inboxJobs.reduce(
+    (sum, job) => sum + job.newCandidateCount,
+    0,
+  );
+  const unreadMessages = inboxJobs.reduce(
+    (sum, job) => sum + job.unreadMessages,
+    0,
   );
 
   const openRolesTotal = openRoles.data?.meta.total ?? null;
   const latestRole = openRoles.data?.data[0] ?? null;
 
-  const advanced = subs.filter((s) => s.status === "advanced").length;
-  const activeSubmissionsHint =
-    activeCount === 0
+  const candidatesHint =
+    candidateCount === 0
       ? "nothing in flight"
-      : advanced > 0
-        ? `${advanced} advanced`
-        : underReview.length > 0
-          ? `${underReview.length} under review`
-          : "awaiting company review";
+      : awaitingReview > 0
+        ? `${awaitingReview} awaiting review`
+        : "all reviewed";
 
   const subtitleParts = [
     "Recruiter",
@@ -95,14 +95,14 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
       href: `/jobs/${latestRole.id}`,
     });
   }
-  if (stalled.length > 0) {
+  if (unreadMessages > 0) {
     attention.push({
-      id: "stalled",
+      id: "unread",
       tone: "amber",
-      title: `${stalled.length} submission${stalled.length === 1 ? "" : "s"} under review for ${STALL_DAYS}+ days`,
-      detail: "Follow up with the company to keep them moving.",
+      title: `${unreadMessages} unread message${unreadMessages === 1 ? "" : "s"}`,
+      detail: "A company is waiting on you in one of your conversations.",
       actionLabel: "Open",
-      href: "/recruiter/submissions",
+      href: "/recruiter/inbox",
     });
   }
   if (references.length < 3) {
@@ -134,13 +134,12 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
           href="/explore-jobs"
         />
         <StatCard
-          label="Active submissions"
-          value={submissions.isPending ? "—" : activeCount}
-          // The hint has to describe the same set as the number. It used to read
-          // "none open" whenever nothing was `under_review`, so a single
-          // submitted candidate showed "1 · none open".
-          hint={activeSubmissionsHint}
-          href="/recruiter/submissions"
+          label="Candidates in flight"
+          value={inbox.isPending ? "—" : candidateCount}
+          // The hint has to describe the same set as the number, so it counts
+          // the same rows rather than a differently-scoped subset.
+          hint={candidatesHint}
+          href="/recruiter/inbox"
         />
         <StatCard
           label="In escrow"

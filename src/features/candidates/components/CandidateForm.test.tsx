@@ -9,19 +9,20 @@ import { CandidateForm } from "./CandidateForm";
 const fetchCandidatesMock = vi.fn();
 const fetchAttachmentsMock = vi.fn();
 const updateCandidateStatusMock = vi.fn();
-const presignSubmissionUploadMock = vi.fn();
+const presignCandidateUploadMock = vi.fn();
 const uploadToPresignedUrlMock = vi.fn();
 const createCandidateMock = vi.fn();
 const updateCandidateMock = vi.fn();
 const deleteCandidateMock = vi.fn();
 
 vi.mock("../api/candidates", () => ({
-  fetchCandidates: (...args: unknown[]) => fetchCandidatesMock(...args),
+  fetchMyCandidatesForJob: (...args: unknown[]) => fetchCandidatesMock(...args),
+  fetchCandidate: (...args: unknown[]) => fetchCandidatesMock(...args),
   fetchAttachments: (...args: unknown[]) => fetchAttachmentsMock(...args),
   updateCandidateStatus: (...args: unknown[]) =>
     updateCandidateStatusMock(...args),
-  presignSubmissionUpload: (...args: unknown[]) =>
-    presignSubmissionUploadMock(...args),
+  presignCandidateUpload: (...args: unknown[]) =>
+    presignCandidateUploadMock(...args),
   uploadToPresignedUrl: (...args: unknown[]) =>
     uploadToPresignedUrlMock(...args),
   createCandidate: (...args: unknown[]) => createCandidateMock(...args),
@@ -31,11 +32,13 @@ vi.mock("../api/candidates", () => ({
 
 const candidate: Candidate = {
   id: "candidate-1",
-  submissionId: "submission-1",
+  jobId: "job-1",
+  recruiterProfileId: "rec-1",
   fullName: "Jane Doe",
   email: "jane@example.com",
   phone: "555-1234",
   overview: "Strong backend candidate.",
+  pitch: null,
   linkedinUrl: "https://linkedin.com/in/janedoe",
   yearsOfExperience: 5,
   currentCompany: "Acme Corp",
@@ -59,7 +62,7 @@ describe("CandidateForm", () => {
     fetchCandidatesMock.mockReset();
     fetchAttachmentsMock.mockReset();
     updateCandidateStatusMock.mockReset();
-    presignSubmissionUploadMock.mockReset();
+    presignCandidateUploadMock.mockReset();
     uploadToPresignedUrlMock.mockReset();
     createCandidateMock.mockReset();
     updateCandidateMock.mockReset();
@@ -68,9 +71,7 @@ describe("CandidateForm", () => {
 
   it("keeps submit disabled until a valid CV file is chosen", async () => {
     const user = userEvent.setup();
-    renderWithProviders(
-      <CandidateForm submissionId="submission-1" onDone={vi.fn()} />,
-    );
+    renderWithProviders(<CandidateForm jobId="job-1" onDone={vi.fn()} />);
 
     const submitButton = screen.getByRole("button", {
       name: /submit candidate/i,
@@ -87,9 +88,7 @@ describe("CandidateForm", () => {
     // userEvent mirrors that by filtering uploads against `accept`, so this
     // scenario — a file that slips through some other route — needs it off.
     const user = userEvent.setup({ applyAccept: false });
-    renderWithProviders(
-      <CandidateForm submissionId="submission-1" onDone={vi.fn()} />,
-    );
+    renderWithProviders(<CandidateForm jobId="job-1" onDone={vi.fn()} />);
 
     const pngFile = new File(["x"], "cv.png", { type: "image/png" });
     await user.upload(screen.getByLabelText(/cv \/ resume/i), pngFile);
@@ -102,9 +101,7 @@ describe("CandidateForm", () => {
 
   it("rejects an oversized file with a size message", async () => {
     const user = userEvent.setup();
-    renderWithProviders(
-      <CandidateForm submissionId="submission-1" onDone={vi.fn()} />,
-    );
+    renderWithProviders(<CandidateForm jobId="job-1" onDone={vi.fn()} />);
 
     const oversized = pdfFile();
     Object.defineProperty(oversized, "size", {
@@ -121,7 +118,7 @@ describe("CandidateForm", () => {
 
   it("converts the dollars input to cents in the mutation payload", async () => {
     const user = userEvent.setup();
-    presignSubmissionUploadMock.mockResolvedValue({
+    presignCandidateUploadMock.mockResolvedValue({
       s3Key: "staged/key.pdf",
       uploadUrl: "https://s3.example.com/upload",
     });
@@ -129,9 +126,7 @@ describe("CandidateForm", () => {
     createCandidateMock.mockResolvedValue(candidate);
     const onDone = vi.fn();
 
-    renderWithProviders(
-      <CandidateForm submissionId="submission-1" onDone={onDone} />,
-    );
+    renderWithProviders(<CandidateForm jobId="job-1" onDone={onDone} />);
 
     await fillRequiredFields(user);
     await user.type(screen.getByLabelText(/expected salary/i), "1500");
@@ -147,11 +142,7 @@ describe("CandidateForm", () => {
 
   it("edit mode hides the CV input and prefills fields", () => {
     renderWithProviders(
-      <CandidateForm
-        submissionId="submission-1"
-        candidate={candidate}
-        onDone={vi.fn()}
-      />,
+      <CandidateForm jobId="job-1" candidate={candidate} onDone={vi.fn()} />,
     );
 
     expect(screen.queryByLabelText(/cv \/ resume/i)).not.toBeInTheDocument();

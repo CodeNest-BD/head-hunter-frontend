@@ -21,7 +21,7 @@ import {
 } from "../schemas";
 
 interface CandidateFormProps {
-  submissionId: string;
+  jobId: string;
   candidate?: Candidate;
   onDone: () => void;
   /** Renders a Cancel beside the submit when provided, so the two actions share
@@ -86,13 +86,13 @@ function defaultValuesFor(candidate?: Candidate): CandidateFormValues {
 }
 
 export function CandidateForm({
-  submissionId,
+  jobId,
   candidate,
   onDone,
   onCancel,
 }: CandidateFormProps) {
-  const submitCandidate = useSubmitCandidate(submissionId);
-  const updateCandidate = useUpdateCandidate(submissionId);
+  const submitCandidate = useSubmitCandidate(jobId);
+  const updateCandidate = useUpdateCandidate(jobId);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvTouched, setCvTouched] = useState(false);
 

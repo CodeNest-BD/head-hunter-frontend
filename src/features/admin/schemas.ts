@@ -100,25 +100,34 @@ export const companyDetailSchema = companyListItemSchema.extend({
 });
 export type CompanyDetail = z.infer<typeof companyDetailSchema>;
 
-// Same forward tolerance as the conversations feature's own status field
-// (`conversationThreadHeaderSchema`, below) — a status this map doesn't know
-// about yet should degrade the admin view too, not throw it.
-export const submissionStatusSchema = tolerantEnum(
-  ["submitted", "under_review", "advanced", "rejected", "withdrawn", "unknown"],
+// Same forward tolerance as the conversations feature's own status fields — a
+// status this map doesn't know about yet should degrade the admin view, not
+// throw it away.
+export const candidateStatusSchema = tolerantEnum(
+  [
+    "submitted",
+    "reviewing",
+    "interviewing",
+    "offered",
+    "hired",
+    "passed",
+    "unknown",
+  ],
   "unknown",
 );
-export type SubmissionStatus = z.infer<typeof submissionStatusSchema>;
+export type AdminCandidateStatus = z.infer<typeof candidateStatusSchema>;
 
 export const conversationListItemSchema = z.object({
-  submissionId: z.string(),
+  candidateId: z.string(),
+  candidateName: z.string(),
   companyProfileId: z.string(),
   companyName: z.string(),
   recruiterProfileId: z.string(),
   recruiterName: z.string(),
   jobId: z.string(),
   jobTitle: z.string(),
-  status: submissionStatusSchema,
-  candidateCount: z.number(),
+  status: candidateStatusSchema,
+  messageCount: z.number(),
   lastActivityAt: z.string(),
 });
 export type ConversationListItem = z.infer<typeof conversationListItemSchema>;
@@ -156,12 +165,13 @@ export const VERIFICATION_LABELS: Record<AdminVerificationStatus, string> = {
   rejected: "Rejected",
 };
 
-export const SUBMISSION_LABELS: Record<SubmissionStatus, string> = {
+export const CANDIDATE_LABELS: Record<AdminCandidateStatus, string> = {
   submitted: "Submitted",
-  under_review: "Under review",
-  advanced: "Advanced",
-  rejected: "Rejected",
-  withdrawn: "Withdrawn",
+  reviewing: "Reviewing",
+  interviewing: "Interviewing",
+  offered: "Offered",
+  hired: "Hired",
+  passed: "Passed",
   unknown: "Unknown",
 };
 
