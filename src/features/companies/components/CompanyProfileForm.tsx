@@ -87,6 +87,8 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
         profile.yearFounded === null ? "" : String(profile.yearFounded),
       employeeSize: profile.employeeSize ?? "",
       revenue: profile.revenue ?? "",
+      firstName: profile.firstName,
+      lastName: profile.lastName,
       phone: profile.phone ?? "",
     },
   });
@@ -103,6 +105,10 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
         description: values.description === "" ? null : values.description,
         commissionRangeMinMinor: majorInputToMinor(values.commissionMin),
         commissionRangeMaxMinor: majorInputToMinor(values.commissionMax),
+        // Required on the User row, so they are sent as-is rather than through
+        // blankToNull — the schema has already refused an empty one.
+        firstName: values.firstName,
+        lastName: values.lastName,
         // "" is how the form spells "cleared"; the API wants null, since an
         // empty string would fail the validators that guard these columns.
         ...blankToNull({
@@ -239,8 +245,28 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
 
         <Section
           title="Contact"
-          hint="Your phone stays private until it is verified."
+          hint="Who we and our recruiters deal with. Your phone stays private until it is verified."
         >
+          <div className="grid gap-4 sm:max-w-lg sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="firstName">First name</Label>
+              <Input id="firstName" {...register("firstName")} />
+              {errors.firstName && (
+                <p className="text-xs text-destructive">
+                  {errors.firstName.message}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="lastName">Last name</Label>
+              <Input id="lastName" {...register("lastName")} />
+              {errors.lastName && (
+                <p className="text-xs text-destructive">
+                  {errors.lastName.message}
+                </p>
+              )}
+            </div>
+          </div>
           <div className="flex flex-col gap-2 sm:max-w-sm">
             <div className="flex items-center justify-between">
               <Label htmlFor="phone">Phone</Label>

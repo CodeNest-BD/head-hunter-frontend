@@ -35,6 +35,20 @@ const authSlice = createSlice({
         state.accessToken = action.payload.accessToken;
       }
     },
+    /**
+     * The account's own details changed under an established session — the
+     * profile screens edit the User row, and the header reads its copy from
+     * here, so without this the old name stays on screen until the next boot.
+     */
+    accountDetailsUpdated(
+      state,
+      action: PayloadAction<Pick<AuthUser, "firstName" | "lastName" | "phone">>,
+    ) {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
+
     /** No session: boot resolved signed-out, logout, or a refresh 401. */
     sessionCleared(state) {
       state.status = "unauthenticated";
@@ -50,6 +64,11 @@ const authSlice = createSlice({
   },
 });
 
-export const { sessionEstablished, tokenRotated, sessionCleared, bootFailed } =
-  authSlice.actions;
+export const {
+  sessionEstablished,
+  tokenRotated,
+  accountDetailsUpdated,
+  sessionCleared,
+  bootFailed,
+} = authSlice.actions;
 export default authSlice.reducer;

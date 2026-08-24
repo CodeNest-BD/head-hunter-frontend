@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { personNameSchema } from "@/shared/libs/personName";
 import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
 
 /** Admin approval states, shared with the recruiter side. */
@@ -40,6 +41,10 @@ export const companyProfileSchema = z.object({
   yearFounded: z.number().nullable(),
   employeeSize: z.string().nullable(),
   revenue: z.string().nullable(),
+  // The person who signed the company up. Lives on the User row, which is why
+  // it is never null the way the profile's own columns are.
+  firstName: z.string(),
+  lastName: z.string(),
   // Always returned to the owner, verified or not. Other marketplace users
   // only ever see it once phoneVerified is true.
   phone: z.string().nullable(),
@@ -127,6 +132,8 @@ export const companyProfileFormSchema = z
       ),
     employeeSize: z.string().trim().max(40, "Keep it under 40 characters"),
     revenue: z.string().trim().max(40, "Keep it under 40 characters"),
+    firstName: personNameSchema("First name"),
+    lastName: personNameSchema("Last name"),
     phone: z.string().trim().max(32, "Keep it under 32 characters"),
   })
   .refine(

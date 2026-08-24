@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { accountDetailsUpdated } from "@/features/auth/store/authSlice";
+import { useAppDispatch } from "@/shared/store/hooks";
 import {
   fetchMyCompanyProfile,
   reapplyCompanyVerification,
@@ -17,11 +19,21 @@ export function useMyCompanyProfile() {
 
 export function useUpdateMyCompanyProfile() {
   const queryClient = useQueryClient();
+  const dispatch = useAppDispatch();
   return useMutation({
     mutationFn: (input: UpdateCompanyProfileInput) =>
       updateMyCompanyProfile(input),
     onSuccess: (profile) => {
       queryClient.setQueryData(companyKeys.myProfile, profile);
+      // The contact's name and phone come from the User row the session was
+      // built from, so the header and user menu need the new values too.
+      dispatch(
+        accountDetailsUpdated({
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          phone: profile.phone,
+        }),
+      );
       toast.success("Profile saved");
     },
   });

@@ -16,6 +16,8 @@ const valid = {
   yearFounded: "",
   employeeSize: "",
   revenue: "",
+  firstName: "Jane",
+  lastName: "Doe",
   phone: "",
 };
 
@@ -27,6 +29,14 @@ const errorPaths = (overrides: Record<string, unknown>): string[] => {
 describe("companyProfileFormSchema", () => {
   it("accepts a profile with only a name", () => {
     expect(companyProfileFormSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("requires the contact name, which the account always has", () => {
+    expect(errorPaths({ firstName: "  " })).toContain("firstName");
+  });
+
+  it("rejects a contact name with digits in it", () => {
+    expect(errorPaths({ lastName: "Doe2" })).toContain("lastName");
   });
 
   it("accepts the address and business details, all optional", () => {

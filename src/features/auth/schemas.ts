@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { personNameSchema } from "@/shared/libs/personName";
 import { specializationsSchema } from "@/shared/utils/specializations";
 import { signupRoleSchema, type SignupRole } from "./types";
 
@@ -93,24 +94,8 @@ export type SignUpReferenceValues = z.infer<typeof signUpReferenceSchema>;
 export const signUpSchema = z
   .object({
     role: signupRoleSchema,
-    firstName: z
-      .string()
-      .trim()
-      .min(1, "First name is required")
-      .max(80, "Keep it under 80 characters")
-      .regex(
-        /^[\p{L}\p{M}][\p{L}\p{M}'\-. ]*$/u,
-        "Use letters, spaces, hyphens, apostrophes and periods only",
-      ),
-    lastName: z
-      .string()
-      .trim()
-      .min(1, "Last name is required")
-      .max(80, "Keep it under 80 characters")
-      .regex(
-        /^[\p{L}\p{M}][\p{L}\p{M}'\-. ]*$/u,
-        "Use letters, spaces, hyphens, apostrophes and periods only",
-      ),
+    firstName: personNameSchema("First name"),
+    lastName: personNameSchema("Last name"),
     email: z.string().email("Enter a valid email address"),
     password: z
       .string()
