@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
 
 import { RequireApprovedRecruiter, RequireRole } from "@/features/auth";
-import { CandidateForm, useMyCandidatesForJob } from "@/features/candidates";
+import { useMyCandidatesForJob } from "@/features/candidates";
 import { InboxCandidatesTable } from "@/features/inbox";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -17,11 +16,9 @@ const MAX_CANDIDATES = 5;
 
 /**
  * Level 2 of the recruiter inbox: your candidates on one job, each with its own
- * conversation — plus the form to send another, which is the only place that
- * act happens now that opening a submission is gone.
+ * conversation. Sending another is its own page — see ./submit.
  */
 function JobCandidates({ jobId }: { jobId: string }) {
-  const [adding, setAdding] = useState(false);
   const mine = useMyCandidatesForJob(jobId);
   const count = mine.data?.length ?? 0;
   const atCap = count >= MAX_CANDIDATES;
@@ -30,18 +27,19 @@ function JobCandidates({ jobId }: { jobId: string }) {
   // an empty card. Once there is a list to act on, the header button returns.
   const isEmpty = !mine.isPending && count === 0;
 
-  const submitButton = (
-    <Button
-      type="button"
-      disabled={atCap || mine.isPending}
-      onClick={() => setAdding(true)}
-    >
+  // A disabled anchor is not a thing, so the capped state is a plain disabled
+  // button that says why rather than a link that goes nowhere.
+  const submitAction = atCap ? (
+    <Button type="button" disabled>
       <Plus className="h-4 w-4" />
-      {atCap
-        ? `At the ${MAX_CANDIDATES}-candidate limit`
-        : isEmpty
-          ? "Submit a candidate"
-          : "Submit another candidate"}
+      At the {MAX_CANDIDATES}-candidate limit
+    </Button>
+  ) : (
+    <Button asChild type="button" disabled={mine.isPending}>
+      <Link href={`/recruiter/inbox/job/${jobId}/submit`}>
+        <Plus className="h-4 w-4" />
+        {isEmpty ? "Submit a candidate" : "Submit another candidate"}
+      </Link>
     </Button>
   );
 
@@ -61,24 +59,14 @@ function JobCandidates({ jobId }: { jobId: string }) {
             subtitle="Everyone you have sent to this job. Open one for its conversation."
             className="mb-0"
           />
-          {!adding && !isEmpty && submitButton}
+          {!isEmpty && submitAction}
         </div>
       </div>
-
-      {adding && (
-        <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm">
-          <CandidateForm
-            jobId={jobId}
-            onDone={() => setAdding(false)}
-            onCancel={() => setAdding(false)}
-          />
-        </div>
-      )}
 
       <InboxCandidatesTable
         side="recruiter"
         jobId={jobId}
-        emptyAction={!adding && isEmpty ? submitButton : undefined}
+        emptyAction={isEmpty ? submitAction : undefined}
       />
     </div>
   );
