@@ -30,8 +30,28 @@ describe("recruiter navigation", () => {
     expect(labels).not.toContain("Notifications");
   });
 
-  it("never reduces a company's navigation", () => {
-    expect(navForRole("company", false)).toEqual(navForRole("company", true));
+  it("reduces an unapproved company to its profile alone", () => {
+    // Narrower than the recruiter's reduction on purpose: a pending company
+    // has no dashboard worth showing (every tile on it 403s), and the profile
+    // is the page it completes to get approved. Notifications stay reachable
+    // from the top-bar bell rather than the sidebar.
+    const labels = navForRole("company", false).map((item) => item.label);
+
+    expect(labels).toEqual(["Profile"]);
+  });
+
+  it("gives an approved company its full navigation", () => {
+    const labels = navForRole("company", true).map((item) => item.label);
+
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        "Dashboard",
+        "Jobs",
+        "Inbox",
+        "Wallet",
+        "Profile",
+      ]),
+    );
   });
 
   it("never reduces an admin's navigation", () => {

@@ -32,7 +32,7 @@ import {
   useUnreadCount,
 } from "@/features/notifications";
 import { notificationHref } from "@/features/notifications/utils/notificationHref";
-import { useVerificationGate } from "@/features/recruiters";
+import { useAccountApproval } from "@/shared/hooks/useAccountApproval";
 import { cn } from "@/shared/libs/shadCnConfig";
 import {
   Popover,
@@ -239,7 +239,7 @@ function NotificationBell() {
  */
 function UserMenu() {
   const { user, logout } = useAuth();
-  const { isApproved } = useVerificationGate();
+  const { isApproved } = useAccountApproval();
   const [open, setOpen] = useState(false);
   if (!user) return null;
 
@@ -377,7 +377,7 @@ function SidebarContent({
 }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { isApproved } = useVerificationGate();
+  const { isApproved } = useAccountApproval();
   if (!user) return null;
 
   const items = navForRole(user.role, isApproved);

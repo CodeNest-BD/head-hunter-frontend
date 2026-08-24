@@ -81,7 +81,12 @@ const buildResponseErrorHandler =
 
     const apiError = handleError(error);
     const config = axios.isAxiosError(error) ? error.config : undefined;
-    if (!config?.suppressGlobalErrorToast) {
+    // The approval gate is global on the API, so every query a pending or
+    // declined account fires comes back 403 — one toast each, several per
+    // page. The state is already explained in place by the approval banner,
+    // so these are silent: `verificationStatus` is only ever set by that gate.
+    const isApprovalGate = apiError.verificationStatus !== undefined;
+    if (!config?.suppressGlobalErrorToast && !isApprovalGate) {
       // The parsed message is already a readable sentence (see errorHandler) —
       // it belongs in the title, not buried in a generic "Request failed"
       // heading with the real information demoted to the description. The

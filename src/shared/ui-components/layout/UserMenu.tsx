@@ -6,7 +6,7 @@ import { ChevronDown, LogOut, UserRound } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { useMessageUnreadCount } from "@/features/conversations";
-import { useVerificationGate } from "@/features/recruiters";
+import { useAccountApproval } from "@/shared/hooks/useAccountApproval";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { CountBadge } from "./CountBadge";
 import { navForRole } from "./dashboardNav";
@@ -24,7 +24,7 @@ function UnreadMessageCount() {
  */
 export function UserMenu({ className }: { className?: string }) {
   const { user, logout } = useAuth();
-  const { isApproved } = useVerificationGate();
+  const { isApproved } = useAccountApproval();
   if (!user) return null;
 
   const initials =

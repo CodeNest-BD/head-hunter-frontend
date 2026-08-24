@@ -75,27 +75,34 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
 };
 
 /**
- * Nav labels an unapproved recruiter still sees: the dashboard (which hosts the
- * verification-pending guidance) and their profile (which they complete to get
- * approved). Everything else is gated until an admin approves them.
+ * Nav labels an unapproved account still sees.
+ *
+ * A recruiter keeps the dashboard (which hosts the verification-pending
+ * guidance) alongside their profile. A company keeps only its profile — the
+ * page it completes to get approved; everything else, the dashboard included,
+ * is gated, and notifications live in the top-bar bell rather than the
+ * sidebar. Everything omitted here 403s at the API anyway.
  */
-const UNAPPROVED_RECRUITER_LABELS = ["Dashboard", "Profile"] as const;
+const UNAPPROVED_LABELS: Record<Role, readonly string[]> = {
+  recruiter: ["Dashboard", "Profile"],
+  company: ["Profile"],
+  admin: [],
+};
 
 /**
  * Approval-aware nav selector. `UserMenu` and `SidebarContent` both read
  * through this instead of `NAV_BY_ROLE` directly, so reducing an unapproved
- * recruiter's navigation fixes the dropdown and the sidebar in one change.
- * Companies and admins are never reduced.
+ * account's navigation fixes the dropdown and the sidebar in one change.
+ * Admins are never reduced.
  */
 export function navForRole(
   role: Role,
   isApproved: boolean,
 ): readonly NavItem[] {
   const items = NAV_BY_ROLE[role];
-  if (role !== "recruiter" || isApproved) {
+  if (role === "admin" || isApproved) {
     return items;
   }
-  return items.filter((item) =>
-    (UNAPPROVED_RECRUITER_LABELS as readonly string[]).includes(item.label),
-  );
+  const allowed = UNAPPROVED_LABELS[role];
+  return items.filter((item) => allowed.includes(item.label));
 }
