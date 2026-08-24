@@ -77,14 +77,14 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
 /**
  * Nav labels an unapproved account still sees.
  *
- * A recruiter keeps the dashboard (which hosts the verification-pending
- * guidance) alongside their profile. A company keeps only its profile — the
- * page it completes to get approved; everything else, the dashboard included,
- * is gated, and notifications live in the top-bar bell rather than the
- * sidebar. Everything omitted here 403s at the API anyway.
+ * Either role keeps only its profile — the page it completes to get approved.
+ * The dashboard goes too: every tile on it reads an endpoint the approval gate
+ * refuses, so it can only ever render the pending banner, which the profile
+ * page already carries. Notifications stay reachable from the top-bar bell
+ * rather than the sidebar.
  */
 const UNAPPROVED_LABELS: Record<Role, readonly string[]> = {
-  recruiter: ["Dashboard", "Profile"],
+  recruiter: ["Profile"],
   company: ["Profile"],
   admin: [],
 };

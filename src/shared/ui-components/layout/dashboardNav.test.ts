@@ -17,10 +17,12 @@ describe("recruiter navigation", () => {
     );
   });
 
-  it("reduces an unapproved recruiter to the dashboard and their profile", () => {
+  it("reduces an unapproved recruiter to their profile alone", () => {
+    // The dashboard goes with the rest: every tile on it reads an endpoint the
+    // approval gate refuses, so it could only ever render the pending banner.
     const labels = navForRole("recruiter", false).map((item) => item.label);
 
-    expect(labels).toEqual(["Dashboard", "Profile"]);
+    expect(labels).toEqual(["Profile"]);
   });
 
   it("keeps the top-bar-only destinations (job map, notifications) out of the sidebar", () => {
@@ -31,10 +33,9 @@ describe("recruiter navigation", () => {
   });
 
   it("reduces an unapproved company to its profile alone", () => {
-    // Narrower than the recruiter's reduction on purpose: a pending company
-    // has no dashboard worth showing (every tile on it 403s), and the profile
-    // is the page it completes to get approved. Notifications stay reachable
-    // from the top-bar bell rather than the sidebar.
+    // Same rule as the recruiter above: the profile is the page it completes
+    // to get approved, and notifications stay reachable from the top-bar bell
+    // rather than the sidebar.
     const labels = navForRole("company", false).map((item) => item.label);
 
     expect(labels).toEqual(["Profile"]);
