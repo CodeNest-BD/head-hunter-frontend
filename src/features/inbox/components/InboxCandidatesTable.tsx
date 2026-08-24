@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowRight, Users } from "lucide-react";
 
@@ -76,9 +76,17 @@ const SORT_LABELS: Record<InboxCandidateSort, string> = {
 export function InboxCandidatesTable({
   side,
   jobId,
+  emptyAction,
 }: {
   side: InboxSide;
   jobId: string;
+  /**
+   * Offered inside the empty state, where the reader is already looking, so
+   * the only thing to do on an empty list is not stranded in a corner. Passed
+   * as a node rather than a boolean flag: the recruiter side owns the submit
+   * action and its form state, and the company side has no action at all.
+   */
+  emptyAction?: ReactNode;
 }) {
   const {
     page,
@@ -209,6 +217,7 @@ export function InboxCandidatesTable({
               ? "When a recruiter sends someone to this job, they appear here — newest first."
               : "Candidates you send to this job appear here, each with its own conversation."}
           </p>
+          {emptyAction}
         </div>
       ) : (
         <div className={TABLE_CARD}>

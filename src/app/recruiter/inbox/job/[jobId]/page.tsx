@@ -25,6 +25,25 @@ function JobCandidates({ jobId }: { jobId: string }) {
   const mine = useMyCandidatesForJob(jobId);
   const count = mine.data?.length ?? 0;
   const atCap = count >= MAX_CANDIDATES;
+  // With nobody on this job yet the only thing to do is add someone, so the
+  // action moves into the empty state rather than sitting in the corner above
+  // an empty card. Once there is a list to act on, the header button returns.
+  const isEmpty = !mine.isPending && count === 0;
+
+  const submitButton = (
+    <Button
+      type="button"
+      disabled={atCap || mine.isPending}
+      onClick={() => setAdding(true)}
+    >
+      <Plus className="h-4 w-4" />
+      {atCap
+        ? `At the ${MAX_CANDIDATES}-candidate limit`
+        : isEmpty
+          ? "Submit a candidate"
+          : "Submit another candidate"}
+    </Button>
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -42,18 +61,7 @@ function JobCandidates({ jobId }: { jobId: string }) {
             subtitle="Everyone you have sent to this job. Open one for its conversation."
             className="mb-0"
           />
-          {!adding && (
-            <Button
-              type="button"
-              disabled={atCap || mine.isPending}
-              onClick={() => setAdding(true)}
-            >
-              <Plus className="h-4 w-4" />
-              {atCap
-                ? `At the ${MAX_CANDIDATES}-candidate limit`
-                : "Submit another candidate"}
-            </Button>
-          )}
+          {!adding && !isEmpty && submitButton}
         </div>
       </div>
 
@@ -67,7 +75,11 @@ function JobCandidates({ jobId }: { jobId: string }) {
         </div>
       )}
 
-      <InboxCandidatesTable side="recruiter" jobId={jobId} />
+      <InboxCandidatesTable
+        side="recruiter"
+        jobId={jobId}
+        emptyAction={!adding && isEmpty ? submitButton : undefined}
+      />
     </div>
   );
 }
