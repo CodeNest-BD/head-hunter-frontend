@@ -139,7 +139,9 @@ export function usePublishJob(id: string) {
         { status: "published" },
         {
           onSuccess: () =>
-            toast.success("Job published. Recruiters can now submit candidates."),
+            toast.success(
+              "Job published. Recruiters can now submit candidates.",
+            ),
         },
       ),
     isPending: update.isPending,
