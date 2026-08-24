@@ -18,6 +18,6 @@ export function useMessageUnreadCounts() {
     // so it no longer needs its own poll.
     refetchOnWindowFocus: true,
     select: (counts) =>
-      new Map(counts.map((count) => [count.submissionId, count.unread])),
+      new Map(counts.map((count) => [count.candidateId, count.unread])),
   });
 }

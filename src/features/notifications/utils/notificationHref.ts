@@ -1,10 +1,9 @@
 import type { Role } from "@/features/auth";
 import type { Notification } from "../schemas";
 
-/** Types that resolve to the submission both parties share. */
-const SUBMISSION_TYPES = new Set([
+/** Types that resolve to the candidate thread both parties share. */
+const CANDIDATE_TYPES = new Set([
   "submission_received",
-  "submission_status_changed",
   "candidate_passed",
   "candidate_status_changed",
   "interview_proposed",
@@ -47,14 +46,14 @@ export function notificationHref(
 ): string | null {
   const { type, data } = notification;
 
-  if (SUBMISSION_TYPES.has(type)) {
-    const submissionId = readId(data, "submissionId");
-    if (!submissionId) return null;
+  if (CANDIDATE_TYPES.has(type)) {
+    const candidateId = readId(data, "candidateId");
+    if (!candidateId) return null;
     // Explicit per-role branches rather than a binary ternary: an admin (or
     // any future non-company, non-recruiter role) must fall through to null
     // rather than silently landing on the recruiter's route.
-    if (role === "company") return `/company/inbox/${submissionId}`;
-    if (role === "recruiter") return `/recruiter/submissions/${submissionId}`;
+    if (role === "company") return `/company/inbox/${candidateId}`;
+    if (role === "recruiter") return `/recruiter/inbox/${candidateId}`;
     return null;
   }
 

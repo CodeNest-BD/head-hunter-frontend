@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
 
-import { RequireRole } from "@/features/auth";
+import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import { JobForm, useJob, usePublishJob, useUpdateJob } from "@/features/jobs";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -136,16 +136,18 @@ export default function EditJobPage() {
   return (
     <RequireRole role="company">
       <DashboardLayout>
-        <div className="flex w-full flex-col gap-4">
-          <Link
-            href="/company/jobs"
-            className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to jobs
-          </Link>
-          <EditJobContent jobId={params.id} />
-        </div>
+        <RequireApprovedCompany>
+          <div className="flex w-full flex-col gap-4">
+            <Link
+              href="/company/jobs"
+              className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to jobs
+            </Link>
+            <EditJobContent jobId={params.id} />
+          </div>
+        </RequireApprovedCompany>
       </DashboardLayout>
     </RequireRole>
   );

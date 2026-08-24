@@ -126,8 +126,10 @@ export function useUpdateJob(id: string) {
 }
 
 /**
- * Publishing is the moment followers get notified, so it is a distinct action
- * rather than a status dropdown — and it says so in the toast.
+ * Publishing is what puts a job in front of recruiters, so it is a distinct
+ * action rather than a status dropdown. The toast no longer mentions
+ * followers: the follow feature is hidden from the UI, so naming it would
+ * promise something the reader cannot see.
  */
 export function usePublishJob(id: string) {
   const update = useUpdateJob(id);
@@ -137,7 +139,9 @@ export function usePublishJob(id: string) {
         { status: "published" },
         {
           onSuccess: () =>
-            toast.success("Job published. Followers have been notified."),
+            toast.success(
+              "Job published. Recruiters can now submit candidates.",
+            ),
         },
       ),
     isPending: update.isPending,

@@ -47,8 +47,9 @@ function formatDate(iso: string | null): string {
 }
 
 /**
- * The admin's verification decision. The note travels to the recruiter with a
- * rejection (it becomes the notification body), so it is worth writing well.
+ * The admin's verification decision. The note reaches the recruiter either way
+ * — it becomes the rejection's notification body, and is appended to the
+ * approval's — so it is worth writing well.
  */
 function VerificationCard({ data }: { data: RecruiterDetailData }) {
   const decide = useDecideRecruiterVerification();
@@ -91,7 +92,7 @@ function VerificationCard({ data }: { data: RecruiterDetailData }) {
           rows={2}
           value={note}
           onChange={(event) => setNote(event.target.value)}
-          placeholder="Optional note — sent to the recruiter with a rejection."
+          placeholder="Optional note — sent to the recruiter with the decision."
           aria-label="Verification note"
         />
         <div className="flex flex-wrap gap-2">
@@ -251,6 +252,27 @@ export function RecruiterDetail({ userId }: { userId: string }) {
             <DetailField label="Location" value={location} />
             <DetailField label="Address" value={data.addressLine} />
             <DetailField label="ZIP" value={data.zip} />
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                LinkedIn
+              </span>
+              {data.linkedinUrl ? (
+                <a
+                  href={data.linkedinUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="w-fit break-all text-sm font-medium text-primary hover:underline"
+                >
+                  {data.linkedinUrl.replace(/^https?:\/\//, "")}
+                </a>
+              ) : (
+                <span className="text-sm text-navy">—</span>
+              )}
+            </div>
+            <DetailField
+              label="Email confirmed"
+              value={data.emailVerified ? "Yes" : "No"}
+            />
           </CardContent>
         </Card>
 
@@ -279,8 +301,8 @@ export function RecruiterDetail({ userId }: { userId: string }) {
               value={formatDate(data.currentPeriodEnd)}
             />
             <DetailField
-              label="Submissions"
-              value={String(data.submissionCount)}
+              label="Candidates"
+              value={String(data.candidateCount)}
             />
             <DetailField
               label="Total earnings"
@@ -323,6 +345,47 @@ export function RecruiterDetail({ userId }: { userId: string }) {
               label="Last login"
               value={formatDate(data.lastLoginAt)}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Staffing history ({data.experiences.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data.experiences.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No staffing firms listed.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {data.experiences.map((experience) => (
+                  <li
+                    key={experience.id}
+                    className="flex flex-col gap-1 rounded-md border border-border px-3 py-2"
+                  >
+                    <span className="flex flex-wrap items-baseline gap-2 text-sm font-semibold text-navy">
+                      {experience.firmName}
+                      {experience.years !== null && (
+                        <span className="text-xs font-normal text-muted-foreground">
+                          {experience.years} yr
+                          {experience.years === 1 ? "" : "s"}
+                        </span>
+                      )}
+                    </span>
+                    {experience.specializations.length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {experience.specializations
+                          .map(getSpecializationLabel)
+                          .join(" · ")}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
 

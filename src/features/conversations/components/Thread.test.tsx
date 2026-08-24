@@ -209,12 +209,27 @@ function threadResponse(
   events: ConversationThread["events"]["data"],
 ): ConversationThread {
   return {
-    submissionId: "submission-1",
-    status: "submitted",
+    candidate: {
+      id: "candidate-1",
+      jobId: "j1",
+      recruiterProfileId: "r1",
+      fullName: "Dana Lee",
+      email: "dana@example.com",
+      phone: null,
+      overview: null,
+      pitch: null,
+      linkedinUrl: null,
+      yearsOfExperience: null,
+      currentCompany: null,
+      expectedSalaryMinor: null,
+      noticePeriodDays: null,
+      status: "submitted",
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+    },
+    acceptsMessages: true,
     company: { profileId: "c1", name: "Acme" },
     recruiter: { profileId: "r1", name: "Dana Lee" },
-    job: { id: "j1", title: "Staff Engineer" },
-    candidates,
+    job: { id: "j1", title: "Staff Engineer", recruiterFeeMinor: 1_000_000 },
     events: {
       data: events,
       meta: { page: 1, limit: 20, total: events.length, totalPages: 1 },
@@ -230,7 +245,7 @@ function threadWithMessage(body: string): ConversationThread {
 }
 
 function renderThread() {
-  return renderWithProviders(<Thread submissionId="submission-1" />);
+  return renderWithProviders(<Thread candidateId="submission-1" />);
 }
 
 describe("Thread", () => {
@@ -256,28 +271,12 @@ describe("Thread", () => {
   });
 
   it("renders message bodies and a system event's title", async () => {
-    renderWithProviders(<Thread submissionId="submission-1" />);
+    renderWithProviders(<Thread candidateId="submission-1" />);
 
     expect(
       await screen.findByText("Strong fit for cand1."),
     ).toBeInTheDocument();
     expect(screen.getByText("Great fit for cand2.")).toBeInTheDocument();
-    expect(screen.getByText("Candidates submitted")).toBeInTheDocument();
-  });
-
-  it("narrows to the selected candidate's messages, keeping untagged system events visible", async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<Thread submissionId="submission-1" />);
-    await screen.findByText("Strong fit for cand1.");
-
-    await user.click(screen.getByRole("button", { name: "J. Rivera" }));
-
-    await waitFor(() => {
-      expect(
-        screen.queryByText("Great fit for cand2."),
-      ).not.toBeInTheDocument();
-    });
-    expect(screen.getByText("Strong fit for cand1.")).toBeInTheDocument();
     expect(screen.getByText("Candidates submitted")).toBeInTheDocument();
   });
 
@@ -289,7 +288,7 @@ describe("Thread", () => {
       threadResponse([systemEvent, offerEvent]),
     );
 
-    renderWithProviders(<Thread submissionId="submission-1" />);
+    renderWithProviders(<Thread candidateId="submission-1" />);
 
     await screen.findByText("Candidates submitted");
     // OfferCard renders the negotiated salary and a Counter action for the
@@ -309,7 +308,7 @@ describe("Thread", () => {
       threadResponse([systemEvent, droppedFutureEvent]),
     );
 
-    renderWithProviders(<Thread submissionId="submission-1" />);
+    renderWithProviders(<Thread candidateId="submission-1" />);
 
     expect(
       await screen.findByText("Offer sent — $5,000 for A. Kim"),
@@ -332,7 +331,7 @@ describe("Thread", () => {
     );
 
     const { queryClient, container } = renderWithClient(
-      <Thread submissionId="submission-1" />,
+      <Thread candidateId="submission-1" />,
     );
     await screen.findByText("Strong fit for cand1.");
 
@@ -364,52 +363,41 @@ describe("Thread", () => {
     await waitFor(() => expect(scrollContainer.scrollTop).toBe(900));
   });
 
-  it("scrolls to the newest message after switching candidate filters, even when the newest event is unchanged", async () => {
-    // The untagged system event is the newest entry in every filter (it has
-    // no `candidateId`, so it survives narrowing to one candidate) — the
-    // trap `lastEventKey` alone can't catch: the newest event's identity
-    // never changes across this switch, so only tracking the filter itself
-    // (`candidateId`, added alongside `keepPreviousData`) makes the scroll
-    // effect fire at all. Before that, the container no longer remounting
-    // (Task 1's fix) meant this case scrolled nowhere.
-    const systemEventLatest = {
-      ...systemEvent,
-      at: "2026-08-11T10:00:00.000Z",
-    };
+  it("scrolls to the newest message when the reader opens a different candidate's thread", async () => {
+    // The trap `lastEventKey` alone cannot catch: two threads can legitimately
+    // share a newest entry, so the event's identity never changes across the
+    // switch. Only tracking `candidateId` itself (added alongside
+    // `keepPreviousData`, which stopped the container remounting) makes the
+    // scroll effect fire at all.
     fetchConversationThreadMock.mockResolvedValue(
-      threadResponse([systemEventLatest, cand1Message]),
+      threadResponse([systemEvent, cand1Message]),
     );
     const scrollHeightValue = 320;
     restoreScrollHeight = mockScrollHeight(() => scrollHeightValue);
 
-    const { container } = renderWithProviders(
-      <Thread submissionId="submission-1" />,
+    const { container, rerender } = renderWithProviders(
+      <Thread candidateId="candidate-1" />,
     );
     await screen.findByText("Strong fit for cand1.");
 
     const initialContainer =
       container.querySelector<HTMLDivElement>(".overflow-y-auto");
     if (!initialContainer) throw new Error("scroll container not found");
-    // Simulate the reader having scrolled away from the bottom before
-    // switching filters, so a later match against `scrollHeightValue`
-    // proves the effect actually ran rather than scrollTop having never
-    // moved off it.
+    // Simulate the reader having scrolled away from the bottom before opening
+    // the other thread, so a later match against `scrollHeightValue` proves the
+    // effect actually ran rather than scrollTop having never moved off it.
     initialContainer.scrollTop = 0;
 
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "J. Rivera" }));
-    await screen.findByText("Candidates submitted");
+    rerender(<Thread candidateId="candidate-2" />);
+    await screen.findByText("Strong fit for cand1.");
 
-    const filteredContainer =
+    const nextContainer =
       container.querySelector<HTMLDivElement>(".overflow-y-auto");
-    // Same element — `keepPreviousData` (Task 1) means the filter switch no
-    // longer remounts the scroll container.
-    expect(filteredContainer).toBe(initialContainer);
-    // Scrolled to the newest message of the *filtered* view regardless — the
-    // filter change is its own trigger, independent of whether the newest
-    // event's identity happened to change.
+    // Same element — `keepPreviousData` means moving between threads no longer
+    // remounts the scroll container.
+    expect(nextContainer).toBe(initialContainer);
     await waitFor(() =>
-      expect(filteredContainer?.scrollTop).toBe(scrollHeightValue),
+      expect(nextContainer?.scrollTop).toBe(scrollHeightValue),
     );
   });
 
@@ -453,7 +441,7 @@ describe("Thread", () => {
     );
 
     const { container } = renderWithProviders(
-      <Thread submissionId="submission-1" />,
+      <Thread candidateId="submission-1" />,
     );
     await screen.findByText("Strong fit for cand1.");
 
@@ -472,11 +460,13 @@ describe("Thread", () => {
     expect(scrollContainer.scrollTop).toBe(450);
   });
 
-  it("keeps the previous events on screen — dimmed, not blanked — while a candidate filter loads", async () => {
+  it("keeps the previous events on screen — dimmed, not blanked — while the next thread loads", async () => {
     fetchConversationThreadMock.mockResolvedValue(
       threadWithMessage("first message"),
     );
-    const { container } = renderThread();
+    const { container, rerender } = renderWithProviders(
+      <Thread candidateId="candidate-1" />,
+    );
     expect(await screen.findByText("first message")).toBeInTheDocument();
 
     const eventsList = container.querySelector(".overflow-y-auto");
@@ -484,23 +474,23 @@ describe("Thread", () => {
     // Settled state: no stale affordance yet.
     expect(eventsList).not.toHaveClass("opacity-60");
 
-    // The next fetch is for the filtered view and has not resolved yet.
-    let resolveFiltered: (value: ConversationThread) => void = () => {};
+    // The next fetch is for the other thread and has not resolved yet.
+    let resolveNext: (value: ConversationThread) => void = () => {};
     fetchConversationThreadMock.mockReturnValue(
       new Promise<ConversationThread>((resolve) => {
-        resolveFiltered = resolve;
+        resolveNext = resolve;
       }),
     );
-    await userEvent.click(screen.getByRole("button", { name: "J. Rivera" }));
+    rerender(<Thread candidateId="candidate-2" />);
 
     // The skeleton must NOT have replaced the thread — the previous events
     // stay on screen, marked stale rather than disappearing.
     expect(screen.getByText("first message")).toBeInTheDocument();
     expect(eventsList).toHaveClass("opacity-60");
 
-    resolveFiltered(threadWithMessage("filtered message"));
-    expect(await screen.findByText("filtered message")).toBeInTheDocument();
-    // The affordance clears once the filtered data has actually arrived.
+    resolveNext(threadWithMessage("next message"));
+    expect(await screen.findByText("next message")).toBeInTheDocument();
+    // The affordance clears once the new thread's data has actually arrived.
     expect(eventsList).not.toHaveClass("opacity-60");
   });
 });

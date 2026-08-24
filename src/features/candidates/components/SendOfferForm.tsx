@@ -25,7 +25,7 @@ export interface SendOfferFormProps {
   candidateId: string;
   /** This candidate's entry from `candidateNegotiationState`, or `null` when
    * the candidate has neither an interview nor an offer yet — derived once
-   * per page from the page-level `useOffers({ submissionId })` query, never
+   * per page from the page-level `useOffers({ candidateId })` query, never
    * fetched per candidate here. */
   negotiationState: CandidateNegotiationState | null;
 }

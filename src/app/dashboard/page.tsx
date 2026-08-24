@@ -2,7 +2,11 @@
 
 import dynamic from "next/dynamic";
 
-import { RequireApprovedRecruiter, useAuth } from "@/features/auth";
+import {
+  RequireApprovedCompany,
+  RequireApprovedRecruiter,
+  useAuth,
+} from "@/features/auth";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 // Each role's dashboard is a heavy composite (it pulls in that role's feature
@@ -38,7 +42,11 @@ function DashboardContent() {
     );
   }
   if (user.role === "company") {
-    return <CompanyDashboard firstName={user.firstName} />;
+    return (
+      <RequireApprovedCompany>
+        <CompanyDashboard firstName={user.firstName} />
+      </RequireApprovedCompany>
+    );
   }
   return <AdminOverview firstName={user.firstName} />;
 }

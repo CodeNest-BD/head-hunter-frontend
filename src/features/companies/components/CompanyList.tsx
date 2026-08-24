@@ -10,16 +10,14 @@ import { Input } from "@/shared/ui-components/controls/input";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { formatMinor } from "@/shared/utils/money";
 import type { CompanySummary } from "../schemas";
-import { useCompanies, useFollowedCompanies } from "../hooks/useCompanies";
-import { FollowButton } from "./FollowButton";
+import { useCompanies } from "../hooks/useCompanies";
 
 const PAGE_SIZE = 12;
 
-/** The three views the reference offers, as mutually-exclusive chips. */
-type Filter = "all" | "following" | "commission";
+/** The two views the directory offers, as mutually-exclusive chips. */
+type Filter = "all" | "commission";
 const FILTERS: readonly { key: Filter; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "following", label: "Following" },
   { key: "commission", label: "Commission published" },
 ];
 
@@ -89,10 +87,6 @@ function CompanyCard({ company }: { company: CompanySummary }) {
             )}
           </div>
         </div>
-        <FollowButton
-          companyId={company.id}
-          isFollowed={company.isFollowedByMe}
-        />
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-3">
@@ -119,18 +113,15 @@ export function CompanyList() {
   const query = useDebouncedValue(search, 300);
   const q = query === "" ? undefined : query;
 
-  // "Following" reads from the followed endpoint; "all" and "commission" read
-  // the full directory (commission has no server filter, so it's refined
-  // client-side below).
-  const listParams = { q, page, limit: PAGE_SIZE };
-  const all = useCompanies(listParams);
-  const followedList = useFollowedCompanies(listParams);
-  const source = filter === "following" ? followedList : all;
-  const { data, isPending, isError, refetch } = source;
+  // Both views read the full directory; commission has no server filter, so it
+  // is refined client-side below.
+  const { data, isPending, isError, refetch } = useCompanies({
+    q,
+    page,
+    limit: PAGE_SIZE,
+  });
 
-  // Banner counts: stable totals independent of the active search/filter.
-  const followedTotal =
-    useFollowedCompanies({ limit: 1 }).data?.meta.total ?? 0;
+  // Banner count: a stable total independent of the active search/filter.
   const companiesTotal = useCompanies({ limit: 1 }).data?.meta.total ?? 0;
 
   const rows = data?.data ?? [];
@@ -151,11 +142,8 @@ export function CompanyList() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Companies"
-        subtitle="Follow a company to be notified when it posts a job."
-        metrics={[
-          { label: "Following", value: followedTotal },
-          { label: "Companies", value: companiesTotal },
-        ]}
+        subtitle="Browse the companies hiring through the marketplace."
+        metrics={[{ label: "Companies", value: companiesTotal }]}
       />
 
       <div className="flex flex-col gap-4">
@@ -216,11 +204,9 @@ export function CompanyList() {
               <p className="max-w-sm text-sm text-muted-foreground">
                 {commissionOnly
                   ? "No companies on this page have a published commission."
-                  : filter === "following"
-                    ? "You're not following any companies yet."
-                    : query !== ""
-                      ? `Nothing matches “${query}”. Try a different search.`
-                      : "There are no companies to show right now."}
+                  : query !== ""
+                    ? `Nothing matches “${query}”. Try a different search.`
+                    : "There are no companies to show right now."}
               </p>
             </div>
           </div>

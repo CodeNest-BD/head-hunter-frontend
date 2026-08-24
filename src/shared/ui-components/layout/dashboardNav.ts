@@ -19,8 +19,8 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Show the unread-messages badge on this item (Inbox / Submissions). */
-  badge?: "messages";
+  /** Show the waiting-candidates badge on this item (either side's Inbox). */
+  badge?: "inbox";
 }
 
 /** Role-based primary navigation, shared by the sidebar and the user menu. */
@@ -32,7 +32,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       href: "/company/inbox",
       label: "Inbox",
       icon: Inbox,
-      badge: "messages",
+      badge: "inbox",
     },
     { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
     { href: "/company/profile", label: "Profile", icon: UserRound },
@@ -44,10 +44,10 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     // is repeated here.
     { href: "/companies", label: "Companies", icon: Building2 },
     {
-      href: "/recruiter/submissions",
-      label: "Submissions",
+      href: "/recruiter/inbox",
+      label: "Inbox",
       icon: Send,
-      badge: "messages",
+      badge: "inbox",
     },
     // Recruiting is free during phases 1–2; the subscription page returns
     // with the flag flip.
@@ -68,34 +68,41 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/admin/recruiters", label: "Recruiters", icon: Users },
     { href: "/admin/companies", label: "Companies", icon: Building2 },
     { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
-    // Conversations are consolidated under Jobs: a job's submission count
+    // Conversations are consolidated under Jobs: a job's candidate count
     // links into the conversations view, so no separate nav item.
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ],
 };
 
 /**
- * Nav labels an unapproved recruiter still sees: the dashboard (which hosts the
- * verification-pending guidance) and their profile (which they complete to get
- * approved). Everything else is gated until an admin approves them.
+ * Nav labels an unapproved account still sees.
+ *
+ * Either role keeps only its profile — the page it completes to get approved.
+ * The dashboard goes too: every tile on it reads an endpoint the approval gate
+ * refuses, so it can only ever render the pending banner, which the profile
+ * page already carries. Notifications stay reachable from the top-bar bell
+ * rather than the sidebar.
  */
-const UNAPPROVED_RECRUITER_LABELS = ["Dashboard", "Profile"] as const;
+const UNAPPROVED_LABELS: Record<Role, readonly string[]> = {
+  recruiter: ["Profile"],
+  company: ["Profile"],
+  admin: [],
+};
 
 /**
  * Approval-aware nav selector. `UserMenu` and `SidebarContent` both read
  * through this instead of `NAV_BY_ROLE` directly, so reducing an unapproved
- * recruiter's navigation fixes the dropdown and the sidebar in one change.
- * Companies and admins are never reduced.
+ * account's navigation fixes the dropdown and the sidebar in one change.
+ * Admins are never reduced.
  */
 export function navForRole(
   role: Role,
   isApproved: boolean,
 ): readonly NavItem[] {
   const items = NAV_BY_ROLE[role];
-  if (role !== "recruiter" || isApproved) {
+  if (role === "admin" || isApproved) {
     return items;
   }
-  return items.filter((item) =>
-    (UNAPPROVED_RECRUITER_LABELS as readonly string[]).includes(item.label),
-  );
+  const allowed = UNAPPROVED_LABELS[role];
+  return items.filter((item) => allowed.includes(item.label));
 }

@@ -13,10 +13,10 @@ import {
 } from "lucide-react";
 
 // Deep-imported (not via the feature barrels): JobsTable is exported from the
-// jobs barrel, and the submissions barrel imports back from jobs — the barrel
+// jobs barrel, and the inbox barrel imports back from jobs — the barrel
 // paths would close an import cycle.
 import { useWallet } from "@/features/billing/hooks/useBilling";
-import { useInboxJobs } from "@/features/submissions/hooks/useSubmissions";
+import { useInboxJobs } from "@/features/inbox/hooks/useInbox";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
@@ -87,7 +87,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "status", label: "Status" },
   { key: "category", label: "Category" },
   { key: "fee", label: "Recruiter fee" },
-  { key: "submissions", label: "Submissions" },
+  { key: "candidates", label: "Candidates" },
   { key: "actions", label: "Actions", required: true },
 ];
 
@@ -220,10 +220,11 @@ export function JobsTable() {
   ).length;
   const wallet = useWallet();
 
-  // Submissions live on the inbox rows, not the job; one fetch builds a lookup.
-  const inbox = useInboxJobs({ page: 1, limit: 100 });
-  const submissionsByJob = new Map(
-    (inbox.data?.data ?? []).map((row) => [row.jobId, row.submissionCount]),
+  // Candidate counts live on the inbox rows, not the job; one fetch builds a
+  // lookup keyed by job.
+  const inbox = useInboxJobs("company", { page: 1, limit: 100 });
+  const candidatesByJob = new Map<string, number>(
+    (inbox.data?.data ?? []).map((row) => [row.jobId, row.candidateCount]),
   );
 
   const toolbar = (
@@ -262,7 +263,7 @@ export function JobsTable() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Jobs"
-        subtitle="Create a job, then publish it to notify your followers."
+        subtitle="Create a job, then publish it to open it to recruiters."
         metrics={[
           { label: "Published", value: publishedTotal },
           {
@@ -337,15 +338,15 @@ export function JobsTable() {
                       {cols.isVisible("fee") && (
                         <th className={TABLE_TH}>Recruiter fee</th>
                       )}
-                      {cols.isVisible("submissions") && (
-                        <th className={TABLE_TH}>Submissions</th>
+                      {cols.isVisible("candidates") && (
+                        <th className={TABLE_TH}>Candidates</th>
                       )}
                       <th className={`${TABLE_TH} text-right`}>Actions</th>
                     </tr>
                   </thead>
                   <tbody className={TABLE_BODY}>
                     {data.data.map((job) => {
-                      const subs = submissionsByJob.get(job.id);
+                      const candidateCount = candidatesByJob.get(job.id);
                       const dateLabel = formatDate(
                         job.publishedAt ?? job.createdAt,
                       );
@@ -393,18 +394,19 @@ export function JobsTable() {
                               )}
                             </td>
                           )}
-                          {cols.isVisible("submissions") && (
+                          {cols.isVisible("candidates") && (
                             <td className={`${TABLE_TD} tabular-nums`}>
                               {/* Just the total: the untriaged count lives in the
                                   inbox, which is where you act on it, and the
                                   number links straight there. */}
-                              {subs !== undefined && subs > 0 ? (
+                              {candidateCount !== undefined &&
+                              candidateCount > 0 ? (
                                 <Link
                                   href={`/company/inbox/job/${job.id}`}
                                   className="inline-flex items-center gap-1.5 transition-colors hover:underline"
                                 >
                                   <span className="font-semibold text-navy">
-                                    {subs}
+                                    {candidateCount}
                                   </span>
                                 </Link>
                               ) : (

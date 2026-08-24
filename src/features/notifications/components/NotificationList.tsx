@@ -267,7 +267,7 @@ export function NotificationList() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Notifications"
-        subtitle="Updates on your jobs, submissions and followed companies."
+        subtitle="Updates on your jobs, candidates and conversations."
         actions={
           <button
             type="button"
@@ -323,7 +323,7 @@ export function NotificationList() {
               </p>
               <p className="max-w-sm text-sm text-muted-foreground">
                 {filter === "all"
-                  ? "Follow a company and you will hear when it posts a job."
+                  ? "You will hear here as your jobs and candidates move."
                   : "No notifications match this filter."}
               </p>
             </div>

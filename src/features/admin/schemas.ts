@@ -55,17 +55,28 @@ const recruiterReferenceSchema = z
   .object({ id: z.string(), name: z.string() })
   .passthrough();
 
+export const recruiterExperienceSchema = z.object({
+  id: z.string(),
+  firmName: z.string(),
+  years: z.number().nullable().catch(null),
+  specializations: z.array(z.string()).catch([]),
+});
+export type RecruiterExperience = z.infer<typeof recruiterExperienceSchema>;
+
 export const recruiterDetailSchema = recruiterListItemSchema.extend({
+  emailVerified: z.boolean().catch(false),
+  experiences: z.array(recruiterExperienceSchema).catch([]),
   verifiedAt: z.string().nullable().catch(null),
   verificationNote: z.string().nullable().catch(null),
   phone: z.string().nullable(),
   addressLine: z.string().nullable(),
   zip: z.string().nullable(),
+  linkedinUrl: z.string().nullable().catch(null),
   yearsExperience: z.number().nullable(),
   specializations: z.array(z.string()).nullable(),
   lastLoginAt: z.string().nullable(),
   currentPeriodEnd: z.string().nullable(),
-  submissionCount: z.number(),
+  candidateCount: z.number(),
   releasedEarningsMinor: z.number(),
   references: z.array(recruiterReferenceSchema),
 });
@@ -77,6 +88,7 @@ export const companyListItemSchema = z.object({
   companyName: z.string(),
   email: z.string(),
   status: accountStatusSchema,
+  verificationStatus: verificationStatusSchema.catch("pending"),
   balanceMinor: z.number(),
   jobCount: z.number(),
   joinedAt: z.string(),
@@ -84,11 +96,25 @@ export const companyListItemSchema = z.object({
 export type CompanyListItem = z.infer<typeof companyListItemSchema>;
 
 export const companyDetailSchema = companyListItemSchema.extend({
+  // `.catch` throughout: a field the API has not shipped yet degrades to a
+  // dash on the review screen rather than failing the whole page — the
+  // failure mode that took the recruiter detail down.
+  emailVerified: z.boolean().catch(false),
+  verifiedAt: z.string().nullable().catch(null),
+  verificationNote: z.string().nullable().catch(null),
   phone: z.string().nullable(),
   website: z.string().nullable(),
   description: z.string().nullable(),
+  addressLine: z.string().nullable().catch(null),
   city: z.string().nullable(),
   state: z.string().nullable(),
+  zip: z.string().nullable().catch(null),
+  industry: z.string().nullable().catch(null),
+  yearFounded: z.number().nullable().catch(null),
+  employeeSize: z.string().nullable().catch(null),
+  revenue: z.string().nullable().catch(null),
+  commissionRangeMinMinor: z.number().nullable().catch(null),
+  commissionRangeMaxMinor: z.number().nullable().catch(null),
   reservedMinor: z.number(),
   availableMinor: z.number(),
   lastLoginAt: z.string().nullable(),
@@ -97,25 +123,34 @@ export const companyDetailSchema = companyListItemSchema.extend({
 });
 export type CompanyDetail = z.infer<typeof companyDetailSchema>;
 
-// Same forward tolerance as the conversations feature's own status field
-// (`conversationThreadHeaderSchema`, below) — a status this map doesn't know
-// about yet should degrade the admin view too, not throw it.
-export const submissionStatusSchema = tolerantEnum(
-  ["submitted", "under_review", "advanced", "rejected", "withdrawn", "unknown"],
+// Same forward tolerance as the conversations feature's own status fields — a
+// status this map doesn't know about yet should degrade the admin view, not
+// throw it away.
+export const candidateStatusSchema = tolerantEnum(
+  [
+    "submitted",
+    "reviewing",
+    "interviewing",
+    "offered",
+    "hired",
+    "passed",
+    "unknown",
+  ],
   "unknown",
 );
-export type SubmissionStatus = z.infer<typeof submissionStatusSchema>;
+export type AdminCandidateStatus = z.infer<typeof candidateStatusSchema>;
 
 export const conversationListItemSchema = z.object({
-  submissionId: z.string(),
+  candidateId: z.string(),
+  candidateName: z.string(),
   companyProfileId: z.string(),
   companyName: z.string(),
   recruiterProfileId: z.string(),
   recruiterName: z.string(),
   jobId: z.string(),
   jobTitle: z.string(),
-  status: submissionStatusSchema,
-  candidateCount: z.number(),
+  status: candidateStatusSchema,
+  messageCount: z.number(),
   lastActivityAt: z.string(),
 });
 export type ConversationListItem = z.infer<typeof conversationListItemSchema>;
@@ -153,12 +188,13 @@ export const VERIFICATION_LABELS: Record<AdminVerificationStatus, string> = {
   rejected: "Rejected",
 };
 
-export const SUBMISSION_LABELS: Record<SubmissionStatus, string> = {
+export const CANDIDATE_LABELS: Record<AdminCandidateStatus, string> = {
   submitted: "Submitted",
-  under_review: "Under review",
-  advanced: "Advanced",
-  rejected: "Rejected",
-  withdrawn: "Withdrawn",
+  reviewing: "Reviewing",
+  interviewing: "Interviewing",
+  offered: "Offered",
+  hired: "Hired",
+  passed: "Passed",
   unknown: "Unknown",
 };
 
@@ -201,7 +237,7 @@ export const adminJobListItemSchema = z.object({
   status: jobStatusSchema,
   recruiterFeeMinor: z.number(),
   locationState: z.string().nullable(),
-  submissionCount: z.number(),
+  candidateCount: z.number(),
   createdAt: z.string(),
 });
 export type AdminJobListItem = z.infer<typeof adminJobListItemSchema>;

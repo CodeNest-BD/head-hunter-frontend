@@ -13,7 +13,8 @@ export interface InterviewListParams {
   page?: number;
   limit?: number;
   candidateId?: string;
-  submissionId?: string;
+  /** Narrows to one job's candidates, on top of the caller's own scoping. */
+  jobId?: string;
 }
 
 export interface CreateInterviewInput {
@@ -37,7 +38,7 @@ export interface RecordOutcomeInput {
 // proposal no longer open, an outcome already recorded, a candidate that
 // already has an open interview) are all reachable in normal use, so the
 // scheduling UI owns rendering them specifically, the same way
-// `sendMessage`/`createSubmission` already own their own 409s.
+// `sendMessage` already owns its own 409s.
 
 /**
  * POST /v1/interviews — company only. `round` is server-computed and must
@@ -59,7 +60,7 @@ export async function fetchInterview(id: string): Promise<Interview> {
   return interviewSchema.parse(data);
 }
 
-/** GET /v1/interviews?candidateId=&submissionId= — both parties, paginated. */
+/** GET /v1/interviews?candidateId=&jobId= — both parties, paginated. */
 export async function fetchInterviews(
   params: InterviewListParams,
 ): Promise<Paginated<Interview>> {

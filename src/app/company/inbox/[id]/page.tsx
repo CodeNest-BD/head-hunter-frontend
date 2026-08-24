@@ -1,60 +1,25 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { AlertCircle, FileText, UserRound } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
-import { RequireRole } from "@/features/auth";
-import {
-  CandidateCard,
-  useCandidates,
-  type Candidate,
-} from "@/features/candidates";
+import { RequireApprovedCompany, RequireRole } from "@/features/auth";
+import { CandidateCard, useCandidate } from "@/features/candidates";
 import { Thread } from "@/features/conversations";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
-import {
-  SUBMISSION_STATUS_LABELS,
-  SubmissionStatusPicker,
-  recruiterDisplayName,
-  useSubmission,
-  type Submission,
-  type SubmissionStatus,
-} from "@/features/submissions";
-import { Eyebrow, PageHeader } from "@/shared/ui-components/brand";
-import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDetailLayout";
 
-const STATUS_STYLES: Record<SubmissionStatus, string> = {
-  submitted: "bg-primary/15 text-primary",
-  under_review: "text-[#92610C] bg-[#FBF3DF]",
-  advanced: "text-[#17734E] bg-[#E7F4EC]",
-  rejected: "bg-muted text-muted-foreground",
-  withdrawn: "bg-muted text-muted-foreground",
-};
-
-function CardSkeleton() {
-  return (
-    <div className="h-40 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
-  );
-}
-
 /**
- * Matches the shape of the loaded left column (header block, then candidate
- * cards) so the page doesn't reflow when the submission and candidates
- * queries resolve — one combined skeleton rather than the header and the
- * candidate list popping in independently at different times.
+ * Matches the shape of the loaded left column so the page doesn't reflow when
+ * the candidate and negotiation queries resolve.
  */
 function LeftColumnSkeleton() {
   return (
-    <>
-      <div className="h-40 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
-      <div className="flex flex-col gap-4">
-        <CardSkeleton />
-        <CardSkeleton />
-      </div>
-    </>
+    <div className="h-96 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
   );
 }
 
@@ -86,153 +51,38 @@ function ErrorCallout({
   );
 }
 
-function CandidateListSection({
-  submissionId,
-  candidates,
-  negotiationState,
-}: {
-  submissionId: string;
-  candidates: Candidate[];
-  negotiationState: ReturnType<typeof candidateNegotiationState>;
-}) {
-  if (candidates.length === 0) {
-    return (
-      <div className="rounded-md border border-dashed border-[#C9D0DF] bg-card px-6 py-12 text-center shadow-card">
-        <div className="flex flex-col items-center gap-3">
-          <Eyebrow>No candidates</Eyebrow>
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-            <UserRound className="h-6 w-6" />
-          </span>
-          <p className="font-heading text-base font-semibold text-navy">
-            No candidates yet
-          </p>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            This submission has no candidates on it yet.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      {candidates.map((candidate) => (
-        <CandidateCard
-          key={candidate.id}
-          candidate={candidate}
-          submissionId={submissionId}
-          negotiationState={negotiationState.get(candidate.id) ?? null}
-        />
-      ))}
-    </div>
-  );
-}
-
-function SubmissionInfoHeader({ submission }: { submission: Submission }) {
-  return (
-    <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-4 shadow-card">
-      {/* Two lines, not four: the name carries the status badge beside it and the
-          secondary detail sits on one muted line under it, so the header does not
-          out-tall the one control it holds. */}
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-          <UserRound className="h-[18px] w-[18px]" />
-        </span>
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-heading text-base font-semibold text-navy">
-              {recruiterDisplayName(submission.recruiter)}
-            </p>
-            <StatusBadge
-              label={SUBMISSION_STATUS_LABELS[submission.status]}
-              className={STATUS_STYLES[submission.status]}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Submitted by this recruiter
-            {submission.recruiter?.yearsExperience !== null &&
-              submission.recruiter !== null &&
-              ` · ${submission.recruiter.yearsExperience} years of recruiting experience`}
-          </p>
-        </div>
-
-        <div className="shrink-0">
-          <SubmissionStatusPicker submission={submission} />
-        </div>
-      </div>
-
-      {submission.note && (
-        <div className="flex flex-col gap-1.5 rounded-md border border-border/60 bg-background/50 p-4">
-          <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
-            <FileText className="h-3.5 w-3.5" />
-            Recruiter note
-          </p>
-          <p className="whitespace-pre-wrap text-sm text-foreground">
-            {submission.note}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 /**
- * The left column's info: submission header and candidate list. Fetches
- * both in parallel and gates on a single combined pending/error state, so
- * the two — which read as one grouped "job & candidates" panel — never
- * show one loaded while the other is still a skeleton.
+ * The left column: this one candidate, with the status control and the
+ * interview/offer actions their negotiation state allows.
  *
- * Also fetches every interview and offer on this submission — two requests
- * total, scoped by `submissionId` rather than one pair per candidate — and
- * derives the negotiation-state map once here so each `CandidateCard` below
- * only does a `Map` lookup. A failure on either of those two is not fatal to
- * the page: the candidate list and status controls stay usable, so it
- * degrades to an empty map (every badge reads "none yet") instead of
- * blocking the whole column the way a failed submission or candidates fetch
- * does.
+ * Interviews and offers are fetched scoped to the candidate — two requests,
+ * not one pair per card, now that a page holds exactly one candidate. A
+ * failure on either is not fatal: the card and its status control stay usable
+ * and every badge degrades to "none yet", rather than blocking the column the
+ * way a failed candidate fetch does.
  */
-function SubmissionDetailLeftColumn({
-  submissionId,
-}: {
-  submissionId: string;
-}) {
-  const submissionQuery = useSubmission(submissionId);
-  const candidatesQuery = useCandidates(submissionId);
-  // `limit` is explicit rather than left to the API's default of 20: a
-  // submission caps at 5 candidates, but each can accumulate any number of
-  // interviews and offers over a negotiation, and the pickers below need the
-  // latest of each — not the first page of the oldest.
-  const interviewsQuery = useInterviews({ submissionId, limit: 100 });
-  const offersQuery = useOffers({ submissionId, limit: 100 });
+function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
+  const candidateQuery = useCandidate(candidateId);
+  const interviewsQuery = useInterviews({ candidateId, limit: 100 });
+  const offersQuery = useOffers({ candidateId, limit: 100 });
 
-  // Interviews and offers gate the skeleton too, even though a failure on
-  // either is non-fatal below: until they have resolved, `negotiationState` is
-  // empty, so every action would render enabled and a click on a candidate who
-  // already has a live offer or open interview would earn a raw 409 instead of
-  // the readable reason those controls exist to give. `isPending` is false on
-  // error, so a failure still degrades to an empty map rather than a stuck
-  // skeleton.
+  // Interviews and offers gate the skeleton too: until they resolve,
+  // `negotiationState` is empty, so every action would render enabled and a
+  // click on a candidate who already has a live offer would earn a raw 409
+  // instead of the readable reason those controls exist to give. `isPending`
+  // is false on error, so a failure still degrades rather than sticking.
   if (
-    submissionQuery.isPending ||
-    candidatesQuery.isPending ||
+    candidateQuery.isPending ||
     interviewsQuery.isPending ||
     offersQuery.isPending
   ) {
     return <LeftColumnSkeleton />;
   }
-  if (submissionQuery.isError) {
+  if (candidateQuery.isError) {
     return (
       <ErrorCallout
-        message="Could not load this submission."
-        onRetry={() => void submissionQuery.refetch()}
-      />
-    );
-  }
-  if (candidatesQuery.isError) {
-    return (
-      <ErrorCallout
-        message="Could not load candidates."
-        onRetry={() => void candidatesQuery.refetch()}
+        message="Could not load this candidate."
+        onRetry={() => void candidateQuery.refetch()}
       />
     );
   }
@@ -243,34 +93,32 @@ function SubmissionDetailLeftColumn({
   );
 
   return (
-    <>
-      <SubmissionInfoHeader submission={submissionQuery.data} />
-      <CandidateListSection
-        submissionId={submissionId}
-        candidates={candidatesQuery.data}
-        negotiationState={negotiationState}
-      />
-    </>
+    <CandidateCard
+      candidate={candidateQuery.data}
+      negotiationState={negotiationState.get(candidateId) ?? null}
+    />
   );
 }
 
-export default function SubmissionReviewPage() {
+export default function CandidateReviewPage() {
   const params = useParams<{ id: string }>();
 
   return (
     <RequireRole role="company">
-      <DashboardLayout wide="detail">
-        <TwoColumnDetailLayout
-          header={
-            <PageHeader
-              title="Review submission"
-              subtitle="The recruiter, their note, and every candidate on this submission."
-            />
-          }
-          left={<SubmissionDetailLeftColumn submissionId={params.id} />}
-          right={<Thread submissionId={params.id} />}
-        />
-      </DashboardLayout>
+      <RequireApprovedCompany>
+        <DashboardLayout wide="detail">
+          <TwoColumnDetailLayout
+            header={
+              <PageHeader
+                title="Review candidate"
+                subtitle="Everything about this candidate, and the conversation about them."
+              />
+            }
+            left={<CandidateDetailColumn candidateId={params.id} />}
+            right={<Thread candidateId={params.id} />}
+          />
+        </DashboardLayout>
+      </RequireApprovedCompany>
     </RequireRole>
   );
 }

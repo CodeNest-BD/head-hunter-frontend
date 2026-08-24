@@ -175,7 +175,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
             />
             <p className="text-[13px] text-muted-foreground">
               This is the whole first impression in the companies grid — a real
-              description and a published range are what earn a follow.
+              description and a published range are what draw recruiters in.
             </p>
           </div>
         </Section>

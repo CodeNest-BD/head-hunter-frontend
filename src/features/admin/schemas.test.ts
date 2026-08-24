@@ -34,11 +34,27 @@ describe("conversationEventSchema", () => {
 // array — admin now pages through the same envelope the participant view
 // does (see ParticipantThreadDto in the backend contract).
 const thread = {
-  submissionId: "11111111-1111-4111-8111-111111111111",
-  status: "submitted",
+  candidate: {
+    id: "11111111-1111-4111-8111-111111111111",
+    jobId: "j1",
+    recruiterProfileId: "r1",
+    fullName: "J. Rivera",
+    email: "rivera@example.com",
+    phone: null,
+    overview: null,
+    pitch: null,
+    linkedinUrl: null,
+    yearsOfExperience: null,
+    currentCompany: null,
+    expectedSalaryMinor: null,
+    noticePeriodDays: null,
+    status: "submitted",
+    createdAt: "2026-08-11T09:00:00.000Z",
+  },
+  acceptsMessages: true,
   company: { profileId: "c1", name: "Acme" },
   recruiter: { profileId: "r1", name: "Dana Lee" },
-  job: { id: "j1", title: "Staff Engineer" },
+  job: { id: "j1", title: "Staff Engineer", recruiterFeeMinor: 1000000 },
   events: {
     data: [{ ...base, type: "message" }],
     meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
@@ -63,19 +79,9 @@ describe("conversationThreadSchema", () => {
     expect(parsed.events.data[0].type).toBe("unknown");
   });
 
-  it("degrades an unfamiliar submission status to unknown", () => {
-    const parsed = conversationThreadSchema.parse({
-      ...thread,
-      status: "placed",
-    });
-    expect(parsed.status).toBe("unknown");
-  });
-
-  it("does not surface candidates even when the backend includes them", () => {
-    const parsed = conversationThreadSchema.parse({
-      ...thread,
-      candidates: [{ id: "cand1", fullName: "J. Rivera" }],
-    });
-    expect(parsed).not.toHaveProperty("candidates");
+  it("carries the whole candidate, so the pane and the thread are one request", () => {
+    const parsed = conversationThreadSchema.parse(thread);
+    expect(parsed.candidate.fullName).toBe("J. Rivera");
+    expect(parsed.job.recruiterFeeMinor).toBe(1000000);
   });
 });

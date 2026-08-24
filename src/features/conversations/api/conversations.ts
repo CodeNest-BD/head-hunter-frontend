@@ -1,9 +1,9 @@
 import { apiClient } from "@/shared/libs/apiClient";
 import {
+  candidateUnreadCountsSchema,
   conversationThreadSchema,
   markReadResponseSchema,
   messageSchema,
-  submissionUnreadCountsSchema,
   unreadCountSchema,
   type ConversationThread,
   type Message,
@@ -14,49 +14,51 @@ export type ThreadSortOrder = "ASC" | "DESC";
 export interface ThreadParams {
   limit?: number;
   sortOrder?: ThreadSortOrder;
-  candidateId?: string;
 }
 
 export interface SendMessageInput {
   body: string;
-  candidateId?: string;
 }
 
-/** GET /v1/conversations/:submissionId — one page of the thread, `page` added by the hook. */
+/**
+ * GET /v1/conversations/candidates/:candidateId — one page of the thread,
+ * `page` added by the hook. A conversation is one candidate: the header comes
+ * back with that candidate, both parties and the job, so the split view is a
+ * single request.
+ */
 export async function fetchConversationThread(
-  submissionId: string,
+  candidateId: string,
   params: ThreadParams & { page?: number },
 ): Promise<ConversationThread> {
   const { data } = await apiClient.get<unknown>(
-    `/conversations/${submissionId}`,
+    `/conversations/candidates/${candidateId}`,
     { params },
   );
   return conversationThreadSchema.parse(data);
 }
 
 /**
- * POST /v1/conversations/:submissionId/messages
+ * POST /v1/conversations/candidates/:candidateId/messages
  *
- * 409 when the submission is withdrawn or rejected, 429 once the 30/minute
- * limit is hit — the caller owns surfacing both, so the global error toast is
- * suppressed here (mirrors `createSubmission`'s 409 handling).
+ * 409 once the candidate is passed on, 429 at the 30/minute limit — the caller
+ * owns surfacing both, so the global error toast is suppressed here.
  */
 export async function sendMessage(
-  submissionId: string,
+  candidateId: string,
   input: SendMessageInput,
 ): Promise<Message> {
   const { data } = await apiClient.post<unknown>(
-    `/conversations/${submissionId}/messages`,
+    `/conversations/candidates/${candidateId}/messages`,
     input,
     { suppressGlobalErrorToast: true },
   );
   return messageSchema.parse(data);
 }
 
-/** PATCH /v1/conversations/:submissionId/read */
-export async function markThreadRead(submissionId: string): Promise<number> {
+/** PATCH /v1/conversations/candidates/:candidateId/read */
+export async function markThreadRead(candidateId: string): Promise<number> {
   const { data } = await apiClient.patch<unknown>(
-    `/conversations/${submissionId}/read`,
+    `/conversations/candidates/${candidateId}/read`,
   );
   return markReadResponseSchema.parse(data).updated;
 }
@@ -67,10 +69,10 @@ export async function fetchMessageUnreadCount(): Promise<number> {
   return unreadCountSchema.parse(data).unread;
 }
 
-/** GET /v1/conversations/unread-counts — unread messages per submission. */
+/** GET /v1/conversations/unread-counts — unread messages per candidate. */
 export async function fetchMessageUnreadCounts(): Promise<
-  Array<{ submissionId: string; unread: number }>
+  Array<{ candidateId: string; jobId: string; unread: number }>
 > {
   const { data } = await apiClient.get<unknown>("/conversations/unread-counts");
-  return submissionUnreadCountsSchema.parse(data).counts;
+  return candidateUnreadCountsSchema.parse(data).counts;
 }

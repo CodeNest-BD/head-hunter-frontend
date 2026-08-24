@@ -3,11 +3,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth";
 // Imported from the keys module directly, not the feature barrel: the barrel
 // also re-exports components that would drag unrelated UI into every module
-// that merely wants to invalidate the inbox/submissions list.
+// that merely wants to invalidate the inbox list.
 import { candidateKeys } from "@/features/candidates/keys";
 import { interviewKeys } from "@/features/interviews/keys";
 import { offerKeys } from "@/features/offers/keys";
-import { submissionKeys } from "@/features/submissions/keys";
+import { inboxKeys } from "@/features/inbox/keys";
 import { CONVERSATION_EVENT } from "../events";
 import { conversationKeys } from "../keys";
 import {
@@ -23,7 +23,7 @@ export interface ConversationRealtimeState {
 
 /** Mirrors MessageCreatedPayload in the API's libs/common/src/ws/conversation-events.ts. */
 interface MessageCreatedFrame {
-  submissionId: string;
+  candidateId: string;
   messageId: string;
   senderUserId: string;
   createdAt: string;
@@ -36,7 +36,7 @@ const isMessageCreatedFrame = (
     return false;
   }
   if (
-    !("submissionId" in payload) ||
+    !("candidateId" in payload) ||
     !("senderUserId" in payload) ||
     !("messageId" in payload) ||
     !("createdAt" in payload)
@@ -44,7 +44,7 @@ const isMessageCreatedFrame = (
     return false;
   }
   return (
-    typeof payload.submissionId === "string" &&
+    typeof payload.candidateId === "string" &&
     typeof payload.senderUserId === "string" &&
     typeof payload.messageId === "string" &&
     typeof payload.createdAt === "string"
@@ -52,7 +52,7 @@ const isMessageCreatedFrame = (
 };
 
 interface NegotiationChangedFrame {
-  submissionId: string;
+  candidateId: string;
   kind: string;
 }
 
@@ -62,11 +62,11 @@ const isNegotiationChangedFrame = (
   if (typeof payload !== "object" || payload === null) {
     return false;
   }
-  if (!("submissionId" in payload) || !("kind" in payload)) {
+  if (!("candidateId" in payload) || !("kind" in payload)) {
     return false;
   }
   return (
-    typeof payload.submissionId === "string" && typeof payload.kind === "string"
+    typeof payload.candidateId === "string" && typeof payload.kind === "string"
   );
 };
 
@@ -86,7 +86,7 @@ const isNegotiationChangedFrame = (
  * `useConversationSocket`'s concern — shared with `useUnreadRealtime`.
  */
 export function useConversationRealtime(
-  submissionId: string,
+  candidateId: string,
 ): ConversationRealtimeState {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -97,7 +97,7 @@ export function useConversationRealtime(
       if (!isMessageCreatedFrame(payload)) {
         return;
       }
-      if (payload.submissionId !== submissionId) {
+      if (payload.candidateId !== candidateId) {
         return;
       }
       // The sender's own send mutation already invalidated, so skip the second
@@ -116,7 +116,7 @@ export function useConversationRealtime(
       // the sidebar unread pill by partial-key matching. The inbox lives under
       // its own namespace and needs its own call.
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
-      void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
+      void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
     },
 
     // The party who did not act has no mutation of their own to learn from. The
@@ -125,14 +125,14 @@ export function useConversationRealtime(
       if (!isNegotiationChangedFrame(payload)) {
         return;
       }
-      if (payload.submissionId !== submissionId) {
+      if (payload.candidateId !== candidateId) {
         return;
       }
       void queryClient.invalidateQueries({ queryKey: offerKeys.all });
       void queryClient.invalidateQueries({ queryKey: interviewKeys.all });
       void queryClient.invalidateQueries({ queryKey: candidateKeys.all });
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
-      void queryClient.invalidateQueries({ queryKey: submissionKeys.all });
+      void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
     },
   });
 

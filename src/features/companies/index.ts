@@ -8,14 +8,18 @@
  * only — everything under api/, hooks/ and components/ is internal and may be
  * restructured without touching consumers.
  */
+export { CompanyApprovalBanner } from "./components/CompanyApprovalBanner";
 export { CompanyList } from "./components/CompanyList";
 export { CompanyProfileForm } from "./components/CompanyProfileForm";
-export { FollowButton } from "./components/FollowButton";
-export { useMyCompanyProfile } from "./hooks/useCompanyProfile";
+export { useCompanyApprovalGate } from "./hooks/useCompanyApprovalGate";
 export {
-  useCompanies,
-  useFollowedCompanies,
-  useToggleFollow,
-} from "./hooks/useCompanies";
+  useMyCompanyProfile,
+  useReapplyCompanyVerification,
+} from "./hooks/useCompanyProfile";
+export { useCompanies } from "./hooks/useCompanies";
 export { companyKeys } from "./keys";
-export type { CompanyProfile, CompanySummary } from "./schemas";
+export type {
+  CompanyProfile,
+  CompanySummary,
+  VerificationStatus,
+} from "./schemas";

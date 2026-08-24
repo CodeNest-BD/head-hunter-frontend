@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { submissionKeys } from "@/features/submissions/keys";
+import { inboxKeys } from "@/features/inbox/keys";
 
 import { conversationKeys } from "../keys";
 
@@ -77,7 +77,7 @@ function createFakeSocket() {
 }
 
 const messageFrame = (overrides: Record<string, unknown> = {}) => ({
-  submissionId: SUBMISSION_ID,
+  candidateId: SUBMISSION_ID,
   messageId: "message-1",
   senderUserId: COUNTERPARTY_USER_ID,
   createdAt: "2026-08-14T10:00:00.000Z",
@@ -191,7 +191,7 @@ describe("useConversationRealtime", () => {
       expect(invalidate).toHaveBeenCalledWith({
         queryKey: conversationKeys.all,
       });
-      expect(invalidate).toHaveBeenCalledWith({ queryKey: submissionKeys.all });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: inboxKeys.all });
     });
   });
 
@@ -204,7 +204,7 @@ describe("useConversationRealtime", () => {
     act(() =>
       fake.emitToClient(
         "message.created",
-        messageFrame({ submissionId: "submission-other" }),
+        messageFrame({ candidateId: "submission-other" }),
       ),
     );
 

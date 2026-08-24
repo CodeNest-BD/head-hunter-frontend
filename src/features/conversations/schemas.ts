@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 // Imported from the schemas module directly, not the feature barrel: the
-// barrel also re-exports InboxTable and its hooks, which pull in
-// features/jobs' API client — this file only needs the dependency-free
-// status list (schemas.ts imports nothing but zod).
-import { SUBMISSION_STATUSES } from "@/features/submissions/schemas";
+// barrel pulls in components and hooks, and this file only needs the
+// dependency-free candidate shape (candidates/schemas.ts imports nothing but
+// zod and the money helpers).
+import { candidateSchema } from "@/features/candidates/schemas";
 import { paginatedSchema } from "@/shared/libs/pagination";
 import { tolerantEnum } from "@/shared/libs/zodTolerantEnum";
 
@@ -106,50 +106,51 @@ export const conversationEventSchema = z.object({
 });
 export type ConversationEvent = z.infer<typeof conversationEventSchema>;
 
-export const conversationCandidateRefSchema = z.object({
-  id: z.string(),
-  fullName: z.string(),
-});
-export type ConversationCandidateRef = z.infer<
-  typeof conversationCandidateRefSchema
->;
-
 /**
- * Everything that describes a thread itself rather than its entries —
- * mirrors the backend's `ConversationThreadHeaderDto`, which both
- * `ConversationThreadDto` (admin) and `ParticipantThreadDto` (this feature)
- * extend. Shared here the same way so the header can never drift between the
- * two views; only how many entries come back (and whether `candidates` is
- * present) differs per caller.
+ * Everything that describes a thread itself rather than its entries — mirrors
+ * the backend's `ConversationThreadHeaderDto`, which both the admin and
+ * participant views extend, so the header can never drift between them.
+ *
+ * It carries the whole candidate rather than a reference: this header is what
+ * renders the candidate pane beside the conversation, so the split view costs
+ * one request instead of two.
  */
 export const conversationThreadHeaderSchema = z.object({
-  submissionId: z.string(),
-  // Same forward tolerance as `type` above: a sixth submission status added
-  // server-side should degrade this one field, not fail the whole thread.
-  status: tolerantEnum([...SUBMISSION_STATUSES, "unknown"] as const, "unknown"),
+  candidate: candidateSchema,
   company: z.object({ profileId: z.string(), name: z.string() }),
   recruiter: z.object({ profileId: z.string(), name: z.string() }),
-  job: z.object({ id: z.string(), title: z.string() }),
+  job: z.object({
+    id: z.string(),
+    title: z.string(),
+    recruiterFeeMinor: z.number(),
+  }),
+  /** False once the candidate is passed on: readable, closed to new messages. */
+  acceptsMessages: z.boolean(),
 });
 
 /**
- * A participant's view of a thread: the shared header plus the candidates in
- * this submission (for the filter chips) and one page of entries. `events`
- * is the API's `{ data, meta }` envelope, not a bare array — the same
- * envelope every other paginated list endpoint returns — so
+ * A participant's view of a thread: the shared header plus one page of
+ * entries. `events` is the API's `{ data, meta }` envelope, not a bare array —
+ * the same envelope every other paginated list endpoint returns — so
  * `useConversationThread` can page through history with `paginatedSchema`
  * rather than a bespoke shape.
  */
 export const conversationThreadSchema = conversationThreadHeaderSchema.extend({
-  candidates: z.array(conversationCandidateRefSchema),
   events: paginatedSchema(conversationEventSchema),
 });
 export type ConversationThread = z.infer<typeof conversationThreadSchema>;
 
 export const unreadCountSchema = z.object({ unread: z.number() });
 
-export const submissionUnreadCountsSchema = z.object({
-  counts: z.array(z.object({ submissionId: z.string(), unread: z.number() })),
+/** Unread messages per candidate; `jobId` rides along for the inbox rollup. */
+export const candidateUnreadCountsSchema = z.object({
+  counts: z.array(
+    z.object({
+      candidateId: z.string(),
+      jobId: z.string(),
+      unread: z.number(),
+    }),
+  ),
 });
 
 export const markReadResponseSchema = z.object({ updated: z.number() });
@@ -162,8 +163,7 @@ export const markReadResponseSchema = z.object({ updated: z.number() });
  */
 export const messageSchema = z.object({
   id: z.string(),
-  submissionId: z.string(),
-  candidateId: z.string().nullable(),
+  candidateId: z.string(),
   senderParty: z.enum(["company", "recruiter"]),
   body: z.string().nullable(),
   readAt: z.string().nullable(),

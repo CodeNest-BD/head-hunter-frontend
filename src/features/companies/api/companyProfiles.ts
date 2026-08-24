@@ -3,8 +3,10 @@ import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   companyProfileSchema,
   companySummarySchema,
+  reapplyCompanyVerificationResponseSchema,
   type CompanyProfile,
   type CompanySummary,
+  type ReapplyCompanyVerificationResult,
 } from "../schemas";
 
 /**
@@ -67,10 +69,14 @@ export async function fetchCompanies(
   return paginatedSchema(companySummarySchema).parse(data);
 }
 
-/** GET /v1/follows — companies the calling recruiter follows. */
-export async function fetchFollowedCompanies(
-  params: CompanyListParams,
-): Promise<Paginated<CompanySummary>> {
-  const { data } = await apiClient.get<unknown>("/follows", { params });
-  return paginatedSchema(companySummarySchema).parse(data);
+/**
+ * POST /v1/company-profiles/me/reapply
+ *
+ * Legal only from `rejected`; the server 409s from `pending` or `verified`.
+ */
+export async function reapplyCompanyVerification(): Promise<ReapplyCompanyVerificationResult> {
+  const { data } = await apiClient.post<unknown>(
+    "/company-profiles/me/reapply",
+  );
+  return reapplyCompanyVerificationResponseSchema.parse(data);
 }

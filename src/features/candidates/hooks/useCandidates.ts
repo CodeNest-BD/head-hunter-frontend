@@ -6,8 +6,9 @@ import {
   createCandidate,
   deleteCandidate,
   fetchAttachments,
-  fetchCandidates,
-  presignSubmissionUpload,
+  fetchCandidate,
+  fetchMyCandidatesForJob,
+  presignCandidateUpload,
   updateCandidate,
   updateCandidateStatus,
   uploadToPresignedUrl,
@@ -17,12 +18,25 @@ import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { candidateKeys } from "../keys";
 import type { CandidateStatus } from "../schemas";
 
-export function useCandidates(submissionId: string) {
+/** The calling recruiter's own candidates on one job — at most five. */
+export function useMyCandidatesForJob(jobId: string) {
   return useQuery({
-    queryKey: candidateKeys.forSubmission(submissionId),
-    queryFn: () => fetchCandidates(submissionId),
+    queryKey: candidateKeys.forJob(jobId),
+    queryFn: () => fetchMyCandidatesForJob(jobId),
     // The company moves a candidate's status, so the recruiter's copy has to
     // learn about a change it did not make.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
+  });
+}
+
+/** One candidate — the subject of a conversation, and its detail pane. */
+export function useCandidate(candidateId: string) {
+  return useQuery({
+    queryKey: candidateKeys.detail(candidateId),
+    queryFn: () => fetchCandidate(candidateId),
+    // The company moves the status, so the recruiter's copy has to learn about
+    // a change it did not make.
     refetchInterval: REALTIME_POLL_MS,
     refetchOnWindowFocus: true,
   });
@@ -40,21 +54,21 @@ export function useAttachments(candidateId: string, enabled: boolean) {
   });
 }
 
-export function useUpdateCandidateStatus(submissionId: string) {
+export function useUpdateCandidateStatus(jobId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: CandidateStatus }) =>
       updateCandidateStatus(id, status),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: candidateKeys.forSubmission(submissionId),
+        queryKey: candidateKeys.forJob(jobId),
       });
       toast.success("Candidate updated");
     },
   });
 }
 
-export function useSubmitCandidate(submissionId: string) {
+export function useSubmitCandidate(jobId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -64,9 +78,9 @@ export function useSubmitCandidate(submissionId: string) {
       input: CandidateInput;
       cvFile: File;
     }) => {
-      const staged = await presignSubmissionUpload(submissionId, cvFile);
+      const staged = await presignCandidateUpload(jobId, cvFile);
       await uploadToPresignedUrl(staged.uploadUrl, cvFile);
-      return createCandidate(submissionId, input, [
+      return createCandidate(jobId, input, [
         {
           s3Key: staged.s3Key,
           fileName: cvFile.name,
@@ -77,7 +91,7 @@ export function useSubmitCandidate(submissionId: string) {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: candidateKeys.forSubmission(submissionId),
+        queryKey: candidateKeys.forJob(jobId),
       });
       toast.success("Candidate submitted");
     },
@@ -100,7 +114,7 @@ export function useSubmitCandidate(submissionId: string) {
   });
 }
 
-export function useUpdateCandidate(submissionId: string) {
+export function useUpdateCandidate(jobId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -112,20 +126,20 @@ export function useUpdateCandidate(submissionId: string) {
     }) => updateCandidate(id, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: candidateKeys.forSubmission(submissionId),
+        queryKey: candidateKeys.forJob(jobId),
       });
       toast.success("Candidate updated");
     },
   });
 }
 
-export function useDeleteCandidate(submissionId: string) {
+export function useDeleteCandidate(jobId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteCandidate(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: candidateKeys.forSubmission(submissionId),
+        queryKey: candidateKeys.forJob(jobId),
       });
       toast.success("Candidate removed");
     },

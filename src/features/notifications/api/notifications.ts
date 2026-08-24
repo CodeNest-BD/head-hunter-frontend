@@ -10,7 +10,7 @@ export interface NotificationListParams {
   page?: number;
   limit?: number;
   unreadOnly?: boolean;
-  submissionId?: string;
+  candidateId?: string;
 }
 
 /** GET /v1/notifications */

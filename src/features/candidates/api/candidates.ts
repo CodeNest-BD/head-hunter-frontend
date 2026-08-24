@@ -8,14 +8,20 @@ import {
   type CandidateStatus,
 } from "../schemas";
 
-/** GET /v1/submissions/:submissionId/candidates — bounded at five, not paginated. */
-export async function fetchCandidates(
-  submissionId: string,
+/** GET /v1/jobs/:jobId/candidates/mine — your own, bounded at five, not paginated. */
+export async function fetchMyCandidatesForJob(
+  jobId: string,
 ): Promise<Candidate[]> {
   const { data } = await apiClient.get<unknown>(
-    `/submissions/${submissionId}/candidates`,
+    `/jobs/${jobId}/candidates/mine`,
   );
   return candidateSchema.array().parse(data);
+}
+
+/** GET /v1/candidates/:id */
+export async function fetchCandidate(id: string): Promise<Candidate> {
+  const { data } = await apiClient.get<unknown>(`/candidates/${id}`);
+  return candidateSchema.parse(data);
 }
 
 /** PATCH /v1/candidates/:id */
@@ -44,6 +50,8 @@ export interface CandidateInput {
   email: string;
   phone?: string | null;
   overview?: string | null;
+  /** Opens the candidate's conversation, where `overview` describes the person. */
+  pitch?: string | null;
   linkedinUrl?: string | null;
   yearsOfExperience?: number | null;
   currentCompany?: string | null;
@@ -56,13 +64,18 @@ export interface StagedUpload {
   uploadUrl: string;
 }
 
-/** POST /v1/submissions/:id/attachments/presign */
-export async function presignSubmissionUpload(
-  submissionId: string,
+/**
+ * POST /v1/jobs/:jobId/candidate-attachments/presign
+ *
+ * Anchored to the job because the candidate does not exist yet — the
+ * recruiter's right to stage here is their right to submit to the job.
+ */
+export async function presignCandidateUpload(
+  jobId: string,
   file: File,
 ): Promise<StagedUpload> {
   const { data } = await apiClient.post<StagedUpload>(
-    `/submissions/${submissionId}/attachments/presign`,
+    `/jobs/${jobId}/candidate-attachments/presign`,
     { fileName: file.name, contentType: file.type },
     { suppressGlobalErrorToast: true },
   );
@@ -79,9 +92,9 @@ export async function uploadToPresignedUrl(
   });
 }
 
-/** POST /v1/submissions/:submissionId/candidates */
+/** POST /v1/jobs/:jobId/candidates — max five per recruiter per job. */
 export async function createCandidate(
-  submissionId: string,
+  jobId: string,
   input: CandidateInput,
   attachments: Array<{
     s3Key: string;
@@ -91,7 +104,7 @@ export async function createCandidate(
   }>,
 ): Promise<Candidate> {
   const { data } = await apiClient.post<unknown>(
-    `/submissions/${submissionId}/candidates`,
+    `/jobs/${jobId}/candidates`,
     { ...input, attachments },
     { suppressGlobalErrorToast: true },
   );

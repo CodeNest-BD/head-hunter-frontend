@@ -1,4 +1,8 @@
-import type { AccountStatus, JobStatus, SubmissionStatus } from "../schemas";
+import type {
+  AccountStatus,
+  AdminCandidateStatus,
+  JobStatus,
+} from "../schemas";
 
 /** Account status pill colors (matches the app's light status palette). */
 export const ACCOUNT_STATUS_STYLES: Record<AccountStatus, string> = {
@@ -25,12 +29,13 @@ export const VERIFICATION_STATUS_STYLES: Record<string, string> = {
   rejected: "bg-[#FBEAEA] text-[#9B3535]",
 };
 
-export const SUBMISSION_STATUS_STYLES: Record<SubmissionStatus, string> = {
+export const CANDIDATE_STATUS_STYLES: Record<AdminCandidateStatus, string> = {
   submitted: "bg-primary/15 text-primary",
-  under_review: "bg-[#FBF3DF] text-[#7A5109]",
-  advanced: "bg-[#E7F4EC] text-[#17734E]",
-  rejected: "bg-[#FBEAEA] text-[#9B3535]",
-  withdrawn: "bg-muted text-muted-foreground",
+  reviewing: "bg-[#FBF3DF] text-[#7A5109]",
+  interviewing: "bg-[#FBF3DF] text-[#7A5109]",
+  offered: "bg-[#E7F4EC] text-[#17734E]",
+  hired: "bg-[#E7F4EC] text-[#17734E]",
+  passed: "bg-[#FBEAEA] text-[#9B3535]",
   unknown: "bg-muted text-muted-foreground",
 };
 

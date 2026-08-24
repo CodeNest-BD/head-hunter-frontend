@@ -32,11 +32,14 @@ export const MAX_CV_BYTES = 10 * 1024 * 1024;
 
 export const candidateSchema = z.object({
   id: z.string(),
-  submissionId: z.string(),
+  jobId: z.string(),
+  recruiterProfileId: z.string(),
   fullName: z.string(),
   email: z.string(),
   phone: z.string().nullable(),
   overview: z.string().nullable(),
+  /** The recruiter's pitch to the company; it opens the candidate's thread. */
+  pitch: z.string().nullable(),
   linkedinUrl: z.string().nullable(),
   yearsOfExperience: z.number().nullable(),
   currentCompany: z.string().nullable(),

@@ -8,7 +8,8 @@ export { ScheduleInterviewAction } from "./components/ScheduleInterviewAction";
 export { SendOfferForm } from "./components/SendOfferForm";
 export {
   useAttachments,
-  useCandidates,
+  useCandidate,
+  useMyCandidatesForJob,
   useDeleteCandidate,
   useSubmitCandidate,
   useUpdateCandidate,
@@ -25,7 +26,7 @@ export type { Attachment, Candidate, CandidateStatus } from "./schemas";
 export {
   createCandidate,
   deleteCandidate,
-  presignSubmissionUpload,
+  presignCandidateUpload,
   updateCandidate,
   uploadToPresignedUrl,
 } from "./api/candidates";

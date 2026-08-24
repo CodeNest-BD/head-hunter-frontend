@@ -24,7 +24,7 @@ export interface ScheduleInterviewActionProps {
   candidateId: string;
   /** This candidate's entry from `candidateNegotiationState`, or `null` when
    * the candidate has neither an interview nor an offer yet — derived once
-   * per page from the page-level `useInterviews({ submissionId })` query,
+   * per page from the page-level `useInterviews({ candidateId })` query,
    * never fetched per candidate here. */
   negotiationState: CandidateNegotiationState | null;
 }

@@ -6,7 +6,7 @@ import { useWallet } from "@/features/billing";
 import { useMessageUnreadCount } from "@/features/conversations";
 import { useJobs } from "@/features/jobs";
 import { useNotifications } from "@/features/notifications";
-import { useInboxJobs } from "@/features/submissions";
+import { useInboxJobs } from "@/features/inbox";
 import { PageBanner } from "@/shared/ui-components/brand";
 import {
   AttentionRow,
@@ -25,7 +25,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
   const profile = useMyCompanyProfile();
   const wallet = useWallet();
   const published = useJobs({ status: "published", limit: 100 });
-  const inbox = useInboxJobs({ limit: 100 });
+  const inbox = useInboxJobs("company", { limit: 100 });
   const messages = useMessageUnreadCount();
   const activity = useNotifications({ limit: 6 });
 
@@ -39,27 +39,27 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
   ).length;
 
   const inboxJobs = inbox.data?.data ?? [];
-  const newSubmissions = inboxJobs.reduce(
-    (sum, job) => sum + job.newSubmissionCount,
+  const newCandidates = inboxJobs.reduce(
+    (sum, job) => sum + job.newCandidateCount,
     0,
   );
   const jobsWithNew = inboxJobs.filter(
-    (job) => job.newSubmissionCount > 0,
+    (job) => job.newCandidateCount > 0,
   ).length;
   const unreadMessages = messages.data ?? 0;
 
   const subtitleParts = [
     companyName || "Your company",
     `${publishedTotal} published job${publishedTotal === 1 ? "" : "s"}`,
-    `${newSubmissions} new submission${newSubmissions === 1 ? "" : "s"}`,
+    `${newCandidates} new candidate${newCandidates === 1 ? "" : "s"}`,
   ];
 
   const attention: AttentionItem[] = [];
-  if (newSubmissions > 0) {
+  if (newCandidates > 0) {
     attention.push({
       id: "waiting",
       tone: "blue",
-      title: `${newSubmissions} candidate${newSubmissions === 1 ? "" : "s"} waiting on your review`,
+      title: `${newCandidates} candidate${newCandidates === 1 ? "" : "s"} waiting on your review`,
       detail: `Across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"} in your inbox.`,
       actionLabel: "Open inbox",
       href: "/company/inbox",
@@ -116,10 +116,10 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           href="/company/wallet"
         />
         <StatCard
-          label="New submissions"
-          value={inbox.isPending ? "—" : newSubmissions}
+          label="New candidates"
+          value={inbox.isPending ? "—" : newCandidates}
           hint={
-            newSubmissions === 0
+            newCandidates === 0
               ? "nothing waiting on you"
               : `across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"}`
           }

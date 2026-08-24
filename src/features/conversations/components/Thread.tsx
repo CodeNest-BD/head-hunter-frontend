@@ -17,7 +17,6 @@ import {
   groupEvents,
   type ConversationParty,
 } from "../utils/groupEvents";
-import { CandidateFilterChips } from "./CandidateFilterChips";
 import { DaySeparator } from "./DaySeparator";
 import { MessageComposer } from "./MessageComposer";
 import { MessageGroup } from "./MessageGroup";
@@ -26,7 +25,7 @@ import { ProposalCard } from "./ProposalCard";
 import { SystemEvent } from "./SystemEvent";
 
 export interface ThreadProps {
-  submissionId: string;
+  candidateId: string;
 }
 
 /**
@@ -85,14 +84,12 @@ function useViewerParty(): ConversationParty {
   return user?.role === "recruiter" ? "recruiter" : "company";
 }
 
-export function Thread({ submissionId }: ThreadProps) {
+export function Thread({ candidateId }: ThreadProps) {
   const viewerParty = useViewerParty();
-  const [candidateId, setCandidateId] = useState<string | null>(null);
-  const params = useMemo(
-    () => (candidateId ? { candidateId } : {}),
-    [candidateId],
-  );
-  const { status: realtimeStatus } = useConversationRealtime(submissionId);
+  // A thread is one candidate now, so there is nothing left to filter by and
+  // the params are constant — memoised only to keep the query key stable.
+  const params = useMemo(() => ({}), []);
+  const { status: realtimeStatus } = useConversationRealtime(candidateId);
   const {
     data,
     isPending,
@@ -102,8 +99,8 @@ export function Thread({ submissionId }: ThreadProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useConversationThread(submissionId, params, realtimeStatus);
-  const markRead = useMarkThreadRead(submissionId);
+  } = useConversationThread(candidateId, params, realtimeStatus);
+  const markRead = useMarkThreadRead(candidateId);
 
   // A fresh array every render regardless of whether the underlying data
   // changed (`orderedEvents` always allocates), so this is memoised on
@@ -122,18 +119,12 @@ export function Thread({ submissionId }: ThreadProps) {
   // the element's own identity is tracked as a second, independent trigger
   // rather than folded into "did the newest event change".
   const lastScrolledContainerRef = useRef<HTMLDivElement | null>(null);
-  // The candidate filter this thread last scrolled for. `keepPreviousData`
-  // means switching filters no longer remounts the container (see
-  // `useConversationThread`), so that can no longer stand in for "the user
-  // asked for a different view" — this tracks it directly instead. Only
+  // The thread this container last scrolled for. `keepPreviousData` means
+  // moving between candidates no longer remounts the container (see
+  // `useConversationThread`), so a remount can no longer stand in for "the
+  // reader opened a different conversation" — this tracks it directly. Only
   // updated once `isPlaceholderData` clears, i.e. once `events` actually
-  // reflects the new filter rather than the still-displayed stale data —
-  // otherwise the immediate re-render after clicking a chip (still showing
-  // the old filter's events while the new page fetches) would mark the
-  // filter "seen" a render too early, and the real transition — often onto
-  // an unchanged newest event, since the latest message is frequently the
-  // one just sent about the candidate being filtered to — would fall
-  // through both other triggers and never scroll at all.
+  // reflects the new thread rather than the previous one still on screen.
   const lastScrolledCandidateIdRef = useRef<string | null>(null);
 
   // Mark the counterparty's messages read on mount and whenever the thread
@@ -145,16 +136,15 @@ export function Thread({ submissionId }: ThreadProps) {
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submissionId]);
+  }, [candidateId]);
 
   // Scrolls to the newest message on first load, whenever the newest event
   // actually changes (a real arrival — Realtime or the periodic poll),
   // whenever the scroll container itself has been replaced by a remount (an
   // error→Retry — a fresh `div` always starts at `scrollTop 0`), and
-  // whenever the candidate filter has genuinely changed (the reader asked
-  // to look at a different, usually shorter, view and expects its newest
-  // message, not wherever they happened to be scrolled in the previous
-  // view). Fetching an older page only ever appends to `data.pages`, and
+  // whenever the reader has opened a different candidate's thread (they
+  // expect its newest message, not wherever they were scrolled in the
+  // previous one). Fetching an older page only ever appends to `data.pages`, and
   // `orderedEvents` reverses that into oldest-first, so the *last* (newest)
   // event's key is unchanged and this stays a no-op for that case.
   //
@@ -164,8 +154,8 @@ export function Thread({ submissionId }: ThreadProps) {
   // checks, not a visible jump — and it means a remount or a settled filter
   // change is caught the instant it happens rather than depending on `data`
   // reference equality also having changed in the same commit, which is
-  // exactly the case a filter switch onto an untagged system event (already
-  // the newest entry before and after narrowing) violates.
+  // exactly the case moving between two threads whose newest entries happen
+  // to be identical would violate.
   // A layout effect, not a passive one, so the adjustment lands before the
   // browser paints the container at its stale `scrollTop 0`.
   useLayoutEffect(() => {
@@ -174,17 +164,17 @@ export function Thread({ submissionId }: ThreadProps) {
     const container = scrollContainerRef.current;
     const eventChanged = lastEventKey !== lastEventKeyRef.current;
     const containerChanged = container !== lastScrolledContainerRef.current;
-    // Placeholder data is the previous filter's events, redisplayed while the
-    // new filter's page fetches — `events` doesn't reflect `candidateId` yet,
-    // so comparing against it here would fire (and mark the filter "seen")
-    // one render too early, on data that hasn't actually changed.
-    const filterChanged =
+    // Placeholder data is the previous thread's events, redisplayed while the
+    // new one fetches — `events` doesn't reflect `candidateId` yet, so
+    // comparing against it here would fire (and mark the thread "seen") one
+    // render too early, on data that hasn't actually changed.
+    const threadChanged =
       !isPlaceholderData && candidateId !== lastScrolledCandidateIdRef.current;
     lastEventKeyRef.current = lastEventKey;
     if (!isPlaceholderData) {
       lastScrolledCandidateIdRef.current = candidateId;
     }
-    if (!container || (!eventChanged && !containerChanged && !filterChanged)) {
+    if (!container || (!eventChanged && !containerChanged && !threadChanged)) {
       return;
     }
     lastScrolledContainerRef.current = container;
@@ -255,9 +245,7 @@ export function Thread({ submissionId }: ThreadProps) {
   }
 
   const threadHeader = data.pages[0];
-  const candidates = threadHeader?.candidates ?? [];
   const groupedItems = groupEvents(events, viewerParty);
-  const selectedCandidate = candidates.find((c) => c.id === candidateId);
   // The counterparty is whoever the viewer isn't — a recruiter talks with the
   // company, and vice versa.
   const counterpartyName =
@@ -283,12 +271,6 @@ export function Thread({ submissionId }: ThreadProps) {
           </p>
         </div>
       )}
-
-      <CandidateFilterChips
-        candidates={candidates}
-        selectedCandidateId={candidateId}
-        onSelect={setCandidateId}
-      />
 
       {/* The only child allowed to shrink (`min-h-0`) inside the
        * fixed-height panel, so this is what scrolls — the header, chips and
@@ -377,9 +359,9 @@ export function Thread({ submissionId }: ThreadProps) {
       </div>
 
       <MessageComposer
-        submissionId={submissionId}
-        candidateId={candidateId ?? undefined}
-        candidateName={selectedCandidate?.fullName}
+        candidateId={candidateId}
+        candidateName={threadHeader?.candidate.fullName}
+        acceptsMessages={threadHeader?.acceptsMessages ?? true}
       />
     </div>
   );
