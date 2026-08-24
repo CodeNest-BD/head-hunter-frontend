@@ -140,21 +140,24 @@ describe("ExploreJobsView", () => {
     expect(screen.getByText("Senior Backend Engineer")).toBeInTheDocument();
   });
 
-  it("shows the live map for an admin (not a verified recruiter)", () => {
-    useIsVerifiedRecruiterMock.mockReturnValue({
-      isRecruiter: false,
-      isVerified: false,
-      verificationStatus: null,
-    });
-    useAuthMock.mockReturnValue({ user: { role: "admin" } });
+  it.each(["admin", "company"] as const)(
+    "shows the live map for a %s (not a verified recruiter)",
+    (role) => {
+      useIsVerifiedRecruiterMock.mockReturnValue({
+        isRecruiter: false,
+        isVerified: false,
+        verificationStatus: null,
+      });
+      useAuthMock.mockReturnValue({ user: { role } });
 
-    renderWithProviders(<ExploreJobsView />);
+      renderWithProviders(<ExploreJobsView />);
 
-    expect(screen.getByTestId("live-map")).toBeInTheDocument();
-    expect(
-      screen.queryByText("The live map is for verified recruiters"),
-    ).not.toBeInTheDocument();
-  });
+      expect(screen.getByTestId("live-map")).toBeInTheDocument();
+      expect(
+        screen.queryByText("The live map is for verified recruiters"),
+      ).not.toBeInTheDocument();
+    },
+  );
 
   it("renders an empty state when no roles match, without crashing", () => {
     useIsVerifiedRecruiterMock.mockReturnValue({

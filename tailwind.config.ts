@@ -86,13 +86,6 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      fontSize: {
-        // Landing hero display size, measured off the client reference.
-        hero: [
-          "clamp(2.75rem, 6.2vw, 5.375rem)",
-          { lineHeight: "1.02", letterSpacing: "-0.02em", fontWeight: "800" },
-        ],
-      },
       fontFamily: {
         // The "Under Development" mock uses a single system sans; weight and
         // tracking carry the headings. Inter is our high-quality system-ui

@@ -12,22 +12,22 @@ describe("recruiter navigation", () => {
         "Companies",
         "Submissions",
         "Wallet",
+        "Profile",
       ]),
     );
   });
 
-  it("reduces an unapproved recruiter to the dashboard", () => {
+  it("reduces an unapproved recruiter to the dashboard and their profile", () => {
     const labels = navForRole("recruiter", false).map((item) => item.label);
 
-    expect(labels).toEqual(["Dashboard"]);
+    expect(labels).toEqual(["Dashboard", "Profile"]);
   });
 
-  it("keeps top-bar destinations (job map, notifications, profile) out of the sidebar", () => {
+  it("keeps the top-bar-only destinations (job map, notifications) out of the sidebar", () => {
     const labels = navForRole("recruiter", true).map((item) => item.label);
 
     expect(labels).not.toContain("Job map");
     expect(labels).not.toContain("Notifications");
-    expect(labels).not.toContain("My profile");
   });
 
   it("never reduces a company's navigation", () => {

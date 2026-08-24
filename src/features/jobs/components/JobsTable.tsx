@@ -18,6 +18,7 @@ import {
 import { useWallet } from "@/features/billing/hooks/useBilling";
 import { useInboxJobs } from "@/features/submissions/hooks/useSubmissions";
 import { PageBanner } from "@/shared/ui-components/brand";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
@@ -64,8 +65,26 @@ const STATUS_LABELS: Record<string, string> = {
   expired: "Expired",
 };
 
+/** Per-status pill colors for the Status column (mirrors the job detail page). */
+const STATUS_STYLES: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground",
+  published: "text-[#17734E] bg-[#E7F4EC]",
+  expired: "text-[#9B3535] bg-[#FBEAEA]",
+  paused: "text-[#92610C] bg-[#FBF3DF]",
+  filled: "bg-primary/15 text-primary",
+  closed: "bg-muted text-muted-foreground",
+};
+
+/** The statuses a job actually reaches in the product, for the filter. */
+const STATUS_FILTER_OPTIONS = [
+  { value: "published", label: "Published" },
+  { value: "draft", label: "Draft" },
+  { value: "expired", label: "Expired" },
+] as const;
+
 const COLUMNS: ColumnDef[] = [
   { key: "title", label: "Title", required: true },
+  { key: "status", label: "Status" },
   { key: "category", label: "Category" },
   { key: "fee", label: "Recruiter fee" },
   { key: "submissions", label: "Submissions" },
@@ -218,14 +237,7 @@ export function JobsTable() {
             value: status,
             onChange: changeStatus,
             allLabel: "All statuses",
-            options: [
-              { value: "published", label: "Published" },
-              { value: "draft", label: "Draft" },
-              { value: "paused", label: "Paused" },
-              { value: "filled", label: "Filled" },
-              { value: "closed", label: "Closed" },
-              { value: "expired", label: "Expired" },
-            ],
+            options: [...STATUS_FILTER_OPTIONS],
           }}
           extraFilter={{
             value: category,
@@ -316,6 +328,9 @@ export function JobsTable() {
                   <thead className={TABLE_HEAD}>
                     <tr className={TABLE_HEAD_ROW}>
                       <th className={TABLE_TH}>Title</th>
+                      {cols.isVisible("status") && (
+                        <th className={TABLE_TH}>Status</th>
+                      )}
                       {cols.isVisible("category") && (
                         <th className={TABLE_TH}>Category</th>
                       )}
@@ -325,7 +340,7 @@ export function JobsTable() {
                       {cols.isVisible("submissions") && (
                         <th className={TABLE_TH}>Submissions</th>
                       )}
-                      <th className={TABLE_TH} />
+                      <th className={`${TABLE_TH} text-right`}>Actions</th>
                     </tr>
                   </thead>
                   <tbody className={TABLE_BODY}>
@@ -346,10 +361,20 @@ export function JobsTable() {
                               {job.title}
                             </Link>
                             <p className="mt-0.5 text-xs text-muted-foreground">
-                              {STATUS_LABELS[job.status] ?? job.status} ·{" "}
                               {dateLabel}
                             </p>
                           </td>
+                          {cols.isVisible("status") && (
+                            <td className={TABLE_TD}>
+                              <StatusBadge
+                                label={STATUS_LABELS[job.status] ?? job.status}
+                                className={
+                                  STATUS_STYLES[job.status] ??
+                                  "bg-muted text-muted-foreground"
+                                }
+                              />
+                            </td>
+                          )}
                           {cols.isVisible("category") && (
                             <td className={`${TABLE_TD} text-brand-gray`}>
                               {ROLE_CATEGORY_LABELS[job.roleCategory]}

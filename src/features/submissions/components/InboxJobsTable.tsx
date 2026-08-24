@@ -53,10 +53,10 @@ export function InboxJobsTable() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Inbox"
-        subtitle="Every job with submissions — open one to see its recruiters and candidates."
+        subtitle="Every job with candidates submitted — open one to review them."
         metrics={[
           { label: "New", value: newTotal },
-          { label: "Total submissions", value: subsTotal },
+          { label: "Total candidates", value: subsTotal },
         ]}
       />
 
@@ -107,7 +107,7 @@ export function InboxJobsTable() {
               <p className="font-heading text-base font-semibold text-navy">
                 {filter === "needs-review"
                   ? "Nothing needs review"
-                  : "No submissions found"}
+                  : "No candidates yet"}
               </p>
               <p className="max-w-sm text-sm text-muted-foreground">
                 Recruiters can only submit candidates to your{" "}
@@ -149,7 +149,7 @@ export function InboxJobsTable() {
                           <UnreadBadge count={row.unreadMessages} />
                         </div>
                         <p className="mt-0.5 text-[13px] text-muted-foreground">
-                          {row.submissionCount} submission
+                          {row.submissionCount} candidate
                           {row.submissionCount === 1 ? "" : "s"}
                           {fresh ? ` · ${row.newSubmissionCount} new` : ""}
                         </p>
@@ -159,7 +159,7 @@ export function InboxJobsTable() {
                           {formatDate(row.lastSubmittedAt)}
                         </span>
                         <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                          View recruiters
+                          Review candidates
                           <ArrowRight className="h-3.5 w-3.5" />
                         </span>
                       </div>

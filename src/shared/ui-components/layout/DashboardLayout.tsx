@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-import { useAuth, type Role } from "@/features/auth";
+import { useAuth } from "@/features/auth";
 import { useAdminRecruiters } from "@/features/admin/hooks/useAdmin";
 import { useWallet } from "@/features/billing/hooks/useBilling";
 import {
@@ -44,13 +44,6 @@ import { type Crumb } from "./Breadcrumb";
 import { CountBadge } from "./CountBadge";
 import { navForRole, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
-
-/** Where each role's "Profile / settings" lives, for the top-bar user menu. */
-const ACCOUNT_HREF: Record<Role, string> = {
-  company: "/company/profile",
-  recruiter: "/recruiter/profile",
-  admin: "/admin/settings",
-};
 
 /** Persists the desktop collapse choice across navigations and reloads. */
 const SIDEBAR_COLLAPSED_KEY = "hh-sidebar-collapsed";
@@ -240,15 +233,17 @@ function NotificationBell() {
 }
 
 /**
- * Top-bar account menu: avatar + name opening a popover with the role and a
- * shortcut to the profile plus Log out. This is where the user/logout controls
- * live in the new chrome, so the sidebar carries only navigation.
+ * Top-bar account menu: avatar + name opening a popover with the full role
+ * navigation (Profile included) plus Log out — a complete mirror of the
+ * sidebar, so everything is reachable from either place.
  */
 function UserMenu() {
   const { user, logout } = useAuth();
+  const { isApproved } = useVerificationGate();
   const [open, setOpen] = useState(false);
   if (!user) return null;
 
+  const items = navForRole(user.role, isApproved);
   const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`
     .toUpperCase()
     .trim();
@@ -274,7 +269,7 @@ function UserMenu() {
           <ChevronDown className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-56">
+      <PopoverContent align="end" className="w-60">
         <div className="border-b border-border px-3 py-2.5">
           <p className="truncate text-sm font-semibold text-navy">
             {user.firstName} {user.lastName}
@@ -283,18 +278,25 @@ function UserMenu() {
             {user.role}
           </p>
         </div>
+        {/* The full role navigation, mirroring the sidebar. */}
         <div className="p-1">
-          {/* Admins have no profile page — their Settings live in the sidebar. */}
-          {user.role !== "admin" && (
-            <Link
-              href={ACCOUNT_HREF[user.role]}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 rounded-sm px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-accent"
-            >
-              <UserRound className="h-4 w-4 text-muted-foreground" />
-              Profile
-            </Link>
-          )}
+          {items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-sm px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-accent"
+              >
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                <span className="flex-1 truncate">{item.label}</span>
+                {item.badge === "messages" && <UnreadMessagesBadge />}
+              </Link>
+            );
+          })}
+        </div>
+        <div className="border-t border-border p-1">
           <button
             type="button"
             onClick={() => {
@@ -361,15 +363,11 @@ function NavLink({
 function SidebarContent({
   onNavigate,
   collapsed = false,
-  showAccount = true,
   showSiteLinks = false,
   onToggleCollapse,
 }: {
   onNavigate: () => void;
   collapsed?: boolean;
-  /** The account block + Log out. Off on desktop (the top-bar user menu owns
-   * it); on for the mobile drawer, where there is no room for that menu. */
-  showAccount?: boolean;
   /** The global site links (How It Works, Explore Jobs). On for the mobile
    * drawer only — on desktop they live in the top bar. */
   showSiteLinks?: boolean;
@@ -455,37 +453,35 @@ function SidebarContent({
         ))}
       </nav>
 
-      {showAccount && (
-        <div className="border-t border-sidebar-border p-3">
-          {!collapsed && (
-            <div className="flex items-center gap-3 rounded-md px-2 py-2">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-                {initials || <UserRound className="h-4 w-4" />}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-sidebar-accent-foreground">
-                  {user.firstName} {user.lastName}
-                </p>
-                <p className="truncate text-xs capitalize text-sidebar-foreground/60">
-                  {user.role}
-                </p>
-              </div>
+      <div className="border-t border-sidebar-border p-3">
+        {!collapsed && (
+          <div className="flex items-center gap-3 rounded-md px-2 py-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+              {initials || <UserRound className="h-4 w-4" />}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-sidebar-accent-foreground">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="truncate text-xs capitalize text-sidebar-foreground/60">
+                {user.role}
+              </p>
             </div>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => void logout()}
+          title={collapsed ? "Log out" : undefined}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-md py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-destructive/15 hover:text-destructive",
+            collapsed ? "justify-center px-0" : "mt-1 px-3",
           )}
-          <button
-            type="button"
-            onClick={() => void logout()}
-            title={collapsed ? "Log out" : undefined}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-md py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-destructive/15 hover:text-destructive",
-              collapsed ? "justify-center px-0" : "mt-1 px-3",
-            )}
-          >
-            <LogOut className="h-[18px] w-[18px] shrink-0" />
-            {!collapsed && "Log out"}
-          </button>
-        </div>
-      )}
+        >
+          <LogOut className="h-[18px] w-[18px] shrink-0" />
+          {!collapsed && "Log out"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -595,7 +591,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <SidebarContent
           onNavigate={close}
           collapsed={collapsed}
-          showAccount={false}
           onToggleCollapse={() => setCollapsed((value) => !value)}
         />
       </aside>
