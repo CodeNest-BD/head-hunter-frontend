@@ -8,6 +8,7 @@ import {
   Send,
   Settings,
   Users,
+  UserRound,
   Wallet2,
 } from "lucide-react";
 
@@ -34,12 +35,13 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       badge: "messages",
     },
     { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
+    { href: "/company/profile", label: "Profile", icon: UserRound },
   ],
   recruiter: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     // "Explore Jobs" (the job map) lives in the global top bar and the mobile
-    // drawer's site links; Notifications and the profile live in the top bar
-    // (bell dropdown + user menu) — so none are repeated here.
+    // drawer's site links; Notifications live in the bell dropdown — so neither
+    // is repeated here.
     { href: "/companies", label: "Companies", icon: Building2 },
     {
       href: "/recruiter/submissions",
@@ -59,6 +61,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
           },
         ]),
     { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
+    { href: "/recruiter/profile", label: "Profile", icon: UserRound },
   ],
   admin: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -72,11 +75,11 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
 };
 
 /**
- * Sidebar labels an unapproved recruiter still sees. Notifications and the
- * profile moved to the top bar (always available), so the reduced sidebar is
- * just the dashboard, which hosts the verification-pending guidance.
+ * Nav labels an unapproved recruiter still sees: the dashboard (which hosts the
+ * verification-pending guidance) and their profile (which they complete to get
+ * approved). Everything else is gated until an admin approves them.
  */
-const UNAPPROVED_RECRUITER_LABELS = ["Dashboard"] as const;
+const UNAPPROVED_RECRUITER_LABELS = ["Dashboard", "Profile"] as const;
 
 /**
  * Approval-aware nav selector. `UserMenu` and `SidebarContent` both read

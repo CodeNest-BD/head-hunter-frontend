@@ -6,13 +6,8 @@ vi.mock("@/features/auth", () => ({
   useAuth: () => useAuthMock(),
 }));
 
-// Both shells stand in for themselves: this file is about which one wraps the
-// page, not what either renders.
-vi.mock("@/shared/ui-components/layout/DashboardLayout", () => ({
-  DashboardLayout: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="dashboard-shell">{children}</div>
-  ),
-}));
+// The shell stands in for itself: this file is about whether the public shell
+// wraps the page, not what it renders.
 vi.mock("@/components/landing/PublicShell", () => ({
   PublicShell: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="public-shell">{children}</div>
@@ -26,7 +21,7 @@ vi.mock("./ExploreJobsView", () => ({
 import { ExploreJobsShell } from "./ExploreJobsShell";
 
 describe("ExploreJobsShell", () => {
-  it("gives a signed-in recruiter their sidebar, so the job map is not a dead end", () => {
+  it("wraps a signed-in user in the public shell — explore is a public route, no sidebar", () => {
     useAuthMock.mockReturnValue({
       status: "authenticated",
       user: { role: "recruiter" },
@@ -34,29 +29,27 @@ describe("ExploreJobsShell", () => {
 
     render(<ExploreJobsShell />);
 
-    expect(screen.getByTestId("dashboard-shell")).toBeInTheDocument();
-    expect(screen.queryByTestId("public-shell")).not.toBeInTheDocument();
+    expect(screen.getByTestId("public-shell")).toBeInTheDocument();
     expect(screen.getByTestId("explore-view")).toBeInTheDocument();
   });
 
-  it("gives a guest the marketing shell and its sign-up path", () => {
+  it("wraps a guest in the same public shell", () => {
     useAuthMock.mockReturnValue({ status: "unauthenticated", user: null });
 
     render(<ExploreJobsShell />);
 
     expect(screen.getByTestId("public-shell")).toBeInTheDocument();
-    expect(screen.queryByTestId("dashboard-shell")).not.toBeInTheDocument();
+    expect(screen.getByTestId("explore-view")).toBeInTheDocument();
   });
 
-  it("renders neither shell while the session is still booting", () => {
+  it("renders no shell while the session is still booting", () => {
     useAuthMock.mockReturnValue({ status: "booting", user: null });
 
     render(<ExploreJobsShell />);
 
-    // The regression this guards: a reload painted the marketing hero, then
-    // swapped it for the dashboard once the silent refresh landed.
+    // Holding until the session settles avoids flashing the guest CTAs before
+    // swapping to the account menu.
     expect(screen.queryByTestId("public-shell")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("dashboard-shell")).not.toBeInTheDocument();
     expect(screen.getByText("Loading…")).toBeInTheDocument();
   });
 });

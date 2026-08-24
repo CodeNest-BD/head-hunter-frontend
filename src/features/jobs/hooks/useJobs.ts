@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { isApiError } from "@/shared/libs/errorHandler";
 import {
   createJob,
   deleteJob,
@@ -64,32 +65,50 @@ export function useCreateJob() {
   const router = useRouter();
   return useMutation({
     mutationFn: (input: JobWriteInput) => createJob(input),
-    onSuccess: (job) => {
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: jobKeys.all });
       toast.success("Draft saved");
-      router.push(`/company/jobs/${job.id}`);
+      router.push("/company/jobs");
     },
   });
 }
 
 /**
  * Create a job and publish it in one action (the "Publish" button on the new-job
- * form). Publishing reserves the fee, so it can fail on insufficient funds — the
- * draft is already saved, and the error surfaces so the company can top up and
- * publish from the job page.
+ * form). Publishing reserves the fee, so it can fail on insufficient funds.
+ * Posting is all-or-nothing: if publishing fails we delete the just-created
+ * draft so no half-finished post lingers in the list, surface the error, and
+ * stay on the form. Only a successful publish redirects to the list.
  */
 export function useCreateAndPublishJob() {
   const queryClient = useQueryClient();
   const router = useRouter();
   return useMutation({
     mutationFn: async (input: JobWriteInput) => {
-      const draft = await createJob(input);
-      return updateJob(draft.id, { status: "published" });
+      const draft = await createJob(input, { suppressGlobalErrorToast: true });
+      try {
+        return await updateJob(
+          draft.id,
+          { status: "published" },
+          { suppressGlobalErrorToast: true },
+        );
+      } catch (error) {
+        // Roll back the draft so a failed post leaves nothing behind.
+        await deleteJob(draft.id).catch(() => undefined);
+        throw error;
+      }
     },
-    onSuccess: (job) => {
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: jobKeys.all });
       toast.success("Job published. Recruiters can see it now.");
-      router.push(`/company/jobs/${job.id}`);
+      router.push("/company/jobs");
+    },
+    onError: (error) => {
+      toast.error(
+        isApiError(error)
+          ? error.message
+          : "Could not post the job. Please try again.",
+      );
     },
   });
 }

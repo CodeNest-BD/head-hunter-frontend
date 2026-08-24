@@ -2,21 +2,17 @@
 
 import { useAuth } from "@/features/auth";
 import { PublicShell } from "@/components/landing/PublicShell";
-import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 import { ExploreJobsView } from "./ExploreJobsView";
 
 /**
- * One page, two shells: guests get the marketing chrome and sign-up path,
- * signed-in users get their sidebar.
- *
- * Neither renders while the session boots. This route is public, so the auth
- * provider lets it through immediately — without the hold, a reload painted the
- * marketing hero and then swapped it for the dashboard.
+ * Explore is a public route, so it always uses the marketing chrome — no
+ * dashboard sidebar — even for signed-in users (the marketing nav shows their
+ * account menu). We still hold render until the session settles so the nav
+ * doesn't flash the guest CTAs before swapping to the account menu.
  */
 export function ExploreJobsShell() {
-  const { status, user } = useAuth();
-  const signedIn = status === "authenticated" && user !== null;
+  const { status } = useAuth();
 
   if (status === "booting") {
     return (
@@ -24,14 +20,6 @@ export function ExploreJobsShell() {
         <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
         Loading…
       </div>
-    );
-  }
-
-  if (signedIn) {
-    return (
-      <DashboardLayout wide>
-        <ExploreJobsView />
-      </DashboardLayout>
     );
   }
 

@@ -49,7 +49,7 @@ export function StatsStrip() {
     {
       icon: DollarSign,
       value: formatMinor(data.averageFeeMinor),
-      label: "Avg. Fee Offered",
+      label: "Avg. fee",
     },
   ];
 
@@ -73,10 +73,12 @@ export function StatsStrip() {
               <Icon className="h-[18px] w-[18px]" />
             </span>
             <div className="min-w-0">
-              <p className="font-heading text-lg font-extrabold leading-none text-navy">
+              <p className="font-heading text-lg font-extrabold leading-none text-navy tabular-nums">
                 {cell.value}
               </p>
-              <p className="mt-1 text-[11px] text-brand-gray">{cell.label}</p>
+              <p className="mt-1 whitespace-nowrap text-[11px] text-brand-gray">
+                {cell.label}
+              </p>
             </div>
           </div>
         );

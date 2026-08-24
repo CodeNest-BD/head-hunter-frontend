@@ -117,8 +117,8 @@ export function ExploreJobsView() {
   const { isVerified, isRecruiter, verificationStatus, isLoading } =
     useIsVerifiedRecruiter();
   const { user } = useAuth();
-  // Admins see the live map too — they have full access to the marketplace.
-  const isAdmin = user?.role === "admin";
+  // Companies and admins see the live map too, not just verified recruiters.
+  const canViewLiveMap = user?.role === "admin" || user?.role === "company";
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
   const [view, setView] = useState<ResultView>("cards");
   const [page, setPage] = useState(1);
@@ -258,7 +258,7 @@ export function ExploreJobsView() {
           <div className="flex min-w-0 flex-col gap-6">
             <MapCard
               isLoading={isLoading}
-              canViewMap={isVerified || isAdmin}
+              canViewMap={isVerified || canViewLiveMap}
               isRecruiter={isRecruiter}
               verificationStatus={verificationStatus}
               listParams={listParams}

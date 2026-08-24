@@ -17,16 +17,20 @@ import { StatsStrip } from "./StatsStrip";
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-background">
-      <div className="mx-auto grid max-w-[1240px] items-end gap-12 px-5 pb-16 pt-14 md:px-10 md:pb-20 lg:grid-cols-[1fr_1.05fr]">
-        <div className="[animation:fadeUp_500ms_ease_both]">
-          <h1 className="mb-6 font-heading text-hero text-navy">
-            You Set the Price. We Connect You to the{" "}
-            <span className="text-primary">Best.</span>
-          </h1>
-          <p className="mb-9 max-w-xl text-lg leading-relaxed text-brand-slate">
-            Companies name their price for recruiting services. Recruiters find
-            open jobs and get paid what you&rsquo;re willing to offer.
-          </p>
+      <div className="mx-auto grid max-w-[1240px] items-stretch gap-12 px-5 pb-16 pt-10 md:px-10 md:pb-20 lg:grid-cols-[1fr_1.05fr]">
+        <div className="flex flex-col [animation:fadeUp_500ms_ease_both]">
+          {/* Text block centers vertically in the space above the CTAs so it
+              sits opposite the map, instead of clinging to the top edge. */}
+          <div className="my-auto">
+            <h1 className="mb-6 font-heading text-4xl font-extrabold leading-[1.15] tracking-tight text-navy sm:text-5xl">
+              You Set the Price. We Connect You to the{" "}
+              <span className="text-primary">Best.</span>
+            </h1>
+            <p className="max-w-xl text-lg leading-relaxed text-brand-slate">
+              Companies name their price for recruiting services. Recruiters
+              find open jobs and get paid what you&rsquo;re willing to offer.
+            </p>
+          </div>
           <div className="flex flex-col gap-3.5 sm:flex-row">
             <LandingCta
               role="company"

@@ -56,17 +56,26 @@ export async function fetchJob(id: string): Promise<Job> {
 }
 
 /** POST /v1/jobs — always created as a draft; status is not accepted here. */
-export async function createJob(input: JobWriteInput): Promise<Job> {
-  const { data } = await apiClient.post<unknown>("/jobs", input);
+export async function createJob(
+  input: JobWriteInput,
+  options?: { suppressGlobalErrorToast?: boolean },
+): Promise<Job> {
+  const { data } = await apiClient.post<unknown>("/jobs", input, options);
   return jobSchema.parse(data);
 }
 
-/** PATCH /v1/jobs/:id */
+/** PATCH /v1/jobs/:id. `suppressGlobalErrorToast` lets a caller own its own
+ * error UI (used by the create-then-publish flow). */
 export async function updateJob(
   id: string,
   input: Partial<JobWriteInput> & { status?: JobStatus },
+  options?: { suppressGlobalErrorToast?: boolean },
 ): Promise<Job> {
-  const { data } = await apiClient.patch<unknown>(`/jobs/${id}`, input);
+  const { data } = await apiClient.patch<unknown>(
+    `/jobs/${id}`,
+    input,
+    options,
+  );
   return jobSchema.parse(data);
 }
 

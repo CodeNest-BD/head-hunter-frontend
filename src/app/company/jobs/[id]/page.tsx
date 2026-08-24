@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
@@ -113,7 +114,14 @@ function EditJobContent({ jobId }: { jobId: string }) {
 
       <JobForm
         job={job}
-        onSubmit={(input) => update.mutate(input)}
+        onSubmit={(input) =>
+          update.mutate(input, {
+            onSuccess: () => {
+              toast.success("Job updated");
+              router.push("/company/jobs");
+            },
+          })
+        }
         isSubmitting={update.isPending}
         submitLabel="Save changes"
         onCancel={() => router.push("/company/jobs")}
