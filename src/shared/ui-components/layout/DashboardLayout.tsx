@@ -41,7 +41,7 @@ import {
 } from "@/shared/ui-components/controls/popover";
 import { formatMinor } from "@/shared/utils/money";
 import { type Crumb } from "./Breadcrumb";
-import { CountBadge } from "./CountBadge";
+import { InboxBadge } from "./InboxBadge";
 import { navForRole, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
 
@@ -96,13 +96,6 @@ function AdminTopBarPending() {
       {pending} verification{pending === 1 ? "" : "s"} pending
     </Link>
   );
-}
-
-/** Unread-messages pill for either side's Inbox
- * nav items; renders nothing with no unread messages. */
-function UnreadMessagesBadge() {
-  const { data } = useMessageUnreadCount();
-  return <CountBadge count={data} />;
 }
 
 /**
@@ -291,7 +284,7 @@ function UserMenu() {
               >
                 <Icon className="h-4 w-4 text-muted-foreground" />
                 <span className="flex-1 truncate">{item.label}</span>
-                {item.badge === "messages" && <UnreadMessagesBadge />}
+                {item.badge === "inbox" && <InboxBadge />}
               </Link>
             );
           })}
@@ -355,7 +348,7 @@ function NavLink({
         )}
       />
       {!collapsed && <span className="truncate">{item.label}</span>}
-      {!collapsed && item.badge === "messages" && <UnreadMessagesBadge />}
+      {!collapsed && item.badge === "inbox" && <InboxBadge />}
     </Link>
   );
 }

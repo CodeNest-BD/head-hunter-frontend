@@ -11,6 +11,8 @@ import {
 // notifications API client into every module that merely wants to
 // invalidate its badge — this hook only needs the static key array.
 import { notificationKeys } from "@/features/notifications/keys";
+import { candidateKeys } from "@/features/candidates/keys";
+import { inboxKeys } from "@/features/inbox/keys";
 import {
   fetchConversationThread,
   fetchMessageUnreadCount,
@@ -101,8 +103,10 @@ export function useMarkThreadRead(candidateId: string) {
   return useMutation({
     mutationFn: () => markThreadRead(candidateId),
     // Read state appears nowhere in ConversationEventDto, so refetching the
-    // thread itself can never change what renders — only the unread count and
-    // the notifications badge actually reflect it.
+    // thread itself can never change what renders — only the unread count, the
+    // inbox badge and the notifications badge actually reflect it. The
+    // candidate is invalidated because the company reading a thread is what
+    // moves it off `submitted` server-side, so its status is now stale.
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: conversationKeys.unreadCount,
@@ -110,6 +114,8 @@ export function useMarkThreadRead(candidateId: string) {
       void queryClient.invalidateQueries({
         queryKey: conversationKeys.unreadCounts,
       });
+      void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
+      void queryClient.invalidateQueries({ queryKey: candidateKeys.all });
       void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });

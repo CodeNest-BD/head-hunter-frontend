@@ -68,3 +68,23 @@ export const INBOX_CANDIDATE_SORTS = [
   "status",
 ] as const;
 export type InboxCandidateSort = (typeof INBOX_CANDIDATE_SORTS)[number];
+
+/** The sidebar badge's payload: candidates waiting on the caller. */
+export const inboxAttentionCountSchema = z.object({
+  count: z.number(),
+});
+
+/**
+ * Whether a candidate row is one of the ones the nav badge is counting —
+ * unread messages, or never reviewed. Written once here because the sidebar
+ * count comes from the server and the row highlight from the client: if the
+ * two rules drifted, the badge would say 1 and no row would explain it.
+ *
+ * A recruiter's own `submitted` candidate is not news to them, which is why
+ * the second clause is the company's alone.
+ */
+export const candidateNeedsAttention = (
+  side: "company" | "recruiter",
+  row: Pick<InboxCandidateRow, "status" | "unreadMessages">,
+): boolean =>
+  row.unreadMessages > 0 || (side === "company" && row.status === "submitted");

@@ -19,8 +19,8 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Show the unread-messages badge on this item (either side's Inbox). */
-  badge?: "messages";
+  /** Show the waiting-candidates badge on this item (either side's Inbox). */
+  badge?: "inbox";
 }
 
 /** Role-based primary navigation, shared by the sidebar and the user menu. */
@@ -32,7 +32,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       href: "/company/inbox",
       label: "Inbox",
       icon: Inbox,
-      badge: "messages",
+      badge: "inbox",
     },
     { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
     { href: "/company/profile", label: "Profile", icon: UserRound },
@@ -47,7 +47,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       href: "/recruiter/inbox",
       label: "Inbox",
       icon: Send,
-      badge: "messages",
+      badge: "inbox",
     },
     // Recruiting is free during phases 1–2; the subscription page returns
     // with the flag flip.

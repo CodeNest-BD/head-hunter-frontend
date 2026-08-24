@@ -5,17 +5,10 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, LogOut, UserRound } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
-import { useMessageUnreadCount } from "@/features/conversations";
 import { useAccountApproval } from "@/shared/hooks/useAccountApproval";
 import { cn } from "@/shared/libs/shadCnConfig";
-import { CountBadge } from "./CountBadge";
+import { InboxBadge } from "./InboxBadge";
 import { navForRole } from "./dashboardNav";
-
-/** Live unread count for the Inbox menu item. */
-function UnreadMessageCount() {
-  const { data } = useMessageUnreadCount();
-  return <CountBadge count={data} />;
-}
 
 /**
  * Signed-in identity control: an avatar + name that opens a dropdown of the
@@ -86,7 +79,7 @@ export function UserMenu({ className }: { className?: string }) {
                 >
                   <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                   <span className="truncate">{item.label}</span>
-                  {item.badge === "messages" && <UnreadMessageCount />}
+                  {item.badge === "inbox" && <InboxBadge />}
                 </Link>
               </DropdownMenu.Item>
             );

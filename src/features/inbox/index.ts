@@ -10,7 +10,11 @@
  */
 export { InboxCandidatesTable } from "./components/InboxCandidatesTable";
 export { InboxJobsTable } from "./components/InboxJobsTable";
-export { useInboxCandidates, useInboxJobs } from "./hooks/useInbox";
+export {
+  useInboxAttentionCount,
+  useInboxCandidates,
+  useInboxJobs,
+} from "./hooks/useInbox";
 export { inboxKeys } from "./keys";
 export type { InboxSide } from "./api/inbox";
 export {

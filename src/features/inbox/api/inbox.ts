@@ -1,6 +1,7 @@
 import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
+  inboxAttentionCountSchema,
   inboxCandidateRowSchema,
   inboxJobRowSchema,
   type InboxCandidateRow,
@@ -67,4 +68,14 @@ export async function fetchInboxCandidates(
     },
   );
   return paginatedSchema(inboxCandidateRowSchema).parse(data);
+}
+
+/** GET /v1/{side}/inbox/attention-count — the number behind the nav badge. */
+export async function fetchInboxAttentionCount(
+  side: InboxSide,
+): Promise<number> {
+  const { data } = await apiClient.get<unknown>(
+    `/${side}/inbox/attention-count`,
+  );
+  return inboxAttentionCountSchema.parse(data).count;
 }

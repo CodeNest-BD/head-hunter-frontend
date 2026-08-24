@@ -34,11 +34,13 @@ import {
 } from "@/shared/ui-components/data/tableStyles";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { useListState } from "@/shared/hooks/useListState";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { InboxSide } from "../api/inbox";
 import { useInboxCandidates } from "../hooks/useInbox";
 import {
   INBOX_CANDIDATE_SORTS,
+  candidateNeedsAttention,
   recruiterDisplayName,
   type InboxCandidateSort,
 } from "../schemas";
@@ -103,10 +105,7 @@ export function InboxCandidatesTable({
   const cols = useVisibleColumns(`${side}.inbox.candidates.columns`, [
     { key: "candidate", label: "Candidate", required: true },
     ...(isCompany
-      ? [
-          { key: "recruiter", label: "Recruiter" },
-          { key: "rating", label: "Rating" },
-        ]
+      ? [{ key: "recruiter", label: "Recruiter" }]
       : [{ key: "company", label: "Company" }]),
     { key: "submitted", label: "Submitted" },
     { key: "status", label: "Status" },
@@ -229,9 +228,6 @@ export function InboxCandidatesTable({
                   {isCompany && cols.isVisible("recruiter") && (
                     <th className={TABLE_TH}>Recruiter</th>
                   )}
-                  {isCompany && cols.isVisible("rating") && (
-                    <th className={TABLE_TH}>Rating</th>
-                  )}
                   {!isCompany && cols.isVisible("company") && (
                     <th className={TABLE_TH}>Company</th>
                   )}
@@ -246,31 +242,40 @@ export function InboxCandidatesTable({
               </thead>
               <tbody className={TABLE_BODY}>
                 {data.data.map((row) => (
-                  <tr key={row.candidateId} className={TABLE_ROW}>
+                  <tr
+                    key={row.candidateId}
+                    className={cn(
+                      TABLE_ROW,
+                      // The same tint level 1 gives a job with new candidates,
+                      // so the row the sidebar count refers to is findable.
+                      candidateNeedsAttention(side, row) && "bg-primary/[0.04]",
+                    )}
+                  >
                     <td className={`${TABLE_TD} font-semibold text-navy`}>
                       <span className="flex items-center gap-2">
                         {row.candidateName}
+                        {isCompany && row.status === "submitted" && (
+                          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                            New
+                          </span>
+                        )}
                         <UnreadBadge count={row.unreadMessages} />
                       </span>
                     </td>
                     {isCompany && cols.isVisible("recruiter") && (
                       <td className={`${TABLE_TD} text-navy`}>
-                        <span className="flex items-center gap-2">
+                        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           {recruiterDisplayName(row.recruiter)}
                           {row.recruiter?.yearsExperience != null && (
                             <span className="text-xs font-normal text-brand-gray">
                               {row.recruiter.yearsExperience} yrs
                             </span>
                           )}
+                          <RatingStars
+                            value={row.recruiter?.ratingAvg ?? null}
+                            count={row.recruiter?.ratingCount}
+                          />
                         </span>
-                      </td>
-                    )}
-                    {isCompany && cols.isVisible("rating") && (
-                      <td className={`${TABLE_TD} whitespace-nowrap`}>
-                        <RatingStars
-                          value={row.recruiter?.ratingAvg ?? null}
-                          count={row.recruiter?.ratingCount}
-                        />
                       </td>
                     )}
                     {!isCompany && cols.isVisible("company") && (
