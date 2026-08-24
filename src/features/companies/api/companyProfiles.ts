@@ -30,6 +30,10 @@ export interface UpdateCompanyProfileInput {
   yearFounded?: number | null;
   employeeSize?: string | null;
   revenue?: string | null;
+  // Both write to the User row. A name is never cleared — an account always has
+  // one — so unlike the fields above these are optional but not nullable.
+  firstName?: string;
+  lastName?: string;
   // Writes to the User row, and resets phoneVerified whenever it changes.
   phone?: string | null;
   commissionRangeMinMinor?: number | null;
