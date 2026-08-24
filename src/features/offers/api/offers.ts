@@ -6,7 +6,8 @@ export interface OfferListParams {
   page?: number;
   limit?: number;
   candidateId?: string;
-  submissionId?: string;
+  /** Narrows to one job's candidates, on top of the caller's own scoping. */
+  jobId?: string;
 }
 
 /**
@@ -57,7 +58,7 @@ export async function fetchOffer(id: string): Promise<Offer> {
   return offerSchema.parse(data);
 }
 
-/** GET /v1/offers?candidateId=&submissionId= — both parties, paginated. */
+/** GET /v1/offers?candidateId=&jobId= — both parties, paginated. */
 export async function fetchOffers(
   params: OfferListParams,
 ): Promise<Paginated<Offer>> {

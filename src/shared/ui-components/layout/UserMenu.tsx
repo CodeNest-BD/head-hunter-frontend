@@ -11,7 +11,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { CountBadge } from "./CountBadge";
 import { navForRole } from "./dashboardNav";
 
-/** Live unread count for the Inbox / Submissions menu item. */
+/** Live unread count for the Inbox menu item. */
 function UnreadMessageCount() {
   const { data } = useMessageUnreadCount();
   return <CountBadge count={data} />;

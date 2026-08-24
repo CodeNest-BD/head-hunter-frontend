@@ -98,7 +98,7 @@ function AdminTopBarPending() {
   );
 }
 
-/** Unread-messages pill for the Inbox (company) / Submissions (recruiter)
+/** Unread-messages pill for either side's Inbox
  * nav items; renders nothing with no unread messages. */
 function UnreadMessagesBadge() {
   const { data } = useMessageUnreadCount();

@@ -280,8 +280,8 @@ export function RecruiterDetail({ userId }: { userId: string }) {
               value={formatDate(data.currentPeriodEnd)}
             />
             <DetailField
-              label="Submissions"
-              value={String(data.submissionCount)}
+              label="Candidates"
+              value={String(data.candidateCount)}
             />
             <DetailField
               label="Total earnings"

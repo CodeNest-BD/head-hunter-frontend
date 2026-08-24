@@ -65,7 +65,7 @@ export const recruiterDetailSchema = recruiterListItemSchema.extend({
   specializations: z.array(z.string()).nullable(),
   lastLoginAt: z.string().nullable(),
   currentPeriodEnd: z.string().nullable(),
-  submissionCount: z.number(),
+  candidateCount: z.number(),
   releasedEarningsMinor: z.number(),
   references: z.array(recruiterReferenceSchema),
 });
@@ -214,7 +214,7 @@ export const adminJobListItemSchema = z.object({
   status: jobStatusSchema,
   recruiterFeeMinor: z.number(),
   locationState: z.string().nullable(),
-  submissionCount: z.number(),
+  candidateCount: z.number(),
   createdAt: z.string(),
 });
 export type AdminJobListItem = z.infer<typeof adminJobListItemSchema>;

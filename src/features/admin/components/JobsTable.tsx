@@ -41,7 +41,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "company", label: "Company" },
   { key: "status", label: "Status" },
   { key: "fee", label: "Recruiter fee" },
-  { key: "submissions", label: "Submissions" },
+  { key: "candidates", label: "Candidates" },
   { key: "posted", label: "Posted" },
   { key: "actions", label: "Actions", required: true },
 ];
@@ -108,7 +108,7 @@ export function JobsTable({
               </span>
             ),
           },
-          { label: "Submissions", value: stats.data?.conversations ?? 0 },
+          { label: "Conversations", value: stats.data?.conversations ?? 0 },
         ]}
       />
 
@@ -212,12 +212,12 @@ export function JobsTable({
                           Recruiter fee
                         </th>
                       )}
-                      {cols.isVisible("submissions") && (
+                      {cols.isVisible("candidates") && (
                         <th
                           scope="col"
                           className="px-5 py-3 text-center font-semibold"
                         >
-                          Submissions
+                          Candidates
                         </th>
                       )}
                       {cols.isVisible("posted") && (
@@ -292,15 +292,15 @@ export function JobsTable({
                             )}
                           </td>
                         )}
-                        {cols.isVisible("submissions") && (
+                        {cols.isVisible("candidates") && (
                           <td className="px-5 py-3 text-center tabular-nums">
                             {/* Submissions → the threads on this job. */}
-                            {job.submissionCount > 0 ? (
+                            {job.candidateCount > 0 ? (
                               <Link
                                 href={`/admin/conversations?jobId=${job.jobId}`}
                                 className="font-medium text-primary hover:underline"
                               >
-                                {job.submissionCount}
+                                {job.candidateCount}
                               </Link>
                             ) : (
                               <span className="text-muted-foreground">0</span>

@@ -115,7 +115,7 @@ function toOfferBadge(offer: Offer): OfferBadge | null {
 
 /**
  * Pure, single-pass-per-list derivation from the two page-level queries
- * (`useInterviews({ submissionId })`, `useOffers({ submissionId })`) into a
+ * (`useInterviews({ candidateId })`, `useOffers({ candidateId })`) into a
  * map a candidate card can look up in O(1) — no query per candidate, no
  * `.find()` inside a card's render. A candidate absent from both lists is
  * simply absent from the returned map; callers treat a missing entry the

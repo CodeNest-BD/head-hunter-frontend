@@ -27,8 +27,7 @@ const COPY: Record<
   }
 > = {
   company: {
-    subtitle:
-      "Every job with candidates submitted — open one to review them.",
+    subtitle: "Every job with candidates submitted — open one to review them.",
     emptyHint: {
       before: "Recruiters can only submit candidates to your ",
       href: "/company/jobs",
