@@ -194,6 +194,16 @@ export function CompanyDetail({ userId }: { userId: string }) {
     companyName: data.companyName,
   }).toString()}`;
 
+  // Both ends, one end, or nothing published — the same three cases the
+  // recruiter-facing company card renders.
+  const { commissionRangeMinMinor: min, commissionRangeMaxMinor: max } = data;
+  const commissionRange =
+    min === null && max === null
+      ? null
+      : min !== null && max !== null
+        ? `${formatMinor(min)} – ${formatMinor(max)}`
+        : formatMinor(min ?? max ?? 0);
+
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
       <Card>
@@ -242,11 +252,40 @@ export function CompanyDetail({ userId }: { userId: string }) {
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DetailField label="Phone" value={data.phone} />
+            <DetailField
+              label="Email confirmed"
+              value={data.emailVerified ? "Yes" : "No"}
+            />
             <DetailField label="Location" value={location} />
+            <DetailField label="Address" value={data.addressLine} />
+            <DetailField label="ZIP" value={data.zip} />
             <DetailField label="Website" value={data.website} />
             <DetailField label="Joined" value={formatDate(data.joinedAt)} />
             <div className="col-span-2">
               <DetailField label="Description" value={data.description} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* The sign-up questionnaire. This is what an admin actually reads to
+            judge whether a company is real, so it gets its own card rather
+            than being buried among the contact fields. */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Business profile</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <DetailField label="Industry" value={data.industry} />
+            <DetailField
+              label="Founded"
+              value={
+                data.yearFounded !== null ? String(data.yearFounded) : null
+              }
+            />
+            <DetailField label="Employees" value={data.employeeSize} />
+            <DetailField label="Revenue" value={data.revenue} />
+            <div className="col-span-2">
+              <DetailField label="Commission range" value={commissionRange} />
             </div>
           </CardContent>
         </Card>

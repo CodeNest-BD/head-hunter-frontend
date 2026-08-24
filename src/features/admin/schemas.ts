@@ -55,12 +55,23 @@ const recruiterReferenceSchema = z
   .object({ id: z.string(), name: z.string() })
   .passthrough();
 
+export const recruiterExperienceSchema = z.object({
+  id: z.string(),
+  firmName: z.string(),
+  years: z.number().nullable().catch(null),
+  specializations: z.array(z.string()).catch([]),
+});
+export type RecruiterExperience = z.infer<typeof recruiterExperienceSchema>;
+
 export const recruiterDetailSchema = recruiterListItemSchema.extend({
+  emailVerified: z.boolean().catch(false),
+  experiences: z.array(recruiterExperienceSchema).catch([]),
   verifiedAt: z.string().nullable().catch(null),
   verificationNote: z.string().nullable().catch(null),
   phone: z.string().nullable(),
   addressLine: z.string().nullable(),
   zip: z.string().nullable(),
+  linkedinUrl: z.string().nullable().catch(null),
   yearsExperience: z.number().nullable(),
   specializations: z.array(z.string()).nullable(),
   lastLoginAt: z.string().nullable(),
@@ -85,13 +96,25 @@ export const companyListItemSchema = z.object({
 export type CompanyListItem = z.infer<typeof companyListItemSchema>;
 
 export const companyDetailSchema = companyListItemSchema.extend({
+  // `.catch` throughout: a field the API has not shipped yet degrades to a
+  // dash on the review screen rather than failing the whole page — the
+  // failure mode that took the recruiter detail down.
+  emailVerified: z.boolean().catch(false),
   verifiedAt: z.string().nullable().catch(null),
   verificationNote: z.string().nullable().catch(null),
   phone: z.string().nullable(),
   website: z.string().nullable(),
   description: z.string().nullable(),
+  addressLine: z.string().nullable().catch(null),
   city: z.string().nullable(),
   state: z.string().nullable(),
+  zip: z.string().nullable().catch(null),
+  industry: z.string().nullable().catch(null),
+  yearFounded: z.number().nullable().catch(null),
+  employeeSize: z.string().nullable().catch(null),
+  revenue: z.string().nullable().catch(null),
+  commissionRangeMinMinor: z.number().nullable().catch(null),
+  commissionRangeMaxMinor: z.number().nullable().catch(null),
   reservedMinor: z.number(),
   availableMinor: z.number(),
   lastLoginAt: z.string().nullable(),
