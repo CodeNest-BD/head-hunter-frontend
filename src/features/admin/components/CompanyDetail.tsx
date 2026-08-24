@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { AlertCircle, BadgeCheck, BadgeX } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { formatMinor } from "@/shared/utils/money";
@@ -12,10 +13,98 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
-import { useAdminCompany } from "../hooks/useAdmin";
+import { Textarea } from "@/shared/ui-components/controls/textarea";
+import {
+  useAdminCompany,
+  useDecideCompanyVerification,
+} from "../hooks/useAdmin";
+import type { CompanyDetail as CompanyDetailData } from "../schemas";
+import { VERIFICATION_LABELS } from "../schemas";
 import { HoldButton } from "./HoldButton";
 import { DetailField, DetailSkeleton } from "./DetailPrimitives";
-import { ACCOUNT_STATUS_LABELS, ACCOUNT_STATUS_STYLES } from "./statusStyles";
+import {
+  ACCOUNT_STATUS_LABELS,
+  ACCOUNT_STATUS_STYLES,
+  VERIFICATION_STATUS_STYLES,
+} from "./statusStyles";
+
+/**
+ * The admin's approval decision. The note reaches the company either way — it
+ * becomes the decline's notification body, and is appended to the approval's —
+ * so it is worth writing well.
+ */
+function VerificationCard({ data }: { data: CompanyDetailData }) {
+  const decide = useDecideCompanyVerification();
+  const [note, setNote] = useState("");
+
+  const submit = (status: "verified" | "rejected"): void => {
+    decide.mutate(
+      { userId: data.userId, status, note: note.trim() || undefined },
+      { onSuccess: () => setNote("") },
+    );
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-base">Approval</CardTitle>
+        <StatusBadge
+          label={VERIFICATION_LABELS[data.verificationStatus]}
+          className={
+            VERIFICATION_STATUS_STYLES[data.verificationStatus] ??
+            "bg-muted text-muted-foreground"
+          }
+        />
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <p className="text-sm text-muted-foreground">
+          {data.verificationStatus === "verified"
+            ? "This company can post jobs and review candidate submissions."
+            : data.verificationStatus === "rejected"
+              ? "This company was declined. Approving now restores full access."
+              : "Review the profile, then approve or decline. A pending company cannot post jobs or review candidates, and is hidden from recruiters."}
+        </p>
+        {data.verificationNote && (
+          <p className="rounded-md border border-border bg-secondary/60 px-3 py-2 text-sm text-navy">
+            <span className="font-semibold">Last note:</span>{" "}
+            {data.verificationNote}
+          </p>
+        )}
+        <Textarea
+          rows={2}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          placeholder="Optional note — sent to the company with the decision."
+          aria-label="Approval note"
+        />
+        <div className="flex flex-wrap gap-2">
+          {data.verificationStatus !== "verified" && (
+            <Button
+              type="button"
+              disabled={decide.isPending}
+              onClick={() => submit("verified")}
+            >
+              <BadgeCheck className="h-4 w-4" />
+              Approve
+            </Button>
+          )}
+          {data.verificationStatus !== "rejected" && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={decide.isPending}
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => submit("rejected")}
+            >
+              <BadgeX className="h-4 w-4" />
+              Decline
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 /** Label + clickable count that deep-links to this company's jobs list. */
 function JobCountField({
@@ -118,6 +207,13 @@ export function CompanyDetail({ userId }: { userId: string }) {
                 label={ACCOUNT_STATUS_LABELS[data.status]}
                 className={ACCOUNT_STATUS_STYLES[data.status]}
               />
+              <StatusBadge
+                label={VERIFICATION_LABELS[data.verificationStatus]}
+                className={
+                  VERIFICATION_STATUS_STYLES[data.verificationStatus] ??
+                  "bg-muted text-muted-foreground"
+                }
+              />
             </div>
             <p className="text-sm text-muted-foreground">{data.email}</p>
           </div>
@@ -128,6 +224,8 @@ export function CompanyDetail({ userId }: { userId: string }) {
           />
         </CardContent>
       </Card>
+
+      <VerificationCard data={data} />
 
       <Card className="overflow-hidden">
         <CardContent className="flex flex-col divide-y divide-border p-0 sm:flex-row sm:divide-x sm:divide-y-0">

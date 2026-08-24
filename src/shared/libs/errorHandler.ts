@@ -21,6 +21,11 @@ export class ApiError extends Error {
   /** Every sentence the backend sent, in order. `message` is just the first —
    * see `remainingMessages` for the ones a headline cannot carry. */
   readonly messages?: string[];
+  /** On the approval gate's 403 only: where the blocked account stands, and
+   * the admin's note on the decision. Lets a caller explain the refusal
+   * without a second request. */
+  readonly verificationStatus?: string;
+  readonly verificationNote?: string | null;
 
   constructor(
     message: string,
@@ -29,6 +34,8 @@ export class ApiError extends Error {
       details?: string;
       code?: string;
       messages?: string[];
+      verificationStatus?: string;
+      verificationNote?: string | null;
       cause?: unknown;
     },
   ) {
@@ -38,6 +45,8 @@ export class ApiError extends Error {
     this.details = opts?.details;
     this.code = opts?.code;
     this.messages = opts?.messages;
+    this.verificationStatus = opts?.verificationStatus;
+    this.verificationNote = opts?.verificationNote;
     // Preserve prototype across transpilation targets that downlevel `class`.
     Object.setPrototypeOf(this, new.target.prototype);
   }
@@ -98,11 +107,23 @@ const NestValidationBody = z.object({
   error: z.string().optional(),
 });
 
+/**
+ * The approval gate's 403 body. A global APP_GUARD on the backend adds these to
+ * the standard exception shape for a pending or declined recruiter or company,
+ * so any authenticated request can come back carrying them.
+ */
+const ApprovalGateBody = z.object({
+  verificationStatus: z.enum(["pending", "rejected"]),
+  verificationNote: z.string().nullable().optional(),
+});
+
 type ParsedBody = {
   message: string;
   messages?: string[];
   details?: string;
   code?: string;
+  verificationStatus?: string;
+  verificationNote?: string | null;
 };
 
 function parseErrorBody(data: unknown): ParsedBody | null {
@@ -121,10 +142,17 @@ function parseErrorBody(data: unknown): ParsedBody | null {
 
   const nestException = NestExceptionBody.safeParse(data);
   if (nestException.success) {
+    const gate = ApprovalGateBody.safeParse(data);
     return {
       message: nestException.data.message,
       details: nestException.data.error,
       code: nestException.data.code,
+      ...(gate.success
+        ? {
+            verificationStatus: gate.data.verificationStatus,
+            verificationNote: gate.data.verificationNote ?? null,
+          }
+        : {}),
     };
   }
 
@@ -139,6 +167,8 @@ export function handleError(error: unknown): ApiError {
       details: parsed?.details ?? error.name,
       code: parsed?.code,
       messages: parsed?.messages,
+      verificationStatus: parsed?.verificationStatus,
+      verificationNote: parsed?.verificationNote,
       cause: error,
     });
   }

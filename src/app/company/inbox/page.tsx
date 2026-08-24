@@ -1,6 +1,6 @@
 "use client";
 
-import { RequireRole } from "@/features/auth";
+import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import { InboxJobsTable } from "@/features/submissions";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -13,7 +13,9 @@ export default function CompanyInboxPage() {
   return (
     <RequireRole role="company">
       <DashboardLayout wide>
-        <InboxJobsTable />
+        <RequireApprovedCompany>
+          <InboxJobsTable />
+        </RequireApprovedCompany>
       </DashboardLayout>
     </RequireRole>
   );

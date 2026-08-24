@@ -262,7 +262,7 @@ export function JobsTable() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Jobs"
-        subtitle="Create a job, then publish it to notify your followers."
+        subtitle="Create a job, then publish it to open it to recruiters."
         metrics={[
           { label: "Published", value: publishedTotal },
           {

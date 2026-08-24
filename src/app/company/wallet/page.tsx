@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { RequireRole } from "@/features/auth";
+import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import {
   CheckoutResultBanner,
   LedgerTable,
@@ -121,7 +121,9 @@ export default function CompanyWalletPage() {
   return (
     <RequireRole role="company">
       <DashboardLayout>
-        <WalletContent />
+        <RequireApprovedCompany>
+          <WalletContent />
+        </RequireApprovedCompany>
       </DashboardLayout>
     </RequireRole>
   );

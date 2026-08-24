@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 
-import { useFollowedCompanies } from "@/features/companies";
 import { useJobs } from "@/features/jobs";
 import { useNotifications } from "@/features/notifications";
 import { useRecruiterWallet } from "@/features/billing";
@@ -28,7 +27,6 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   const profile = useMyRecruiterProfile();
   const submissions = useSubmissions({ limit: 50 });
   const wallet = useRecruiterWallet();
-  const followed = useFollowedCompanies({ limit: 50 });
   const openRoles = useJobs({ limit: 5, sortBy: "publishedAt" });
   const activity = useNotifications({ limit: 6 });
 
@@ -42,12 +40,6 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   const stalled = underReview.filter(
     (s) => Date.now() - s.updatedAt.getTime() > STALL_DAYS * DAY_MS,
   );
-
-  const followedTotal = followed.data?.meta.total ?? 0;
-  const noCommissionCount = (followed.data?.data ?? []).filter(
-    (c) =>
-      c.commissionRangeMinMinor === null && c.commissionRangeMaxMinor === null,
-  ).length;
 
   const openRolesTotal = openRoles.data?.meta.total ?? null;
   const latestRole = openRoles.data?.data[0] ?? null;
@@ -124,16 +116,6 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
       href: "/recruiter/profile",
     });
   }
-  if (noCommissionCount > 0) {
-    attention.push({
-      id: "commission",
-      tone: "muted",
-      title: `${noCommissionCount} followed compan${noCommissionCount === 1 ? "y has" : "ies have"} no published commission`,
-      detail: "Ask before you submit so the fee is agreed up front.",
-      actionLabel: "Review",
-      href: "/companies",
-    });
-  }
 
   const recentActivity = activity.data?.data ?? [];
 
@@ -169,12 +151,6 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
               : "released 30 days after a start"
           }
           href="/recruiter/wallet"
-        />
-        <StatCard
-          label="Companies followed"
-          value={followed.isPending ? "—" : followedTotal}
-          hint="you're alerted when they post"
-          href="/companies"
         />
       </div>
 

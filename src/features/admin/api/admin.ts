@@ -89,6 +89,16 @@ export async function decideRecruiterVerification(
   });
 }
 
+/** PATCH /v1/admin/companies/:userId/verification */
+export async function decideCompanyVerification(
+  input: VerificationDecisionInput,
+): Promise<void> {
+  await apiClient.patch(`/admin/companies/${input.userId}/verification`, {
+    status: input.status,
+    ...(input.note ? { note: input.note } : {}),
+  });
+}
+
 /** GET /v1/admin/companies */
 export async function fetchCompanies(
   params: AdminListParams,

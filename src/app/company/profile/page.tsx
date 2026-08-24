@@ -3,7 +3,12 @@
 import { AlertCircle } from "lucide-react";
 
 import { AccountSection, RequireRole } from "@/features/auth";
-import { CompanyProfileForm, useMyCompanyProfile } from "@/features/companies";
+import {
+  CompanyApprovalBanner,
+  CompanyProfileForm,
+  useMyCompanyProfile,
+  type VerificationStatus,
+} from "@/features/companies";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
@@ -23,6 +28,16 @@ function ProfileSkeleton() {
   );
 }
 
+/** What the banner pill says about the company's standing with recruiters. */
+const APPROVAL_PILL: Record<
+  VerificationStatus,
+  { dot: string; label: string }
+> = {
+  verified: { dot: "bg-emerald-400", label: "Visible to recruiters" },
+  pending: { dot: "bg-amber-400", label: "Awaiting approval" },
+  rejected: { dot: "bg-red-400", label: "Approval declined" },
+};
+
 function CompanyProfileContent() {
   const { data, isPending, isError, refetch } = useMyCompanyProfile();
 
@@ -34,12 +49,18 @@ function CompanyProfileContent() {
         actions={
           data ? (
             <span className="inline-flex items-center gap-2 text-sm font-medium text-white/80">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              Visible to recruiters
+              <span
+                className={`h-2 w-2 rounded-full ${APPROVAL_PILL[data.verificationStatus].dot}`}
+              />
+              {APPROVAL_PILL[data.verificationStatus].label}
             </span>
           ) : null
         }
       />
+
+      {/* The profile page is the server's allow-list surface, so this is where
+          an unapproved company reads the admin's note and can re-apply. */}
+      <CompanyApprovalBanner />
 
       {isPending ? (
         <ProfileSkeleton />

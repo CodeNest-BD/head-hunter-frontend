@@ -47,8 +47,9 @@ function formatDate(iso: string | null): string {
 }
 
 /**
- * The admin's verification decision. The note travels to the recruiter with a
- * rejection (it becomes the notification body), so it is worth writing well.
+ * The admin's verification decision. The note reaches the recruiter either way
+ * — it becomes the rejection's notification body, and is appended to the
+ * approval's — so it is worth writing well.
  */
 function VerificationCard({ data }: { data: RecruiterDetailData }) {
   const decide = useDecideRecruiterVerification();
@@ -91,7 +92,7 @@ function VerificationCard({ data }: { data: RecruiterDetailData }) {
           rows={2}
           value={note}
           onChange={(event) => setNote(event.target.value)}
-          placeholder="Optional note — sent to the recruiter with a rejection."
+          placeholder="Optional note — sent to the recruiter with the decision."
           aria-label="Verification note"
         />
         <div className="flex flex-wrap gap-2">

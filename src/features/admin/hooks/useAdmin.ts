@@ -12,6 +12,7 @@ import {
   createAdmin,
   deleteAdminJob,
   deleteRecruiter,
+  decideCompanyVerification,
   decideRecruiterVerification,
   fetchAdmins,
   fetchAdminStats,
@@ -71,6 +72,25 @@ export function useDecideRecruiterVerification() {
         input.status === "verified"
           ? "Recruiter verified — they now have full access"
           : "Recruiter rejected — they have been notified",
+      );
+    },
+  });
+}
+
+export function useDecideCompanyVerification() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: VerificationDecisionInput) =>
+      decideCompanyVerification(input),
+    onSuccess: (_, input) => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "companies"] });
+      void queryClient.invalidateQueries({
+        queryKey: adminKeys.company(input.userId),
+      });
+      toast.success(
+        input.status === "verified"
+          ? "Company approved — they now have full access"
+          : "Company declined — they have been notified",
       );
     },
   });

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { AlertCircle, Building2 } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -18,10 +19,15 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminCompanies, useAdminStats } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
+import { VERIFICATION_LABELS } from "../schemas";
 import { AccountRowActions } from "./AccountRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
-import { ACCOUNT_STATUS_LABELS, ACCOUNT_STATUS_STYLES } from "./statusStyles";
+import {
+  ACCOUNT_STATUS_LABELS,
+  ACCOUNT_STATUS_STYLES,
+  VERIFICATION_STATUS_STYLES,
+} from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 import { TABLE_TOOLBAR } from "@/shared/ui-components/data/tableStyles";
 
@@ -38,6 +44,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "wallet", label: "Wallet" },
   { key: "jobs", label: "Jobs" },
   { key: "joined", label: "Joined" },
+  { key: "approval", label: "Approval" },
   { key: "status", label: "Status" },
   { key: "actions", label: "Actions", required: true },
 ];
@@ -66,13 +73,18 @@ export function CompaniesTable() {
     limit,
     changeLimit,
   } = useListState();
+  const [verificationFilter, setVerificationFilter] = useState("");
   const cols = useVisibleColumns("admin.companies.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminCompanies({
     page,
     limit,
     q: q || undefined,
     status: status || undefined,
+    verificationStatus: verificationFilter || undefined,
   });
+  const pendingTotal =
+    useAdminCompanies({ page: 1, verificationStatus: "pending", limit: 1 }).data
+      ?.meta.total ?? 0;
 
   const stats = useAdminStats();
   const allCompanies = useAdminCompanies({ page: 1, limit: 100 });
@@ -89,6 +101,7 @@ export function CompaniesTable() {
         title="Companies"
         subtitle="Every company on the platform, their wallet, and account controls."
         metrics={[
+          { label: "Awaiting approval", value: pendingTotal },
           { label: "Funded wallets", value: fundedCount },
           { label: "Posted a job", value: postedCount },
           { label: "Held", value: stats.data?.companies.held ?? 0 },
@@ -109,6 +122,19 @@ export function CompaniesTable() {
                 options: [
                   { value: "active", label: "Active" },
                   { value: "suspended", label: "Held" },
+                ],
+              }}
+              extraFilter={{
+                value: verificationFilter,
+                onChange: (next) => {
+                  setVerificationFilter(next);
+                  setPage(1);
+                },
+                allLabel: "All approvals",
+                options: [
+                  { value: "pending", label: "Pending" },
+                  { value: "verified", label: "Approved" },
+                  { value: "rejected", label: "Declined" },
                 ],
               }}
             />
@@ -181,6 +207,11 @@ export function CompaniesTable() {
                           Joined
                         </th>
                       )}
+                      {cols.isVisible("approval") && (
+                        <th scope="col" className="px-5 py-3 font-semibold">
+                          Approval
+                        </th>
+                      )}
                       {cols.isVisible("status") && (
                         <th scope="col" className="px-5 py-3 font-semibold">
                           Status
@@ -248,6 +279,18 @@ export function CompaniesTable() {
                         {cols.isVisible("joined") && (
                           <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
                             {formatDate(c.joinedAt)}
+                          </td>
+                        )}
+                        {cols.isVisible("approval") && (
+                          <td className="px-5 py-3">
+                            <StatusBadge
+                              label={VERIFICATION_LABELS[c.verificationStatus]}
+                              className={
+                                VERIFICATION_STATUS_STYLES[
+                                  c.verificationStatus
+                                ] ?? "bg-muted text-muted-foreground"
+                              }
+                            />
                           </td>
                         )}
                         {cols.isVisible("status") && (

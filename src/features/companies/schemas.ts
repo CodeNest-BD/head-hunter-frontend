@@ -2,6 +2,15 @@ import { z } from "zod";
 
 import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
 
+/** Admin approval states, shared with the recruiter side. */
+export const VERIFICATION_STATUSES = [
+  "pending",
+  "verified",
+  "rejected",
+] as const;
+export const verificationStatusSchema = z.enum(VERIFICATION_STATUSES);
+export type VerificationStatus = z.infer<typeof verificationStatusSchema>;
+
 /** One end of the advertised commission range, as the form holds it. Empty
  * means "not published" rather than $0, which is why every rule is guarded on
  * the empty string instead of the field being required. */
@@ -38,8 +47,23 @@ export const companyProfileSchema = z.object({
   commissionRangeMinMinor: z.number().nullable(),
   commissionRangeMaxMinor: z.number().nullable(),
   currency: z.string(),
+  // `.catch` so an unrecognised status degrades to "pending" (the safe, gated
+  // reading) rather than throwing the whole profile away.
+  verificationStatus: verificationStatusSchema.catch("pending"),
+  verifiedAt: z.string().nullable().catch(null),
+  verificationNote: z.string().nullable().catch(null),
+  /** Mirrors the server's approval gate, so the UI can explain a 403 before provoking one. */
+  hasMarketplaceAccess: z.boolean().catch(false),
 });
 export type CompanyProfile = z.infer<typeof companyProfileSchema>;
+
+/** POST /v1/company-profiles/me/reapply — always returns to `pending`. */
+export const reapplyCompanyVerificationResponseSchema = z.object({
+  verificationStatus: verificationStatusSchema,
+});
+export type ReapplyCompanyVerificationResult = z.infer<
+  typeof reapplyCompanyVerificationResponseSchema
+>;
 
 /** A company as seen by someone browsing. */
 export const companySummarySchema = z.object({
@@ -51,7 +75,6 @@ export const companySummarySchema = z.object({
   commissionRangeMaxMinor: z.number().nullable(),
   // Null while the company's number is unverified — the API withholds it.
   phone: z.string().nullable(),
-  isFollowedByMe: z.boolean(),
 });
 export type CompanySummary = z.infer<typeof companySummarySchema>;
 

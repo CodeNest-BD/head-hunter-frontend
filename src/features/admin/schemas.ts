@@ -77,6 +77,7 @@ export const companyListItemSchema = z.object({
   companyName: z.string(),
   email: z.string(),
   status: accountStatusSchema,
+  verificationStatus: verificationStatusSchema.catch("pending"),
   balanceMinor: z.number(),
   jobCount: z.number(),
   joinedAt: z.string(),
@@ -84,6 +85,8 @@ export const companyListItemSchema = z.object({
 export type CompanyListItem = z.infer<typeof companyListItemSchema>;
 
 export const companyDetailSchema = companyListItemSchema.extend({
+  verifiedAt: z.string().nullable().catch(null),
+  verificationNote: z.string().nullable().catch(null),
   phone: z.string().nullable(),
   website: z.string().nullable(),
   description: z.string().nullable(),
