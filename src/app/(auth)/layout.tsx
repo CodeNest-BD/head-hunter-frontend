@@ -1,16 +1,24 @@
 import Link from "next/link";
+import { ShieldCheck, Store, Zap, type LucideIcon } from "lucide-react";
 import { Logo } from "@/shared/ui-components/layout/Logo";
 
-const BRAND_HIGHLIGHTS: ReadonlyArray<{ title: string; body: string }> = [
+const BRAND_HIGHLIGHTS: ReadonlyArray<{
+  icon: LucideIcon;
+  title: string;
+  body: string;
+}> = [
   {
+    icon: Store,
     title: "A curated marketplace",
     body: "Companies and specialist recruiters, matched on the placements that matter.",
   },
   {
+    icon: Zap,
     title: "Built for momentum",
     body: "Track candidates, references, and payouts in one focused workspace.",
   },
   {
+    icon: ShieldCheck,
     title: "Trusted by design",
     body: "Verified accounts and secure sign-in keep every engagement protected.",
   },
@@ -71,33 +79,27 @@ export default function AuthLayout({
           </p>
 
           <ul className="mt-10 space-y-5">
-            {BRAND_HIGHLIGHTS.map((item) => (
-              <li key={item.title} className="flex gap-3.5">
-                <span
-                  aria-hidden="true"
-                  className="mt-0.5 shrink-0 rounded-md bg-primary/15 p-1.5 text-primary"
-                >
-                  <svg
-                    width="16"
-                    height="12"
-                    viewBox="0 0 26 20"
-                    fill="none"
-                    className="block"
+            {BRAND_HIGHLIGHTS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.title} className="flex gap-3.5">
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[#85B1F3] ring-1 ring-inset ring-white/10"
                   >
-                    <path d="M2 2l8 8-8 8V2z" fill="#034AEF" />
-                    <path d="M12 2l8 8-8 8V2z" fill="#4F80E6" />
-                  </svg>
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-white">
-                    {item.title}
-                  </p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-white/60">
-                    {item.body}
-                  </p>
-                </div>
-              </li>
-            ))}
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      {item.title}
+                    </p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-white/60">
+                      {item.body}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
 

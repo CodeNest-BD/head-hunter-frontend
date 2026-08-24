@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt } from "lucide-react";
+import { FileText, Receipt } from "lucide-react";
 
+import { useAuth } from "@/features/auth";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
@@ -10,15 +11,22 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useLedger } from "../hooks/useBilling";
 import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
+import { PurchaseReceiptDialog } from "./PurchaseReceiptDialog";
 
 /** Credits grow the spendable pot; reserves/holds shrink it. */
 const isInflow = (type: LedgerEntry["entryType"]): boolean =>
   type === "credit" || type === "release_reserve" || type === "refund";
 
+/** A purchase — a top-up the company paid for — gets a downloadable receipt. */
+const isPurchase = (type: LedgerEntry["entryType"]): boolean =>
+  type === "credit";
+
 /** The wallet's append-only history, newest first. */
 export function LedgerTable() {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useLedger(page);
+  const { user } = useAuth();
+  const accountName = user ? `${user.firstName} ${user.lastName}`.trim() : "";
 
   if (isLoading) {
     return (
@@ -64,6 +72,7 @@ export function LedgerTable() {
                 <th className="px-5 py-3 text-right font-semibold">Amount</th>
                 <th className="px-5 py-3 text-right font-semibold">Balance</th>
                 <th className="px-5 py-3 text-right font-semibold">Reserved</th>
+                <th className="px-5 py-3 text-right font-semibold">Document</th>
               </tr>
             </thead>
             <tbody>
@@ -101,6 +110,24 @@ export function LedgerTable() {
                   </td>
                   <td className="whitespace-nowrap px-5 py-3 text-right text-muted-foreground">
                     {formatMinor(entry.reservedAfterMinor)}
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-3 text-right">
+                    {isPurchase(entry.entryType) ? (
+                      <PurchaseReceiptDialog
+                        entry={entry}
+                        accountName={accountName}
+                      >
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-accent"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          Receipt
+                        </button>
+                      </PurchaseReceiptDialog>
+                    ) : (
+                      <span className="text-muted-foreground/50">—</span>
+                    )}
                   </td>
                 </tr>
               ))}
