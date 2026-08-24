@@ -1,8 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { forwardRef, useEffect, useState, type ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import { PanelRightOpen } from "lucide-react";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
@@ -34,10 +36,13 @@ import {
   type JobFormValues,
 } from "../schemas";
 import type { JobWriteInput } from "../api/jobs";
+import { JobLivePreview } from "./JobLivePreview";
 
-// Radix Select items can't take an empty-string value, so the "clear the
-// state" option needs a sentinel that this form translates to/from "" —
-// the value `locationState` actually holds, since it's optional.
+/** Persists the live-preview open/closed choice across navigations and reloads. */
+const PREVIEW_OPEN_KEY = "hh-job-preview-open";
+
+/** Consistent, spacious control height across the form (matches the reference). */
+const CONTROL_HEIGHT = "h-11";
 
 interface JobFormProps {
   job?: Job;
@@ -64,30 +69,92 @@ function toDefaults(job?: Job): JobFormValues {
   };
 }
 
-/** A form section: title + hint on the left, fields on the right. */
-function Section({
+/** A numbered form section: step badge + title + hint on the left, fields right. */
+function StepSection({
+  step,
   title,
   hint,
   children,
 }: {
+  step: number;
   title: string;
   hint?: string;
   children: ReactNode;
 }) {
   return (
     <div className="grid gap-x-8 gap-y-4 p-5 sm:p-6 md:grid-cols-[minmax(0,15rem)_1fr]">
-      <div>
-        <h2 className="text-sm font-bold text-navy">{title}</h2>
-        {hint && (
-          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-            {hint}
-          </p>
-        )}
+      <div className="flex gap-3">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-muted-foreground">
+          {step}
+        </span>
+        <div>
+          <h2 className="text-sm font-bold text-navy">{title}</h2>
+          {hint && (
+            <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+              {hint}
+            </p>
+          )}
+        </div>
       </div>
       <div className="flex flex-col gap-4">{children}</div>
     </div>
   );
 }
+
+/** Segmented On-site / Remote toggle, bound to the `isRemote` boolean. */
+function WorkModelControl({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (isRemote: boolean) => void;
+}) {
+  const options = [
+    { label: "On-site", isRemote: false },
+    { label: "Remote", isRemote: true },
+  ] as const;
+  return (
+    <div className="inline-flex rounded-lg border border-border bg-secondary/60 p-1">
+      {options.map((option) => {
+        const active = value === option.isRemote;
+        return (
+          <button
+            key={option.label}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(option.isRemote)}
+            className={cn(
+              "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+              active
+                ? "bg-card text-navy shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** A money field with a leading "$" adornment. */
+const MoneyInput = forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, ...props }, ref) => (
+    <div className="relative">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+        $
+      </span>
+      <Input
+        ref={ref}
+        inputMode="decimal"
+        className={cn(CONTROL_HEIGHT, "pl-7", className)}
+        {...props}
+      />
+    </div>
+  ),
+);
+MoneyInput.displayName = "MoneyInput";
 
 export function JobForm({
   job,
@@ -108,309 +175,436 @@ export function JobForm({
     defaultValues: toDefaults(job),
   });
 
-  const isRemote = watch("isRemote");
-  const locationState = watch("locationState");
+  // The whole form is watched so the live preview reacts as the company types;
+  // individual fields are read off the snapshot.
+  const values = watch();
+  const { isRemote, locationState } = values;
   const citiesInState = US_CITIES.filter(
     (city) => city.state === locationState,
   );
 
-  const toInput = (values: JobFormValues): JobWriteInput => ({
-    title: values.title,
+  // Default open so first-time posters see the preview; the choice then sticks.
+  const [previewOpen, setPreviewOpen] = useState(true);
+  useEffect(() => {
+    const stored = localStorage.getItem(PREVIEW_OPEN_KEY);
+    if (stored !== null) setPreviewOpen(stored === "true");
+  }, []);
+  const togglePreview = () =>
+    setPreviewOpen((open) => {
+      const next = !open;
+      localStorage.setItem(PREVIEW_OPEN_KEY, String(next));
+      return next;
+    });
+
+  // Required-for-publish completeness, surfaced in the sticky bar status.
+  // roleCategory always has a default, so it's not counted.
+  const requiredChecks = [
+    values.title.trim() !== "",
+    values.employmentType !== "",
+    values.isRemote || values.locationState !== "",
+    values.recruiterFee.trim() !== "",
+    values.description.trim() !== "",
+  ];
+  const remaining = requiredChecks.filter((ok) => !ok).length;
+
+  const feeMinor = majorInputToMinor(values.recruiterFee);
+  const feeMeetsMinimum =
+    minFee != null && feeMinor != null && feeMinor >= minFee.amountMinor;
+
+  // Word count from the description's plain text, for the writing hint.
+  const wordCount = values.description
+    .replace(/<[^>]*>/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+
+  const toInput = (formValues: JobFormValues): JobWriteInput => ({
+    title: formValues.title,
     // Sanitized at save as well as render — the editor is not a boundary.
     description:
-      values.description === ""
+      formValues.description === ""
         ? undefined
-        : sanitizeRichText(values.description),
-    roleCategory: values.roleCategory,
+        : sanitizeRichText(formValues.description),
+    roleCategory: formValues.roleCategory,
     employmentType:
-      values.employmentType === "" ? undefined : values.employmentType,
+      formValues.employmentType === "" ? undefined : formValues.employmentType,
     locationState:
-      values.locationState === ""
+      formValues.locationState === ""
         ? undefined
-        : values.locationState.toUpperCase(),
-    locationCity: values.locationCity === "" ? undefined : values.locationCity,
-    isRemote: values.isRemote,
-    salaryMinMinor: majorInputToMinor(values.salaryMin),
-    salaryMaxMinor: majorInputToMinor(values.salaryMax),
+        : formValues.locationState.toUpperCase(),
+    locationCity:
+      formValues.locationCity === "" ? undefined : formValues.locationCity,
+    isRemote: formValues.isRemote,
+    salaryMinMinor: majorInputToMinor(formValues.salaryMin),
+    salaryMaxMinor: majorInputToMinor(formValues.salaryMax),
     // Required by the schema, so a plain conversion is safe here.
-    recruiterFeeMinor: majorToMinor(Number(values.recruiterFee)),
+    recruiterFeeMinor: majorToMinor(Number(formValues.recruiterFee)),
   });
 
   // Which action fired: the primary save (Enter or "Save") vs. "Publish".
   const emit = (intent: "draft" | "publish") =>
-    handleSubmit((values) => onSubmit(toInput(values), intent));
+    handleSubmit((formValues) => onSubmit(toInput(formValues), intent));
+
+  const statusText = job
+    ? "Changes are live as soon as you save."
+    : remaining === 0
+      ? "Ready to publish. Recruiters are notified immediately."
+      : `${remaining} field${remaining === 1 ? "" : "s"} left before you can publish.`;
 
   return (
-    <form onSubmit={emit("draft")} className="flex flex-col gap-4">
-      <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
-        <Section title="Basics" hint="What the role is and where it sits.">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="title">Job title</Label>
-            <Input
-              id="title"
-              placeholder="Senior Software Engineer"
-              {...register("title")}
-            />
-            {errors.title && (
-              <p className="text-xs text-destructive">{errors.title.message}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+      {/* The form takes ~70% and the preview ~30% of the row (flex 7:3). */}
+      <form
+        onSubmit={emit("draft")}
+        className="flex min-w-0 flex-col gap-4 lg:flex-[7]"
+      >
+        <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
+          <StepSection
+            step={1}
+            title="Basics"
+            hint="What the role is and where it sits in your org."
+          >
             <div className="flex flex-col gap-2">
-              <Label htmlFor="roleCategory">Role category</Label>
-              <Controller
-                control={control}
-                name="roleCategory"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="roleCategory">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROLE_CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {ROLE_CATEGORY_LABELS[category]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+              <Label htmlFor="title">Job title</Label>
+              <Input
+                id="title"
+                className={CONTROL_HEIGHT}
+                placeholder="Senior Software Engineer"
+                {...register("title")}
               />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="employmentType">Employment type</Label>
-              <Controller
-                control={control}
-                name="employmentType"
-                render={({ field }) => (
-                  <Select
-                    value={field.value === "" ? undefined : field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger id="employmentType">
-                      <SelectValue placeholder="Select employment type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EMPLOYMENT_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {EMPLOYMENT_TYPE_LABELS[type]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.employmentType && (
+              {errors.title ? (
                 <p className="text-xs text-destructive">
-                  {errors.employmentType.message}
+                  {errors.title.message}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Recruiters search on this. Be specific about seniority.
                 </p>
               )}
             </div>
-          </div>
-        </Section>
 
-        <Section title="Location" hint="Where the work happens.">
-          <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="roleCategory">Role category</Label>
+                <Controller
+                  control={control}
+                  name="roleCategory"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger
+                        id="roleCategory"
+                        className={CONTROL_HEIGHT}
+                      >
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLE_CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {ROLE_CATEGORY_LABELS[category]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="employmentType">Employment type</Label>
+                <Controller
+                  control={control}
+                  name="employmentType"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value === "" ? undefined : field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id="employmentType"
+                        className={CONTROL_HEIGHT}
+                      >
+                        <SelectValue placeholder="Select employment type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EMPLOYMENT_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {EMPLOYMENT_TYPE_LABELS[type]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.employmentType && (
+                  <p className="text-xs text-destructive">
+                    {errors.employmentType.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </StepSection>
+
+          <StepSection
+            step={2}
+            title="Location"
+            hint="Where the work happens, and how often on site."
+          >
             <div className="flex flex-col gap-2">
-              <Label htmlFor="locationState">
-                State{isRemote ? " (optional)" : ""}
+              <Label>Work model</Label>
+              <Controller
+                control={control}
+                name="isRemote"
+                render={({ field }) => (
+                  <WorkModelControl
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="locationState">
+                  State{isRemote ? " (optional)" : ""}
+                </Label>
+                <Controller
+                  control={control}
+                  name="locationState"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value === "" ? undefined : field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id="locationState"
+                        className={CONTROL_HEIGHT}
+                      >
+                        <SelectValue placeholder="Select a state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_STATES.map((state) => (
+                          <SelectItem key={state.code} value={state.code}>
+                            {state.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.locationState && (
+                  <p className="text-xs text-destructive">
+                    {errors.locationState.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="locationCity">
+                  City{" "}
+                  <span className="font-normal text-muted-foreground">
+                    Optional
+                  </span>
+                </Label>
+                {/* Suggestions, not a closed list: US_CITIES is a curated set of
+                      the largest cities plus state capitals, so a select would
+                      reject plenty of real places. A datalist narrows to the chosen
+                      state while still accepting anything typed. */}
+                <Input
+                  id="locationCity"
+                  className={CONTROL_HEIGHT}
+                  list="location-city-options"
+                  autoComplete="off"
+                  placeholder={
+                    locationState ? "Start typing a city" : "Pick a state first"
+                  }
+                  {...register("locationCity")}
+                />
+                <datalist id="location-city-options">
+                  {citiesInState.map((city) => (
+                    <option key={city.name} value={city.name} />
+                  ))}
+                </datalist>
+              </div>
+            </div>
+          </StepSection>
+
+          <StepSection
+            step={3}
+            title="Compensation"
+            hint="The salary band for the candidate, and the fee for the recruiter."
+          >
+            <div className="flex flex-col gap-2">
+              <Label>
+                Salary range{" "}
+                <span className="font-normal text-muted-foreground">
+                  Optional
+                </span>
               </Label>
-              <Controller
-                control={control}
-                name="locationState"
-                render={({ field }) => (
-                  <Select
-                    value={field.value === "" ? undefined : field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger id="locationState">
-                      <SelectValue placeholder="Select a state" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {US_STATES.map((state) => (
-                        <SelectItem key={state.code} value={state.code}>
-                          {state.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <div className="flex items-center gap-3">
+                <MoneyInput
+                  aria-label="Salary minimum"
+                  placeholder="Min"
+                  {...register("salaryMin")}
+                />
+                <span className="text-muted-foreground">–</span>
+                <MoneyInput
+                  aria-label="Salary maximum"
+                  placeholder="Max"
+                  {...register("salaryMax")}
+                />
+              </div>
+              {(errors.salaryMin || errors.salaryMax) && (
+                <p className="text-xs text-destructive">
+                  {errors.salaryMin?.message ?? errors.salaryMax?.message}
+                </p>
+              )}
+            </div>
+
+            {/* The recruiter fee is the money that drives the marketplace, so
+                  it gets its own emphasized panel. */}
+            <div className="rounded-lg bg-secondary/50 p-4">
+              <Label htmlFor="recruiterFee">Recruiter fee</Label>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <MoneyInput
+                  id="recruiterFee"
+                  placeholder="10000"
+                  className="max-w-[12rem] bg-card"
+                  {...register("recruiterFee")}
+                />
+                {feeMeetsMinimum && (
+                  <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                    Meets the publishing minimum
+                  </span>
                 )}
-              />
-              {errors.locationState && (
-                <p className="text-xs text-destructive">
-                  {errors.locationState.message}
+              </div>
+              {errors.recruiterFee ? (
+                <p className="mt-2 text-xs text-destructive">
+                  {errors.recruiterFee.message}
+                </p>
+              ) : (
+                <p className="mt-2 text-[13px] text-muted-foreground">
+                  Paid only on a successful hire.
+                  {minFee && (
+                    <>
+                      {" "}
+                      Publishing requires at least{" "}
+                      <span className="font-semibold text-navy">
+                        {formatMinor(minFee.amountMinor)}
+                      </span>
+                      .
+                    </>
+                  )}
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="locationCity">City (optional)</Label>
-              {/* Suggestions, not a closed list: US_CITIES is a curated set of
-                  the largest cities plus state capitals, so a select would
-                  reject plenty of real places. A datalist narrows to the chosen
-                  state while still accepting anything typed. */}
-              <Input
-                id="locationCity"
-                list="location-city-options"
-                autoComplete="off"
-                placeholder={
-                  locationState ? "Start typing a city" : "Pick a state first"
-                }
-                {...register("locationCity")}
-              />
-              <datalist id="location-city-options">
-                {citiesInState.map((city) => (
-                  <option key={city.name} value={city.name} />
-                ))}
-              </datalist>
-            </div>
-          </div>
+          </StepSection>
 
-          <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-navy">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              {...register("isRemote")}
+          <StepSection
+            step={4}
+            title="Description"
+            hint="Sell the role. Recruiters read this before deciding to work it."
+          >
+            <Controller
+              control={control}
+              name="description"
+              render={({ field }) => (
+                <RichTextEditor
+                  id="description"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
-            Remote
-          </label>
-        </Section>
-
-        <Section
-          title="Compensation"
-          hint="The salary band for the candidate and the fee for the recruiter."
-        >
-          {/* The salary band and the recruiter fee are different money paid by
-              different parties to different people, so they get their own rows
-              rather than reading as three columns of one figure. */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="salaryMin">Salary minimum ($) (optional)</Label>
-              <Input
-                id="salaryMin"
-                inputMode="decimal"
-                {...register("salaryMin")}
-              />
-              {errors.salaryMin && (
-                <p className="text-xs text-destructive">
-                  {errors.salaryMin.message}
-                </p>
-              )}
+            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+              <span>Roles with 300+ words get 2x more recruiter interest.</span>
+              <span className="shrink-0 tabular-nums">
+                {wordCount} {wordCount === 1 ? "word" : "words"}
+              </span>
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="salaryMax">Salary maximum ($) (optional)</Label>
-              <Input
-                id="salaryMax"
-                inputMode="decimal"
-                {...register("salaryMax")}
-              />
-              {errors.salaryMax && (
-                <p className="text-xs text-destructive">
-                  {errors.salaryMax.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex max-w-xs flex-col gap-2">
-            <Label htmlFor="recruiterFee">Recruiter fee ($)</Label>
-            <Input
-              id="recruiterFee"
-              inputMode="decimal"
-              placeholder="10000"
-              {...register("recruiterFee")}
-            />
-            {errors.recruiterFee && (
+            {errors.description && (
               <p className="text-xs text-destructive">
-                {errors.recruiterFee.message}
+                {errors.description.message}
               </p>
             )}
-          </div>
-          <p className="text-[13px] text-muted-foreground">
-            What you will pay a recruiter for a successful hire.
-            {minFee && (
-              <>
-                {" "}
-                Publishing requires at least{" "}
-                <span className="font-semibold text-navy">
-                  {formatMinor(minFee.amountMinor)}
-                </span>
-                .
-              </>
-            )}
-          </p>
-        </Section>
+          </StepSection>
+        </div>
 
-        <Section
-          title="Description"
-          hint="Sell the role — recruiters read this before deciding to work it."
-        >
-          <Controller
-            control={control}
-            name="description"
-            render={({ field }) => (
-              <RichTextEditor
-                id="description"
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          {errors.description && (
-            <p className="text-xs text-destructive">
-              {errors.description.message}
-            </p>
-          )}
-        </Section>
-      </div>
-
-      {/* Sticky action bar so Save is always reachable in a long form. */}
-      <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-card-lg backdrop-blur sm:px-5">
-        <span className="text-sm text-muted-foreground">
-          {job
-            ? "Changes are live as soon as you save."
-            : "Save as a draft, or publish it live right away."}
-        </span>
-        <div className="flex gap-2">
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-          )}
-          {job ? (
-            <Button type="submit" size="sm" disabled={isSubmitting}>
-              {isSubmitting ? "Saving…" : submitLabel}
-            </Button>
-          ) : (
-            <>
+        {/* Sticky action bar so Save is always reachable in a long form. */}
+        <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-card-lg backdrop-blur sm:px-5">
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span
+              className={cn(
+                "h-2 w-2 shrink-0 rounded-full",
+                job || remaining === 0 ? "bg-emerald-500" : "bg-amber-400",
+              )}
+            />
+            <span className="hidden sm:inline">{statusText}</span>
+          </span>
+          <div className="flex gap-2">
+            {onCancel && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={emit("draft")}
+                onClick={onCancel}
                 disabled={isSubmitting}
               >
-                Save as draft
+                Cancel
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={emit("publish")}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Working…" : "Publish job"}
+            )}
+            {job ? (
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting ? "Saving…" : submitLabel}
               </Button>
-            </>
-          )}
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={emit("draft")}
+                  disabled={isSubmitting}
+                >
+                  Save as draft
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={emit("publish")}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Working…" : "Publish job"}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+
+      {/* The preview is a right sidebar: open, it tracks the form as a sticky
+            panel; collapsed, it shrinks to a thin rail on the right edge that
+            reopens it. On narrow screens it drops below the form. */}
+      {previewOpen ? (
+        <aside className="w-full min-w-0 lg:sticky lg:top-24 lg:flex-[3]">
+          <JobLivePreview
+            values={values}
+            status={job?.status ?? "draft"}
+            onCollapse={togglePreview}
+          />
+        </aside>
+      ) : (
+        <aside className="shrink-0 lg:sticky lg:top-24">
+          <button
+            type="button"
+            onClick={togglePreview}
+            aria-label="Show preview"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-sm font-medium text-navy shadow-sm transition-colors hover:bg-accent lg:w-auto lg:flex-col lg:gap-3 lg:px-2.5 lg:py-4"
+          >
+            <PanelRightOpen className="h-4 w-4 shrink-0 text-primary" />
+            <span className="lg:[writing-mode:vertical-rl]">Preview</span>
+          </button>
+        </aside>
+      )}
+    </div>
   );
 }
