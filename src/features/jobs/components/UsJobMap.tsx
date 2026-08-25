@@ -34,6 +34,8 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { formatMinor } from "@/shared/utils/money";
 
 import {
+  bubbleRadius,
+  feeRange,
   resolveCityBubbles,
   type CityMapBubble,
   type CityMapRow,
@@ -51,7 +53,7 @@ export type MapSelection =
 
 interface StateStat {
   readonly openRoles: number;
-  readonly averageFeeMinor: number;
+  readonly totalFeeMinor: number;
 }
 
 interface UsJobMapProps {
@@ -80,10 +82,9 @@ const PLOTTED_CITIES: readonly PlottedCity[] = US_CITIES.flatMap((city) => {
   return point ? [{ ...city, x: point.x, y: point.y }] : [];
 });
 
-/** Bubble radius (SVG units) scaled by role volume — small→few, large→many. */
-function bubbleRadius(count: number): number {
-  return Math.min(34, 6 + Math.sqrt(count) * 4);
-}
+/** SVG radius bounds for the smallest/largest available-fee cities. */
+const MIN_BUBBLE_RADIUS = 10;
+const MAX_BUBBLE_RADIUS = 32;
 
 // State fills copied from the mock: a sky-blue selected fill with a blue
 // border, a slightly-blue tone for states that have roles, and a neutral tone
@@ -148,10 +149,8 @@ function CityPopup({
           Open Roles
         </p>
         <p className="text-[13px] text-navy">
-          Avg Company Price:{" "}
-          <span className="font-bold">
-            {formatMinor(bubble.averageFeeMinor)}
-          </span>
+          Available fee:{" "}
+          <span className="font-bold">{formatMinor(bubble.totalFeeMinor)}</span>
         </p>
         <button
           type="button"
@@ -246,6 +245,9 @@ export function UsJobMap({
     () => resolveCityBubbles(cityData ?? []),
     [cityData],
   );
+  // Bubbles are sized by available fee (summed recruiter fees), relative to the
+  // busiest/quietest city currently plotted.
+  const feeSpan = useMemo(() => feeRange(cityBubbles), [cityBubbles]);
 
   // Pan toward the selected state's centroid when zoomed in.
   const focus = useMemo(() => {
@@ -539,7 +541,7 @@ export function UsJobMap({
               const count = stat?.openRoles ?? 0;
               const feeLabel =
                 count > 0 && stat
-                  ? `, avg fee ${formatMinor(stat.averageFeeMinor)}`
+                  ? `, available fee ${formatMinor(stat.totalFeeMinor)}`
                   : "";
               const isActive = selectedState === geo.code;
               const isHovered = hoveredState === geo.code;
@@ -585,7 +587,13 @@ export function UsJobMap({
                 Hovering shows the city popup; clicking drills into its state. */}
             {cityBubbles.map((bubble) => {
               const isActive = selectedState === bubble.state;
-              const r = bubbleRadius(bubble.openRoles);
+              const r = bubbleRadius(
+                bubble.totalFeeMinor,
+                feeSpan.min,
+                feeSpan.max,
+                MIN_BUBBLE_RADIUS,
+                MAX_BUBBLE_RADIUS,
+              );
               const color = isActive ? "#034AEF" : "#4F80E6";
               return (
                 <circle

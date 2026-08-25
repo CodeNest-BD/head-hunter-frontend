@@ -43,6 +43,7 @@ export const publicJobMapEntrySchema = z.object({
   locationState: z.string().catch(""),
   locationCity: z.string().nullable().catch(null),
   openRoles: z.number().catch(0),
-  averageFeeMinor: z.number().catch(0),
+  /** Total recruiter fees available across this city's live listings. */
+  totalFeeMinor: z.number().catch(0),
 });
 export type PublicJobMapEntry = z.infer<typeof publicJobMapEntrySchema>;

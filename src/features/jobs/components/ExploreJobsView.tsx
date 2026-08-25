@@ -641,17 +641,17 @@ function BubbleSizeLegend() {
   return (
     <div className="pointer-events-none absolute bottom-4 right-4 rounded-md border border-brand-line bg-white/95 px-3 py-2 shadow-card backdrop-blur-sm">
       <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
-        Open roles
+        Available fee
       </p>
       <div className="flex items-end gap-3 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <LegendDot size={8} /> Few
+          <LegendDot size={8} /> Low
         </span>
         <span className="flex items-center gap-1.5">
           <LegendDot size={13} /> Moderate
         </span>
         <span className="flex items-center gap-1.5">
-          <LegendDot size={18} /> Many
+          <LegendDot size={18} /> High
         </span>
       </div>
     </div>
@@ -676,27 +676,20 @@ function LiveMapCard({
   });
 
   // The map rows are per state *and* city; fold them back into per-state totals
-  // (fee weighted by role count) for the fills and hover popup.
+  // (open roles and summed available fee) for the fills and hover popup.
   const stats = useMemo(() => {
-    const acc = new Map<string, { openRoles: number; feeWeighted: number }>();
-    for (const entry of map.data ?? []) {
-      const prev = acc.get(entry.locationState) ?? {
-        openRoles: 0,
-        feeWeighted: 0,
-      };
-      prev.openRoles += entry.openRoles;
-      prev.feeWeighted += entry.averageFeeMinor * entry.openRoles;
-      acc.set(entry.locationState, prev);
-    }
     const byState = new Map<
       string,
-      { openRoles: number; averageFeeMinor: number }
+      { openRoles: number; totalFeeMinor: number }
     >();
-    for (const [code, { openRoles: roles, feeWeighted }] of acc) {
-      byState.set(code, {
-        openRoles: roles,
-        averageFeeMinor: roles > 0 ? Math.round(feeWeighted / roles) : 0,
-      });
+    for (const entry of map.data ?? []) {
+      const prev = byState.get(entry.locationState) ?? {
+        openRoles: 0,
+        totalFeeMinor: 0,
+      };
+      prev.openRoles += entry.openRoles;
+      prev.totalFeeMinor += entry.totalFeeMinor;
+      byState.set(entry.locationState, prev);
     }
     return byState;
   }, [map.data]);

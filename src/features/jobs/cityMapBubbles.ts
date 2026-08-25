@@ -6,7 +6,8 @@ export interface CityMapRow {
   readonly locationState: string;
   readonly locationCity: string | null;
   readonly openRoles: number;
-  readonly averageFeeMinor: number;
+  /** Total recruiter fees available across the city's live listings. */
+  readonly totalFeeMinor: number;
 }
 
 /** A placeable city bubble: its projected point in the 960x600 map frame. */
@@ -17,7 +18,50 @@ export interface CityMapBubble {
   readonly state: string;
   readonly city: string;
   readonly openRoles: number;
-  readonly averageFeeMinor: number;
+  /** Total recruiter fees available here — drives the bubble's size. */
+  readonly totalFeeMinor: number;
+}
+
+/** The available-fee min/max across bubbles, for range-relative sizing. */
+export function feeRange(bubbles: readonly { totalFeeMinor: number }[]): {
+  min: number;
+  max: number;
+} {
+  if (bubbles.length === 0) return { min: 0, max: 0 };
+  let min = Infinity;
+  let max = -Infinity;
+  for (const bubble of bubbles) {
+    if (bubble.totalFeeMinor < min) min = bubble.totalFeeMinor;
+    if (bubble.totalFeeMinor > max) max = bubble.totalFeeMinor;
+  }
+  return { min, max };
+}
+
+/**
+ * A continuous, range-relative bubble radius: the busiest city maps to
+ * `maxRadius`, the quietest to `minRadius`, and everything in between scales
+ * smoothly — so a $3,000 city is visibly larger than a $500 one (not a fixed
+ * bucket where both look the same).
+ *
+ * Available fee is heavily skewed — most cities cluster low with a few very
+ * large outliers — so a linear scale would squash the common range into one
+ * dot. A logarithmic scale spreads that low–mid range by ratio (each doubling
+ * of fee is an equal step) while still capping the outliers. When every value
+ * is equal there is no relative order to convey, so all get the mid radius.
+ */
+export function bubbleRadius(
+  value: number,
+  min: number,
+  max: number,
+  minRadius: number,
+  maxRadius: number,
+): number {
+  if (max <= min) return (minRadius + maxRadius) / 2;
+  // +1 keeps log defined at zero; ratios are unaffected at fee scale.
+  const lift = (n: number) => Math.log(n + 1);
+  const t = (lift(value) - lift(min)) / (lift(max) - lift(min));
+  const clamped = Math.min(1, Math.max(0, t));
+  return minRadius + clamped * (maxRadius - minRadius);
 }
 
 const normalizeCity = (name: string): string => name.trim().toLowerCase();
@@ -58,7 +102,7 @@ export function resolveCityBubbles(
 ): CityMapBubble[] {
   const byPoint = new Map<
     string,
-    { point: CityPoint; openRoles: number; feeWeighted: number }
+    { point: CityPoint; openRoles: number; totalFeeMinor: number }
   >();
   for (const row of rows) {
     if (!row.locationCity || row.openRoles <= 0) continue;
@@ -68,18 +112,19 @@ export function resolveCityBubbles(
       CITY_BY_NAME.get(norm);
     if (!point) continue;
     const key = `${point.name}|${point.state}`;
-    const prev = byPoint.get(key) ?? { point, openRoles: 0, feeWeighted: 0 };
+    const prev = byPoint.get(key) ?? { point, openRoles: 0, totalFeeMinor: 0 };
     prev.openRoles += row.openRoles;
-    prev.feeWeighted += row.averageFeeMinor * row.openRoles;
+    // Available fee is a plain sum, so merging duplicate points just adds.
+    prev.totalFeeMinor += row.totalFeeMinor;
     byPoint.set(key, prev);
   }
-  return [...byPoint.values()].map(({ point, openRoles, feeWeighted }) => ({
+  return [...byPoint.values()].map(({ point, openRoles, totalFeeMinor }) => ({
     key: `${point.name}|${point.state}`,
     x: point.x,
     y: point.y,
     state: point.state,
     city: point.name,
     openRoles,
-    averageFeeMinor: openRoles > 0 ? Math.round(feeWeighted / openRoles) : 0,
+    totalFeeMinor,
   }));
 }

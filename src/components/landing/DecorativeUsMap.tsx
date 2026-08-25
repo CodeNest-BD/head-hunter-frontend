@@ -5,6 +5,8 @@ import Link from "next/link";
 
 import { usePublicJobMap } from "@/features/jobs";
 import {
+  bubbleRadius,
+  feeRange,
   resolveCityBubbles,
   type CityMapBubble,
 } from "@/features/jobs/cityMapBubbles";
@@ -24,10 +26,9 @@ import { formatMinor } from "@/shared/utils/money";
 
 const MAX_BUBBLES = 8;
 
-/** Radius in the 960x600 frame — sqrt so a huge city can't dwarf a small one. */
-function bubbleRadius(count: number): number {
-  return Math.min(32, 12 + Math.sqrt(count) * 3.5);
-}
+// Radius bounds — the open-roles number sits inside, so keep a legible minimum.
+const MIN_BUBBLE_RADIUS = 16;
+const MAX_BUBBLE_RADIUS = 30;
 
 export function DecorativeUsMap() {
   const { data } = usePublicJobMap();
@@ -38,6 +39,8 @@ export function DecorativeUsMap() {
       .sort((a, b) => b.openRoles - a.openRoles)
       .slice(0, MAX_BUBBLES);
   }, [data]);
+  // Sized by available fee, relative to the cities we actually show.
+  const feeSpan = useMemo(() => feeRange(bubbles), [bubbles]);
 
   return (
     <div className="relative select-none">
@@ -58,7 +61,13 @@ export function DecorativeUsMap() {
         ))}
         {bubbles.map((bubble) => {
           const isActive = active?.key === bubble.key;
-          const r = bubbleRadius(bubble.openRoles);
+          const r = bubbleRadius(
+            bubble.totalFeeMinor,
+            feeSpan.min,
+            feeSpan.max,
+            MIN_BUBBLE_RADIUS,
+            MAX_BUBBLE_RADIUS,
+          );
           return (
             <g
               key={bubble.key}
@@ -124,9 +133,9 @@ export function DecorativeUsMap() {
           <p className="mt-0.5 text-sm font-bold text-primary">
             {active.openRoles} Open Roles
           </p>
-          <p className="mt-2 text-xs text-brand-gray">Avg. Company Price</p>
+          <p className="mt-2 text-xs text-brand-gray">Available fee</p>
           <p className="text-xl font-extrabold text-navy">
-            {formatMinor(active.averageFeeMinor)}
+            {formatMinor(active.totalFeeMinor)}
           </p>
         </div>
       )}
