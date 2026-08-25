@@ -2,9 +2,13 @@ import Link from "next/link";
 
 import { Logo } from "@/shared/ui-components/layout/Logo";
 
+import { FooterPostJobLink } from "./FooterPostJobLink";
+
 interface FooterLink {
   readonly label: string;
   readonly href: string;
+  /** Resolve the destination by auth (a signed-in company deep-links in-app). */
+  readonly roleAware?: boolean;
 }
 
 interface FooterColumn {
@@ -23,7 +27,7 @@ const COLUMNS: readonly FooterColumn[] = [
   {
     title: "Get started",
     links: [
-      { label: "Post a job", href: "/signup" },
+      { label: "Post a job", href: "/signup", roleAware: true },
       { label: "Become a recruiter", href: "/signup" },
       { label: "Log in", href: "/login" },
     ],
@@ -84,7 +88,14 @@ export function LandingFooter() {
             <ul className="mt-4 flex flex-col gap-3">
               {column.links.map((link) => (
                 <li key={`${link.label}-${link.href}`}>
-                  <FooterNavLink {...link} />
+                  {link.roleAware ? (
+                    <FooterPostJobLink
+                      label={link.label}
+                      guestHref={link.href}
+                    />
+                  ) : (
+                    <FooterNavLink {...link} />
+                  )}
                 </li>
               ))}
             </ul>
