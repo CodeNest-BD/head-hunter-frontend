@@ -14,6 +14,7 @@ import {
 /** Filters the public browse endpoint accepts (a guest-safe subset). */
 export interface PublicJobFilterParams {
   roleCategory?: string;
+  employmentType?: string;
   locationState?: string;
   isRemote?: boolean;
   feeMin?: number;

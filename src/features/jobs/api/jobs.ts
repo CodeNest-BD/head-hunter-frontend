@@ -11,6 +11,7 @@ import {
 /** Filters shared by the list and the map so both stay in step. */
 export interface JobFilterParams {
   roleCategory?: string;
+  employmentType?: string;
   locationState?: string;
   isRemote?: boolean;
   feeMin?: number;
