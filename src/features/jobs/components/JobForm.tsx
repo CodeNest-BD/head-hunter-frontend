@@ -3,11 +3,17 @@
 import { forwardRef, useEffect, useState, type ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { PanelRightOpen } from "lucide-react";
+import { Info, PanelRightOpen } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui-components/controls/tooltip";
 import { RichTextEditor } from "@/shared/ui-components/controls/RichTextEditor";
 import {
   Select,
@@ -463,7 +469,25 @@ export function JobForm({
             {/* The recruiter fee is the money that drives the marketplace, so
                   it gets its own emphasized panel. */}
             <div className="rounded-lg bg-secondary/50 p-4">
-              <Label htmlFor="recruiterFee">Recruiter fee</Label>
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="recruiterFee">Recruiter fee</Label>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Why the fee is fixed"
+                        className="text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      You can&rsquo;t change the fee once the job is posted.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <MoneyInput
                   id="recruiterFee"
