@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
-import Link from "next/link";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +14,7 @@ import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { PasswordInput } from "@/shared/ui-components/controls/password-input";
 
-import { resetPassword } from "../api/auth";
+import { forgotPassword, resetPassword } from "../api/auth";
 
 // Mirrors the sign-up password rule so both screens agree on what's valid.
 const schema = z.object({
@@ -35,14 +34,42 @@ type FormData = z.infer<typeof schema>;
 function ResetPasswordFormInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [resending, setResending] = useState(false);
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { email: searchParams.get("email") ?? "" },
   });
+
+  // Send a fresh reset code without leaving the page — the same endpoint the
+  // Forgot Password screen uses, so "Request another" actually re-issues a code
+  // instead of bouncing back there.
+  const onResend = async (): Promise<void> => {
+    const email = getValues("email").trim();
+    if (!email) {
+      toast.error("Enter your email first");
+      return;
+    }
+    setResending(true);
+    try {
+      await forgotPassword(email);
+      toast.success("Code sent", {
+        description: `We emailed a new reset code to ${email}.`,
+      });
+    } catch (error) {
+      toast.error("Couldn't send a new code", {
+        description: isApiError(error)
+          ? error.message
+          : "Please try again in a moment.",
+      });
+    } finally {
+      setResending(false);
+    }
+  };
 
   const onSubmit = async (data: FormData): Promise<void> => {
     try {
@@ -129,12 +156,14 @@ function ResetPasswordFormInner() {
 
       <p className="text-center text-sm text-muted-foreground">
         Didn&apos;t get a code?{" "}
-        <Link
-          href="/forgot-password"
-          className="font-medium text-primary underline-offset-2 hover:underline"
+        <button
+          type="button"
+          onClick={onResend}
+          disabled={resending}
+          className="rounded-sm font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
         >
-          Request another
-        </Link>
+          {resending ? "Sending…" : "Request another"}
+        </button>
       </p>
     </form>
   );
