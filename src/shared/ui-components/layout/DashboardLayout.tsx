@@ -19,7 +19,6 @@ import {
 import { formatDistanceToNow } from "date-fns";
 
 import { useAuth } from "@/features/auth";
-import { useAdminRecruiters } from "@/features/admin/hooks/useAdmin";
 import { useWallet } from "@/features/billing/hooks/useBilling";
 import {
   useMessageUnreadCount,
@@ -73,28 +72,6 @@ function CompanyTopBarActions() {
         <span className="hidden sm:inline">Post a job</span>
       </Link>
     </div>
-  );
-}
-
-/**
- * Admin top-bar pill: pending recruiter verifications follow the admin across
- * every page, since clearing them is the job. Renders nothing at zero.
- */
-function AdminTopBarPending() {
-  const { data } = useAdminRecruiters({
-    page: 1,
-    verificationStatus: "pending",
-    limit: 1,
-  });
-  const pending = data?.meta.total ?? 0;
-  if (pending === 0) return null;
-  return (
-    <Link
-      href="/admin/recruiters"
-      className="inline-flex items-center rounded-full bg-[#FBF3DF] px-3 py-1.5 text-sm font-semibold text-[#7A5109] transition-colors hover:bg-[#F6E9C6]"
-    >
-      {pending} verification{pending === 1 ? "" : "s"} pending
-    </Link>
   );
 }
 
@@ -565,7 +542,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </nav>
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           {user?.role === "company" && <CompanyTopBarActions />}
-          {user?.role === "admin" && <AdminTopBarPending />}
           {(user?.role === "company" || user?.role === "recruiter") && (
             <NotificationBell />
           )}
