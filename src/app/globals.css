@@ -74,6 +74,11 @@
   }
   html {
     scroll-behavior: smooth;
+    /* Reserve the scrollbar's space at all times. Opening a scroll-locking
+       overlay (Radix Select / Dialog / Popover, via react-remove-scroll) hides
+       the page scrollbar; without a reserved gutter that removal reflows the
+       whole page — the "dropdown widens the section" glitch. */
+    scrollbar-gutter: stable;
   }
   body {
     background-color: hsl(var(--background));
@@ -140,4 +145,14 @@
   [class*="hh-"] {
     animation: none !important;
   }
+}
+
+/* react-remove-scroll (under Radix Select/Dialog/Popover) offsets the <body> to
+   make up for the scrollbar it hides while an overlay is open. With the stable
+   gutter above that space is already reserved, so the offset would double up and
+   push the page left. Cancel just the offset (keep the scroll lock). This lives
+   outside @layer, and leads with `html`, so it outranks the library's own
+   runtime-injected `!important` rule. */
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
 }
