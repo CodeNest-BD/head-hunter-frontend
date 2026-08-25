@@ -44,10 +44,10 @@ import { UsJobMap, type MapSelection } from "./UsJobMap";
 const PAGE_SIZE = 12;
 const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
 
-// City and employment aren't server filters, so when either is active we fetch
-// the whole (state-scoped) result set in one page and refine + paginate it
-// client-side. 100 is the backend's max page size — a comfortable ceiling for a
-// single state's open roles.
+// City is the only filter the API can't do (the public list has no city param;
+// the map groups by city), so when a city is active we fetch the whole
+// state-scoped result set in one page and refine + paginate it client-side.
+// 100 is the backend's max page size — a comfortable ceiling for one state.
 const CLIENT_FILTER_FETCH_LIMIT = 100;
 
 /**
@@ -139,7 +139,7 @@ export function ExploreJobsView() {
         ? false
         : undefined;
 
-  const clientFilterActive = Boolean(selectedCity || filters.employment);
+  const clientFilterActive = Boolean(selectedCity);
 
   const listParams = useMemo(
     () => ({
@@ -147,6 +147,7 @@ export function ExploreJobsView() {
         filters.roleCategory === ANY_CATEGORY
           ? undefined
           : filters.roleCategory,
+      employmentType: filters.employment || undefined,
       feeMin: bucket.feeMin,
       feeMax: bucket.feeMax,
       q: debouncedQ.trim() || undefined,
@@ -157,6 +158,7 @@ export function ExploreJobsView() {
     }),
     [
       filters.roleCategory,
+      filters.employment,
       filters.sort,
       bucket,
       debouncedQ,
@@ -192,13 +194,10 @@ export function ExploreJobsView() {
     }
   };
 
-  // Refine the fetched rows by the client-only filters (employment, city).
+  // City is the one filter the API can't do, so refine the fetched rows by it.
   const rows = jobs.data?.data ?? [];
   const cityKey = selectedCity ? normalizeCityName(selectedCity) : undefined;
   const filtered = rows.filter((job) => {
-    if (filters.employment && job.employmentType !== filters.employment) {
-      return false;
-    }
     if (cityKey && normalizeCityName(job.locationCity ?? "") !== cityKey) {
       return false;
     }
@@ -578,6 +577,7 @@ function FiltersPanel({
 
 interface MapListParams {
   roleCategory?: string;
+  employmentType?: string;
   feeMin?: number;
   feeMax?: number;
   q?: string;
@@ -676,6 +676,7 @@ function LiveMapCard({
 
   const map = useJobMap({
     roleCategory: listParams.roleCategory,
+    employmentType: listParams.employmentType,
     feeMin: listParams.feeMin,
     feeMax: listParams.feeMax,
     q: listParams.q,
