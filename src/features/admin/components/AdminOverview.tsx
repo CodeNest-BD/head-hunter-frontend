@@ -81,6 +81,11 @@ export function AdminOverview({ firstName }: { firstName: string }) {
     verificationStatus: "pending",
     limit: 1,
   });
+  const pendingCompanies = useAdminCompanies({
+    page: 1,
+    verificationStatus: "pending",
+    limit: 1,
+  });
   const companies = useAdminCompanies({ page: 1, limit: 100 });
 
   const banner = (
@@ -136,6 +141,7 @@ export function AdminOverview({ firstName }: { firstName: string }) {
   }));
 
   const pending = pendingRecruiters.data?.meta.total ?? 0;
+  const pendingCompanyCount = pendingCompanies.data?.meta.total ?? 0;
   const heldAccounts = data.recruiters.held + data.companies.held;
   const unfunded = (companies.data?.data ?? []).filter(
     (c) => c.balanceMinor === 0,
@@ -150,6 +156,16 @@ export function AdminOverview({ firstName }: { firstName: string }) {
       detail: "Recruiters can't access the marketplace until reviewed.",
       actionLabel: "Review",
       href: "/admin/recruiters",
+    });
+  }
+  if (pendingCompanyCount > 0) {
+    queue.push({
+      id: "pending-companies",
+      tone: "blue",
+      title: `${pendingCompanyCount} company verification${pendingCompanyCount === 1 ? "" : "s"} pending`,
+      detail: "Companies can't post jobs or review candidates until reviewed.",
+      actionLabel: "Review",
+      href: "/admin/companies",
     });
   }
   if (unfunded > 0) {
