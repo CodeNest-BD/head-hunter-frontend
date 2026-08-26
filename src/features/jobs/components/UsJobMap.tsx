@@ -280,6 +280,11 @@ export function UsJobMap({
 
   const startDrag = (event: React.PointerEvent<SVGSVGElement>): void => {
     if (zoom <= MIN_ZOOM) return; // Nothing to pan on the full map.
+    // Record a *potential* drag, but do NOT capture the pointer yet. Capturing
+    // on pointerdown retargets the ensuing `click` to the SVG (the capture
+    // target), so a plain click on a bubble or state would never fire its own
+    // onClick — which is exactly why clicks broke once zoomed. Capture is
+    // deferred to moveDrag, once a real drag is actually under way.
     dragRef.current = {
       startX: event.clientX,
       startY: event.clientY,
@@ -287,8 +292,6 @@ export function UsJobMap({
       panY: pan.y,
       moved: false,
     };
-    setIsDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const moveDrag = (event: React.PointerEvent<SVGSVGElement>): void => {
@@ -297,23 +300,30 @@ export function UsJobMap({
     const { sx, sy } = svgUnitsPerPx();
     const dx = (event.clientX - drag.startX) * sx;
     const dy = (event.clientY - drag.startY) * sy;
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) drag.moved = true;
-    setPan({ x: drag.panX + dx, y: drag.panY + dy });
+    // Promote to a real drag only once the pointer clears a small threshold;
+    // that is the moment to capture, so panning survives the cursor leaving the
+    // map — a click that never moves stays a click and reaches its target.
+    if (!drag.moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+      drag.moved = true;
+      setIsDragging(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    if (drag.moved) setPan({ x: drag.panX + dx, y: drag.panY + dy });
   };
 
   const endDrag = (event: React.PointerEvent<SVGSVGElement>): void => {
     const drag = dragRef.current;
     if (!drag) return;
-    // A drag that actually moved must not also register as a state click.
+    // A drag that actually moved must not also register as a click.
     if (drag.moved) {
       suppressClickRef.current = true;
       requestAnimationFrame(() => {
         suppressClickRef.current = false;
       });
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
     }
     dragRef.current = null;
     setIsDragging(false);
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
   };
 
   const filteredCities = useMemo(() => {
@@ -625,9 +635,11 @@ export function UsJobMap({
                     showCity(bubble, event.currentTarget)
                   }
                   onMouseLeave={scheduleHideCity}
-                  onClick={() =>
-                    onSelect(nextBubbleSelection(selection, bubble))
-                  }
+                  onClick={() => {
+                    // A pan that happens to end on a bubble isn't a selection.
+                    if (suppressClickRef.current) return;
+                    onSelect(nextBubbleSelection(selection, bubble));
+                  }}
                 >
                   <title>{`${bubble.city}, ${bubble.state} — ${bubble.openRoles} open ${
                     bubble.openRoles === 1 ? "role" : "roles"
