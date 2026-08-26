@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AlertCircle, BadgeCheck, BadgeX } from "lucide-react";
 
+import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -208,24 +209,32 @@ export function CompanyDetail({ userId }: { userId: string }) {
     <div className="flex w-full max-w-5xl flex-col gap-6">
       <Card>
         <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h2 className="font-heading text-xl font-bold text-navy">
-                {data.companyName}
-              </h2>
-              <StatusBadge
-                label={ACCOUNT_STATUS_LABELS[data.status]}
-                className={ACCOUNT_STATUS_STYLES[data.status]}
-              />
-              <StatusBadge
-                label={VERIFICATION_LABELS[data.verificationStatus]}
-                className={
-                  VERIFICATION_STATUS_STYLES[data.verificationStatus] ??
-                  "bg-muted text-muted-foreground"
-                }
-              />
+          <div className="flex items-center gap-3">
+            <CompanyLogo
+              companyProfileId={data.companyProfileId}
+              hasLogo={data.hasLogo}
+              name={data.companyName}
+              size="lg"
+            />
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h2 className="font-heading text-xl font-bold text-navy">
+                  {data.companyName}
+                </h2>
+                <StatusBadge
+                  label={ACCOUNT_STATUS_LABELS[data.status]}
+                  className={ACCOUNT_STATUS_STYLES[data.status]}
+                />
+                <StatusBadge
+                  label={VERIFICATION_LABELS[data.verificationStatus]}
+                  className={
+                    VERIFICATION_STATUS_STYLES[data.verificationStatus] ??
+                    "bg-muted text-muted-foreground"
+                  }
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">{data.email}</p>
             </div>
-            <p className="text-sm text-muted-foreground">{data.email}</p>
           </div>
           <HoldButton
             userId={data.userId}

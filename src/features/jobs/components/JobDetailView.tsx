@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Wallet } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { RichTextView } from "@/shared/ui-components/data/RichTextView";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
@@ -31,6 +32,12 @@ export interface JobView {
   recruiterFeeMinor: number;
   publishedAt: Date | null;
   description: string | null;
+  // Company identity — present on the marketplace/authed job (recruiters,
+  // admins see who's hiring), absent on the create/edit preview draft and on a
+  // company's own job (it already knows whose it is), so all three are optional.
+  companyProfileId?: string;
+  companyName?: string | null;
+  hasLogo?: boolean;
 }
 
 /** One label/value fact in the header card. */
@@ -140,6 +147,22 @@ export function JobDetailBody({
 }) {
   return (
     <div className="flex flex-col gap-6">
+      {job.companyName ? (
+        <div className="flex items-center gap-3">
+          <CompanyLogo
+            companyProfileId={job.companyProfileId ?? ""}
+            hasLogo={job.hasLogo ?? false}
+            name={job.companyName}
+            size="md"
+          />
+          <div className="min-w-0">
+            <p className="truncate font-heading text-base font-bold text-navy">
+              {job.companyName}
+            </p>
+            <p className="text-xs text-muted-foreground">Hiring company</p>
+          </div>
+        </div>
+      ) : null}
       <FactsCard job={job} compact={compact} />
       {cta ? (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">

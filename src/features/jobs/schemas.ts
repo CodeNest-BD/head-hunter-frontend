@@ -54,10 +54,15 @@ export const jobSchema = z.object({
   status: jobStatusSchema,
   publishedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
+  // Always present — every job knows its company. Backs the company logo,
+  // which is fetched from an id-based URL.
+  companyProfileId: z.string().catch(""),
   // Present when GET /v1/jobs is browsed marketplace-wide (recruiters,
   // admins); absent when a company reads back its own jobs, which already
   // know whose they are. Tolerant so either shape parses.
   companyName: z.string().nullable().catch(null),
+  /** True when the company has a logo; served from the id-based URL. */
+  hasLogo: z.boolean().catch(false),
 });
 export type Job = z.infer<typeof jobSchema>;
 

@@ -11,6 +11,7 @@ import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
@@ -965,9 +966,17 @@ function JobRow({ job }: { job: PublicJobCardData }) {
         <p className="mt-0.5 truncate font-heading text-[15px] font-bold text-navy">
           {job.title}
         </p>
-        <p className="truncate text-sm text-brand-gray">
-          {job.companyName || "A company"} · {location}
-        </p>
+        <div className="flex items-center gap-1.5 text-sm text-brand-gray">
+          <CompanyLogo
+            companyProfileId={job.companyProfileId}
+            hasLogo={job.hasLogo}
+            name={job.companyName || "A company"}
+            size="xs"
+          />
+          <span className="truncate">
+            {job.companyName || "A company"} · {location}
+          </span>
+        </div>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {employment && <Tag>{employment}</Tag>}

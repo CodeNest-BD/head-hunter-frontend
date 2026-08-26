@@ -10,7 +10,10 @@ import { z } from "zod";
 export const publicJobCardSchema = z.object({
   id: z.string(),
   title: z.string().catch(""),
+  companyProfileId: z.string().catch(""),
   companyName: z.string().catch(""),
+  /** True when the company has a logo; the image is served from its id URL. */
+  hasLogo: z.boolean().catch(false),
   roleCategory: z.string().catch("other"),
   employmentType: z.string().nullable().catch(null),
   locationState: z.string().nullable().catch(null),

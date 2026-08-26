@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 
+import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { formatMinor } from "@/shared/utils/money";
 
 import type { PublicJobCard as PublicJobCardData } from "../publicSchemas";
@@ -78,12 +79,18 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
       <h3 className="mt-3 font-heading text-lg font-extrabold leading-snug text-navy">
         {job.title}
       </h3>
-      <p className="mt-1.5 flex items-center gap-1.5 text-sm text-brand-gray">
+      <div className="mt-1.5 flex items-center gap-2 text-sm text-brand-gray">
+        <CompanyLogo
+          companyProfileId={job.companyProfileId}
+          hasLogo={job.hasLogo}
+          name={job.companyName}
+          size="xs"
+        />
         <span className="truncate">{job.companyName}</span>
         <span aria-hidden="true">·</span>
         <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="truncate">{locationLine(job)}</span>
-      </p>
+      </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {tags(job).map((tag) => (
