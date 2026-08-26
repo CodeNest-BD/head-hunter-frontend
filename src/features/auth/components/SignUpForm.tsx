@@ -16,10 +16,13 @@ import { Check, X } from "lucide-react";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { useSpecializationsField } from "@/shared/hooks/useSpecializationsField";
+import { useStateCities } from "@/shared/hooks/useStateCities";
 import { Button } from "@/shared/ui-components/controls/button";
+import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
 import { PasswordInput } from "@/shared/ui-components/controls/password-input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
 import {
   signUpSchema,
   toSignUpPayload,
@@ -223,6 +226,9 @@ export function SignUpForm() {
   const firms = useFieldArray({ control, name: "experiences" });
 
   const selectedRole = watch("role");
+  // City options are scoped to the chosen state, matching every other address.
+  const stateValue = watch("state");
+  const cityOptions = useStateCities(stateValue || undefined);
   // Google provisioning wants a display name; compose it from what's typed.
   const enteredName = [watch("firstName"), watch("lastName")]
     .filter(Boolean)
@@ -596,23 +602,30 @@ export function SignUpForm() {
           aria-label="Street address"
         />
         <FieldError message={errors.addressLine?.message} />
-        <div className="grid grid-cols-[2fr_1fr_1fr] gap-2.5">
-          <Input
-            type="text"
-            autoComplete="address-level2"
-            {...register("city")}
-            className="h-11"
-            placeholder="City"
-            aria-label="City"
+        <div className="grid grid-cols-[1fr_1fr] gap-2.5 sm:grid-cols-[1fr_1.4fr_0.9fr]">
+          <Controller
+            control={control}
+            name="state"
+            render={({ field }) => (
+              <StateSelect
+                className="h-11"
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
-          <Input
-            type="text"
-            autoComplete="address-level1"
-            maxLength={2}
-            {...register("state")}
-            className="h-11 uppercase"
-            placeholder="State"
-            aria-label="State"
+          <Controller
+            control={control}
+            name="city"
+            render={({ field }) => (
+              <CityCombobox
+                cities={cityOptions}
+                value={field.value === "" ? null : field.value}
+                onChange={(city) => field.onChange(city ?? "")}
+                disabled={stateValue === ""}
+                className="h-11"
+              />
+            )}
           />
           <Input
             type="text"
