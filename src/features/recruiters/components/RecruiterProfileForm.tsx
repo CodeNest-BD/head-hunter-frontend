@@ -356,21 +356,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
           description="Your phone is never shown to companies — they reach you through the platform."
         >
           <div className="flex flex-col gap-2 sm:max-w-sm">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="phone">Phone</Label>
-              {profile.phone !== null && (
-                <span
-                  className={cn(
-                    "text-xs font-medium",
-                    profile.phoneVerified
-                      ? "text-emerald-600"
-                      : "text-[#B4820A]",
-                  )}
-                >
-                  {profile.phoneVerified ? "Verified" : "Not verified"}
-                </span>
-              )}
-            </div>
+            <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
               inputMode="tel"
