@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AlertCircle, Briefcase, X } from "lucide-react";
 
+import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
@@ -253,19 +254,27 @@ export function JobsTable({
                         </td>
                         {cols.isVisible("company") && (
                           <td className="px-5 py-3 text-muted-foreground">
-                            {/* Company name → its admin profile. */}
-                            {job.companyUserId ? (
-                              <Link
-                                href={`/admin/companies/${job.companyUserId}`}
-                                className="block max-w-[200px] truncate text-navy hover:text-primary hover:underline"
-                              >
-                                {job.companyName}
-                              </Link>
-                            ) : (
-                              <span className="block max-w-[200px] truncate">
-                                {job.companyName}
-                              </span>
-                            )}
+                            {/* Logo + company name → its admin profile. */}
+                            <div className="flex items-center gap-2.5">
+                              <CompanyLogo
+                                companyProfileId={job.companyProfileId}
+                                hasLogo={job.hasLogo}
+                                name={job.companyName}
+                                size="xs"
+                              />
+                              {job.companyUserId ? (
+                                <Link
+                                  href={`/admin/companies/${job.companyUserId}`}
+                                  className="block max-w-[200px] truncate text-navy hover:text-primary hover:underline"
+                                >
+                                  {job.companyName}
+                                </Link>
+                              ) : (
+                                <span className="block max-w-[200px] truncate">
+                                  {job.companyName}
+                                </span>
+                              )}
+                            </div>
                           </td>
                         )}
                         {cols.isVisible("status") && (

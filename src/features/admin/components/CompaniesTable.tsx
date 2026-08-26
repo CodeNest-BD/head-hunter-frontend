@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { AlertCircle, Building2 } from "lucide-react";
 
+import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
-import { TableAvatar } from "@/shared/ui-components/data/TableAvatar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   ColumnsToggle,
@@ -230,7 +230,12 @@ export function CompaniesTable() {
                       <tr key={c.userId} className={BODY_ROW_CLASS}>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-3">
-                            <TableAvatar name={c.companyName} />
+                            <CompanyLogo
+                              companyProfileId={c.companyProfileId}
+                              hasLogo={c.hasLogo}
+                              name={c.companyName}
+                              size="sm"
+                            />
                             <div className="min-w-0">
                               <Link
                                 href={`/admin/companies/${c.userId}`}

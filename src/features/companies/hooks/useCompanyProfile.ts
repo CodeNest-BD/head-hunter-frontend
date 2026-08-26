@@ -3,9 +3,11 @@ import { toast } from "sonner";
 import { accountDetailsUpdated } from "@/features/auth/store/authSlice";
 import { useAppDispatch } from "@/shared/store/hooks";
 import {
+  deleteCompanyLogo,
   fetchMyCompanyProfile,
   reapplyCompanyVerification,
   updateMyCompanyProfile,
+  uploadCompanyLogo,
   type UpdateCompanyProfileInput,
 } from "../api/companyProfiles";
 import { companyKeys } from "../keys";
@@ -36,6 +38,38 @@ export function useUpdateMyCompanyProfile() {
       );
       toast.success("Profile saved");
     },
+  });
+}
+
+/**
+ * Logo upload and removal share one cache update: both return the fresh
+ * profile, so `hasLogo` (and every consumer reading it) flips the moment the
+ * mutation resolves — no separate invalidation needed.
+ */
+export function useUploadCompanyLogo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => uploadCompanyLogo(file),
+    onSuccess: (profile) => {
+      queryClient.setQueryData(companyKeys.myProfile, profile);
+      toast.success("Logo updated");
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error ? error.message : "Could not update the logo",
+      ),
+  });
+}
+
+export function useRemoveCompanyLogo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteCompanyLogo,
+    onSuccess: (profile) => {
+      queryClient.setQueryData(companyKeys.myProfile, profile);
+      toast.success("Logo removed");
+    },
+    onError: () => toast.error("Could not remove the logo"),
   });
 }
 

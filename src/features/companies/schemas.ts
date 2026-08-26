@@ -52,6 +52,8 @@ export const companyProfileSchema = z.object({
   commissionRangeMinMinor: z.number().nullable(),
   commissionRangeMaxMinor: z.number().nullable(),
   currency: z.string(),
+  /** True once a logo is uploaded; the image is served from the id-based URL. */
+  hasLogo: z.boolean().catch(false),
   // `.catch` so an unrecognised status degrades to "pending" (the safe, gated
   // reading) rather than throwing the whole profile away.
   verificationStatus: verificationStatusSchema.catch("pending"),
@@ -61,6 +63,13 @@ export const companyProfileSchema = z.object({
   hasMarketplaceAccess: z.boolean().catch(false),
 });
 export type CompanyProfile = z.infer<typeof companyProfileSchema>;
+
+/** POST /v1/company-profiles/me/logo/presign — a one-shot signed upload URL. */
+export const presignedUploadSchema = z.object({
+  s3Key: z.string(),
+  uploadUrl: z.string(),
+});
+export type PresignedUpload = z.infer<typeof presignedUploadSchema>;
 
 /** POST /v1/company-profiles/me/reapply — always returns to `pending`. */
 export const reapplyCompanyVerificationResponseSchema = z.object({
@@ -78,6 +87,7 @@ export const companySummarySchema = z.object({
   description: z.string().nullable(),
   commissionRangeMinMinor: z.number().nullable(),
   commissionRangeMaxMinor: z.number().nullable(),
+  hasLogo: z.boolean().catch(false),
   // Null while the company's number is unverified — the API withholds it.
   phone: z.string().nullable(),
 });

@@ -15,6 +15,7 @@ import {
 } from "../schemas";
 import { useUpdateMyCompanyProfile } from "../hooks/useCompanyProfile";
 import { CompanyFormSaveBar, CompanyFormSection } from "./CompanyFormLayout";
+import { CompanyLogoUploader } from "./CompanyLogoUploader";
 
 const MAX_DESCRIPTION = 400;
 /** Below this a description reads as a placeholder to recruiters. */
@@ -103,6 +104,10 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           title="Identity"
           hint="What recruiters see when they browse companies."
         >
+          <div className="flex flex-col gap-2">
+            <Label>Logo</Label>
+            <CompanyLogoUploader profile={profile} />
+          </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="companyName">Company name</Label>
             <Input id="companyName" {...register("companyName")} />

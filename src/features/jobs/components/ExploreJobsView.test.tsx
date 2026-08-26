@@ -48,7 +48,9 @@ function samplePublicJob(
   return {
     id: "job-1",
     title: "Senior Backend Engineer",
+    companyProfileId: "company-1",
     companyName: "Acme Inc.",
+    hasLogo: false,
     roleCategory: "engineering",
     employmentType: "full_time",
     locationState: "CA",

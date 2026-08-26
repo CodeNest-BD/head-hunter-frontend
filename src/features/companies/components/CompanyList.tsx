@@ -7,6 +7,7 @@ import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { FilterChip } from "@/shared/ui-components/controls/filter-chip";
 import { Input } from "@/shared/ui-components/controls/input";
+import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { formatMinor } from "@/shared/utils/money";
 import type { CompanySummary } from "../schemas";
@@ -33,14 +34,6 @@ function commissionRange(company: CompanySummary): string | null {
     : `Up to ${formatMinor(max)}`;
 }
 
-/** Two-letter monogram from the company name — a clean avatar fallback. */
-function monogram(name: string): string {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "?";
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return (words[0][0] + words[1][0]).toUpperCase();
-}
-
 function ListSkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -61,9 +54,13 @@ function CompanyCard({ company }: { company: CompanySummary }) {
     <article className="flex h-full flex-col rounded-md border border-border bg-card p-4 shadow-card transition-shadow hover:shadow-card-hover">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent font-heading text-sm font-extrabold text-primary">
-            {monogram(company.companyName)}
-          </span>
+          <CompanyLogo
+            companyProfileId={company.id}
+            hasLogo={company.hasLogo}
+            name={company.companyName}
+            size="sm"
+            className="h-10 w-10 text-sm"
+          />
           <div className="min-w-0">
             <h3 className="truncate font-heading text-[15px] font-bold text-navy">
               {company.companyName}
