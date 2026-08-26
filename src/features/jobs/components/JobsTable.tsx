@@ -17,6 +17,7 @@ import {
 // paths would close an import cycle.
 import { useWallet } from "@/features/billing/hooks/useBilling";
 import { useInboxJobs } from "@/features/inbox/hooks/useInbox";
+import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
@@ -87,7 +88,8 @@ const COLUMNS: ColumnDef[] = [
   { key: "status", label: "Status" },
   { key: "category", label: "Category" },
   { key: "fee", label: "Recruiter fee" },
-  { key: "candidates", label: "Candidates" },
+  // Candidates access is phase-2 — hidden for the phase-1 delivery.
+  ...(HIDE_PHASE2_FEATURES ? [] : [{ key: "candidates", label: "Candidates" }]),
   { key: "actions", label: "Actions", required: true },
 ];
 
@@ -338,9 +340,10 @@ export function JobsTable() {
                       {cols.isVisible("fee") && (
                         <th className={TABLE_TH}>Recruiter fee</th>
                       )}
-                      {cols.isVisible("candidates") && (
-                        <th className={TABLE_TH}>Candidates</th>
-                      )}
+                      {!HIDE_PHASE2_FEATURES &&
+                        cols.isVisible("candidates") && (
+                          <th className={TABLE_TH}>Candidates</th>
+                        )}
                       <th className={`${TABLE_TH} text-right`}>Actions</th>
                     </tr>
                   </thead>
@@ -394,26 +397,27 @@ export function JobsTable() {
                               )}
                             </td>
                           )}
-                          {cols.isVisible("candidates") && (
-                            <td className={`${TABLE_TD} tabular-nums`}>
-                              {/* Just the total: the untriaged count lives in the
+                          {!HIDE_PHASE2_FEATURES &&
+                            cols.isVisible("candidates") && (
+                              <td className={`${TABLE_TD} tabular-nums`}>
+                                {/* Just the total: the untriaged count lives in the
                                   inbox, which is where you act on it, and the
                                   number links straight there. */}
-                              {candidateCount !== undefined &&
-                              candidateCount > 0 ? (
-                                <Link
-                                  href={`/company/inbox/job/${job.id}`}
-                                  className="inline-flex items-center gap-1.5 transition-colors hover:underline"
-                                >
-                                  <span className="font-semibold text-navy">
-                                    {candidateCount}
-                                  </span>
-                                </Link>
-                              ) : (
-                                <span className="text-brand-gray">0</span>
-                              )}
-                            </td>
-                          )}
+                                {candidateCount !== undefined &&
+                                candidateCount > 0 ? (
+                                  <Link
+                                    href={`/company/inbox/job/${job.id}`}
+                                    className="inline-flex items-center gap-1.5 transition-colors hover:underline"
+                                  >
+                                    <span className="font-semibold text-navy">
+                                      {candidateCount}
+                                    </span>
+                                  </Link>
+                                ) : (
+                                  <span className="text-brand-gray">0</span>
+                                )}
+                              </td>
+                            )}
                           <td className={`${TABLE_TD} text-right`}>
                             <div className="flex justify-end">
                               <JobRowActions jobId={job.id} />
