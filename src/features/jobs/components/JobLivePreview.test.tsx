@@ -14,22 +14,20 @@ const values: JobFormValues = {
   isRemote: false,
   salaryMin: "150000",
   salaryMax: "200000",
+  salaryRatePeriod: "per_year",
   recruiterFee: "12000",
 };
 
 const noop = () => {};
 
 describe("JobLivePreview", () => {
-  it("reflects the typed title, fee, and description as recruiters would see them", () => {
+  it("reflects the typed title and fee as recruiters would see them", () => {
     render(<JobLivePreview values={values} onCollapse={noop} />);
 
     expect(
       screen.getByRole("heading", { name: "Staff Platform Engineer" }),
     ).toBeInTheDocument();
     expect(screen.getByText("$12,000")).toBeInTheDocument();
-    expect(
-      screen.getByText("Own the deployment pipeline."),
-    ).toBeInTheDocument();
   });
 
   it("shows a placeholder heading before a title is entered", () => {
@@ -42,17 +40,15 @@ describe("JobLivePreview", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows the empty-description state when nothing is written yet", () => {
-    render(
-      <JobLivePreview
-        values={{ ...values, description: "" }}
-        onCollapse={noop}
-      />,
-    );
+  it("omits the description entirely — the preview is facts only", () => {
+    render(<JobLivePreview values={values} onCollapse={noop} />);
 
     expect(
-      screen.getByText("No description provided for this role."),
-    ).toBeInTheDocument();
+      screen.queryByText("Own the deployment pipeline."),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("No description provided for this role."),
+    ).not.toBeInTheDocument();
   });
 
   it("collapses when the header control is clicked", () => {

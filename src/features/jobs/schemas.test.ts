@@ -11,6 +11,7 @@ const valid = {
   isRemote: false,
   salaryMin: "",
   salaryMax: "",
+  salaryRatePeriod: "per_year" as const,
   recruiterFee: "10000",
 };
 

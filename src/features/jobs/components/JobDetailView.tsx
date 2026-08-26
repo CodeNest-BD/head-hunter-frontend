@@ -10,8 +10,10 @@ import { formatMinor } from "@/shared/utils/money";
 import {
   EMPLOYMENT_TYPE_LABELS,
   ROLE_CATEGORY_LABELS,
+  SALARY_RATE_PERIOD_SUFFIX,
   type EmploymentType,
   type RoleCategory,
+  type SalaryRatePeriod,
 } from "../schemas";
 
 /**
@@ -29,6 +31,7 @@ export interface JobView {
   isRemote: boolean;
   salaryMinMinor: number | null;
   salaryMaxMinor: number | null;
+  salaryRatePeriod?: SalaryRatePeriod | null;
   recruiterFeeMinor: number;
   publishedAt: Date | null;
   description: string | null;
@@ -65,7 +68,11 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
   const salary =
     job.salaryMinMinor === null && job.salaryMaxMinor === null
       ? "—"
-      : `${formatMinor(job.salaryMinMinor)} – ${formatMinor(job.salaryMaxMinor)}`;
+      : `${formatMinor(job.salaryMinMinor)} – ${formatMinor(job.salaryMaxMinor)}${
+          job.salaryRatePeriod
+            ? ` ${SALARY_RATE_PERIOD_SUFFIX[job.salaryRatePeriod]}`
+            : ""
+        }`;
   const employmentType = job.employmentType
     ? (EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType] ?? "—")
     : "—";
@@ -139,11 +146,14 @@ export function JobDetailBody({
   job,
   cta,
   compact,
+  hideDescription,
 }: {
   job: JobView;
   cta?: ReactNode;
   /** Narrow-container layout for the create/edit preview sidebar. */
   compact?: boolean;
+  /** Drop the description card — the post-a-job preview doesn't need it. */
+  hideDescription?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -165,8 +175,16 @@ export function JobDetailBody({
       ) : null}
       <FactsCard job={job} compact={compact} />
       {cta ? (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <DescriptionCard description={job.description} />
+        <div
+          className={
+            hideDescription
+              ? undefined
+              : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
+          }
+        >
+          {!hideDescription && (
+            <DescriptionCard description={job.description} />
+          )}
           <aside className="h-fit lg:sticky lg:top-24">
             <div className="rounded-md border border-border bg-card p-5 shadow-card">
               <h2 className="font-heading text-base font-bold text-navy">
@@ -179,7 +197,7 @@ export function JobDetailBody({
             </div>
           </aside>
         </div>
-      ) : (
+      ) : hideDescription ? null : (
         <DescriptionCard description={job.description} />
       )}
     </div>

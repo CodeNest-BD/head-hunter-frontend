@@ -39,6 +39,7 @@ export interface JobWriteInput {
   isRemote: boolean;
   salaryMinMinor?: number | null;
   salaryMaxMinor?: number | null;
+  salaryRatePeriod?: string | null;
   recruiterFeeMinor: number;
 }
 

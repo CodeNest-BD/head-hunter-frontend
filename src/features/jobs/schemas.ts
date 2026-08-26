@@ -18,6 +18,34 @@ export const EMPLOYMENT_TYPES = ["full_time", "part_time", "contract"] as const;
 export const employmentTypeSchema = z.enum(EMPLOYMENT_TYPES);
 export type EmploymentType = z.infer<typeof employmentTypeSchema>;
 
+/** How the salary range is quoted — mirrors the backend salary_rate_period enum. */
+export const SALARY_RATE_PERIODS = [
+  "per_year",
+  "per_month",
+  "per_week",
+  "per_day",
+  "per_hour",
+] as const;
+export const salaryRatePeriodSchema = z.enum(SALARY_RATE_PERIODS);
+export type SalaryRatePeriod = z.infer<typeof salaryRatePeriodSchema>;
+
+export const SALARY_RATE_PERIOD_LABELS: Record<SalaryRatePeriod, string> = {
+  per_year: "Per Year",
+  per_month: "Per Month",
+  per_week: "Per Week",
+  per_day: "Per Day",
+  per_hour: "Per Hour",
+};
+
+/** Compact suffix for showing a range inline, e.g. "$120k – $150k / yr". */
+export const SALARY_RATE_PERIOD_SUFFIX: Record<SalaryRatePeriod, string> = {
+  per_year: "/ yr",
+  per_month: "/ mo",
+  per_week: "/ wk",
+  per_day: "/ day",
+  per_hour: "/ hr",
+};
+
 /** Mirrors the backend role_category enum. */
 export const ROLE_CATEGORIES = [
   "engineering",
@@ -51,9 +79,13 @@ export const jobSchema = z.object({
   salaryMinMinor: z.number().nullable(),
   salaryMaxMinor: z.number().nullable(),
   recruiterFeeMinor: z.number(),
+  // How the salary band is quoted; null on older jobs saved before it existed.
+  salaryRatePeriod: salaryRatePeriodSchema.nullable().catch(null),
   status: jobStatusSchema,
   publishedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
+  // When a published role expires (30 days after publish); null while a draft.
+  expiresAt: z.coerce.date().nullable().catch(null),
   // Always present — every job knows its company. Backs the company logo,
   // which is fetched from an id-based URL.
   companyProfileId: z.string().catch(""),
@@ -150,6 +182,7 @@ export const jobFormSchema = z
       .refine((v) => v === "" || Number(v) <= MAX_MONEY_MAJOR, {
         message: `Salary must be under ${MAX_MONEY_MAJOR_LABEL}`,
       }),
+    salaryRatePeriod: salaryRatePeriodSchema,
     // Bounded at MAX_MONEY_MAJOR only — the hard ceiling every money field
     // shares. JobsService separately enforces an admin-tunable marketplace
     // policy ceiling (currently $1,000,000) on top of this; that figure is

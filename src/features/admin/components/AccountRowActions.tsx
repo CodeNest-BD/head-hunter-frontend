@@ -46,6 +46,10 @@ export function AccountRowActions({
   const deleteRecruiter = useDeleteRecruiter();
   const isHeld = status === "suspended";
   const holdPending = suspend.isPending || reinstate.isPending;
+  // Companies are "suspended"; recruiters are "held" — same action, clearer word
+  // for each audience.
+  const holdLabel = kind === "company" ? "Suspend" : "Hold";
+  const heldLabel = kind === "company" ? "suspended" : "held";
 
   const confirmHold = async (): Promise<void> => {
     try {
@@ -56,7 +60,7 @@ export function AccountRowActions({
         });
       } else {
         await suspend.mutateAsync({ userId });
-        toast.success("Account held", {
+        toast.success(`Account ${heldLabel}`, {
           description: `${subjectName} has been signed out and blocked.`,
         });
       }
@@ -103,7 +107,7 @@ export function AccountRowActions({
                 ) : (
                   <Ban className="h-4 w-4" />
                 )}
-                {isHeld ? "Reinstate" : "Hold"}
+                {isHeld ? "Reinstate" : holdLabel}
               </Dropdown.Item>
               {kind === "recruiter" && (
                 <Dropdown.Item
@@ -128,7 +132,9 @@ export function AccountRowActions({
           <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
           <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
             <AlertDialog.Title className="font-heading text-lg font-extrabold text-navy">
-              {isHeld ? `Reinstate ${subjectName}?` : `Hold ${subjectName}?`}
+              {isHeld
+                ? `Reinstate ${subjectName}?`
+                : `${holdLabel} ${subjectName}?`}
             </AlertDialog.Title>
             <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
               {isHeld
@@ -151,7 +157,7 @@ export function AccountRowActions({
                   ? "Working…"
                   : isHeld
                     ? "Reinstate account"
-                    : "Hold account"}
+                    : `${holdLabel} account`}
               </Button>
             </div>
           </AlertDialog.Content>

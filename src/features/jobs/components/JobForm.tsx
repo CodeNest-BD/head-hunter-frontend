@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/shared/ui-components/controls/select";
 import { useMinRecruiterFee } from "@/features/billing";
-import { US_CITIES } from "@/shared/data/usCities";
 import { US_STATES } from "@/shared/data/usStatesGeo";
 import { sanitizeRichText } from "@/shared/libs/richText";
 import {
@@ -37,11 +36,15 @@ import {
   EMPLOYMENT_TYPE_LABELS,
   ROLE_CATEGORIES,
   ROLE_CATEGORY_LABELS,
+  SALARY_RATE_PERIODS,
+  SALARY_RATE_PERIOD_LABELS,
   jobFormSchema,
   type Job,
   type JobFormValues,
 } from "../schemas";
 import type { JobWriteInput } from "../api/jobs";
+import { useStateCities } from "../hooks/useStateCities";
+import { CityCombobox } from "./CityCombobox";
 import { JobLivePreview } from "./JobLivePreview";
 
 /** Persists the live-preview open/closed choice across navigations and reloads. */
@@ -71,6 +74,8 @@ function toDefaults(job?: Job): JobFormValues {
     isRemote: job?.isRemote ?? false,
     salaryMin: minorToMajorInput(job?.salaryMinMinor),
     salaryMax: minorToMajorInput(job?.salaryMaxMinor),
+    // Older jobs saved before rate period existed default to the common case.
+    salaryRatePeriod: job?.salaryRatePeriod ?? "per_year",
     recruiterFee: minorToMajorInput(job?.recruiterFeeMinor),
   };
 }
@@ -185,9 +190,9 @@ export function JobForm({
   // individual fields are read off the snapshot.
   const values = watch();
   const { isRemote, locationState } = values;
-  const citiesInState = US_CITIES.filter(
-    (city) => city.state === locationState,
-  );
+  // Same state-scoped city source the explore page uses, so the two stay in
+  // step and a company picks from a real, complete list rather than a stub.
+  const cityOptions = useStateCities(locationState || undefined);
 
   // Default open so first-time posters see the preview; the choice then sticks.
   const [previewOpen, setPreviewOpen] = useState(true);
@@ -243,6 +248,7 @@ export function JobForm({
     isRemote: formValues.isRemote,
     salaryMinMinor: majorInputToMinor(formValues.salaryMin),
     salaryMaxMinor: majorInputToMinor(formValues.salaryMax),
+    salaryRatePeriod: formValues.salaryRatePeriod,
     // Required by the schema, so a plain conversion is safe here.
     recruiterFeeMinor: majorToMinor(Number(formValues.recruiterFee)),
   });
@@ -405,31 +411,27 @@ export function JobForm({
                 )}
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="locationCity">
+                <Label>
                   City{" "}
                   <span className="font-normal text-muted-foreground">
                     Optional
                   </span>
                 </Label>
-                {/* Suggestions, not a closed list: US_CITIES is a curated set of
-                      the largest cities plus state capitals, so a select would
-                      reject plenty of real places. A datalist narrows to the chosen
-                      state while still accepting anything typed. */}
-                <Input
-                  id="locationCity"
-                  className={CONTROL_HEIGHT}
-                  list="location-city-options"
-                  autoComplete="off"
-                  placeholder={
-                    locationState ? "Start typing a city" : "Pick a state first"
-                  }
-                  {...register("locationCity")}
+                {/* The same searchable, state-scoped city picker the explore
+                    map uses, so the job's city matches the values recruiters
+                    filter by. Disabled until a state is chosen. */}
+                <Controller
+                  control={control}
+                  name="locationCity"
+                  render={({ field }) => (
+                    <CityCombobox
+                      cities={cityOptions}
+                      value={field.value === "" ? null : field.value}
+                      onChange={(city) => field.onChange(city ?? "")}
+                      disabled={!locationState}
+                    />
+                  )}
                 />
-                <datalist id="location-city-options">
-                  {citiesInState.map((city) => (
-                    <option key={city.name} value={city.name} />
-                  ))}
-                </datalist>
               </div>
             </div>
           </StepSection>
@@ -464,6 +466,31 @@ export function JobForm({
                   {errors.salaryMin?.message ?? errors.salaryMax?.message}
                 </p>
               )}
+            </div>
+
+            <div className="flex flex-col gap-2 sm:max-w-[16rem]">
+              <Label htmlFor="salaryRatePeriod">Rate period</Label>
+              <Controller
+                control={control}
+                name="salaryRatePeriod"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger
+                      id="salaryRatePeriod"
+                      className={CONTROL_HEIGHT}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SALARY_RATE_PERIODS.map((period) => (
+                        <SelectItem key={period} value={period}>
+                          {SALARY_RATE_PERIOD_LABELS[period]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             {/* The recruiter fee is the money that drives the marketplace, so
@@ -507,16 +534,16 @@ export function JobForm({
                 </p>
               ) : (
                 <p className="mt-2 text-[13px] text-muted-foreground">
-                  Paid only on a successful hire.
-                  {minFee && (
+                  {minFee ? (
                     <>
-                      {" "}
-                      Publishing requires at least{" "}
+                      A minimum recruiter fee of{" "}
                       <span className="font-semibold text-navy">
                         {formatMinor(minFee.amountMinor)}
-                      </span>
-                      .
+                      </span>{" "}
+                      is required to publish any role.
                     </>
+                  ) : (
+                    "Paid only on a successful hire."
                   )}
                 </p>
               )}
