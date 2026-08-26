@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
-import { companyProfileFormSchema } from "./schemas";
+import {
+  companyEmployeeInfoFormSchema,
+  companyProfileFormSchema,
+} from "./schemas";
 
 const valid = {
   companyName: "Acme Inc.",
@@ -16,9 +19,6 @@ const valid = {
   yearFounded: "",
   employeeSize: "",
   revenue: "",
-  firstName: "Jane",
-  lastName: "Doe",
-  phone: "",
 };
 
 const errorPaths = (overrides: Record<string, unknown>): string[] => {
@@ -29,14 +29,6 @@ const errorPaths = (overrides: Record<string, unknown>): string[] => {
 describe("companyProfileFormSchema", () => {
   it("accepts a profile with only a name", () => {
     expect(companyProfileFormSchema.safeParse(valid).success).toBe(true);
-  });
-
-  it("requires the contact name, which the account always has", () => {
-    expect(errorPaths({ firstName: "  " })).toContain("firstName");
-  });
-
-  it("rejects a contact name with digits in it", () => {
-    expect(errorPaths({ lastName: "Doe2" })).toContain("lastName");
   });
 
   it("accepts the address and business details, all optional", () => {
@@ -50,7 +42,6 @@ describe("companyProfileFormSchema", () => {
         yearFounded: "2014",
         employeeSize: "51-200",
         revenue: "$50M",
-        phone: "+1-202-555-0100",
       }),
     ).toEqual([]);
   });
@@ -124,5 +115,36 @@ describe("companyProfileFormSchema", () => {
     expect(result.success).toBe(false);
     const message = result.success ? "" : result.error.issues[0].message;
     expect(message).toBe(`Commission must be under ${MAX_MONEY_MAJOR_LABEL}`);
+  });
+});
+
+describe("companyEmployeeInfoFormSchema", () => {
+  const employee = { firstName: "Jane", lastName: "Doe", phone: "" };
+  const employeeErrorPaths = (overrides: Record<string, unknown>): string[] => {
+    const result = companyEmployeeInfoFormSchema.safeParse({
+      ...employee,
+      ...overrides,
+    });
+    return result.success
+      ? []
+      : result.error.issues.map((i) => i.path.join("."));
+  };
+
+  it("accepts a contact with no phone yet", () => {
+    expect(companyEmployeeInfoFormSchema.safeParse(employee).success).toBe(
+      true,
+    );
+  });
+
+  it("requires the contact name, which the account always has", () => {
+    expect(employeeErrorPaths({ firstName: "  " })).toContain("firstName");
+  });
+
+  it("rejects a contact name with digits in it", () => {
+    expect(employeeErrorPaths({ lastName: "Doe2" })).toContain("lastName");
+  });
+
+  it("accepts a phone number", () => {
+    expect(employeeErrorPaths({ phone: "+1-202-555-0100" })).toEqual([]);
   });
 });

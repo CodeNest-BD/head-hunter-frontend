@@ -251,6 +251,8 @@ export function CompanyDetail({ userId }: { userId: string }) {
             <CardTitle className="text-base">Profile</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <DetailField label="First name" value={data.firstName} />
+            <DetailField label="Last name" value={data.lastName} />
             <DetailField label="Phone" value={data.phone} />
             <DetailField
               label="Email confirmed"
