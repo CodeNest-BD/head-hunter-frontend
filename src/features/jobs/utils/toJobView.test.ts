@@ -13,6 +13,7 @@ const base: JobFormValues = {
   isRemote: false,
   salaryMin: "120000",
   salaryMax: "160000",
+  salaryRatePeriod: "per_year",
   recruiterFee: "10000",
 };
 

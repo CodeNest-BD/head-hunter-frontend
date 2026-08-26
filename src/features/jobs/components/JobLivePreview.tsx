@@ -88,7 +88,7 @@ export function JobLivePreview({
             candidate.
           </p>
         </div>
-        <JobDetailBody job={view} compact />
+        <JobDetailBody job={view} compact hideDescription />
       </div>
     </div>
   );

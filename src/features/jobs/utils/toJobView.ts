@@ -25,6 +25,7 @@ export function formValuesToJobView(values: JobFormValues): JobView {
     isRemote: values.isRemote,
     salaryMinMinor: majorInputToMinor(values.salaryMin),
     salaryMaxMinor: majorInputToMinor(values.salaryMax),
+    salaryRatePeriod: values.salaryRatePeriod,
     recruiterFeeMinor: majorInputToMinor(values.recruiterFee) ?? 0,
     // Drafts are never published, so the preview's "Posted" reads "—".
     publishedAt: null,

@@ -240,6 +240,8 @@ export function CompanyDetail({ userId }: { userId: string }) {
             userId={data.userId}
             status={data.status}
             subjectName={data.companyName}
+            holdLabel="Suspend"
+            heldLabel="suspended"
           />
         </CardContent>
       </Card>
