@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import { cn } from "@/shared/libs/shadCnConfig";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import {
@@ -82,21 +81,7 @@ export function CompanyEmployeeInfoForm({
             </div>
           </div>
           <div className="flex flex-col gap-2 sm:max-w-sm">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="phone">Phone</Label>
-              {profile.phone !== null && (
-                <span
-                  className={cn(
-                    "text-xs font-medium",
-                    profile.phoneVerified
-                      ? "text-emerald-600"
-                      : "text-[#B4820A]",
-                  )}
-                >
-                  {profile.phoneVerified ? "Verified" : "Not verified"}
-                </span>
-              )}
-            </div>
+            <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
               inputMode="tel"
