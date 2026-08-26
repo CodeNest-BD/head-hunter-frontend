@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImageUp, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ import {
   useRemoveCompanyLogo,
   useUploadCompanyLogo,
 } from "../hooks/useCompanyProfile";
+import { LogoEditorDialog } from "./LogoEditorDialog";
 
 /** Kept in step with the backend's LOGO_CONTENT_TYPES / MAX_LOGO_BYTES. */
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -29,10 +30,22 @@ export function CompanyLogoUploader({ profile }: { profile: CompanyProfile }) {
   // Bumped after each change so the owner sees their new logo immediately,
   // past the browser cache on the otherwise-stable logo URL.
   const [version, setVersion] = useState(0);
+  // Object URL of the file being edited; drives the editor dialog. Revoked when
+  // the editor closes so the picked file's memory is released.
+  const [editSrc, setEditSrc] = useState<string | null>(null);
   const upload = useUploadCompanyLogo();
   const remove = useRemoveCompanyLogo();
   const busy = upload.isPending || remove.isPending;
 
+  // Release the object URL when it changes or the component unmounts.
+  useEffect(() => {
+    if (!editSrc) return;
+    return () => URL.revokeObjectURL(editSrc);
+  }, [editSrc]);
+
+  const closeEditor = () => setEditSrc(null);
+
+  // A picked file goes to the editor first — crop/rotate — not straight to S3.
   const onPick = (file: File | undefined) => {
     if (!file) return;
     if (!ACCEPTED_TYPES.includes(file.type)) {
@@ -43,7 +56,16 @@ export function CompanyLogoUploader({ profile }: { profile: CompanyProfile }) {
       toast.error("Image must be 2 MB or smaller");
       return;
     }
-    upload.mutate(file, { onSuccess: () => setVersion((v) => v + 1) });
+    setEditSrc(URL.createObjectURL(file));
+  };
+
+  const onSaveEdited = (file: File) => {
+    upload.mutate(file, {
+      onSuccess: () => {
+        setVersion((v) => v + 1);
+        closeEditor();
+      },
+    });
   };
 
   return (
@@ -96,6 +118,12 @@ export function CompanyLogoUploader({ profile }: { profile: CompanyProfile }) {
           // Reset so re-picking the same file still fires a change.
           event.target.value = "";
         }}
+      />
+      <LogoEditorDialog
+        imageSrc={editSrc}
+        isSaving={upload.isPending}
+        onCancel={closeEditor}
+        onSave={onSaveEdited}
       />
     </div>
   );

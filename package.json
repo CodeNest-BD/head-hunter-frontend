@@ -138,6 +138,7 @@
     "react-dom": "~18",
     "react-draggable": "~4.4.6",
     "react-dropzone": "~14.2.9",
+    "react-easy-crop": "^5.5.7",
     "react-error-boundary": "^5.0.0",
     "react-hook-form": "~7.53.1",
     "react-joyride": "^2.9.3",
