@@ -21,6 +21,8 @@ interface CityComboboxProps {
   value: string | null;
   onChange: (city: string | null) => void;
   disabled?: boolean;
+  /** Extra classes for the trigger, e.g. to match a taller form's field height. */
+  className?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export function CityCombobox({
   value,
   onChange,
   disabled,
+  className,
 }: CityComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -76,6 +79,7 @@ export function CityCombobox({
           className={cn(
             "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
             !value && "text-muted-foreground",
+            className,
           )}
         >
           <span className="line-clamp-1 text-left">

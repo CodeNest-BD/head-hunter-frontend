@@ -37,8 +37,8 @@ import {
 import { BrandGlow } from "@/shared/ui-components/brand";
 import { DecorativeUsMap } from "@/components/landing/DecorativeUsMap";
 import { US_STATES, US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
-import { useStateCities } from "../hooks/useStateCities";
-import { CityCombobox } from "./CityCombobox";
+import { useStateCities } from "@/shared/hooks/useStateCities";
+import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { PublicJobCard } from "./PublicJobCard";
 import { UsJobMap, type MapSelection } from "./UsJobMap";
 

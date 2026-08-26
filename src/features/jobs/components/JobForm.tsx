@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/shared/ui-components/controls/select";
 import { useMinRecruiterFee } from "@/features/billing";
-import { US_STATES } from "@/shared/data/usStatesGeo";
 import { sanitizeRichText } from "@/shared/libs/richText";
 import {
   formatMinor,
@@ -43,8 +42,9 @@ import {
   type JobFormValues,
 } from "../schemas";
 import type { JobWriteInput } from "../api/jobs";
-import { useStateCities } from "../hooks/useStateCities";
-import { CityCombobox } from "./CityCombobox";
+import { useStateCities } from "@/shared/hooks/useStateCities";
+import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
+import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
 import { JobLivePreview } from "./JobLivePreview";
 
 /** Persists the live-preview open/closed choice across navigations and reloads. */
@@ -384,24 +384,12 @@ export function JobForm({
                   control={control}
                   name="locationState"
                   render={({ field }) => (
-                    <Select
-                      value={field.value === "" ? undefined : field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger
-                        id="locationState"
-                        className={CONTROL_HEIGHT}
-                      >
-                        <SelectValue placeholder="Select a state" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {US_STATES.map((state) => (
-                          <SelectItem key={state.code} value={state.code}>
-                            {state.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <StateSelect
+                      id="locationState"
+                      className={CONTROL_HEIGHT}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                   )}
                 />
                 {errors.locationState && (

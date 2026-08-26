@@ -6,9 +6,12 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { useSpecializationsField } from "@/shared/hooks/useSpecializationsField";
+import { useStateCities } from "@/shared/hooks/useStateCities";
 import { Button } from "@/shared/ui-components/controls/button";
+import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
 import { useUpdateMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 import {
   MAX_EXPERIENCES,
@@ -140,6 +143,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
   const {
     register,
     control,
+    watch,
     handleSubmit,
     reset,
     formState: { errors, isDirty },
@@ -161,6 +165,10 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
   });
 
   const firms = useFieldArray({ control, name: "experiences" });
+
+  // City options are scoped to the chosen state, matching the job form.
+  const stateValue = watch("state");
+  const cityOptions = useStateCities(stateValue || undefined);
 
   const onSubmit = handleSubmit((values) => {
     update.mutate(
@@ -195,24 +203,40 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
             <Label htmlFor="addressLine">Address</Label>
             <Input id="addressLine" {...register("addressLine")} />
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="city">City</Label>
-              <Input id="city" {...register("city")} />
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="flex flex-col gap-2">
               <Label htmlFor="state">State</Label>
-              <Input
-                id="state"
-                maxLength={2}
-                placeholder="TX"
-                {...register("state")}
+              <Controller
+                control={control}
+                name="state"
+                render={({ field }) => (
+                  <StateSelect
+                    id="state"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               {errors.state && (
                 <p className="text-xs text-destructive">
                   {errors.state.message}
                 </p>
               )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="city">City</Label>
+              <Controller
+                control={control}
+                name="city"
+                render={({ field }) => (
+                  <CityCombobox
+                    cities={cityOptions}
+                    value={field.value === "" ? null : field.value}
+                    onChange={(city) => field.onChange(city ?? "")}
+                    disabled={stateValue === ""}
+                  />
+                )}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="zip">ZIP</Label>
