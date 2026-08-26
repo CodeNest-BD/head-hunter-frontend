@@ -132,9 +132,6 @@ export const companyProfileFormSchema = z
       ),
     employeeSize: z.string().trim().max(40, "Keep it under 40 characters"),
     revenue: z.string().trim().max(40, "Keep it under 40 characters"),
-    firstName: personNameSchema("First name"),
-    lastName: personNameSchema("Last name"),
-    phone: z.string().trim().max(32, "Keep it under 32 characters"),
   })
   .refine(
     (values) => {
@@ -151,3 +148,16 @@ export const companyProfileFormSchema = z
     },
   );
 export type CompanyProfileFormValues = z.infer<typeof companyProfileFormSchema>;
+
+/**
+ * The contact person's own details. Kept apart from the profile form because
+ * these three write to the User row, not to the company profile columns.
+ */
+export const companyEmployeeInfoFormSchema = z.object({
+  firstName: personNameSchema("First name"),
+  lastName: personNameSchema("Last name"),
+  phone: z.string().trim().max(32, "Keep it under 32 characters"),
+});
+export type CompanyEmployeeInfoFormValues = z.infer<
+  typeof companyEmployeeInfoFormSchema
+>;

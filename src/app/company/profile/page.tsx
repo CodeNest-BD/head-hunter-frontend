@@ -5,6 +5,7 @@ import { AlertCircle } from "lucide-react";
 import { AccountSection, RequireRole } from "@/features/auth";
 import {
   CompanyApprovalBanner,
+  CompanyEmployeeInfoForm,
   CompanyProfileForm,
   useMyCompanyProfile,
   type VerificationStatus,
@@ -85,10 +86,14 @@ function CompanyProfileContent() {
         <Tabs defaultValue="info">
           <TabsList>
             <TabsTrigger value="info">Company info</TabsTrigger>
+            <TabsTrigger value="employee">Employee Info</TabsTrigger>
             <TabsTrigger value="password">Password change</TabsTrigger>
           </TabsList>
           <TabsContent value="info">
             <CompanyProfileForm profile={data} />
+          </TabsContent>
+          <TabsContent value="employee">
+            <CompanyEmployeeInfoForm profile={data} />
           </TabsContent>
           <TabsContent value="password">
             <AccountSection />

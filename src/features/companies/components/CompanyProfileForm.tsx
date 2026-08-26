@@ -1,11 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { cn } from "@/shared/libs/shadCnConfig";
-import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
@@ -16,6 +14,7 @@ import {
   type CompanyProfileFormValues,
 } from "../schemas";
 import { useUpdateMyCompanyProfile } from "../hooks/useCompanyProfile";
+import { CompanyFormSaveBar, CompanyFormSection } from "./CompanyFormLayout";
 
 const MAX_DESCRIPTION = 400;
 /** Below this a description reads as a placeholder to recruiters. */
@@ -31,31 +30,6 @@ const blankToNull = <T extends Record<string, string>>(
       value === "" ? null : value,
     ]),
   ) as { [K in keyof T]: string | null };
-
-/** A form section: title + hint on the left, fields on the right. */
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string;
-  hint?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="grid gap-x-8 gap-y-4 p-5 sm:p-6 md:grid-cols-[minmax(0,15rem)_1fr]">
-      <div>
-        <h3 className="text-sm font-bold text-navy">{title}</h3>
-        {hint && (
-          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-            {hint}
-          </p>
-        )}
-      </div>
-      <div className="flex flex-col gap-4">{children}</div>
-    </div>
-  );
-}
 
 interface CompanyProfileFormProps {
   profile: CompanyProfile;
@@ -87,9 +61,6 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
         profile.yearFounded === null ? "" : String(profile.yearFounded),
       employeeSize: profile.employeeSize ?? "",
       revenue: profile.revenue ?? "",
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      phone: profile.phone ?? "",
     },
   });
 
@@ -105,10 +76,6 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
         description: values.description === "" ? null : values.description,
         commissionRangeMinMinor: majorInputToMinor(values.commissionMin),
         commissionRangeMaxMinor: majorInputToMinor(values.commissionMax),
-        // Required on the User row, so they are sent as-is rather than through
-        // blankToNull — the schema has already refused an empty one.
-        firstName: values.firstName,
-        lastName: values.lastName,
         // "" is how the form spells "cleared"; the API wants null, since an
         // empty string would fail the validators that guard these columns.
         ...blankToNull({
@@ -119,7 +86,6 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           industry: values.industry,
           employeeSize: values.employeeSize,
           revenue: values.revenue,
-          phone: values.phone,
         }),
         yearFounded:
           values.yearFounded === "" ? null : Number(values.yearFounded),
@@ -133,7 +99,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
-        <Section
+        <CompanyFormSection
           title="Identity"
           hint="What recruiters see when they browse companies."
         >
@@ -184,9 +150,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               description and a published range are what draw recruiters in.
             </p>
           </div>
-        </Section>
+        </CompanyFormSection>
 
-        <Section
+        <CompanyFormSection
           title="Business details"
           hint="Shown on your profile so recruiters can size up the company."
         >
@@ -241,65 +207,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               )}
             </div>
           </div>
-        </Section>
+        </CompanyFormSection>
 
-        <Section
-          title="Contact"
-          hint="Who we and our recruiters deal with. Your phone stays private until it is verified."
-        >
-          <div className="grid gap-4 sm:max-w-lg sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="firstName">First name</Label>
-              <Input id="firstName" {...register("firstName")} />
-              {errors.firstName && (
-                <p className="text-xs text-destructive">
-                  {errors.firstName.message}
-                </p>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="lastName">Last name</Label>
-              <Input id="lastName" {...register("lastName")} />
-              {errors.lastName && (
-                <p className="text-xs text-destructive">
-                  {errors.lastName.message}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 sm:max-w-sm">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="phone">Phone</Label>
-              {profile.phone !== null && (
-                <span
-                  className={cn(
-                    "text-xs font-medium",
-                    profile.phoneVerified
-                      ? "text-emerald-600"
-                      : "text-[#B4820A]",
-                  )}
-                >
-                  {profile.phoneVerified ? "Verified" : "Not verified"}
-                </span>
-              )}
-            </div>
-            <Input
-              id="phone"
-              inputMode="tel"
-              placeholder="+1-202-555-0100"
-              {...register("phone")}
-            />
-            {errors.phone && (
-              <p className="text-xs text-destructive">{errors.phone.message}</p>
-            )}
-            <p className="text-[13px] text-muted-foreground">
-              Recruiters only see this once it is verified. Changing the number
-              clears that, so it has to be verified again.
-            </p>
-          </div>
-        </Section>
-
-        <Section
+        <CompanyFormSection
           title="Mailing address"
           hint="Not shown publicly — used for contracts and billing."
         >
@@ -347,9 +257,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               )}
             </div>
           </div>
-        </Section>
+        </CompanyFormSection>
 
-        <Section
+        <CompanyFormSection
           title="Recruiter commission range"
           hint="Shown on your public profile. The binding fee is still set per job."
         >
@@ -383,33 +293,14 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               )}
             </div>
           </div>
-        </Section>
+        </CompanyFormSection>
       </div>
 
-      {/* Sticky save bar so Save is always reachable while editing. */}
-      <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-card-lg backdrop-blur sm:px-5">
-        <span className="text-sm text-muted-foreground">
-          {isDirty ? "Unsaved changes" : "All changes saved"}
-        </span>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!isDirty || update.isPending}
-            onClick={() => reset()}
-          >
-            Discard
-          </Button>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={update.isPending || !isDirty}
-          >
-            {update.isPending ? "Saving…" : "Save changes"}
-          </Button>
-        </div>
-      </div>
+      <CompanyFormSaveBar
+        isDirty={isDirty}
+        isSaving={update.isPending}
+        onDiscard={() => reset()}
+      />
     </form>
   );
 }

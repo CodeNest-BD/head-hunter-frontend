@@ -102,6 +102,9 @@ export const companyDetailSchema = companyListItemSchema.extend({
   emailVerified: z.boolean().catch(false),
   verifiedAt: z.string().nullable().catch(null),
   verificationNote: z.string().nullable().catch(null),
+  // The contact person on the account, not a company profile column.
+  firstName: z.string().catch(""),
+  lastName: z.string().catch(""),
   phone: z.string().nullable(),
   website: z.string().nullable(),
   description: z.string().nullable(),

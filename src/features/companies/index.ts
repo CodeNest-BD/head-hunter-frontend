@@ -9,6 +9,7 @@
  * restructured without touching consumers.
  */
 export { CompanyApprovalBanner } from "./components/CompanyApprovalBanner";
+export { CompanyEmployeeInfoForm } from "./components/CompanyEmployeeInfoForm";
 export { CompanyList } from "./components/CompanyList";
 export { CompanyProfileForm } from "./components/CompanyProfileForm";
 export { useCompanyApprovalGate } from "./hooks/useCompanyApprovalGate";
