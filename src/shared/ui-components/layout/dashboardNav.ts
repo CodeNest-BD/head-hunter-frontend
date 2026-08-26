@@ -13,7 +13,10 @@ import {
 } from "lucide-react";
 
 import type { Role } from "@/features/auth";
-import { PHASE1_FREE } from "@/shared/config/featureFlags";
+import {
+  HIDE_PHASE2_FEATURES,
+  PHASE1_FREE,
+} from "@/shared/config/featureFlags";
 
 export interface NavItem {
   href: string;
@@ -90,16 +93,32 @@ const UNAPPROVED_LABELS: Record<Role, readonly string[]> = {
 };
 
 /**
+ * Nav items hidden for the phase-1 client delivery (see HIDE_PHASE2_FEATURES).
+ * Removing them here covers both the sidebar and the top dropdown at once.
+ */
+const HIDDEN_PHASE2_LABELS: Record<Role, readonly string[]> = {
+  recruiter: ["Companies", "Inbox", "Wallet"],
+  company: ["Inbox"],
+  admin: [],
+};
+
+/**
  * Approval-aware nav selector. `UserMenu` and `SidebarContent` both read
  * through this instead of `NAV_BY_ROLE` directly, so reducing an unapproved
- * account's navigation fixes the dropdown and the sidebar in one change.
- * Admins are never reduced.
+ * account's navigation — and hiding phase-2 items — fixes the dropdown and the
+ * sidebar in one change. Admins are never reduced by approval.
  */
 export function navForRole(
   role: Role,
   isApproved: boolean,
 ): readonly NavItem[] {
-  const items = NAV_BY_ROLE[role];
+  let items: readonly NavItem[] = NAV_BY_ROLE[role];
+  if (HIDE_PHASE2_FEATURES) {
+    const hidden = HIDDEN_PHASE2_LABELS[role];
+    if (hidden.length > 0) {
+      items = items.filter((item) => !hidden.includes(item.label));
+    }
+  }
   if (role === "admin" || isApproved) {
     return items;
   }

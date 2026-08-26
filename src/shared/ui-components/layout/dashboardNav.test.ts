@@ -3,18 +3,16 @@ import { describe, expect, it } from "vitest";
 import { navForRole } from "./dashboardNav";
 
 describe("recruiter navigation", () => {
-  it("shows an approved recruiter their full workspace", () => {
+  // Phase-1 delivery hides Companies, Inbox and Wallet from recruiters
+  // (HIDE_PHASE2_FEATURES). Restore these expectations when that flag flips —
+  // see docs/phase-1-hidden-features.md.
+  it("shows an approved recruiter their phase-1 workspace", () => {
     const labels = navForRole("recruiter", true).map((item) => item.label);
 
-    expect(labels).toEqual(
-      expect.arrayContaining([
-        "Dashboard",
-        "Companies",
-        "Inbox",
-        "Wallet",
-        "Profile",
-      ]),
-    );
+    expect(labels).toEqual(["Dashboard", "Profile"]);
+    expect(labels).not.toContain("Companies");
+    expect(labels).not.toContain("Inbox");
+    expect(labels).not.toContain("Wallet");
   });
 
   it("reduces an unapproved recruiter to their profile alone", () => {
@@ -41,18 +39,15 @@ describe("recruiter navigation", () => {
     expect(labels).toEqual(["Profile"]);
   });
 
-  it("gives an approved company its full navigation", () => {
+  // Phase-1 delivery hides Inbox from companies (HIDE_PHASE2_FEATURES). Restore
+  // "Inbox" here when that flag flips — see docs/phase-1-hidden-features.md.
+  it("gives an approved company its phase-1 navigation", () => {
     const labels = navForRole("company", true).map((item) => item.label);
 
     expect(labels).toEqual(
-      expect.arrayContaining([
-        "Dashboard",
-        "Jobs",
-        "Inbox",
-        "Wallet",
-        "Profile",
-      ]),
+      expect.arrayContaining(["Dashboard", "Jobs", "Wallet", "Profile"]),
     );
+    expect(labels).not.toContain("Inbox");
   });
 
   it("never reduces an admin's navigation", () => {

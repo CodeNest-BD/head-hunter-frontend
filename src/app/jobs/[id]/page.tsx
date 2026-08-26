@@ -9,6 +9,7 @@ import { useJob } from "@/features/jobs";
 import { JobDetailBody } from "@/features/jobs/components/JobDetailView";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { PublicShell } from "@/components/landing/PublicShell";
+import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -29,6 +30,16 @@ function DetailSkeleton() {
  * intents.
  */
 function SubmitCandidatesButton({ jobId }: { jobId: string }) {
+  // Candidate submission is phase-2 — disable the button for the phase-1
+  // delivery (see HIDE_PHASE2_FEATURES / docs/phase-1-hidden-features.md).
+  if (HIDE_PHASE2_FEATURES) {
+    return (
+      <Button type="button" className="w-full" disabled>
+        <Send className="h-[18px] w-[18px]" />
+        Submit candidates
+      </Button>
+    );
+  }
   // Sending a candidate IS the act that puts a recruiter on a job now, so
   // there is nothing to "open" first — this goes straight to the job's
   // candidate list, where the form to add one lives.

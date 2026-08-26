@@ -11,6 +11,7 @@ import {
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
 import { PageBanner } from "@/shared/ui-components/brand";
+import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
@@ -41,7 +42,8 @@ const COLUMNS: ColumnDef[] = [
   { key: "company", label: "Company" },
   { key: "status", label: "Status" },
   { key: "fee", label: "Recruiter fee" },
-  { key: "candidates", label: "Candidates" },
+  // Candidates access is phase-2 — hidden for the phase-1 delivery.
+  ...(HIDE_PHASE2_FEATURES ? [] : [{ key: "candidates", label: "Candidates" }]),
   { key: "posted", label: "Posted" },
   { key: "actions", label: "Actions", required: true },
 ];
@@ -212,14 +214,15 @@ export function JobsTable({
                           Recruiter fee
                         </th>
                       )}
-                      {cols.isVisible("candidates") && (
-                        <th
-                          scope="col"
-                          className="px-5 py-3 text-center font-semibold"
-                        >
-                          Candidates
-                        </th>
-                      )}
+                      {!HIDE_PHASE2_FEATURES &&
+                        cols.isVisible("candidates") && (
+                          <th
+                            scope="col"
+                            className="px-5 py-3 text-center font-semibold"
+                          >
+                            Candidates
+                          </th>
+                        )}
                       {cols.isVisible("posted") && (
                         <th scope="col" className="px-5 py-3 font-semibold">
                           Posted
@@ -292,21 +295,22 @@ export function JobsTable({
                             )}
                           </td>
                         )}
-                        {cols.isVisible("candidates") && (
-                          <td className="px-5 py-3 text-center tabular-nums">
-                            {/* Submissions → the threads on this job. */}
-                            {job.candidateCount > 0 ? (
-                              <Link
-                                href={`/admin/conversations?jobId=${job.jobId}`}
-                                className="font-medium text-primary hover:underline"
-                              >
-                                {job.candidateCount}
-                              </Link>
-                            ) : (
-                              <span className="text-muted-foreground">0</span>
-                            )}
-                          </td>
-                        )}
+                        {!HIDE_PHASE2_FEATURES &&
+                          cols.isVisible("candidates") && (
+                            <td className="px-5 py-3 text-center tabular-nums">
+                              {/* Submissions → the threads on this job. */}
+                              {job.candidateCount > 0 ? (
+                                <Link
+                                  href={`/admin/conversations?jobId=${job.jobId}`}
+                                  className="font-medium text-primary hover:underline"
+                                >
+                                  {job.candidateCount}
+                                </Link>
+                              ) : (
+                                <span className="text-muted-foreground">0</span>
+                              )}
+                            </td>
+                          )}
                         {cols.isVisible("posted") && (
                           <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
                             {formatDate(job.createdAt)}
