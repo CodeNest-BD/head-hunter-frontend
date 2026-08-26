@@ -36,20 +36,16 @@ import { formatMinor } from "@/shared/utils/money";
 import {
   bubbleRadius,
   feeRange,
+  nextBubbleSelection,
   resolveCityBubbles,
   type CityMapBubble,
   type CityMapRow,
+  type MapSelection,
 } from "../cityMapBubbles";
 
-/**
- * The map's current selection. A city selection carries its state so the jobs
- * list can filter by state server-side and by city on the client. Modelled as
- * a discriminated union so "a city with no state" is unrepresentable.
- */
-export type MapSelection =
-  | { readonly kind: "none" }
-  | { readonly kind: "state"; readonly state: string }
-  | { readonly kind: "city"; readonly state: string; readonly city: string };
+// Re-exported from its pure home so existing importers (ExploreJobsView) keep
+// importing it from here, while the selection helpers stay unit-testable.
+export type { MapSelection };
 
 interface StateStat {
   readonly openRoles: number;
@@ -249,6 +245,15 @@ export function UsJobMap({
   // busiest/quietest city currently plotted.
   const feeSpan = useMemo(() => feeRange(cityBubbles), [cityBubbles]);
 
+  // Draw largest first so smaller bubbles paint on top: in dense metros (San
+  // Jose beside San Francisco) a small bubble would otherwise sit under a big
+  // neighbour and be impossible to hover or click. Topmost = smallest = the
+  // one the pointer is actually over.
+  const orderedBubbles = useMemo(
+    () => [...cityBubbles].sort((a, b) => b.totalFeeMinor - a.totalFeeMinor),
+    [cityBubbles],
+  );
+
   // Pan toward the selected state's centroid when zoomed in.
   const focus = useMemo(() => {
     if (!selectedState) return { cx: width / 2, cy: height / 2 };
@@ -334,10 +339,10 @@ export function UsJobMap({
   };
 
   const handleCityClick = (city: UsCity) => {
+    // Same toggle as a bubble click, so the toolbar and the map agree: picking
+    // the already-selected city clears it rather than dropping to state view.
     onSelect(
-      selectedCity === city.name && selectedState === city.state
-        ? { kind: "state", state: city.state }
-        : { kind: "city", state: city.state, city: city.name },
+      nextBubbleSelection(selection, { state: city.state, city: city.name }),
     );
   };
 
@@ -464,7 +469,8 @@ export function UsJobMap({
           onViewJobs={(bubble) => {
             cancelHideCity();
             setHoveredCity(null);
-            onSelect({ kind: "state", state: bubble.state });
+            // "View Jobs" always drills into the city (never a toggle-off).
+            onSelect({ kind: "city", state: bubble.state, city: bubble.city });
           }}
         />
 
@@ -583,10 +589,14 @@ export function UsJobMap({
             })}
 
             {/* Per-city demand bubbles: one translucent bordered circle per
-                placeable city, sized by open-role volume (small→few, large→many).
-                Hovering shows the city popup; clicking drills into its state. */}
-            {cityBubbles.map((bubble) => {
-              const isActive = selectedState === bubble.state;
+                placeable city, sized by available fee. Hovering shows the city
+                popup; clicking selects (or clears) that specific city. */}
+            {orderedBubbles.map((bubble) => {
+              const isSelectedCity =
+                selectedCity === bubble.city && selectedState === bubble.state;
+              // The whole state is highlighted when selected; the exact city
+              // gets a stronger fill/stroke on top of that.
+              const inActiveState = selectedState === bubble.state;
               const r = bubbleRadius(
                 bubble.totalFeeMinor,
                 feeSpan.min,
@@ -594,7 +604,7 @@ export function UsJobMap({
                 MIN_BUBBLE_RADIUS,
                 MAX_BUBBLE_RADIUS,
               );
-              const color = isActive ? "#034AEF" : "#4F80E6";
+              const color = inActiveState ? "#034AEF" : "#4F80E6";
               return (
                 <circle
                   key={`bubble-${bubble.key}`}
@@ -603,15 +613,21 @@ export function UsJobMap({
                   cy={bubble.y}
                   r={r}
                   fill={color}
-                  fillOpacity={isActive ? 0.6 : 0.45}
-                  stroke={isActive ? "#034AEF" : "#2658CF"}
-                  strokeWidth={1.5}
+                  fillOpacity={
+                    isSelectedCity ? 0.75 : inActiveState ? 0.6 : 0.45
+                  }
+                  stroke={
+                    isSelectedCity || inActiveState ? "#034AEF" : "#2658CF"
+                  }
+                  strokeWidth={isSelectedCity ? 2.5 : 1.5}
                   strokeOpacity={0.9}
                   onMouseEnter={(event) =>
                     showCity(bubble, event.currentTarget)
                   }
                   onMouseLeave={scheduleHideCity}
-                  onClick={() => handleStateClick(bubble.state)}
+                  onClick={() =>
+                    onSelect(nextBubbleSelection(selection, bubble))
+                  }
                 >
                   <title>{`${bubble.city}, ${bubble.state} — ${bubble.openRoles} open ${
                     bubble.openRoles === 1 ? "role" : "roles"

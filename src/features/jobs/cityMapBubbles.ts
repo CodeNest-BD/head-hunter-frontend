@@ -1,6 +1,38 @@
 import { projectAlbersUsa } from "@/shared/data/albersUsa";
 import { US_CITIES } from "@/shared/data/usCities";
 
+/**
+ * The map's current selection. A city selection carries its state so the jobs
+ * list can filter by state server-side and by city on the client. Modelled as a
+ * discriminated union so "a city with no state" is unrepresentable. Lives here,
+ * in the pure module, so the selection helpers can be unit-tested without the
+ * SVG component (and to avoid a component ↔ helper import cycle).
+ */
+export type MapSelection =
+  | { readonly kind: "none" }
+  | { readonly kind: "state"; readonly state: string }
+  | { readonly kind: "city"; readonly state: string; readonly city: string };
+
+/**
+ * What clicking a city bubble should select next. Clicking the already-selected
+ * city clears the selection; clicking any other bubble selects that city. This
+ * is the whole fix for the map's erratic clicks: bubbles now toggle their own
+ * city cleanly instead of toggling their state (which cleared the map whenever
+ * a second bubble in an already-selected state was clicked).
+ */
+export function nextBubbleSelection(
+  current: MapSelection,
+  bubble: { readonly state: string; readonly city: string },
+): MapSelection {
+  const isSelected =
+    current.kind === "city" &&
+    current.city === bubble.city &&
+    current.state === bubble.state;
+  return isSelected
+    ? { kind: "none" }
+    : { kind: "city", state: bubble.state, city: bubble.city };
+}
+
 /** A per-city aggregate row from a job-map endpoint (city may be unrecorded). */
 export interface CityMapRow {
   readonly locationState: string;
