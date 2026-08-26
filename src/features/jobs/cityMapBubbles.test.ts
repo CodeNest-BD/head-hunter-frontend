@@ -1,6 +1,66 @@
 import { describe, expect, it } from "vitest";
 
-import { bubbleRadius, feeRange } from "./cityMapBubbles";
+import {
+  bubbleRadius,
+  feeRange,
+  nextBubbleSelection,
+  type MapSelection,
+} from "./cityMapBubbles";
+
+describe("nextBubbleSelection", () => {
+  const sanJose = { state: "CA", city: "San Jose" };
+
+  it("selects the city when nothing is selected", () => {
+    expect(nextBubbleSelection({ kind: "none" }, sanJose)).toEqual({
+      kind: "city",
+      state: "CA",
+      city: "San Jose",
+    });
+  });
+
+  it("drills into the city when its whole state is selected (the bug)", () => {
+    // Previously this cleared the map; it must now select the city instead.
+    const state: MapSelection = { kind: "state", state: "CA" };
+    expect(nextBubbleSelection(state, sanJose)).toEqual({
+      kind: "city",
+      state: "CA",
+      city: "San Jose",
+    });
+  });
+
+  it("clears when the same city is clicked again", () => {
+    const selected: MapSelection = {
+      kind: "city",
+      state: "CA",
+      city: "San Jose",
+    };
+    expect(nextBubbleSelection(selected, sanJose)).toEqual({ kind: "none" });
+  });
+
+  it("switches to another city rather than clearing", () => {
+    const oakland: MapSelection = {
+      kind: "city",
+      state: "CA",
+      city: "Oakland",
+    };
+    expect(nextBubbleSelection(oakland, sanJose)).toEqual({
+      kind: "city",
+      state: "CA",
+      city: "San Jose",
+    });
+  });
+
+  it("treats same-named cities in different states as distinct", () => {
+    const portlandOr: MapSelection = {
+      kind: "city",
+      state: "OR",
+      city: "Portland",
+    };
+    expect(
+      nextBubbleSelection(portlandOr, { state: "ME", city: "Portland" }),
+    ).toEqual({ kind: "city", state: "ME", city: "Portland" });
+  });
+});
 
 describe("feeRange", () => {
   it("finds the min and max available fee", () => {

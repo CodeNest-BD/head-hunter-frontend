@@ -669,11 +669,11 @@ function LiveMapCard({
   selection: MapSelection;
   onSelect: (selection: MapSelection) => void;
 }) {
-  // Selection is the single source of truth for the state/city filters (both
-  // the sidebar dropdowns and map clicks write it), so the map narrows by the
-  // same state/city as the results list — not just category/fee/search.
+  // A chosen state narrows the map server-side, exactly like the list. A chosen
+  // city does NOT collapse the map: the map stays populated so the user keeps
+  // context and can switch cities in one click — the selected city is merely
+  // highlighted (UsJobMap), while the results *list* is what narrows to it.
   const selectedState = selection.kind === "none" ? undefined : selection.state;
-  const selectedCity = selection.kind === "city" ? selection.city : undefined;
 
   const map = useJobMap({
     roleCategory: listParams.roleCategory,
@@ -682,20 +682,10 @@ function LiveMapCard({
     feeMax: listParams.feeMax,
     q: listParams.q,
     isRemote: listParams.isRemote,
-    // A chosen state narrows the map server-side, exactly like the list.
     locationState: selectedState,
   });
 
-  // /jobs/map groups by city and has no city param, so a chosen city is applied
-  // here — the same client-side city narrowing the results list uses.
-  const cityData = useMemo(() => {
-    const rows = map.data ?? [];
-    if (!selectedCity) return rows;
-    const key = normalizeCityName(selectedCity);
-    return rows.filter(
-      (row) => normalizeCityName(row.locationCity ?? "") === key,
-    );
-  }, [map.data, selectedCity]);
+  const cityData = map.data ?? [];
 
   // The map rows are per state *and* city; fold them back into per-state totals
   // (open roles and summed available fee) for the fills and hover popup.
