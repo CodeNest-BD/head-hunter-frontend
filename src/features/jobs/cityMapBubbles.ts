@@ -1,5 +1,6 @@
 import { projectAlbersUsa } from "@/shared/data/albersUsa";
 import { US_CITIES } from "@/shared/data/usCities";
+import { US_STATES } from "@/shared/data/usStatesGeo";
 
 /**
  * The map's current selection. A city selection carries its state so the jobs
@@ -124,10 +125,53 @@ for (const city of US_CITIES) {
   }
 }
 
+// State centroids, in the same projected 960×600 frame as the city points.
+const STATE_CENTROID = new Map<string, { x: number; y: number }>(
+  US_STATES.map((state) => [state.code, { x: state.cx, y: state.cy }]),
+);
+
+/**
+ * A small, deterministic offset from a state centroid so several un-geocoded
+ * cities in the same state fan out around the centre instead of stacking on one
+ * unclickable point. Seeded by the city key, so the same city always lands in
+ * the same spot.
+ */
+function centroidOffset(seed: string): { dx: number; dy: number } {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  }
+  const angle = (Math.abs(hash) % 360) * (Math.PI / 180);
+  const radius = 9;
+  return { dx: Math.cos(angle) * radius, dy: Math.sin(angle) * radius };
+}
+
+/**
+ * Last resort when a city isn't in the curated coordinate list: the job form's
+ * picker uses the full Census place list (every town), which is far larger than
+ * this map's hand-geocoded set, so a real job can name a city we have no point
+ * for (e.g. Kaunakakai, HI). Rather than drop it — which silently hides live
+ * jobs from the map — place its bubble at the state centroid, keyed by the real
+ * city name so the popup and selection still read correctly. Null only when
+ * even the state is unknown.
+ */
+function stateCentroidPoint(city: string, state: string): CityPoint | null {
+  const centroid = STATE_CENTROID.get(state.toUpperCase());
+  if (!centroid) return null;
+  const { dx, dy } = centroidOffset(`${normalizeCity(city)}|${state}`);
+  return {
+    x: centroid.x + dx,
+    y: centroid.y + dy,
+    name: city,
+    state: state.toUpperCase(),
+  };
+}
+
 /**
  * Resolve raw per-city rows to placeable bubbles, summing duplicates that land
- * on the same city point (fee re-averaged, weighted by role count). Rows whose
- * city can't be matched to a coordinate are dropped.
+ * on the same city point. A city we can't geocode from the curated list falls
+ * back to its state centroid (see stateCentroidPoint) so its jobs still show;
+ * only a row whose state is unknown too is dropped.
  */
 export function resolveCityBubbles(
   rows: readonly CityMapRow[],
@@ -141,7 +185,8 @@ export function resolveCityBubbles(
     const norm = normalizeCity(row.locationCity);
     const point =
       CITY_BY_NAME_STATE.get(`${norm}|${row.locationState}`) ??
-      CITY_BY_NAME.get(norm);
+      CITY_BY_NAME.get(norm) ??
+      stateCentroidPoint(row.locationCity, row.locationState);
     if (!point) continue;
     const key = `${point.name}|${point.state}`;
     const prev = byPoint.get(key) ?? { point, openRoles: 0, totalFeeMinor: 0 };
