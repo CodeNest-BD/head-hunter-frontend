@@ -270,6 +270,8 @@ export function SignUpForm() {
             <legend className="mb-2 text-sm font-medium leading-none text-foreground">
               I am a…
             </legend>
+            {/* Two short cards; side by side even on a phone, where stacking
+                them pushes the whole form down a screen for no gain. */}
             <div className="grid grid-cols-2 gap-3">
               {ROLE_OPTIONS.map((option) => {
                 const active = field.value === option.value;
@@ -306,7 +308,8 @@ export function SignUpForm() {
         )}
       />
 
-      <div className="grid grid-cols-2 gap-4">
+      {/* First/last are short enough to share a row at 360px. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="firstName">First name</Label>
           <Input
@@ -550,7 +553,7 @@ export function SignUpForm() {
                 <FieldError
                   message={errors.references?.[index]?.name?.message}
                 />
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   <Input
                     type="text"
                     {...register(`references.${index}.company`)}
@@ -602,7 +605,7 @@ export function SignUpForm() {
           aria-label="Street address"
         />
         <FieldError message={errors.addressLine?.message} />
-        <div className="grid grid-cols-[1fr_1fr] gap-2.5 sm:grid-cols-[1fr_1.4fr_0.9fr]">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[1fr_1.4fr_0.9fr]">
           <Controller
             control={control}
             name="state"

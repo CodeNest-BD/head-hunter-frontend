@@ -172,7 +172,7 @@ export function SubscriptionPanel() {
 
       {/* Plan card */}
       <article className="overflow-hidden rounded-md bg-navy text-white shadow-card-lg">
-        <div className="flex items-start justify-between gap-4 p-8 pb-6">
+        <div className="flex flex-wrap items-start justify-between gap-4 p-8 pb-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#85B1F3]">
               {PLAN_NAME}

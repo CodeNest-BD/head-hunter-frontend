@@ -293,7 +293,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           title="Recruiter commission range"
           hint="Shown on your public profile. The binding fee is still set per job."
         >
-          <div className="grid grid-cols-2 gap-4 sm:max-w-md">
+          <div className="grid grid-cols-1 gap-4 sm:max-w-md sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <Label htmlFor="commissionMin">Minimum ($)</Label>
               <Input

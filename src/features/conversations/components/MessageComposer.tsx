@@ -83,6 +83,7 @@ export function MessageComposer({
         <Button
           type="button"
           size="sm"
+          className="shrink-0"
           disabled={
             sendMessage.isPending || trimmed.length === 0 || !acceptsMessages
           }

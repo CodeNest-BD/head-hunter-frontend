@@ -14,7 +14,7 @@ import {
   useDeleteCandidate,
   CANDIDATE_STATUS_LABELS,
 } from "@/features/candidates";
-import { Thread } from "@/features/conversations";
+import { Thread, useMessageUnreadCounts } from "@/features/conversations";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
@@ -188,6 +188,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
 
 export default function RecruiterCandidatePage() {
   const params = useParams<{ id: string }>();
+  const unreadCounts = useMessageUnreadCounts();
 
   return (
     <RequireRole role="recruiter">
@@ -215,6 +216,7 @@ export default function RecruiterCandidatePage() {
             }
             left={<CandidateDetailColumn candidateId={params.id} />}
             right={<Thread candidateId={params.id} />}
+            rightUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
           />
         </RequireApprovedRecruiter>
       </DashboardLayout>

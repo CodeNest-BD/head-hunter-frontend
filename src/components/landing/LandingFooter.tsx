@@ -70,7 +70,7 @@ export function LandingFooter() {
 
   return (
     <footer className="bg-navy text-white">
-      <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-14 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:px-10">
+      <div className="mx-auto grid max-w-[1240px] gap-10 px-4 py-14 sm:px-5 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:px-10">
         <div className="max-w-xs">
           <Logo tone="onDark" />
           <p className="mt-4 text-sm leading-relaxed text-white/55">
@@ -104,7 +104,7 @@ export function LandingFooter() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-[1240px] flex-col gap-2 px-5 py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between md:px-10">
+        <div className="mx-auto flex max-w-[1240px] flex-col gap-2 px-4 py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between sm:px-5 md:px-10">
           <span>© {year} Head-Hunters.com. All rights reserved.</span>
           <span>A US-based recruiting marketplace.</span>
         </div>

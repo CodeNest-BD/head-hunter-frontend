@@ -5,11 +5,15 @@ import { AlertCircle, MessagesSquare } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import {
+  MobileRecordCard,
+  MobileRecordList,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminConversations } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
-import { CANDIDATE_LABELS } from "../schemas";
+import { CANDIDATE_LABELS, type ConversationListItem } from "../schemas";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
 import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
@@ -22,6 +26,44 @@ function formatDateTime(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function ConversationStatus({
+  conversation,
+}: {
+  conversation: ConversationListItem;
+}) {
+  return (
+    <StatusBadge
+      label={CANDIDATE_LABELS[conversation.status] ?? conversation.status}
+      className={
+        CANDIDATE_STATUS_STYLES[conversation.status] ??
+        "bg-muted text-muted-foreground"
+      }
+    />
+  );
+}
+
+function ConversationCard({
+  conversation,
+}: {
+  conversation: ConversationListItem;
+}) {
+  return (
+    <MobileRecordCard
+      title={conversation.jobTitle}
+      subtitle={`${conversation.companyName} · ${conversation.recruiterName}`}
+      href={`/admin/conversations/${conversation.candidateId}`}
+      trailing={<ConversationStatus conversation={conversation} />}
+      fields={[
+        { label: "Messages", value: conversation.messageCount },
+        {
+          label: "Last activity",
+          value: formatDateTime(conversation.lastActivityAt),
+        },
+      ]}
+    />
+  );
 }
 
 export function ConversationsTable() {
@@ -92,7 +134,7 @@ export function ConversationsTable() {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="w-full">
+            <div className="hidden w-full sm:block">
               <table className={TABLE_CLASS}>
                 <thead>
                   <tr className={THEAD_ROW_CLASS}>
@@ -147,13 +189,7 @@ export function ConversationsTable() {
                         {c.messageCount}
                       </td>
                       <td className="px-5 py-3">
-                        <StatusBadge
-                          label={CANDIDATE_LABELS[c.status] ?? c.status}
-                          className={
-                            CANDIDATE_STATUS_STYLES[c.status] ??
-                            "bg-muted text-muted-foreground"
-                          }
-                        />
+                        <ConversationStatus conversation={c} />
                       </td>
                       <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
                         {formatDateTime(c.lastActivityAt)}
@@ -163,6 +199,11 @@ export function ConversationsTable() {
                 </tbody>
               </table>
             </div>
+            <MobileRecordList className="sm:hidden">
+              {data.data.map((c) => (
+                <ConversationCard key={c.candidateId} conversation={c} />
+              ))}
+            </MobileRecordList>
             <ListPager
               page={page}
               totalPages={data.meta.totalPages}

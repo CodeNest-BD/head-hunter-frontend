@@ -168,7 +168,7 @@ export function PurchaseReceiptDialog({
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-md border border-border bg-card shadow-card-lg focus:outline-none">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-x-hidden overflow-y-auto rounded-md border border-border bg-card shadow-card-lg focus:outline-none">
           <div className="flex items-center justify-between border-b border-border px-5 py-3">
             <Dialog.Title className="text-sm font-semibold text-foreground">
               Payment receipt

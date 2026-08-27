@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth, type Role } from "@/features/auth";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 
 interface LandingCtaProps {
@@ -34,7 +35,7 @@ export function LandingCta({
     status === "authenticated" && user?.role === role ? authedHref : guestHref;
 
   return (
-    <Button asChild className={className}>
+    <Button asChild className={cn("w-full sm:w-auto", className)}>
       <Link href={href}>{children}</Link>
     </Button>
   );

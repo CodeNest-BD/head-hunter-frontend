@@ -39,7 +39,7 @@ const STEPS: readonly Step[] = [
 export function HowItWorks() {
   return (
     <section id="how" className="scroll-mt-20 bg-secondary">
-      <div className="mx-auto max-w-[1240px] px-5 py-14 md:px-10">
+      <div className="mx-auto max-w-[1240px] px-4 py-14 sm:px-5 md:px-10">
         <h2 className="mb-10 text-center font-heading text-3xl font-extrabold text-navy md:text-4xl">
           How It Works
         </h2>

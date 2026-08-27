@@ -5,6 +5,18 @@ import { cn } from "@/shared/libs/shadCnConfig";
 interface LogoProps {
   /** Wordmark ink: dark blue on light surfaces, white over navy panels. */
   tone?: "light" | "onDark";
+  /**
+   * "default" for nav bars, where the lockup shares a cramped row and shrinks
+   * on a phone; "lg" where the brand is the point (the auth pages), and a
+   * nav-sized lockup reads as an afterthought.
+   */
+  size?: "default" | "lg";
+  /**
+   * Drops the ".com" suffix below `sm`, keeping the name itself. For bars too
+   * cramped on a phone to fit the full lockup beside their controls — the
+   * suffix is the part a reader can lose without losing the brand.
+   */
+  compact?: boolean;
   className?: string;
 }
 
@@ -14,10 +26,17 @@ interface LogoProps {
  * pixel-faithful) next to the "Head-Hunters.com" wordmark. The wordmark is live
  * text so it stays crisp and the colours match the master exactly — navy
  * "Head-Hunters" with a primary-blue hyphen and a navy period, then a grey
- * "com". Height can be overridden via `className` (e.g. `h-7`).
+ * "com". Height comes from `size` — `className` styles the wrapper, so a
+ * height utility on it would not reach the mark or the wordmark.
  */
-export function Logo({ tone = "light", className }: LogoProps) {
+export function Logo({
+  tone = "light",
+  size = "default",
+  compact = false,
+  className,
+}: LogoProps) {
   const onDark = tone === "onDark";
+  const large = size === "lg";
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       {/* The mark is the same coloured crosshair on every surface — the blue
@@ -29,16 +48,24 @@ export function Logo({ tone = "light", className }: LogoProps) {
         width={292}
         height={298}
         priority
-        className="h-7 w-auto select-none"
+        className={cn("w-auto select-none", large ? "h-9" : "h-6 sm:h-7")}
       />
-      <span className="font-heading text-[19px] font-extrabold leading-none tracking-[-0.02em]">
+      <span
+        className={cn(
+          "font-heading font-extrabold leading-none tracking-[-0.02em]",
+          large ? "text-[24px]" : "text-[17px] sm:text-[19px]",
+        )}
+      >
         <span className={onDark ? "text-white" : "text-navy"}>
           Head
           <span className={onDark ? "text-white" : "text-primary"}>-</span>
-          Hunters.
+          Hunters
         </span>
-        <span className={onDark ? "text-white/60" : "text-brand-gray-light"}>
-          com
+        <span className={cn(compact && "hidden sm:inline")}>
+          <span className={onDark ? "text-white" : "text-navy"}>.</span>
+          <span className={onDark ? "text-white/60" : "text-brand-gray-light"}>
+            com
+          </span>
         </span>
       </span>
     </span>

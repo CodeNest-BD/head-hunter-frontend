@@ -123,14 +123,19 @@ export default function AuthLayout({
        * (sign-in) vertically centred while letting tall ones scroll from the
        * top without the flex-centering clip. */}
       <section className="lg:h-screen lg:overflow-y-auto">
-        <div className="flex min-h-full flex-col items-center px-5 py-10 sm:px-8 lg:justify-center lg:px-14 lg:py-12">
-          {/* Mobile logo — the brand panel is hidden below lg. */}
+        {/* `justify-center` at every width closes the dead band under a short
+         * form on a phone. Safe against the flex-centring clip because the
+         * height here is a minimum, not a fixed one — a tall form grows the
+         * box instead of overflowing it. */}
+        <div className="flex min-h-full flex-col items-center justify-center px-5 py-10 sm:px-8 lg:px-14 lg:py-12">
+          {/* Mobile logo — the brand panel is hidden below lg, so this is the
+           * only brand mark on the page and carries it at full size. */}
           <div className="mb-8 lg:hidden">
             <Link
               href="/"
               className="inline-flex rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              <Logo />
+              <Logo size="lg" />
             </Link>
           </div>
           <div className="flex w-full max-w-md flex-col">{children}</div>

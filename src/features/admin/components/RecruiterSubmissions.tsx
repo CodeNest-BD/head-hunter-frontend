@@ -5,6 +5,10 @@ import { useState } from "react";
 import { AlertCircle } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import {
+  MobileRecordCard,
+  MobileRecordList,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -13,7 +17,7 @@ import {
   CardTitle,
 } from "@/shared/ui-components/controls/card";
 import { useAdminConversations } from "../hooks/useAdmin";
-import { CANDIDATE_LABELS } from "../schemas";
+import { CANDIDATE_LABELS, type ConversationListItem } from "../schemas";
 import { ListPager } from "./ListPager";
 import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
@@ -27,6 +31,40 @@ function formatDateTime(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function SubmissionStatus({
+  submission,
+}: {
+  submission: ConversationListItem;
+}) {
+  return (
+    <StatusBadge
+      label={CANDIDATE_LABELS[submission.status] ?? submission.status}
+      className={
+        CANDIDATE_STATUS_STYLES[submission.status] ??
+        "bg-muted text-muted-foreground"
+      }
+    />
+  );
+}
+
+function SubmissionCard({ submission }: { submission: ConversationListItem }) {
+  return (
+    <MobileRecordCard
+      title={submission.jobTitle}
+      subtitle={submission.companyName}
+      href={`/admin/conversations/${submission.candidateId}`}
+      trailing={<SubmissionStatus submission={submission} />}
+      fields={[
+        { label: "Messages", value: submission.messageCount },
+        {
+          label: "Last activity",
+          value: formatDateTime(submission.lastActivityAt),
+        },
+      ]}
+    />
+  );
 }
 
 /**
@@ -67,7 +105,7 @@ export function RecruiterSubmissions({
           </p>
         ) : (
           <>
-            <div className="w-full">
+            <div className="hidden w-full sm:block">
               <table className={TABLE_CLASS}>
                 <thead>
                   <tr className={THEAD_ROW_CLASS}>
@@ -116,13 +154,7 @@ export function RecruiterSubmissions({
                         {c.messageCount}
                       </td>
                       <td className="px-5 py-3">
-                        <StatusBadge
-                          label={CANDIDATE_LABELS[c.status] ?? c.status}
-                          className={
-                            CANDIDATE_STATUS_STYLES[c.status] ??
-                            "bg-muted text-muted-foreground"
-                          }
-                        />
+                        <SubmissionStatus submission={c} />
                       </td>
                       <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
                         {formatDateTime(c.lastActivityAt)}
@@ -132,6 +164,11 @@ export function RecruiterSubmissions({
                 </tbody>
               </table>
             </div>
+            <MobileRecordList className="sm:hidden">
+              {data.data.map((c) => (
+                <SubmissionCard key={c.candidateId} submission={c} />
+              ))}
+            </MobileRecordList>
             <ListPager
               page={page}
               totalPages={data.meta.totalPages}

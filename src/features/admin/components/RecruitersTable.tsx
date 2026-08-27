@@ -5,6 +5,11 @@ import Link from "next/link";
 import { AlertCircle, Users } from "lucide-react";
 
 import { PageBanner } from "@/shared/ui-components/brand";
+import {
+  MobileRecordCard,
+  MobileRecordList,
+  type MobileRecordField,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableAvatar } from "@/shared/ui-components/data/TableAvatar";
@@ -18,7 +23,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminRecruiters, useAdminStats } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
-import { VERIFICATION_LABELS } from "../schemas";
+import { VERIFICATION_LABELS, type RecruiterListItem } from "../schemas";
 import { AccountRowActions } from "./AccountRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
@@ -47,6 +52,78 @@ const COLUMNS: ColumnDef[] = [
   { key: "status", label: "Status" },
   { key: "actions", label: "Actions", required: true },
 ];
+
+function recruiterName(recruiter: RecruiterListItem): string {
+  return `${recruiter.firstName} ${recruiter.lastName}`;
+}
+
+function recruiterLocation(recruiter: RecruiterListItem): string {
+  return [recruiter.city, recruiter.state].filter(Boolean).join(", ") || "—";
+}
+
+function RecruiterVerification({
+  recruiter,
+}: {
+  recruiter: RecruiterListItem;
+}) {
+  return (
+    <StatusBadge
+      label={VERIFICATION_LABELS[recruiter.verificationStatus]}
+      className={
+        VERIFICATION_STATUS_STYLES[recruiter.verificationStatus] ??
+        "bg-muted text-muted-foreground"
+      }
+    />
+  );
+}
+
+function RecruiterStatus({ recruiter }: { recruiter: RecruiterListItem }) {
+  return (
+    <StatusBadge
+      label={ACCOUNT_STATUS_LABELS[recruiter.status]}
+      className={ACCOUNT_STATUS_STYLES[recruiter.status]}
+    />
+  );
+}
+
+function RecruiterCard({ recruiter }: { recruiter: RecruiterListItem }) {
+  const fields: MobileRecordField[] = [
+    {
+      label: "Verification",
+      value: <RecruiterVerification recruiter={recruiter} />,
+    },
+    {
+      label: "Rating",
+      value: (
+        <RatingStars
+          value={recruiter.ratingAvg}
+          count={recruiter.ratingCount}
+        />
+      ),
+    },
+    { label: "Location", value: recruiterLocation(recruiter) },
+    { label: "Joined", value: formatDate(recruiter.joinedAt) },
+  ];
+
+  return (
+    <MobileRecordCard
+      title={recruiterName(recruiter)}
+      subtitle={recruiter.email}
+      href={`/admin/recruiters/${recruiter.userId}`}
+      trailing={<RecruiterStatus recruiter={recruiter} />}
+      fields={fields}
+      actions={
+        <AccountRowActions
+          userId={recruiter.userId}
+          status={recruiter.status}
+          subjectName={recruiterName(recruiter)}
+          viewHref={`/admin/recruiters/${recruiter.userId}`}
+          kind="recruiter"
+        />
+      }
+    />
+  );
+}
 
 export function RecruitersTable() {
   const {
@@ -158,7 +235,7 @@ export function RecruitersTable() {
         ) : (
           <Card>
             <CardContent className="p-0">
-              <div className="w-full">
+              <div className="hidden w-full sm:block">
                 <table className={TABLE_CLASS}>
                   <thead>
                     <tr className={THEAD_ROW_CLASS}>
@@ -203,9 +280,7 @@ export function RecruitersTable() {
                       <tr key={r.userId} className={BODY_ROW_CLASS}>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-3">
-                            <TableAvatar
-                              name={`${r.firstName} ${r.lastName}`}
-                            />
+                            <TableAvatar name={recruiterName(r)} />
                             <div className="min-w-0">
                               <Link
                                 href={`/admin/recruiters/${r.userId}`}
@@ -224,14 +299,7 @@ export function RecruitersTable() {
                         </td>
                         {cols.isVisible("verification") && (
                           <td className="px-5 py-3">
-                            <StatusBadge
-                              label={VERIFICATION_LABELS[r.verificationStatus]}
-                              className={
-                                VERIFICATION_STATUS_STYLES[
-                                  r.verificationStatus
-                                ] ?? "bg-muted text-muted-foreground"
-                              }
-                            />
+                            <RecruiterVerification recruiter={r} />
                           </td>
                         )}
                         {cols.isVisible("rating") && (
@@ -244,8 +312,7 @@ export function RecruitersTable() {
                         )}
                         {cols.isVisible("location") && (
                           <td className="px-5 py-3 text-muted-foreground">
-                            {[r.city, r.state].filter(Boolean).join(", ") ||
-                              "—"}
+                            {recruiterLocation(r)}
                           </td>
                         )}
                         {cols.isVisible("joined") && (
@@ -255,17 +322,14 @@ export function RecruitersTable() {
                         )}
                         {cols.isVisible("status") && (
                           <td className="px-5 py-3">
-                            <StatusBadge
-                              label={ACCOUNT_STATUS_LABELS[r.status]}
-                              className={ACCOUNT_STATUS_STYLES[r.status]}
-                            />
+                            <RecruiterStatus recruiter={r} />
                           </td>
                         )}
                         <td className="px-5 py-3">
                           <AccountRowActions
                             userId={r.userId}
                             status={r.status}
-                            subjectName={`${r.firstName} ${r.lastName}`}
+                            subjectName={recruiterName(r)}
                             viewHref={`/admin/recruiters/${r.userId}`}
                             kind="recruiter"
                           />
@@ -275,6 +339,11 @@ export function RecruitersTable() {
                   </tbody>
                 </table>
               </div>
+              <MobileRecordList className="sm:hidden">
+                {data.data.map((r) => (
+                  <RecruiterCard key={r.userId} recruiter={r} />
+                ))}
+              </MobileRecordList>
               <ListPager
                 page={page}
                 totalPages={data.meta.totalPages}

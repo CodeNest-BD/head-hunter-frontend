@@ -42,7 +42,7 @@ export function CandidateCard({
           actions moved into the body: both expand into full-width panels, so
           stacking them here made a tall right column next to a two-line left
           one — the empty band this card used to carry. */}
-      <CardHeader className="flex-row items-center justify-between gap-4 space-y-0 p-4">
+      <CardHeader className="flex-col items-start justify-between gap-2 space-y-0 p-4 sm:flex-row sm:items-center sm:gap-4">
         <div className="flex min-w-0 flex-col gap-0.5">
           <CardTitle className="font-heading tracking-tight">
             {candidate.fullName}

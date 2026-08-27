@@ -9,6 +9,10 @@ import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import {
+  MobileRecordCard,
+  MobileRecordList,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { useLedger } from "../hooks/useBilling";
 import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
 import { PurchaseReceiptDialog } from "./PurchaseReceiptDialog";
@@ -20,6 +24,37 @@ const isInflow = (type: LedgerEntry["entryType"]): boolean =>
 /** A purchase — a top-up the company paid for — gets a downloadable receipt. */
 const isPurchase = (type: LedgerEntry["entryType"]): boolean =>
   type === "credit";
+
+// Amount and Document are rendered by both the desktop table and the mobile
+// card, so their shape lives here rather than inline in either one.
+
+const amountToneClass = (entry: LedgerEntry): string =>
+  isInflow(entry.entryType) ? "text-[#17734E]" : "text-navy";
+
+const amountLabel = (entry: LedgerEntry): string =>
+  `${isInflow(entry.entryType) ? "+" : "−"}${formatMinor(entry.amountMinor)}`;
+
+function LedgerDocument({
+  entry,
+  accountName,
+}: {
+  entry: LedgerEntry;
+  accountName: string;
+}) {
+  return isPurchase(entry.entryType) ? (
+    <PurchaseReceiptDialog entry={entry} accountName={accountName}>
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-accent"
+      >
+        <FileText className="h-3.5 w-3.5" />
+        Receipt
+      </button>
+    </PurchaseReceiptDialog>
+  ) : (
+    <span className="text-muted-foreground/50">—</span>
+  );
+}
 
 /** The wallet's append-only history, newest first. */
 export function LedgerTable() {
@@ -63,7 +98,7 @@ export function LedgerTable() {
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
@@ -97,13 +132,10 @@ export function LedgerTable() {
                   <td
                     className={cn(
                       "whitespace-nowrap px-5 py-3 text-right font-semibold",
-                      isInflow(entry.entryType)
-                        ? "text-[#17734E]"
-                        : "text-navy",
+                      amountToneClass(entry),
                     )}
                   >
-                    {isInflow(entry.entryType) ? "+" : "−"}
-                    {formatMinor(entry.amountMinor)}
+                    {amountLabel(entry)}
                   </td>
                   <td className="whitespace-nowrap px-5 py-3 text-right text-muted-foreground">
                     {formatMinor(entry.balanceAfterMinor)}
@@ -112,28 +144,49 @@ export function LedgerTable() {
                     {formatMinor(entry.reservedAfterMinor)}
                   </td>
                   <td className="whitespace-nowrap px-5 py-3 text-right">
-                    {isPurchase(entry.entryType) ? (
-                      <PurchaseReceiptDialog
-                        entry={entry}
-                        accountName={accountName}
-                      >
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-accent"
-                        >
-                          <FileText className="h-3.5 w-3.5" />
-                          Receipt
-                        </button>
-                      </PurchaseReceiptDialog>
-                    ) : (
-                      <span className="text-muted-foreground/50">—</span>
-                    )}
+                    <LedgerDocument entry={entry} accountName={accountName} />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <MobileRecordList className="sm:hidden">
+          {entries.map((entry) => (
+            <MobileRecordCard
+              key={entry.id}
+              title={LEDGER_TYPE_LABELS[entry.entryType]}
+              subtitle={entry.description}
+              trailing={
+                <span
+                  className={cn(
+                    "whitespace-nowrap text-sm font-semibold",
+                    amountToneClass(entry),
+                  )}
+                >
+                  {amountLabel(entry)}
+                </span>
+              }
+              fields={[
+                { label: "When", value: formatDateTime(entry.createdAt) },
+                {
+                  label: "Balance",
+                  value: formatMinor(entry.balanceAfterMinor),
+                },
+                {
+                  label: "Reserved",
+                  value: formatMinor(entry.reservedAfterMinor),
+                },
+                {
+                  label: "Document",
+                  value: (
+                    <LedgerDocument entry={entry} accountName={accountName} />
+                  ),
+                },
+              ]}
+            />
+          ))}
+        </MobileRecordList>
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-border px-5 py-3 text-sm">
             <span className="text-muted-foreground">

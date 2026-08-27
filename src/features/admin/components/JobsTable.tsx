@@ -12,6 +12,11 @@ import {
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
 import { PageBanner } from "@/shared/ui-components/brand";
+import {
+  MobileRecordCard,
+  MobileRecordList,
+  type MobileRecordField,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -22,7 +27,7 @@ import {
   useMinRecruiterFeeSetting,
 } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
-import { JOB_STATUS_LABELS } from "../schemas";
+import { JOB_STATUS_LABELS, type AdminJobListItem } from "../schemas";
 import { JobRowActions } from "./JobRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
@@ -48,6 +53,102 @@ const COLUMNS: ColumnDef[] = [
   { key: "posted", label: "Posted" },
   { key: "actions", label: "Actions", required: true },
 ];
+
+function JobStatus({ status }: { status: AdminJobListItem["status"] }) {
+  return (
+    <StatusBadge
+      label={JOB_STATUS_LABELS[status] ?? status}
+      className={JOB_STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
+    />
+  );
+}
+
+/** Logo + company name → its admin profile. */
+function JobCompany({ job }: { job: AdminJobListItem }) {
+  return (
+    <div className="flex items-center gap-2.5 text-muted-foreground">
+      <CompanyLogo
+        companyProfileId={job.companyProfileId}
+        hasLogo={job.hasLogo}
+        name={job.companyName}
+        size="xs"
+      />
+      {job.companyUserId ? (
+        <Link
+          href={`/admin/companies/${job.companyUserId}`}
+          className="block max-w-[200px] truncate text-navy hover:text-primary hover:underline"
+        >
+          {job.companyName}
+        </Link>
+      ) : (
+        <span className="block max-w-[200px] truncate">{job.companyName}</span>
+      )}
+    </div>
+  );
+}
+
+function JobFee({
+  job,
+  minFeeMinor,
+}: {
+  job: AdminJobListItem;
+  minFeeMinor: number;
+}) {
+  return minFeeMinor > 0 && job.recruiterFeeMinor < minFeeMinor ? (
+    <span className="inline-flex items-center rounded-full bg-[#FBF3DF] px-2 py-0.5 text-xs font-semibold text-[#7A5109]">
+      {formatMinor(job.recruiterFeeMinor)}
+    </span>
+  ) : (
+    <span className="font-bold tabular-nums text-navy">
+      {formatMinor(job.recruiterFeeMinor)}
+    </span>
+  );
+}
+
+/** Submissions → the threads on this job. */
+function JobCandidates({ job }: { job: AdminJobListItem }) {
+  return job.candidateCount > 0 ? (
+    <Link
+      href={`/admin/conversations?jobId=${job.jobId}`}
+      className="font-medium text-primary hover:underline"
+    >
+      {job.candidateCount}
+    </Link>
+  ) : (
+    <span className="text-muted-foreground">0</span>
+  );
+}
+
+function JobCard({
+  job,
+  minFeeMinor,
+}: {
+  job: AdminJobListItem;
+  minFeeMinor: number;
+}) {
+  const fields: MobileRecordField[] = [
+    { label: "Company", value: <JobCompany job={job} /> },
+    {
+      label: "Recruiter fee",
+      value: <JobFee job={job} minFeeMinor={minFeeMinor} />,
+    },
+    { label: "Posted", value: formatDate(job.createdAt) },
+    ...(HIDE_PHASE2_FEATURES
+      ? []
+      : [{ label: "Candidates", value: <JobCandidates job={job} /> }]),
+  ];
+
+  return (
+    <MobileRecordCard
+      title={job.title}
+      subtitle={job.locationState || undefined}
+      href={`/jobs/${job.jobId}`}
+      trailing={<JobStatus status={job.status} />}
+      fields={fields}
+      actions={<JobRowActions jobId={job.jobId} jobTitle={job.title} />}
+    />
+  );
+}
 
 interface JobsTableProps {
   /** When set, the list is restricted to one company (a deep-link). */
@@ -190,7 +291,7 @@ export function JobsTable({
         ) : (
           <Card>
             <CardContent className="p-0">
-              <div className="w-full">
+              <div className="hidden w-full sm:block">
                 <table className={TABLE_CLASS}>
                   <thead>
                     <tr className={THEAD_ROW_CLASS}>
@@ -254,70 +355,23 @@ export function JobsTable({
                         </td>
                         {cols.isVisible("company") && (
                           <td className="px-5 py-3 text-muted-foreground">
-                            {/* Logo + company name → its admin profile. */}
-                            <div className="flex items-center gap-2.5">
-                              <CompanyLogo
-                                companyProfileId={job.companyProfileId}
-                                hasLogo={job.hasLogo}
-                                name={job.companyName}
-                                size="xs"
-                              />
-                              {job.companyUserId ? (
-                                <Link
-                                  href={`/admin/companies/${job.companyUserId}`}
-                                  className="block max-w-[200px] truncate text-navy hover:text-primary hover:underline"
-                                >
-                                  {job.companyName}
-                                </Link>
-                              ) : (
-                                <span className="block max-w-[200px] truncate">
-                                  {job.companyName}
-                                </span>
-                              )}
-                            </div>
+                            <JobCompany job={job} />
                           </td>
                         )}
                         {cols.isVisible("status") && (
                           <td className="px-5 py-3">
-                            <StatusBadge
-                              label={
-                                JOB_STATUS_LABELS[job.status] ?? job.status
-                              }
-                              className={
-                                JOB_STATUS_STYLES[job.status] ??
-                                "bg-muted text-muted-foreground"
-                              }
-                            />
+                            <JobStatus status={job.status} />
                           </td>
                         )}
                         {cols.isVisible("fee") && (
                           <td className="whitespace-nowrap px-5 py-3 text-right">
-                            {minFeeMinor > 0 &&
-                            job.recruiterFeeMinor < minFeeMinor ? (
-                              <span className="inline-flex items-center rounded-full bg-[#FBF3DF] px-2 py-0.5 text-xs font-semibold text-[#7A5109]">
-                                {formatMinor(job.recruiterFeeMinor)}
-                              </span>
-                            ) : (
-                              <span className="font-bold tabular-nums text-navy">
-                                {formatMinor(job.recruiterFeeMinor)}
-                              </span>
-                            )}
+                            <JobFee job={job} minFeeMinor={minFeeMinor} />
                           </td>
                         )}
                         {!HIDE_PHASE2_FEATURES &&
                           cols.isVisible("candidates") && (
                             <td className="px-5 py-3 text-center tabular-nums">
-                              {/* Submissions → the threads on this job. */}
-                              {job.candidateCount > 0 ? (
-                                <Link
-                                  href={`/admin/conversations?jobId=${job.jobId}`}
-                                  className="font-medium text-primary hover:underline"
-                                >
-                                  {job.candidateCount}
-                                </Link>
-                              ) : (
-                                <span className="text-muted-foreground">0</span>
-                              )}
+                              <JobCandidates job={job} />
                             </td>
                           )}
                         {cols.isVisible("posted") && (
@@ -336,6 +390,15 @@ export function JobsTable({
                   </tbody>
                 </table>
               </div>
+              <MobileRecordList className="sm:hidden">
+                {data.data.map((job) => (
+                  <JobCard
+                    key={job.jobId}
+                    job={job}
+                    minFeeMinor={minFeeMinor}
+                  />
+                ))}
+              </MobileRecordList>
               <ListPager
                 page={page}
                 totalPages={data.meta.totalPages}
