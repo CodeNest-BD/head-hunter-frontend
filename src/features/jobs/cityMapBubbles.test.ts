@@ -1,11 +1,88 @@
 import { describe, expect, it } from "vitest";
 
+import { US_STATES } from "@/shared/data/usStatesGeo";
+
 import {
   bubbleRadius,
   feeRange,
   nextBubbleSelection,
+  resolveCityBubbles,
   type MapSelection,
 } from "./cityMapBubbles";
+
+describe("resolveCityBubbles", () => {
+  const hi = US_STATES.find((s) => s.code === "HI")!;
+  const distanceFromHiCentroid = (b: { x: number; y: number }): number =>
+    Math.hypot(b.x - hi.cx, b.y - hi.cy);
+
+  it("places a city missing from the curated list at its state centroid", () => {
+    // Kaunakakai is a real Census place the job form can pick, but it is not in
+    // the hand-geocoded US_CITIES set — it must still get a bubble, not vanish.
+    const bubbles = resolveCityBubbles([
+      {
+        locationState: "HI",
+        locationCity: "Kaunakakai",
+        openRoles: 2,
+        totalFeeMinor: 298000,
+      },
+    ]);
+    expect(bubbles).toHaveLength(1);
+    expect(bubbles[0]).toMatchObject({
+      city: "Kaunakakai",
+      state: "HI",
+      openRoles: 2,
+      totalFeeMinor: 298000,
+    });
+    // Positioned at the state centroid (within the small fan-out offset).
+    expect(distanceFromHiCentroid(bubbles[0])).toBeLessThanOrEqual(10);
+  });
+
+  it("still places a curated city at its own coordinate, not the centroid", () => {
+    const [honolulu] = resolveCityBubbles([
+      {
+        locationState: "HI",
+        locationCity: "Honolulu",
+        openRoles: 1,
+        totalFeeMinor: 100000,
+      },
+    ]);
+    expect(honolulu.city).toBe("Honolulu");
+    // Honolulu has a real geocode, so it is nowhere near the state centroid.
+    expect(distanceFromHiCentroid(honolulu)).toBeGreaterThan(10);
+  });
+
+  it("merges duplicate rows of the same fallback city", () => {
+    const bubbles = resolveCityBubbles([
+      {
+        locationState: "HI",
+        locationCity: "Kaunakakai",
+        openRoles: 2,
+        totalFeeMinor: 200000,
+      },
+      {
+        locationState: "HI",
+        locationCity: "Kaunakakai",
+        openRoles: 3,
+        totalFeeMinor: 300000,
+      },
+    ]);
+    expect(bubbles).toHaveLength(1);
+    expect(bubbles[0]).toMatchObject({ openRoles: 5, totalFeeMinor: 500000 });
+  });
+
+  it("drops a row whose state is unknown", () => {
+    expect(
+      resolveCityBubbles([
+        {
+          locationState: "ZZ",
+          locationCity: "Nowhere",
+          openRoles: 1,
+          totalFeeMinor: 1000,
+        },
+      ]),
+    ).toEqual([]);
+  });
+});
 
 describe("nextBubbleSelection", () => {
   const sanJose = { state: "CA", city: "San Jose" };
