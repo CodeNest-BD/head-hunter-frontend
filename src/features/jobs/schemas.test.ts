@@ -84,6 +84,12 @@ describe("jobFormSchema", () => {
     );
   });
 
+  it("rejects a salary maximum equal to the minimum", () => {
+    expect(errorPaths({ salaryMin: "100000", salaryMax: "100000" })).toContain(
+      "salaryMax",
+    );
+  });
+
   it("accepts a salary range with only one bound set", () => {
     expect(errorPaths({ salaryMin: "100000", salaryMax: "" })).toEqual([]);
   });
@@ -109,9 +115,7 @@ describe("jobFormSchema", () => {
   });
 
   it("accepts a salary minimum at the $1,000,000,000 ceiling", () => {
-    expect(
-      errorPaths({ salaryMin: "1000000000", salaryMax: "1000000000" }),
-    ).toEqual([]);
+    expect(errorPaths({ salaryMin: "1000000000", salaryMax: "" })).toEqual([]);
   });
 
   it("rejects a salary minimum over the $1,000,000,000 ceiling", () => {
