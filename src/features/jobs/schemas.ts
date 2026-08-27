@@ -205,9 +205,12 @@ export const jobFormSchema = z
       const min = Number(values.salaryMin);
       const max = Number(values.salaryMax);
       if (!Number.isFinite(min) || !Number.isFinite(max)) return true;
-      return max >= min;
+      return max > min;
     },
-    { message: "Maximum must be at least the minimum", path: ["salaryMax"] },
+    {
+      message: "Maximum must be greater than the minimum",
+      path: ["salaryMax"],
+    },
   )
   // A located role needs its state: the job map groups by it and skips rows
   // without one, so a stateless on-site job is invisible on the marketplace's

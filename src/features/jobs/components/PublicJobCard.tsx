@@ -55,7 +55,7 @@ function tags(job: PublicJobCardData): string[] {
 
 /**
  * One job card in the public explore grid, per the client reference: a
- * category eyebrow and posted time, the title, company · location, work tags,
+ * category eyebrow and posted time, the title, company and location, work tags,
  * then a footer with the bold recruiter fee ("Free" at $0) and a View details
  * action.
  */
@@ -79,17 +79,20 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
       <h3 className="mt-3 font-heading text-lg font-extrabold leading-snug text-navy">
         {job.title}
       </h3>
-      <div className="mt-1.5 flex items-center gap-2 text-sm text-brand-gray">
-        <CompanyLogo
-          companyProfileId={job.companyProfileId}
-          hasLogo={job.hasLogo}
-          name={job.companyName}
-          size="xs"
-        />
-        <span className="truncate">{job.companyName}</span>
-        <span aria-hidden="true">·</span>
-        <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span className="truncate">{locationLine(job)}</span>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-brand-gray">
+        <span className="flex min-w-0 items-center gap-2">
+          <CompanyLogo
+            companyProfileId={job.companyProfileId}
+            hasLogo={job.hasLogo}
+            name={job.companyName}
+            size="xs"
+          />
+          <span className="truncate">{job.companyName}</span>
+        </span>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span className="truncate">{locationLine(job)}</span>
+        </span>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
