@@ -15,6 +15,7 @@ import { PageBanner } from "@/shared/ui-components/brand";
 import {
   AttentionRow,
   Panel,
+  PanelGroup,
   StatCard,
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
@@ -105,7 +106,7 @@ export function AdminOverview({ firstName }: { firstName: string }) {
     return (
       <div className="flex flex-col gap-6">
         {banner}
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
@@ -193,8 +194,9 @@ export function AdminOverview({ firstName }: { firstName: string }) {
     <div className="flex flex-col gap-6">
       {banner}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         <StatCard
+          className="col-span-2 sm:col-span-1"
           tone="navy"
           label="Wallet total"
           value={formatMinor(data.walletTotalMinor)}
@@ -211,120 +213,146 @@ export function AdminOverview({ firstName }: { firstName: string }) {
           hint={`${data.companies.active} active · ${data.companies.held} held`}
         />
         <StatCard
+          // Odd one out in the phone's two-up grid; spanning it keeps the row
+          // from ending on an empty cell.
+          className="col-span-2 sm:col-span-1"
           label="Live jobs"
           value={liveJobsTotal}
           hint={`${data.conversations} submissions to date`}
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6 lg:col-span-2">
-          <h2 className="font-heading text-base font-bold text-navy">
-            Sign-ups
-          </h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            {peak.companies > 0
-              ? `Last 6 months · ${peak.companies} of ${data.companies.total} companies joined in ${shortMonth(peak.month)}`
-              : "Last 6 months"}
-          </p>
-          <div className="mt-4 h-[260px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={signupData}
-                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#E3E6EC"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 12, fill: "#68707E" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  tick={{ fontSize: 12, fill: "#68707E" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "1px solid #E3E6EC",
-                    fontSize: 13,
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 13 }} />
-                <Bar
-                  dataKey="Companies"
-                  fill={COMPANY_COLOR}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="Recruiters"
-                  fill={RECRUITER_COLOR}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-          <h2 className="font-heading text-base font-bold text-navy">
-            Account status
-          </h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            {heldAccounts} of {data.recruiters.total + data.companies.total}{" "}
-            accounts are on hold.
-          </p>
-          <div className="mt-5 flex flex-col gap-4">
-            <StatusBar
-              label="Companies"
-              active={data.companies.active}
-              held={data.companies.held}
-            />
-            <StatusBar
-              label="Recruiters"
-              active={data.recruiters.active}
-              held={data.recruiters.held}
-            />
-          </div>
-          <div className="mt-5 flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: ACTIVE_COLOR }}
-              />
-              Active
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: HELD_COLOR }}
-              />
-              Held
-            </span>
-          </div>
-        </section>
-      </div>
-
-      <Panel title="Needs a decision">
-        {queue.length > 0 ? (
-          <div className="flex flex-col">
-            {queue.map((item) => (
-              <AttentionRow key={item.id} item={item} />
-            ))}
-          </div>
-        ) : (
-          <p className="py-6 text-sm text-muted-foreground">
-            Nothing waiting on a decision right now.
-          </p>
-        )}
-      </Panel>
+      <PanelGroup
+        gridClassName="gap-y-6 lg:grid-cols-3"
+        primaryId="decisions"
+        panels={[
+          {
+            id: "signups",
+            label: "Sign-ups",
+            className: "lg:col-span-2",
+            content: (
+              <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+                <h2 className="font-heading text-base font-bold text-navy">
+                  Sign-ups
+                </h2>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                  {peak.companies > 0
+                    ? `Last 6 months · ${peak.companies} of ${data.companies.total} companies joined in ${shortMonth(peak.month)}`
+                    : "Last 6 months"}
+                </p>
+                <div className="mt-4 h-[260px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={signupData}
+                      margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#E3E6EC"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="month"
+                        tick={{ fontSize: 12, fill: "#68707E" }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{ fontSize: 12, fill: "#68707E" }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          borderRadius: 12,
+                          border: "1px solid #E3E6EC",
+                          fontSize: 13,
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 13 }} />
+                      <Bar
+                        dataKey="Companies"
+                        fill={COMPANY_COLOR}
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="Recruiters"
+                        fill={RECRUITER_COLOR}
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+            ),
+          },
+          {
+            id: "status",
+            label: "Account status",
+            content: (
+              <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+                <h2 className="font-heading text-base font-bold text-navy">
+                  Account status
+                </h2>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                  {heldAccounts} of{" "}
+                  {data.recruiters.total + data.companies.total} accounts are on
+                  hold.
+                </p>
+                <div className="mt-5 flex flex-col gap-4">
+                  <StatusBar
+                    label="Companies"
+                    active={data.companies.active}
+                    held={data.companies.held}
+                  />
+                  <StatusBar
+                    label="Recruiters"
+                    active={data.recruiters.active}
+                    held={data.recruiters.held}
+                  />
+                </div>
+                <div className="mt-5 flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: ACTIVE_COLOR }}
+                    />
+                    Active
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: HELD_COLOR }}
+                    />
+                    Held
+                  </span>
+                </div>
+              </section>
+            ),
+          },
+          {
+            id: "decisions",
+            label: "Need Decision",
+            className: "lg:col-span-3",
+            content: (
+              <Panel title="Need Decision">
+                {queue.length > 0 ? (
+                  <div className="flex flex-col">
+                    {queue.map((item) => (
+                      <AttentionRow key={item.id} item={item} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="py-6 text-sm text-muted-foreground">
+                    Nothing waiting on a decision right now.
+                  </p>
+                )}
+              </Panel>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }

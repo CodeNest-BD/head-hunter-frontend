@@ -11,6 +11,7 @@ import { PageBanner } from "@/shared/ui-components/brand";
 import {
   AttentionRow,
   Panel,
+  PanelGroup,
   StatCard,
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
@@ -105,8 +106,9 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
         subtitle={subtitleParts.join(" · ")}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         <StatCard
+          className="col-span-2 sm:col-span-1"
           tone="navy"
           label="Available to spend"
           value={formatMinor(wallet.data?.availableMinor)}
@@ -136,6 +138,9 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           href="/company/jobs"
         />
         <StatCard
+          // Odd one out in the phone's two-up grid; spanning it keeps the row
+          // from ending on an empty cell.
+          className="col-span-2 sm:col-span-1"
           label="Reserved"
           value={formatMinor(wallet.data?.reservedMinor)}
           hint="held against live posts"
@@ -143,59 +148,75 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel
-          title="Needs your attention"
-          action={
-            <Link
-              href="/notifications"
-              className="text-sm font-semibold text-primary transition-colors hover:text-primary/80"
-            >
-              View all
-            </Link>
-          }
-        >
-          {attention.length > 0 ? (
-            <div className="flex flex-col">
-              {attention.slice(0, 5).map((item) => (
-                <AttentionRow key={item.id} item={item} />
-              ))}
-            </div>
-          ) : (
-            <p className="py-6 text-sm text-muted-foreground">
-              You&apos;re all caught up — nothing needs your attention right
-              now.
-            </p>
-          )}
-        </Panel>
-
-        <Panel title="Recent activity">
-          {recentActivity.length > 0 ? (
-            <ul className="flex flex-col">
-              {recentActivity.map((note) => (
-                <li
-                  key={note.id}
-                  className="border-b border-border/70 py-3.5 last:border-0"
-                >
-                  <p className="text-sm font-medium text-navy">{note.title}</p>
-                  {note.body && (
-                    <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-                      {note.body}
-                    </p>
-                  )}
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {formatDateTime(note.createdAt)}
+      <PanelGroup
+        gridClassName="lg:grid-cols-2"
+        panels={[
+          {
+            id: "attention",
+            label: "Needs your attention",
+            content: (
+              <Panel
+                title="Needs your attention"
+                action={
+                  <Link
+                    href="/notifications"
+                    className="text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                  >
+                    View all
+                  </Link>
+                }
+              >
+                {attention.length > 0 ? (
+                  <div className="flex flex-col">
+                    {attention.slice(0, 5).map((item) => (
+                      <AttentionRow key={item.id} item={item} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="py-6 text-sm text-muted-foreground">
+                    You&apos;re all caught up — nothing needs your attention
+                    right now.
                   </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="py-6 text-sm text-muted-foreground">
-              No recent activity yet.
-            </p>
-          )}
-        </Panel>
-      </div>
+                )}
+              </Panel>
+            ),
+          },
+          {
+            id: "activity",
+            label: "Recent activity",
+            content: (
+              <Panel title="Recent activity">
+                {recentActivity.length > 0 ? (
+                  <ul className="flex flex-col">
+                    {recentActivity.map((note) => (
+                      <li
+                        key={note.id}
+                        className="border-b border-border/70 py-3.5 last:border-0"
+                      >
+                        <p className="text-sm font-medium text-navy">
+                          {note.title}
+                        </p>
+                        {note.body && (
+                          <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
+                            {note.body}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {formatDateTime(note.createdAt)}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="py-6 text-sm text-muted-foreground">
+                    No recent activity yet.
+                  </p>
+                )}
+              </Panel>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }

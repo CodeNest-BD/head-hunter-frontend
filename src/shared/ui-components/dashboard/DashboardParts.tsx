@@ -1,8 +1,91 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { cn } from "@/shared/libs/shadCnConfig";
+
+export interface DashboardPanel {
+  id: string;
+  /** Tab label below `lg`. */
+  label: string;
+  /** Desktop grid placement, e.g. "lg:col-span-2". */
+  className?: string;
+  content: ReactNode;
+}
+
+/**
+ * A dashboard's content panels: the usual grid at `lg` and up, one panel at a
+ * time behind tabs below it — stacked, they turn a phone dashboard into a very
+ * long scroll past charts and lists.
+ *
+ * Every panel stays mounted and the inactive ones are CSS-hidden, so switching
+ * tabs never remounts a chart or discards a list's scroll position, and the
+ * desktop grid can still show them all at once. (Radix `Tabs` can do neither.)
+ */
+export function PanelGroup({
+  panels,
+  gridClassName,
+  primaryId,
+}: {
+  panels: readonly DashboardPanel[];
+  gridClassName?: string;
+  /**
+   * The panel that leads on a phone: its tab comes first and is selected by
+   * default. Only the tab strip reorders — the grid below keeps `panels` order,
+   * so the desktop layout is unaffected.
+   */
+  primaryId?: string;
+}) {
+  const [active, setActive] = useState(primaryId ?? panels[0]?.id ?? "");
+  const tabs = primaryId
+    ? [...panels].sort((a, b) =>
+        a.id === primaryId ? -1 : b.id === primaryId ? 1 : 0,
+      )
+    : panels;
+
+  return (
+    <div>
+      <div
+        role="tablist"
+        className="flex items-center gap-4 overflow-x-auto border-b border-border lg:hidden"
+      >
+        {tabs.map((panel) => (
+          <button
+            key={panel.id}
+            type="button"
+            role="tab"
+            aria-selected={panel.id === active}
+            onClick={() => setActive(panel.id)}
+            className={cn(
+              "-mb-px whitespace-nowrap border-b-2 px-1 pb-2.5 text-sm font-semibold transition-colors",
+              panel.id === active
+                ? "border-primary text-navy"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {panel.label}
+          </button>
+        ))}
+      </div>
+
+      <div className={cn("mt-4 grid gap-4 lg:mt-0", gridClassName)}>
+        {panels.map((panel) => (
+          <div
+            key={panel.id}
+            role="tabpanel"
+            className={cn(
+              "lg:block",
+              panel.className,
+              panel.id === active ? "block" : "hidden",
+            )}
+          >
+            {panel.content}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /**
  * A single headline metric. Navy tone leads a dashboard's most important number.
@@ -16,18 +99,22 @@ export function StatCard({
   hint,
   tone = "white",
   href,
+  className: classNameProp,
 }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
   tone?: "navy" | "white";
   href?: string;
+  /** Grid placement from the caller, e.g. a lead card spanning both columns. */
+  className?: string;
 }) {
   const navy = tone === "navy";
   const className = cn(
-    "block rounded-md p-5 shadow-card",
+    "block rounded-md p-4 shadow-card sm:p-5",
     navy ? "bg-navy" : "border border-border bg-card",
     href && "transition-colors hover:border-primary/40",
+    classNameProp,
   );
   const body = (
     <>
@@ -39,10 +126,12 @@ export function StatCard({
       >
         {label}
       </p>
-      <p className="mt-2 flex items-baseline gap-2">
+      {/* The hint sits under the figure on a phone: beside it, a two-word hint
+          wraps to three lines and doubles the card's height. */}
+      <p className="mt-1.5 flex flex-col gap-0.5 sm:mt-2 sm:flex-row sm:items-baseline sm:gap-2">
         <span
           className={cn(
-            "text-3xl font-extrabold tracking-[-0.02em] tabular-nums",
+            "text-2xl font-extrabold tracking-[-0.02em] tabular-nums sm:text-3xl",
             navy ? "text-white" : "text-navy",
           )}
         >
@@ -51,7 +140,7 @@ export function StatCard({
         {hint && (
           <span
             className={cn(
-              "text-sm",
+              "text-xs sm:text-sm",
               navy ? "text-white/60" : "text-muted-foreground",
             )}
           >

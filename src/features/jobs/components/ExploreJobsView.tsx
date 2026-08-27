@@ -2,12 +2,21 @@
 
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { LayoutGrid, List, Loader2, Lock, Search, SearchX } from "lucide-react";
+import {
+  ChevronDown,
+  LayoutGrid,
+  List,
+  Loader2,
+  Lock,
+  Search,
+  SearchX,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { useAuth } from "@/features/auth";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
@@ -99,6 +108,22 @@ interface Filters {
   selection: MapSelection;
 }
 
+/**
+ * How many filters are narrowing the list right now. Drives the count beside
+ * the collapsed Filters header on a phone, so a filter that is silently
+ * hiding results is never invisible. `sort` is ordering, not filtering.
+ */
+function countAppliedFilters(filters: Filters): number {
+  return [
+    filters.roleCategory !== ANY_CATEGORY,
+    filters.feeBucket !== "any",
+    filters.q !== "",
+    filters.employment !== "",
+    filters.workMode !== "",
+    filters.selection.kind !== "none",
+  ].filter(Boolean).length;
+}
+
 const INITIAL_FILTERS: Filters = {
   roleCategory: ANY_CATEGORY,
   feeBucket: "any",
@@ -122,6 +147,11 @@ export function ExploreJobsView() {
   const canViewLiveMap = user?.role === "admin" || user?.role === "company";
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
   const [view, setView] = useState<ResultView>("cards");
+  // A phone is one column wide either way, so the layout choice is a desktop
+  // affordance: below `sm` the toggle is hidden and the denser row list is
+  // always what renders, whatever `view` happens to say.
+  const isCompact = useMediaQuery("(max-width: 639px)");
+  const effectiveView: ResultView = isCompact ? "rows" : view;
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState<number>(PAGE_SIZE);
   const debouncedQ = useDebouncedValue(filters.q, 300);
@@ -270,12 +300,16 @@ export function ExploreJobsView() {
               ref={resultsRef}
               className="scroll-mt-24 rounded-md border border-brand-line bg-white p-5 shadow-card sm:p-6"
             >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap items-baseline gap-3">
-                  <h2 className="font-heading text-xl font-extrabold text-navy">
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
+                {/* `min-w-0` + `truncate` so a long state name shortens rather
+                    than pushing the sort control onto its own line. */}
+                <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <h2 className="min-w-0 truncate font-heading text-lg font-extrabold text-navy sm:text-xl">
                     {headline}
                   </h2>
-                  <span className="text-sm text-brand-gray">{total} roles</span>
+                  <span className="shrink-0 text-sm text-brand-gray">
+                    {total} roles
+                  </span>
                   {filters.selection.kind !== "none" && (
                     <button
                       type="button"
@@ -286,23 +320,28 @@ export function ExploreJobsView() {
                     </button>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <SegmentedToggle
-                    options={[
-                      {
-                        value: "rows",
-                        title: "Rows",
-                        label: <List className="h-4 w-4" />,
-                      },
-                      {
-                        value: "cards",
-                        title: "Cards",
-                        label: <LayoutGrid className="h-4 w-4" />,
-                      },
-                    ]}
-                    value={view}
-                    onChange={setView}
-                  />
+                <div className="flex shrink-0 items-center gap-2">
+                  {/* Choosing a layout is a desktop affordance: a phone is one
+                      column wide either way, and the row list is the compact
+                      one, so that is what it always gets. */}
+                  <div className="hidden sm:block">
+                    <SegmentedToggle
+                      options={[
+                        {
+                          value: "rows",
+                          title: "Rows",
+                          label: <List className="h-4 w-4" />,
+                        },
+                        {
+                          value: "cards",
+                          title: "Cards",
+                          label: <LayoutGrid className="h-4 w-4" />,
+                        },
+                      ]}
+                      value={view}
+                      onChange={setView}
+                    />
+                  </div>
                   <Select
                     value={filters.sort}
                     onValueChange={(value) =>
@@ -314,7 +353,7 @@ export function ExploreJobsView() {
                       })
                     }
                   >
-                    <SelectTrigger className="w-[150px]">
+                    <SelectTrigger className="w-[132px] sm:w-[150px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -332,7 +371,7 @@ export function ExploreJobsView() {
                 items={visible}
                 total={total}
                 totalPages={totalPages}
-                view={view}
+                view={effectiveView}
                 page={page}
                 pageSize={limit}
                 onPage={setPage}
@@ -396,11 +435,35 @@ function FiltersPanel({
   const cityOptions = useStateCities(stateCode);
   const cityValue =
     filters.selection.kind === "city" ? filters.selection.city : null;
+  // Collapsed by default below `lg`: the map is what this page is for, and an
+  // expanded filter card pushes it entirely off a phone's first screen.
+  const [open, setOpen] = useState(false);
+  const appliedCount = countAppliedFilters(filters);
 
   return (
     <aside className="h-fit rounded-md border border-brand-line bg-white p-5 shadow-card lg:sticky lg:top-24">
       <div className="flex items-center justify-between">
-        <h2 className="font-heading text-base font-bold text-navy">Filters</h2>
+        <h2 className="font-heading text-base font-bold text-navy">
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            aria-expanded={open}
+            className="flex items-center gap-2 lg:pointer-events-none"
+          >
+            Filters
+            {appliedCount > 0 && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground lg:hidden">
+                {appliedCount}
+              </span>
+            )}
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform lg:hidden",
+                open && "rotate-180",
+              )}
+            />
+          </button>
+        </h2>
         <button
           type="button"
           onClick={onClear}
@@ -410,7 +473,9 @@ function FiltersPanel({
         </button>
       </div>
 
-      <div className="mt-4 flex flex-col gap-5">
+      <div
+        className={cn("mt-4 flex-col gap-5 lg:flex", open ? "flex" : "hidden")}
+      >
         <div>
           <Label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
             Search

@@ -66,7 +66,8 @@ function CompanyTopBarActions() {
       </Link>
       <Link
         href="/company/jobs/new"
-        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        aria-label="Post a job"
+        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:px-3"
       >
         <Plus className="h-4 w-4" />
         <span className="hidden sm:inline">Post a job</span>
@@ -98,7 +99,7 @@ function NotificationBell() {
           aria-label={
             count > 0 ? `Notifications, ${count} unread` : "Notifications"
           }
-          className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="relative flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <Bell className="h-5 w-5" />
           {count > 0 && (
@@ -223,7 +224,7 @@ function UserMenu() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-2 rounded-md p-1 pr-1.5 text-left transition-colors hover:bg-accent sm:pr-2"
+          className="flex h-9 shrink-0 items-center gap-2 rounded-md px-0.5 text-left transition-colors hover:bg-accent sm:pl-1 sm:pr-2"
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
             {initials || <UserRound className="h-4 w-4" />}
@@ -333,21 +334,26 @@ function NavLink({
 function SidebarContent({
   onNavigate,
   collapsed = false,
-  showSiteLinks = false,
+  variant = "rail",
   onToggleCollapse,
 }: {
   onNavigate: () => void;
   collapsed?: boolean;
-  /** The global site links (How It Works, Explore Jobs). On for the mobile
-   * drawer only — on desktop they live in the top bar. */
-  showSiteLinks?: boolean;
-  /** When set (desktop only), renders the collapse toggle beside the MENU
+  /**
+   * "rail" is the desktop sidebar: collapsible, with the account block at its
+   * foot. "drawer" is the mobile slide-over, which carries the account block
+   * in its own header and adds the global site links — on desktop those live
+   * in the top bar.
+   */
+  variant?: "rail" | "drawer";
+  /** When set (rail only), renders the collapse toggle beside the MENU
    * label. Omitted on mobile, where the sidebar never collapses. */
   onToggleCollapse?: () => void;
 }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { isApproved } = useAccountApproval();
+  const isDrawer = variant === "drawer";
   if (!user) return null;
 
   const items = navForRole(user.role, isApproved);
@@ -363,32 +369,14 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-navy px-3 py-4">
-        {/* Global site links — mobile drawer only (the top bar carries them on
-         * desktop), so the job map stays reachable on a phone. */}
-        {showSiteLinks && (
-          <div className="mb-2 space-y-1 border-b border-sidebar-border pb-3">
-            <Link
-              href="/#how"
-              onClick={onNavigate}
-              className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
-            >
-              How It Works
-            </Link>
-            <Link
-              href="/explore-jobs"
-              onClick={onNavigate}
-              className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
-            >
-              Explore Jobs
-            </Link>
-          </div>
-        )}
-        {/* MENU label with the collapse toggle at its right (desktop). When
-         * collapsed the label hides and the toggle centres. */}
+        {/* MENU label with the collapse toggle at its right (rail only). When
+         * collapsed the label hides and the toggle centres. The drawer heads
+         * its nav with the account block instead, so it needs neither. */}
         <div
           className={cn(
             "flex items-center pb-2",
             collapsed ? "justify-center" : "justify-between px-3",
+            isDrawer && "hidden",
           )}
         >
           {!collapsed && (
@@ -421,10 +409,38 @@ function SidebarContent({
             onNavigate={onNavigate}
           />
         ))}
+
+        {/* The global site links are a different kind of destination from the
+         * role nav, so they close the list as their own labelled group rather
+         * than sitting above it unmarked. Drawer only — the top bar carries
+         * them on desktop. */}
+        {isDrawer && (
+          <div className="mt-3 space-y-1 border-t border-sidebar-border pt-3">
+            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/50">
+              Explore
+            </p>
+            <Link
+              href="/#how"
+              onClick={onNavigate}
+              className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="/explore-jobs"
+              onClick={onNavigate}
+              className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+            >
+              Explore Jobs
+            </Link>
+          </div>
+        )}
       </nav>
 
       <div className="border-t border-sidebar-border p-3">
-        {!collapsed && (
+        {/* The drawer carries the account block in its own header, so repeating
+         * it here would show the same name twice. */}
+        {!collapsed && !isDrawer && (
           <div className="flex items-center gap-3 rounded-md px-2 py-2">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
               {initials || <UserRound className="h-4 w-4" />}
@@ -509,17 +525,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Full-width top navbar: logo + global links on the left; role actions,
        * notifications and the account menu on the right. Spans the whole width,
        * with the sidebar sitting beneath it. */}
-      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center gap-3 border-b border-border/70 bg-secondary/80 px-4 backdrop-blur-md sm:px-6 lg:px-10">
+      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center gap-2 border-b border-border/70 bg-secondary/80 px-3 backdrop-blur-md sm:gap-3 sm:px-6 lg:px-10">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
-          className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+          className="-ml-1 shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
         >
           <Menu className="h-5 w-5" />
         </button>
         <Link href="/" aria-label="Head-Hunters home" className="shrink-0">
-          <Logo />
+          <Logo wordmark="sm-up" />
         </Link>
         {/* Global site links, shown to every signed-in user on app pages
          * (public pages get the marketing nav). */}
@@ -540,7 +556,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             Explore Jobs
           </Link>
         </nav>
-        <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        {/* `shrink-0` so the account avatar is never the thing squeezed off the
+         * end of a narrow top bar. */}
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">
           {user?.role === "company" && <CompanyTopBarActions />}
           {(user?.role === "company" || user?.role === "recruiter") && (
             <NotificationBell />
@@ -574,20 +592,38 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             aria-hidden="true"
           />
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[80%] flex-col border-r border-sidebar-border bg-sidebar shadow-2xl">
-            <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-6">
-              <Link href="/" aria-label="Head-Hunters home" onClick={close}>
-                <Logo tone="onDark" />
-              </Link>
+            <div className="flex items-center justify-between gap-3 border-b border-sidebar-border px-4 py-3.5">
+              {user ? (
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                    {`${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`
+                      .toUpperCase()
+                      .trim() || <UserRound className="h-4 w-4" />}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold text-sidebar-accent-foreground">
+                      {user.firstName} {user.lastName}
+                    </span>
+                    <span className="block truncate text-xs capitalize text-sidebar-foreground/60">
+                      {user.role}
+                    </span>
+                  </span>
+                </div>
+              ) : (
+                <Link href="/" aria-label="Head-Hunters home" onClick={close}>
+                  <Logo tone="onDark" />
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={close}
                 aria-label="Close menu"
-                className="rounded-md p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+                className="shrink-0 rounded-md p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <SidebarContent onNavigate={close} showSiteLinks />
+            <SidebarContent onNavigate={close} variant="drawer" />
           </aside>
         </div>
       )}

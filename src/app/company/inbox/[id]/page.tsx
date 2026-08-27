@@ -5,7 +5,7 @@ import { AlertCircle } from "lucide-react";
 
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import { CandidateCard, useCandidate } from "@/features/candidates";
-import { Thread } from "@/features/conversations";
+import { Thread, useMessageUnreadCounts } from "@/features/conversations";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
@@ -102,6 +102,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
 
 export default function CandidateReviewPage() {
   const params = useParams<{ id: string }>();
+  const unreadCounts = useMessageUnreadCounts();
 
   return (
     <RequireRole role="company">
@@ -116,6 +117,7 @@ export default function CandidateReviewPage() {
             }
             left={<CandidateDetailColumn candidateId={params.id} />}
             right={<Thread candidateId={params.id} />}
+            rightUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
           />
         </DashboardLayout>
       </RequireApprovedCompany>

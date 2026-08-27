@@ -270,7 +270,9 @@ export function SignUpForm() {
             <legend className="mb-2 text-sm font-medium leading-none text-foreground">
               I am a…
             </legend>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {/* Two short cards; side by side even on a phone, where stacking
+                them pushes the whole form down a screen for no gain. */}
+            <div className="grid grid-cols-2 gap-3">
               {ROLE_OPTIONS.map((option) => {
                 const active = field.value === option.value;
                 return (
@@ -306,7 +308,8 @@ export function SignUpForm() {
         )}
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* First/last are short enough to share a row at 360px. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="firstName">First name</Label>
           <Input

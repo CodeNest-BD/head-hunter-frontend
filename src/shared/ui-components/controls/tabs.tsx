@@ -14,7 +14,12 @@ const TabsList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.List
     ref={ref}
-    className={cn("flex items-center gap-6 border-b border-border", className)}
+    // Triggers are `whitespace-nowrap`, so a three-tab bar is wider than a
+    // phone: scroll the bar itself rather than letting it widen the page.
+    className={cn(
+      "flex items-center gap-4 overflow-x-auto border-b border-border sm:gap-6",
+      className,
+    )}
     {...props}
   />
 ));
