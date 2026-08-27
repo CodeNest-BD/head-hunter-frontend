@@ -12,11 +12,11 @@ interface LogoProps {
    */
   size?: "default" | "lg";
   /**
-   * "always", or "sm-up" to drop the wordmark below `sm` and let the mark
-   * carry the brand — for bars too cramped on a phone to fit both it and the
-   * controls beside it.
+   * Drops the ".com" suffix below `sm`, keeping the name itself. For bars too
+   * cramped on a phone to fit the full lockup beside their controls — the
+   * suffix is the part a reader can lose without losing the brand.
    */
-  wordmark?: "always" | "sm-up";
+  compact?: boolean;
   className?: string;
 }
 
@@ -32,7 +32,7 @@ interface LogoProps {
 export function Logo({
   tone = "light",
   size = "default",
-  wordmark = "always",
+  compact = false,
   className,
 }: LogoProps) {
   const onDark = tone === "onDark";
@@ -54,16 +54,18 @@ export function Logo({
         className={cn(
           "font-heading font-extrabold leading-none tracking-[-0.02em]",
           large ? "text-[24px]" : "text-[17px] sm:text-[19px]",
-          wordmark === "sm-up" && "hidden sm:inline",
         )}
       >
         <span className={onDark ? "text-white" : "text-navy"}>
           Head
           <span className={onDark ? "text-white" : "text-primary"}>-</span>
-          Hunters.
+          Hunters
         </span>
-        <span className={onDark ? "text-white/60" : "text-brand-gray-light"}>
-          com
+        <span className={cn(compact && "hidden sm:inline")}>
+          <span className={onDark ? "text-white" : "text-navy"}>.</span>
+          <span className={onDark ? "text-white/60" : "text-brand-gray-light"}>
+            com
+          </span>
         </span>
       </span>
     </span>

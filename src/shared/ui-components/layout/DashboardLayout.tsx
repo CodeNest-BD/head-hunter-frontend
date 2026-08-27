@@ -534,8 +534,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <Link href="/" aria-label="Head-Hunters home" className="shrink-0">
-          <Logo wordmark="sm-up" />
+        {/* `min-w-0` + the wordmark's own `truncate`: if the bar still runs out
+         * of room the name ellipsises, rather than shunting the account avatar
+         * off the end where it can't be tapped. */}
+        <Link
+          href="/"
+          aria-label="Head-Hunters home"
+          className="min-w-0 shrink"
+        >
+          <Logo compact className="max-w-full [&>span]:truncate" />
         </Link>
         {/* Global site links, shown to every signed-in user on app pages
          * (public pages get the marketing nav). */}

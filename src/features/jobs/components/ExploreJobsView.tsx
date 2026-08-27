@@ -258,7 +258,7 @@ export function ExploreJobsView() {
   return (
     <div className="w-full">
       {/* Hero band — navy, centered */}
-      <header className="relative overflow-hidden bg-navy px-5 py-12 text-center md:px-10 md:py-14">
+      <header className="relative overflow-hidden bg-navy px-4 py-8 text-center sm:px-5 sm:py-12 md:px-10 md:py-14">
         <BrandGlow />
         <div className="relative mx-auto flex max-w-3xl flex-col items-center">
           <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-white md:text-4xl">
@@ -274,8 +274,8 @@ export function ExploreJobsView() {
       </header>
 
       {/* Body */}
-      <div className="bg-secondary px-5 py-8 md:px-10">
-        <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <div className="bg-secondary px-3 py-5 sm:px-5 sm:py-8 md:px-10">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
           <FiltersPanel
             filters={filters}
             onChange={setFilter}
@@ -285,7 +285,7 @@ export function ExploreJobsView() {
             }}
           />
 
-          <div className="flex min-w-0 flex-col gap-6">
+          <div className="flex min-w-0 flex-col gap-4 sm:gap-6">
             <MapCard
               isLoading={isLoading}
               canViewMap={isVerified || canViewLiveMap}
@@ -298,7 +298,7 @@ export function ExploreJobsView() {
 
             <section
               ref={resultsRef}
-              className="scroll-mt-24 rounded-md border border-brand-line bg-white p-5 shadow-card sm:p-6"
+              className="scroll-mt-24 rounded-md border border-brand-line bg-white p-4 shadow-card sm:p-5 md:p-6"
             >
               <div className="flex items-center justify-between gap-3 sm:gap-4">
                 {/* `min-w-0` + `truncate` so a long state name shortens rather
@@ -441,7 +441,7 @@ function FiltersPanel({
   const appliedCount = countAppliedFilters(filters);
 
   return (
-    <aside className="h-fit rounded-md border border-brand-line bg-white p-5 shadow-card lg:sticky lg:top-24">
+    <aside className="h-fit rounded-md border border-brand-line bg-white p-4 shadow-card sm:p-5 lg:sticky lg:top-24">
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-base font-bold text-navy">
           <button
@@ -690,7 +690,7 @@ function MapCard({
 }
 
 const MAP_HEADER =
-  "flex flex-col gap-3 border-b border-brand-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between";
+  "flex flex-col gap-3 border-b border-brand-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4";
 
 /** A translucent bordered dot echoing the map bubbles, at a legend size. */
 function LegendDot({ size }: { size: number }) {
@@ -783,7 +783,7 @@ function LiveMapCard({
           </span>
         </div>
       </div>
-      <div className="relative p-4 sm:p-5">
+      <div className="relative p-3 sm:p-5">
         <UsJobMap
           embedded
           stats={stats}
@@ -829,7 +829,7 @@ function LockedMapCard({ pending }: { pending: boolean }) {
           </span>
         </div>
       </div>
-      <div className="relative p-4 sm:p-5">
+      <div className="relative p-3 sm:p-5">
         <div className="pointer-events-none select-none opacity-60 blur-[3px]">
           <DecorativeUsMap />
         </div>
@@ -1013,7 +1013,7 @@ function JobRow({ job }: { job: PublicJobCardData }) {
     : null;
 
   return (
-    <li className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] md:items-center md:gap-6">
+    <li className="grid grid-cols-1 gap-2.5 px-3 py-3.5 sm:gap-3 sm:px-4 sm:py-4 md:grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] md:items-center md:gap-6">
       <div className="min-w-0">
         <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-primary">
           {category}
