@@ -135,7 +135,7 @@ function CityPopup({
       <div
         onMouseEnter={onEnter}
         onMouseLeave={onLeave}
-        className="pointer-events-auto w-max min-w-[180px] rounded-lg border border-brand-line bg-white px-4 py-3 shadow-card-lg"
+        className="pointer-events-auto w-max min-w-[180px] max-w-[200px] rounded-lg border border-brand-line bg-white px-4 py-3 shadow-card-lg sm:max-w-none"
       >
         <p className="font-heading text-[15px] font-bold text-navy">
           {bubble.city}
@@ -445,7 +445,7 @@ export function UsJobMap({
         className={cn(
           "relative overflow-hidden",
           embedded
-            ? "h-[420px] md:h-[500px]"
+            ? "h-64 sm:h-[420px] md:h-[500px]"
             : "rounded-md border border-border bg-card shadow-card",
         )}
       >
@@ -726,7 +726,7 @@ function CityCombobox({
           aria-expanded={open}
           aria-controls={listId}
           aria-haspopup="listbox"
-          className="inline-flex h-9 w-64 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-64"
         >
           <span className="flex items-center gap-2 truncate">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />

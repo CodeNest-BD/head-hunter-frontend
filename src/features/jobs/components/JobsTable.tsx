@@ -40,6 +40,10 @@ import {
   TABLE_TH,
   TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
+import {
+  MobileRecordCard,
+  MobileRecordList,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { useListState } from "@/shared/hooks/useListState";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
@@ -53,6 +57,7 @@ import { formatMinor } from "@/shared/utils/money";
 import {
   ROLE_CATEGORY_LABELS,
   jobStatusSchema,
+  type Job,
   type RoleCategory,
 } from "../schemas";
 import { useDeleteJob, useJobs } from "../hooks/useJobs";
@@ -97,6 +102,61 @@ const COLUMNS: ColumnDef[] = [
 const CATEGORY_OPTIONS = (
   Object.entries(ROLE_CATEGORY_LABELS) as [RoleCategory, string][]
 ).map(([value, label]) => ({ value, label }));
+
+// The four value cells below are rendered by both the desktop table and the
+// mobile card, so they live here rather than inline in either one.
+
+function JobStatusBadge({ status }: { status: Job["status"] }) {
+  return (
+    <StatusBadge
+      label={STATUS_LABELS[status] ?? status}
+      className={STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
+    />
+  );
+}
+
+function RecruiterFee({ feeMinor }: { feeMinor: number }) {
+  return feeMinor === 0 ? (
+    <span className="inline-flex items-center rounded-full bg-[#FBF3DF] px-2 py-0.5 text-xs font-semibold text-[#7A5109]">
+      $0
+    </span>
+  ) : (
+    <span className="font-bold tabular-nums text-navy">
+      {formatMinor(feeMinor)}
+    </span>
+  );
+}
+
+function JobExpiry({ expiresAt }: { expiresAt: Job["expiresAt"] }) {
+  return expiresAt ? (
+    <span className="tabular-nums">{formatDate(expiresAt)}</span>
+  ) : (
+    <>—</>
+  );
+}
+
+/**
+ * Just the total: the untriaged count lives in the inbox, which is where you
+ * act on it, and the number links straight there.
+ */
+function CandidateCount({
+  jobId,
+  count,
+}: {
+  jobId: string;
+  count: number | undefined;
+}) {
+  return count !== undefined && count > 0 ? (
+    <Link
+      href={`/company/inbox/job/${jobId}`}
+      className="inline-flex items-center gap-1.5 transition-colors hover:underline"
+    >
+      <span className="font-semibold text-navy">{count}</span>
+    </Link>
+  ) : (
+    <span className="text-brand-gray">0</span>
+  );
+}
 
 /**
  * Per-row actions behind a kebab menu: View (the public-style detail), Edit,
@@ -327,7 +387,7 @@ export function JobsTable() {
         ) : (
           <>
             <div className={TABLE_CARD}>
-              <div className={TABLE_SCROLL}>
+              <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
                 <table className={TABLE_EL}>
                   <thead className={TABLE_HEAD}>
                     <tr className={TABLE_HEAD_ROW}>
@@ -374,13 +434,7 @@ export function JobsTable() {
                           </td>
                           {cols.isVisible("status") && (
                             <td className={TABLE_TD}>
-                              <StatusBadge
-                                label={STATUS_LABELS[job.status] ?? job.status}
-                                className={
-                                  STATUS_STYLES[job.status] ??
-                                  "bg-muted text-muted-foreground"
-                                }
-                              />
+                              <JobStatusBadge status={job.status} />
                             </td>
                           )}
                           {cols.isVisible("category") && (
@@ -390,47 +444,21 @@ export function JobsTable() {
                           )}
                           {cols.isVisible("fee") && (
                             <td className={TABLE_TD}>
-                              {job.recruiterFeeMinor === 0 ? (
-                                <span className="inline-flex items-center rounded-full bg-[#FBF3DF] px-2 py-0.5 text-xs font-semibold text-[#7A5109]">
-                                  $0
-                                </span>
-                              ) : (
-                                <span className="font-bold tabular-nums text-navy">
-                                  {formatMinor(job.recruiterFeeMinor)}
-                                </span>
-                              )}
+                              <RecruiterFee feeMinor={job.recruiterFeeMinor} />
                             </td>
                           )}
                           {cols.isVisible("expiry") && (
                             <td className={`${TABLE_TD} text-brand-gray`}>
-                              {job.expiresAt ? (
-                                <span className="tabular-nums">
-                                  {formatDate(job.expiresAt)}
-                                </span>
-                              ) : (
-                                "—"
-                              )}
+                              <JobExpiry expiresAt={job.expiresAt} />
                             </td>
                           )}
                           {!HIDE_PHASE2_FEATURES &&
                             cols.isVisible("candidates") && (
                               <td className={`${TABLE_TD} tabular-nums`}>
-                                {/* Just the total: the untriaged count lives in the
-                                  inbox, which is where you act on it, and the
-                                  number links straight there. */}
-                                {candidateCount !== undefined &&
-                                candidateCount > 0 ? (
-                                  <Link
-                                    href={`/company/inbox/job/${job.id}`}
-                                    className="inline-flex items-center gap-1.5 transition-colors hover:underline"
-                                  >
-                                    <span className="font-semibold text-navy">
-                                      {candidateCount}
-                                    </span>
-                                  </Link>
-                                ) : (
-                                  <span className="text-brand-gray">0</span>
-                                )}
+                                <CandidateCount
+                                  jobId={job.id}
+                                  count={candidateCount}
+                                />
                               </td>
                             )}
                           <td className={`${TABLE_TD} text-right`}>
@@ -444,6 +472,47 @@ export function JobsTable() {
                   </tbody>
                 </table>
               </div>
+              <MobileRecordList className="sm:hidden">
+                {data.data.map((job) => (
+                  <MobileRecordCard
+                    key={job.id}
+                    href={`/jobs/${job.id}`}
+                    title={job.title}
+                    subtitle={formatDate(job.publishedAt ?? job.createdAt)}
+                    trailing={<JobStatusBadge status={job.status} />}
+                    fields={[
+                      {
+                        label: "Category",
+                        value: ROLE_CATEGORY_LABELS[job.roleCategory],
+                      },
+                      {
+                        label: "Recruiter fee",
+                        value: (
+                          <RecruiterFee feeMinor={job.recruiterFeeMinor} />
+                        ),
+                      },
+                      {
+                        label: "Expiry",
+                        value: <JobExpiry expiresAt={job.expiresAt} />,
+                      },
+                      ...(HIDE_PHASE2_FEATURES
+                        ? []
+                        : [
+                            {
+                              label: "Candidates",
+                              value: (
+                                <CandidateCount
+                                  jobId={job.id}
+                                  count={candidatesByJob.get(job.id)}
+                                />
+                              ),
+                            },
+                          ]),
+                    ]}
+                    actions={<JobRowActions jobId={job.id} />}
+                  />
+                ))}
+              </MobileRecordList>
               <TablePager
                 page={page}
                 totalPages={data.meta.totalPages}

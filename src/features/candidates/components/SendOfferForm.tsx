@@ -167,7 +167,7 @@ export function SendOfferForm({
           <Label htmlFor="send-offer-notes">Notes</Label>
           <Textarea id="send-offer-notes" {...register("notes")} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" size="sm" disabled={createOffer.isPending}>
             {createOffer.isPending ? "Sending…" : "Send offer"}
           </Button>

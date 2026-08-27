@@ -14,7 +14,7 @@ interface CandidateFieldsProps {
 export function CandidateFields({ candidate }: CandidateFieldsProps) {
   return (
     <div className="flex flex-col gap-3">
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
         {candidate.currentCompany && (
           <div>
             <dt className="text-xs text-muted-foreground">Current company</dt>

@@ -15,6 +15,10 @@ import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import {
+  MobileRecordCard,
+  MobileRecordList,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
+import {
   useAdmins,
   useChangeAdminPassword,
   useCreateAdmin,
@@ -229,23 +233,103 @@ function EditAdminForm({
   );
 }
 
-function AdminRow({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
+function AdminName({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
+  return (
+    <>
+      {admin.firstName} {admin.lastName}
+      {isSelf && (
+        <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-primary">
+          You
+        </span>
+      )}
+    </>
+  );
+}
+
+/**
+ * The per-row controls and the panel they open, shared by the desktop `<tr>`
+ * and the mobile card so the two renderings can never drift apart.
+ */
+function useAdminRowControls(admin: AdminUser, isSelf: boolean) {
   const remove = useRemoveAdmin();
   const [confirming, setConfirming] = useState(false);
   const [changing, setChanging] = useState(false);
   const [editing, setEditing] = useState(false);
+
+  const actions = (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setEditing((v) => !v)}
+      >
+        <Pencil className="mr-1.5 h-3.5 w-3.5" />
+        Edit
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setChanging((v) => !v)}
+      >
+        <KeyRound className="mr-1.5 h-3.5 w-3.5" />
+        Password
+      </Button>
+      {!isSelf && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setConfirming(true)}
+        >
+          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+          Remove
+        </Button>
+      )}
+    </>
+  );
+
+  const panel =
+    changing || confirming || editing ? (
+      <>
+        {editing && (
+          <EditAdminForm admin={admin} onDone={() => setEditing(false)} />
+        )}
+        {changing && (
+          <ChangePasswordForm
+            userId={admin.userId}
+            onDone={() => setChanging(false)}
+          />
+        )}
+        {confirming && (
+          <ConfirmAction
+            message={`Remove ${admin.firstName} ${admin.lastName}? They will lose admin access immediately.`}
+            confirmLabel="Remove admin"
+            busy={remove.isPending}
+            onCancel={() => setConfirming(false)}
+            onConfirm={() =>
+              remove.mutate(admin.userId, {
+                onSuccess: () => setConfirming(false),
+              })
+            }
+          />
+        )}
+      </>
+    ) : null;
+
+  return { actions, panel };
+}
+
+function AdminRow({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
+  const { actions, panel } = useAdminRowControls(admin, isSelf);
 
   return (
     <>
       <tr className={BODY_ROW_CLASS}>
         <td className="px-5 py-3">
           <span className="font-medium text-navy">
-            {admin.firstName} {admin.lastName}
-            {isSelf && (
-              <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-primary">
-                You
-              </span>
-            )}
+            <AdminName admin={admin} isSelf={isSelf} />
           </span>
           <p className="text-xs text-muted-foreground">{admin.email}</p>
         </td>
@@ -253,68 +337,35 @@ function AdminRow({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
           {formatDate(admin.createdAt)}
         </td>
         <td className="px-5 py-3">
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setEditing((v) => !v)}
-            >
-              <Pencil className="mr-1.5 h-3.5 w-3.5" />
-              Edit
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setChanging((v) => !v)}
-            >
-              <KeyRound className="mr-1.5 h-3.5 w-3.5" />
-              Password
-            </Button>
-            {!isSelf && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirming(true)}
-              >
-                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                Remove
-              </Button>
-            )}
-          </div>
+          <div className="flex items-center justify-end gap-2">{actions}</div>
         </td>
       </tr>
-      {(changing || confirming || editing) && (
+      {panel && (
         <tr>
           <td colSpan={3} className="px-5 py-3">
-            {editing && (
-              <EditAdminForm admin={admin} onDone={() => setEditing(false)} />
-            )}
-            {changing && (
-              <ChangePasswordForm
-                userId={admin.userId}
-                onDone={() => setChanging(false)}
-              />
-            )}
-            {confirming && (
-              <ConfirmAction
-                message={`Remove ${admin.firstName} ${admin.lastName}? They will lose admin access immediately.`}
-                confirmLabel="Remove admin"
-                busy={remove.isPending}
-                onCancel={() => setConfirming(false)}
-                onConfirm={() =>
-                  remove.mutate(admin.userId, {
-                    onSuccess: () => setConfirming(false),
-                  })
-                }
-              />
-            )}
+            {panel}
           </td>
         </tr>
       )}
     </>
+  );
+}
+
+function AdminCard({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
+  const { actions, panel } = useAdminRowControls(admin, isSelf);
+
+  return (
+    <MobileRecordCard
+      title={<AdminName admin={admin} isSelf={isSelf} />}
+      subtitle={admin.email}
+      fields={[{ label: "Created", value: formatDate(admin.createdAt) }]}
+      actions={
+        <>
+          {actions}
+          {panel && <div className="w-full">{panel}</div>}
+        </>
+      }
+    />
   );
 }
 
@@ -353,35 +404,46 @@ export function AdminManagement() {
               </Button>
             </div>
           ) : (
-            <div className="w-full">
-              <table className={TABLE_CLASS}>
-                <thead>
-                  <tr className={THEAD_ROW_CLASS}>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Admin
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Created
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-right font-semibold"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map((admin) => (
-                    <AdminRow
-                      key={admin.userId}
-                      admin={admin}
-                      isSelf={admin.userId === user?.id}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <div className="hidden w-full sm:block">
+                <table className={TABLE_CLASS}>
+                  <thead>
+                    <tr className={THEAD_ROW_CLASS}>
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Admin
+                      </th>
+                      <th scope="col" className="px-5 py-3 font-semibold">
+                        Created
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-5 py-3 text-right font-semibold"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.map((admin) => (
+                      <AdminRow
+                        key={admin.userId}
+                        admin={admin}
+                        isSelf={admin.userId === user?.id}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <MobileRecordList className="sm:hidden">
+                {data.map((admin) => (
+                  <AdminCard
+                    key={admin.userId}
+                    admin={admin}
+                    isSelf={admin.userId === user?.id}
+                  />
+                ))}
+              </MobileRecordList>
+            </>
           )}
         </CardContent>
       </Card>

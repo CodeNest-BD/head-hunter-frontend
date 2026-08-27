@@ -64,7 +64,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
   const posted = postedAgo(job.publishedAt);
 
   return (
-    <article className="flex h-full flex-col rounded-md border border-brand-line bg-white p-5 shadow-card transition-shadow hover:shadow-card-hover">
+    <article className="flex h-full flex-col rounded-md border border-brand-line bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <span className="inline-flex w-fit rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] text-brand-secondary">
           {categoryLabel(job.roleCategory)}

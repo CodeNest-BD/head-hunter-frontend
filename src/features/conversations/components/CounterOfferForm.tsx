@@ -107,7 +107,7 @@ export function CounterOfferForm({
         <Label htmlFor="offer-counter-notes">Notes</Label>
         <Textarea id="offer-counter-notes" {...register("notes")} />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" size="sm" disabled={isPending}>
           {isPending ? "Sending…" : "Send counter"}
         </Button>

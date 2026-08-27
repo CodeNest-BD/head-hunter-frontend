@@ -117,7 +117,7 @@ export function LogoEditorDialog({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
         <Dialog.Content
           onOpenAutoFocus={reset}
-          className="fixed left-1/2 top-1/2 z-50 flex w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-md border border-border bg-card shadow-card-lg focus:outline-none"
+          className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-x-hidden overflow-y-auto rounded-md border border-border bg-card shadow-card-lg focus:outline-none"
         >
           <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3">
             <Dialog.Title className="text-sm font-bold text-navy">
@@ -135,8 +135,11 @@ export function LogoEditorDialog({
             </Dialog.Close>
           </div>
 
-          {/* Square crop stage. react-easy-crop fills its (relative) parent. */}
-          <div className="relative h-72 w-full bg-navy/90">
+          {/* Square crop stage. react-easy-crop fills its (relative) parent —
+           * and is absolutely positioned, so this box has no min-content
+           * height of its own. Without `shrink-0` the flex parent collapses it
+           * toward zero on a short viewport instead of scrolling. */}
+          <div className="relative h-72 w-full shrink-0 bg-navy/90">
             {imageSrc && (
               <Cropper
                 image={imageSrc}
@@ -156,7 +159,7 @@ export function LogoEditorDialog({
             )}
           </div>
 
-          <div className="flex flex-col gap-4 px-5 py-4">
+          <div className="flex shrink-0 flex-col gap-4 px-5 py-4">
             <div className="flex items-center gap-3">
               <ZoomIn className="h-4 w-4 shrink-0 text-muted-foreground" />
               <ControlSlider

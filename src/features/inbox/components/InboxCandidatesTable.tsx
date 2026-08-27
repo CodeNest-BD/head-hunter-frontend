@@ -33,6 +33,10 @@ import {
   TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
+import {
+  MobileRecordCard,
+  MobileRecordList,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { useListState } from "@/shared/hooks/useListState";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -69,6 +73,37 @@ const SORT_LABELS: Record<InboxCandidateSort, string> = {
   candidateName: "Candidate name",
   status: "Status",
 };
+
+// Every cell below is rendered by the desktop table and the mobile card.
+
+function NewPill() {
+  return (
+    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+      New
+    </span>
+  );
+}
+
+function CandidateStatusBadge({ status }: { status: CandidateStatus }) {
+  return (
+    <StatusBadge
+      label={CANDIDATE_STATUS_LABELS[status]}
+      className={STATUS_STYLES[status]}
+    />
+  );
+}
+
+function OpenConversationLink({ href }: { href: string }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+    >
+      Open conversation
+      <ArrowRight className="h-3.5 w-3.5" />
+    </Link>
+  );
+}
 
 /**
  * Level 2 of either inbox: one row per candidate on the selected job — one
@@ -220,7 +255,7 @@ export function InboxCandidatesTable({
         </div>
       ) : (
         <div className={TABLE_CARD}>
-          <div className={TABLE_SCROLL}>
+          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
             <table className={TABLE_EL}>
               <thead className={TABLE_HEAD}>
                 <tr className={TABLE_HEAD_ROW}>
@@ -254,11 +289,7 @@ export function InboxCandidatesTable({
                     <td className={`${TABLE_TD} font-semibold text-navy`}>
                       <span className="flex items-center gap-2">
                         {row.candidateName}
-                        {isCompany && row.status === "submitted" && (
-                          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                            New
-                          </span>
-                        )}
+                        {isCompany && row.status === "submitted" && <NewPill />}
                         <UnreadBadge count={row.unreadMessages} />
                       </span>
                     </td>
@@ -292,26 +323,53 @@ export function InboxCandidatesTable({
                     )}
                     {cols.isVisible("status") && (
                       <td className={TABLE_TD}>
-                        <StatusBadge
-                          label={CANDIDATE_STATUS_LABELS[row.status]}
-                          className={STATUS_STYLES[row.status]}
-                        />
+                        <CandidateStatusBadge status={row.status} />
                       </td>
                     )}
                     <td className={`${TABLE_TD} text-right`}>
-                      <Link
+                      <OpenConversationLink
                         href={threadHref(row.candidateId)}
-                        className="inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary transition-colors hover:text-primary/80"
-                      >
-                        Open conversation
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
+                      />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <MobileRecordList className="sm:hidden">
+            {data.data.map((row) => (
+              <MobileRecordCard
+                key={row.candidateId}
+                className={cn(
+                  candidateNeedsAttention(side, row) && "bg-primary/[0.04]",
+                )}
+                title={row.candidateName}
+                subtitle={
+                  isCompany
+                    ? recruiterDisplayName(row.recruiter)
+                    : (row.companyName ?? undefined)
+                }
+                trailing={
+                  <div className="flex flex-col items-end gap-1.5">
+                    <CandidateStatusBadge status={row.status} />
+                    {(row.unreadMessages > 0 ||
+                      (isCompany && row.status === "submitted")) && (
+                      <span className="flex items-center gap-1.5">
+                        {isCompany && row.status === "submitted" && <NewPill />}
+                        <UnreadBadge count={row.unreadMessages} />
+                      </span>
+                    )}
+                  </div>
+                }
+                fields={[
+                  { label: "Submitted", value: formatDate(row.submittedAt) },
+                ]}
+                actions={
+                  <OpenConversationLink href={threadHref(row.candidateId)} />
+                }
+              />
+            ))}
+          </MobileRecordList>
           <TablePager
             page={page}
             totalPages={data.meta.totalPages}

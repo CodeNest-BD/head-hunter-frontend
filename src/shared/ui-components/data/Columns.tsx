@@ -64,10 +64,12 @@ export function ColumnsToggle({
 }) {
   return (
     <Dropdown.Root>
+      {/* The trigger is hidden below sm: phones get the stacked card list, whose
+          field set is fixed, so column visibility would control nothing there. */}
       <Dropdown.Trigger asChild>
         <button
           type="button"
-          className="inline-flex h-9 items-center gap-2 rounded-md border border-input bg-card px-3 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary"
+          className="hidden h-9 items-center gap-2 rounded-md border border-input bg-card px-3 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary sm:inline-flex"
         >
           <SlidersHorizontal className="h-4 w-4" />
           Columns

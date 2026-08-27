@@ -123,7 +123,10 @@ function availableActions(
 function ConfirmedTime({ start, end }: { start: string; end: string }) {
   return (
     <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-      <CalendarClock className="h-4 w-4 text-primary" aria-hidden="true" />
+      <CalendarClock
+        className="h-4 w-4 shrink-0 text-primary"
+        aria-hidden="true"
+      />
       {formatDateTime(start)} – {formatDateTime(end)}
     </p>
   );
@@ -183,7 +186,7 @@ function SlotRadioGroup({
               value={slot.id}
               checked={selectedSlotId === slot.id}
               onChange={() => onSelect(slot.id)}
-              className="h-4 w-4 accent-primary"
+              className="h-4 w-4 shrink-0 accent-primary"
             />
             {formatDateTime(slot.startAt)} – {formatDateTime(slot.endAt)}
           </label>

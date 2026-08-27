@@ -155,7 +155,7 @@ function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
 function GuestJobDetail() {
   return (
     <PublicShell>
-      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-12 md:px-0">
+      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-12 sm:px-5 md:px-0">
         <Link
           href="/explore-jobs"
           className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -163,7 +163,7 @@ function GuestJobDetail() {
           <ArrowLeft className="h-4 w-4" />
           Back to explore jobs
         </Link>
-        <div className="rounded-md border border-border bg-card p-10 text-center">
+        <div className="rounded-md border border-border bg-card p-6 text-center sm:p-10">
           <p className="font-heading text-lg font-extrabold text-navy">
             Sign up to view this job
           </p>
@@ -171,7 +171,7 @@ function GuestJobDetail() {
             Create a recruiter account and get verified to see the role, the
             company and the recruiter fee, and to submit candidates.
           </p>
-          <Button asChild className="mt-6 font-bold">
+          <Button asChild className="mt-6 w-full font-bold sm:w-auto">
             <Link href="/signup">
               <Send className="h-[18px] w-[18px]" />
               Sign up as a recruiter
@@ -191,7 +191,7 @@ export default function JobDetailPage() {
   // flash for signed-in visitors.
   if (status === "booting") {
     return (
-      <div className="mx-auto max-w-5xl px-5 py-16">
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-5">
         <DetailSkeleton />
       </div>
     );

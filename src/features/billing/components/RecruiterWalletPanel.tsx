@@ -13,12 +13,17 @@ import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import {
+  MobileRecordCard,
+  MobileRecordList,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
+import {
   useRecruiterPlacements,
   useRecruiterWallet,
 } from "../hooks/useBilling";
 import {
   PLACEMENT_STATUS_LABELS,
   type PlacementStatus,
+  type RecruiterPlacement,
   type RecruiterWalletSummary,
 } from "../schemas";
 
@@ -174,6 +179,24 @@ const HEAD_ROW =
 const BODY_ROW =
   "border-b border-border/60 transition-colors last:border-0 even:bg-muted/20 hover:bg-accent/50";
 
+// Status and the release date are rendered by both the desktop table and the
+// mobile card.
+
+function PlacementStatusBadge({ status }: { status: PlacementStatus }) {
+  return (
+    <StatusBadge
+      label={PLACEMENT_STATUS_LABELS[status] ?? status}
+      className={STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
+    />
+  );
+}
+
+/** Released placements show when they paid out; held ones when they will. */
+const releaseLabel = (placement: RecruiterPlacement): string =>
+  placement.releasedAt
+    ? formatDate(placement.releasedAt)
+    : formatDate(placement.holdExpiresAt);
+
 function PlacementsTable({
   page,
   onPage,
@@ -192,7 +215,7 @@ function PlacementsTable({
             Placements
           </h2>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className={HEAD_ROW}>
@@ -234,24 +257,30 @@ function PlacementsTable({
                     {formatMinor(p.amountMinor)}
                   </td>
                   <td className="px-5 py-3">
-                    <StatusBadge
-                      label={PLACEMENT_STATUS_LABELS[p.status] ?? p.status}
-                      className={
-                        STATUS_STYLES[p.status] ??
-                        "bg-muted text-muted-foreground"
-                      }
-                    />
+                    <PlacementStatusBadge status={p.status} />
                   </td>
                   <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                    {p.releasedAt
-                      ? formatDate(p.releasedAt)
-                      : formatDate(p.holdExpiresAt)}
+                    {releaseLabel(p)}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <MobileRecordList className="sm:hidden">
+          {data.data.map((p) => (
+            <MobileRecordCard
+              key={p.placementId}
+              title={p.candidateName}
+              subtitle={`${p.companyName} · ${p.jobTitle}`}
+              trailing={<PlacementStatusBadge status={p.status} />}
+              fields={[
+                { label: "Commission", value: formatMinor(p.amountMinor) },
+                { label: "Released / hold ends", value: releaseLabel(p) },
+              ]}
+            />
+          ))}
+        </MobileRecordList>
         <div className="flex items-center justify-between border-t border-border px-5 py-3 text-sm">
           <span className="text-muted-foreground">
             {data.meta.total.toLocaleString()} total · page {page} of{" "}

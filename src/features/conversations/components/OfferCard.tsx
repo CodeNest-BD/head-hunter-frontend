@@ -155,7 +155,7 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
           shown as plain text, never an input, and kept visually apart from
           the salary above so it can't be mistaken for part of what's being
           negotiated. */}
-      <div className="flex items-baseline gap-1.5 border-t border-border/60 pt-2 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-baseline gap-1.5 border-t border-border/60 pt-2 text-xs text-muted-foreground">
         <span>Recruiter&apos;s fee (fixed, not part of this negotiation):</span>
         <span className="font-medium text-foreground">
           {formatMinor(amountMinor)}
@@ -167,6 +167,7 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
           <Button
             type="button"
             size="sm"
+            className="w-full sm:w-auto"
             disabled={acceptOffer.isPending}
             onClick={() => acceptOffer.mutate()}
           >
@@ -176,6 +177,7 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
             type="button"
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto"
             disabled={declineOffer.isPending}
             onClick={() => declineOffer.mutate()}
           >
@@ -185,6 +187,7 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
             type="button"
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto"
             onClick={() => setShowCounterForm(true)}
           >
             Counter

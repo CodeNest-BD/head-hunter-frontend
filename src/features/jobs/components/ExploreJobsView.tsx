@@ -271,7 +271,7 @@ export function ExploreJobsView() {
               className="scroll-mt-24 rounded-md border border-brand-line bg-white p-5 shadow-card sm:p-6"
             >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-baseline gap-3">
+                <div className="flex flex-wrap items-baseline gap-3">
                   <h2 className="font-heading text-xl font-extrabold text-navy">
                     {headline}
                   </h2>

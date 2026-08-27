@@ -13,13 +13,18 @@ import {
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
 import { PageBanner } from "@/shared/ui-components/brand";
+import {
+  MobileRecordCard,
+  MobileRecordList,
+  type MobileRecordField,
+} from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminCompanies, useAdminStats } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
-import { VERIFICATION_LABELS } from "../schemas";
+import { VERIFICATION_LABELS, type CompanyListItem } from "../schemas";
 import { AccountRowActions } from "./AccountRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
@@ -59,6 +64,81 @@ function companyJobsHref(
     companyName,
   });
   return `/admin/jobs?${params.toString()}`;
+}
+
+function walletToneClass(balanceMinor: number): string {
+  return balanceMinor > 0 ? "font-bold text-navy" : "text-muted-foreground";
+}
+
+function CompanyJobCount({ company }: { company: CompanyListItem }) {
+  return company.jobCount > 0 ? (
+    <Link
+      href={companyJobsHref(company.companyProfileId, company.companyName)}
+      className="font-medium text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+    >
+      {company.jobCount}
+    </Link>
+  ) : (
+    <span className="text-muted-foreground">0</span>
+  );
+}
+
+function CompanyApproval({ company }: { company: CompanyListItem }) {
+  return (
+    <StatusBadge
+      label={VERIFICATION_LABELS[company.verificationStatus]}
+      className={
+        VERIFICATION_STATUS_STYLES[company.verificationStatus] ??
+        "bg-muted text-muted-foreground"
+      }
+    />
+  );
+}
+
+function CompanyStatus({ company }: { company: CompanyListItem }) {
+  return (
+    <StatusBadge
+      label={ACCOUNT_STATUS_LABELS[company.status]}
+      className={ACCOUNT_STATUS_STYLES[company.status]}
+    />
+  );
+}
+
+function CompanyCard({ company }: { company: CompanyListItem }) {
+  const fields: MobileRecordField[] = [
+    {
+      label: "Wallet",
+      value: (
+        <span
+          className={cn("tabular-nums", walletToneClass(company.balanceMinor))}
+        >
+          {formatMinor(company.balanceMinor)}
+        </span>
+      ),
+    },
+    { label: "Jobs", value: <CompanyJobCount company={company} /> },
+    { label: "Joined", value: formatDate(company.joinedAt) },
+    { label: "Approval", value: <CompanyApproval company={company} /> },
+  ];
+
+  return (
+    <MobileRecordCard
+      title={company.companyName}
+      subtitle={company.email}
+      href={`/admin/companies/${company.userId}`}
+      trailing={<CompanyStatus company={company} />}
+      fields={fields}
+      actions={
+        <AccountRowActions
+          userId={company.userId}
+          status={company.status}
+          subjectName={company.companyName}
+          viewHref={`/admin/companies/${company.userId}`}
+          kind="company"
+        />
+      }
+    />
+  );
 }
 
 export function CompaniesTable() {
@@ -179,7 +259,7 @@ export function CompaniesTable() {
         ) : (
           <Card>
             <CardContent className="p-0">
-              <div className="w-full">
+              <div className="hidden w-full sm:block">
                 <table className={TABLE_CLASS}>
                   <thead>
                     <tr className={THEAD_ROW_CLASS}>
@@ -256,9 +336,7 @@ export function CompaniesTable() {
                           <td
                             className={cn(
                               "whitespace-nowrap px-5 py-3 text-right tabular-nums",
-                              c.balanceMinor > 0
-                                ? "font-bold text-navy"
-                                : "text-muted-foreground",
+                              walletToneClass(c.balanceMinor),
                             )}
                           >
                             {formatMinor(c.balanceMinor)}
@@ -266,19 +344,7 @@ export function CompaniesTable() {
                         )}
                         {cols.isVisible("jobs") && (
                           <td className="px-5 py-3 text-center tabular-nums">
-                            {c.jobCount > 0 ? (
-                              <Link
-                                href={companyJobsHref(
-                                  c.companyProfileId,
-                                  c.companyName,
-                                )}
-                                className="font-medium text-primary hover:underline focus-visible:underline focus-visible:outline-none"
-                              >
-                                {c.jobCount}
-                              </Link>
-                            ) : (
-                              <span className="text-muted-foreground">0</span>
-                            )}
+                            <CompanyJobCount company={c} />
                           </td>
                         )}
                         {cols.isVisible("joined") && (
@@ -288,22 +354,12 @@ export function CompaniesTable() {
                         )}
                         {cols.isVisible("approval") && (
                           <td className="px-5 py-3">
-                            <StatusBadge
-                              label={VERIFICATION_LABELS[c.verificationStatus]}
-                              className={
-                                VERIFICATION_STATUS_STYLES[
-                                  c.verificationStatus
-                                ] ?? "bg-muted text-muted-foreground"
-                              }
-                            />
+                            <CompanyApproval company={c} />
                           </td>
                         )}
                         {cols.isVisible("status") && (
                           <td className="px-5 py-3">
-                            <StatusBadge
-                              label={ACCOUNT_STATUS_LABELS[c.status]}
-                              className={ACCOUNT_STATUS_STYLES[c.status]}
-                            />
+                            <CompanyStatus company={c} />
                           </td>
                         )}
                         <td className="px-5 py-3">
@@ -320,6 +376,11 @@ export function CompaniesTable() {
                   </tbody>
                 </table>
               </div>
+              <MobileRecordList className="sm:hidden">
+                {data.data.map((c) => (
+                  <CompanyCard key={c.userId} company={c} />
+                ))}
+              </MobileRecordList>
               <ListPager
                 page={page}
                 totalPages={data.meta.totalPages}
