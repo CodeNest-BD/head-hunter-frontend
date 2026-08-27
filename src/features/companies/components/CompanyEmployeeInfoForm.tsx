@@ -58,7 +58,7 @@ export function CompanyEmployeeInfoForm({
       <div className="rounded-md border border-border bg-card shadow-card">
         <CompanyFormSection
           title="Contact"
-          hint="Who we and our recruiters deal with. Your phone stays private until it is verified."
+          hint="Who we and our recruiters deal with."
         >
           <div className="grid gap-4 sm:max-w-lg sm:grid-cols-2">
             <div className="flex flex-col gap-2">
@@ -91,10 +91,6 @@ export function CompanyEmployeeInfoForm({
             {errors.phone && (
               <p className="text-xs text-destructive">{errors.phone.message}</p>
             )}
-            <p className="text-[13px] text-muted-foreground">
-              Recruiters only see this once it is verified. Changing the number
-              clears that, so it has to be verified again.
-            </p>
           </div>
         </CompanyFormSection>
       </div>
