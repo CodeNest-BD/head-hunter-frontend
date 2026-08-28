@@ -23,12 +23,13 @@ export function Hero() {
               sits opposite the map, instead of clinging to the top edge. */}
           <div className="my-auto">
             <h1 className="mb-6 font-heading text-3xl font-extrabold leading-[1.15] tracking-tight text-navy sm:text-5xl">
-              You Set the Price. We Connect You to the{" "}
-              <span className="text-primary">Best.</span>
+              Set Your Own Price.{" "}
+              <span className="text-primary">Hire the Right Talent.</span>
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-brand-slate">
-              Companies name their price for recruiting services. Recruiters
-              find open jobs and get paid what you&rsquo;re willing to offer.
+              Companies name their own price for professional recruiting
+              services. Industry-experienced recruiters find open jobs, send
+              great candidates, and get paid to work on their own terms.
             </p>
           </div>
           <div className="flex flex-col gap-3.5 sm:flex-row">

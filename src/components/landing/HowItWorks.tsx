@@ -12,17 +12,17 @@ const STEPS: readonly Step[] = [
   {
     icon: FilePen,
     title: "1. Companies Post",
-    body: "Post your job and name the fee you’re willing to pay for successful placement.",
+    body: "Post your job and name your own price for a successful placement.",
   },
   {
     icon: Globe2,
     title: "2. Recruiters Discover",
-    body: "Recruiters explore live jobs on the map and choose the ones they want to pursue.",
+    body: "Recruiters explore live jobs on the map and choose the roles to pursue relevant to their experience.",
   },
   {
     icon: Users,
     title: "3. You Get Candidates",
-    body: "Qualified candidates are submitted to you by top recruiting professionals.",
+    body: "Qualified candidates sent from experienced recruiters show up in your inbox.",
   },
   {
     icon: Handshake,

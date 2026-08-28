@@ -99,7 +99,7 @@ describe("ExploreJobsView", () => {
 
     renderWithProviders(<ExploreJobsView />);
 
-    expect(screen.getByText(/Set Your Price/)).toBeInTheDocument();
+    expect(screen.getByText(/Fee-Backed Openings/)).toBeInTheDocument();
     expect(screen.getByText("Senior Backend Engineer")).toBeInTheDocument();
     expect(screen.getByText("Acme Inc.")).toBeInTheDocument();
     expect(

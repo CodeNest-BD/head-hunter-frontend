@@ -262,13 +262,13 @@ export function ExploreJobsView() {
         <BrandGlow />
         <div className="relative mx-auto flex max-w-3xl flex-col items-center">
           <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-white md:text-4xl">
-            Set Your Price.{" "}
-            <span className="text-primary">Hire the Right Talent.</span>
+            Explore Live{" "}
+            <span className="text-primary">Fee-Backed Openings.</span>
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-white/65 md:text-base">
-            Empower your recruitment by defining your own success fee. We
-            connect companies with top-tier recruiters willing to find your
-            perfect match within your budget.
+            Every job on the map carries a committed recruiter fee, loaded by
+            the employer before publishing and ready for secure payment to you.
+            Search a specific location or pick a state to see open roles.
           </p>
         </div>
       </header>
