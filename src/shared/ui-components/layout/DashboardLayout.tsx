@@ -542,7 +542,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           aria-label="Head-Hunters home"
           className="min-w-0 shrink"
         >
-          <Logo compact className="max-w-full [&>span]:truncate" />
+          <Logo className="max-w-full [&>span]:truncate" />
         </Link>
         {/* Global site links, shown to every signed-in user on app pages
          * (public pages get the marketing nav). */}

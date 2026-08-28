@@ -11,12 +11,6 @@ interface LogoProps {
    * nav-sized lockup reads as an afterthought.
    */
   size?: "default" | "lg";
-  /**
-   * Drops the ".com" suffix below `sm`, keeping the name itself. For bars too
-   * cramped on a phone to fit the full lockup beside their controls — the
-   * suffix is the part a reader can lose without losing the brand.
-   */
-  compact?: boolean;
   className?: string;
 }
 
@@ -32,7 +26,6 @@ interface LogoProps {
 export function Logo({
   tone = "light",
   size = "default",
-  compact = false,
   className,
 }: LogoProps) {
   const onDark = tone === "onDark";
@@ -61,7 +54,7 @@ export function Logo({
           <span className={onDark ? "text-white" : "text-primary"}>-</span>
           Hunters
         </span>
-        <span className={cn(compact && "hidden sm:inline")}>
+        <span>
           <span className={onDark ? "text-white" : "text-navy"}>.</span>
           <span className={onDark ? "text-white/60" : "text-brand-gray-light"}>
             com
