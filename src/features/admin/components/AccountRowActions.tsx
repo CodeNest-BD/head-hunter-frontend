@@ -29,7 +29,7 @@ const ITEM_CLASS =
 
 /**
  * The single 3-dot row menu for account tables (companies, recruiters):
- * View, Hold/Reinstate, and — for recruiters — Delete. Destructive actions
+ * View, Suspend/Reinstate, and — for recruiters — Delete. Destructive actions
  * confirm in an alert dialog, so the menu item only opens the dialog.
  */
 export function AccountRowActions({
@@ -46,10 +46,9 @@ export function AccountRowActions({
   const deleteRecruiter = useDeleteRecruiter();
   const isHeld = status === "suspended";
   const holdPending = suspend.isPending || reinstate.isPending;
-  // Companies are "suspended"; recruiters are "held" — same action, clearer word
-  // for each audience.
-  const holdLabel = kind === "company" ? "Suspend" : "Hold";
-  const heldLabel = kind === "company" ? "suspended" : "held";
+  // "Suspend" for every account type (companies and recruiters alike).
+  const holdLabel = "Suspend";
+  const heldLabel = "suspended";
 
   const confirmHold = async (): Promise<void> => {
     try {

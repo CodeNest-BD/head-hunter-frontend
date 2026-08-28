@@ -183,7 +183,7 @@ export function AdminOverview({ firstName }: { firstName: string }) {
     queue.push({
       id: "held",
       tone: "muted",
-      title: `${heldAccounts} account${heldAccounts === 1 ? "" : "s"} on hold`,
+      title: `${heldAccounts} account${heldAccounts === 1 ? "" : "s"} suspended`,
       detail: `${data.recruiters.held} recruiters and ${data.companies.held} companies await a decision.`,
       actionLabel: "Review",
       href: "/admin/recruiters",

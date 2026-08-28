@@ -15,14 +15,10 @@ interface HoldButtonProps {
   subjectName: string;
   /** "sm" for table rows, default for detail pages. */
   size?: "sm" | "default";
-  /** The word for the suspend action — "Hold" for recruiters, "Suspend" for
-   * companies. `heldLabel` is its past participle, used in the toast. */
-  holdLabel?: string;
-  heldLabel?: string;
 }
 
 /**
- * Hold / reinstate an account behind a confirmation dialog — suspension is
+ * Suspend / reinstate an account behind a confirmation dialog — suspension is
  * destructive (it force-logs-out the user), so it always confirms first.
  */
 export function HoldButton({
@@ -30,8 +26,6 @@ export function HoldButton({
   status,
   subjectName,
   size = "default",
-  holdLabel = "Hold",
-  heldLabel = "held",
 }: HoldButtonProps) {
   const [open, setOpen] = useState(false);
   const suspend = useSuspendAccount();
@@ -48,7 +42,7 @@ export function HoldButton({
         });
       } else {
         await suspend.mutateAsync({ userId });
-        toast.success(`Account ${heldLabel}`, {
+        toast.success("Account suspended", {
           description: `${subjectName} has been signed out and blocked.`,
         });
       }
@@ -73,16 +67,14 @@ export function HoldButton({
           ) : (
             <Ban className="h-[18px] w-[18px]" />
           )}
-          {isHeld ? "Reinstate" : holdLabel}
+          {isHeld ? "Reinstate" : "Suspend"}
         </Button>
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95">
           <AlertDialog.Title className="font-heading text-lg font-bold text-navy">
-            {isHeld
-              ? `Reinstate ${subjectName}?`
-              : `${holdLabel} ${subjectName}?`}
+            {isHeld ? `Reinstate ${subjectName}?` : `Suspend ${subjectName}?`}
           </AlertDialog.Title>
           <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
             {isHeld
@@ -105,7 +97,7 @@ export function HoldButton({
                 ? "Working…"
                 : isHeld
                   ? "Reinstate account"
-                  : `${holdLabel} account`}
+                  : "Suspend account"}
             </Button>
           </div>
         </AlertDialog.Content>
