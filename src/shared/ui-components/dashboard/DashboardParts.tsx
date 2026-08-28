@@ -126,9 +126,10 @@ export function StatCard({
       >
         {label}
       </p>
-      {/* The hint sits under the figure on a phone: beside it, a two-word hint
-          wraps to three lines and doubles the card's height. */}
-      <p className="mt-1.5 flex flex-col gap-0.5 sm:mt-2 sm:flex-row sm:items-baseline sm:gap-2">
+      {/* Figure over hint, always stacked: beside the number, a multi-word hint
+          collides with a large figure once the card is narrow (e.g. the 3-up
+          wallet grid). Stacking keeps it clean at every width. */}
+      <div className="mt-1.5 flex flex-col gap-0.5 sm:mt-2">
         <span
           className={cn(
             "text-2xl font-extrabold tracking-[-0.02em] tabular-nums sm:text-3xl",
@@ -147,7 +148,7 @@ export function StatCard({
             {hint}
           </span>
         )}
-      </p>
+      </div>
     </>
   );
 
