@@ -11,6 +11,7 @@ import {
   type EmploymentType,
   type RoleCategory,
 } from "../schemas";
+import { formatSalaryRange } from "../utils/formatSalaryRange";
 
 function locationLine(job: PublicJobCardData): string {
   if (job.isRemote) return "Remote";
@@ -56,12 +57,13 @@ function tags(job: PublicJobCardData): string[] {
 /**
  * One job card in the public explore grid, per the client reference: a
  * category eyebrow and posted time, the title, company and location, work tags,
- * then a footer with the bold recruiter fee ("Free" at $0) and a View details
- * action.
+ * then a footer with the salary range, the bold recruiter fee ("Free" at $0)
+ * and a View details action.
  */
 export function PublicJobCard({ job }: { job: PublicJobCardData }) {
   const isFree = job.recruiterFeeMinor === 0;
   const posted = postedAgo(job.publishedAt);
+  const salary = formatSalaryRange(job);
 
   return (
     <article className="flex h-full flex-col rounded-md border border-brand-line bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover sm:p-5">
@@ -106,8 +108,21 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
         ))}
       </div>
 
-      <div className="mt-auto flex items-end justify-between gap-3 border-t border-brand-line pt-4">
+      {/* Stacked, so the money lines get the card's full width: in the two- and
+       * three-column grids a card is ~290–470px, which is not enough to sit a
+       * salary range, a fee and the action on one row without clipping. The
+       * reference side-by-side footer returns once the columns are wide
+       * enough for it. */}
+      <div className="mt-auto flex flex-col gap-3 border-t border-brand-line pt-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
         <div className="min-w-0">
+          {salary && (
+            <p className="mb-1.5 text-sm font-bold text-navy">
+              {salary}
+              <span className="ml-1.5 text-xs font-medium text-brand-gray">
+                salary
+              </span>
+            </p>
+          )}
           <p className="font-heading text-xl font-extrabold leading-none text-primary">
             {isFree ? "Free" : formatMinor(job.recruiterFeeMinor)}
             <span className="ml-1.5 text-sm font-medium text-brand-gray">
@@ -120,7 +135,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
         </div>
         <Link
           href={`/jobs/${job.id}`}
-          className="inline-flex shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="inline-flex w-full shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 2xl:w-auto"
         >
           View details
         </Link>

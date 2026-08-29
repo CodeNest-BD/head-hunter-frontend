@@ -58,6 +58,7 @@ function samplePublicJob(
     isRemote: false,
     salaryMinMinor: null,
     salaryMaxMinor: null,
+    salaryRatePeriod: null,
     recruiterFeeMinor: 500_000,
     publishedAt: new Date("2026-01-01"),
     ...overrides,

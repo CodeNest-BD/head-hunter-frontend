@@ -22,6 +22,10 @@ interface LogoProps {
  * "Head-Hunters" with a primary-blue hyphen and a navy period, then a grey
  * "com". Height comes from `size` — `className` styles the wrapper, so a
  * height utility on it would not reach the mark or the wordmark.
+ *
+ * The default size steps down below `sm` so the full ".com" still fits beside
+ * a hamburger and three actions on a 360px phone — the whole point of keeping
+ * the suffix is that it is readable, not ellipsised.
  */
 export function Logo({
   tone = "light",
@@ -31,7 +35,9 @@ export function Logo({
   const onDark = tone === "onDark";
   const large = size === "lg";
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
+    <span
+      className={cn("inline-flex items-center gap-1.5 sm:gap-2", className)}
+    >
       {/* The mark is the same coloured crosshair on every surface — the blue
           ring reads on both light and navy — so only the wordmark ink adapts. */}
       <Image
@@ -46,7 +52,7 @@ export function Logo({
       <span
         className={cn(
           "font-heading font-extrabold leading-none tracking-[-0.02em]",
-          large ? "text-[24px]" : "text-[17px] sm:text-[19px]",
+          large ? "text-[24px]" : "text-[15px] sm:text-[19px]",
         )}
       >
         <span className={onDark ? "text-white" : "text-navy"}>

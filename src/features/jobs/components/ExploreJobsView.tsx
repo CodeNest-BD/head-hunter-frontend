@@ -43,6 +43,7 @@ import {
   type EmploymentType,
   type RoleCategory,
 } from "../schemas";
+import { formatSalaryRange } from "../utils/formatSalaryRange";
 import { BrandGlow } from "@/shared/ui-components/brand";
 import { DecorativeUsMap } from "@/components/landing/DecorativeUsMap";
 import { US_STATES, US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
@@ -1011,6 +1012,7 @@ function JobRow({ job }: { job: PublicJobCardData }) {
   const employment = job.employmentType
     ? (EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType] ?? null)
     : null;
+  const salary = formatSalaryRange(job);
 
   return (
     <li className="grid grid-cols-1 gap-2.5 px-3 py-3.5 sm:gap-3 sm:px-4 sm:py-4 md:grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] md:items-center md:gap-6">
@@ -1032,6 +1034,14 @@ function JobRow({ job }: { job: PublicJobCardData }) {
             {job.companyName || "A company"} · {location}
           </span>
         </div>
+        {salary && (
+          <p className="mt-0.5 truncate text-[13px] font-semibold text-navy">
+            {salary}
+            <span className="ml-1.5 text-xs font-medium text-brand-gray">
+              salary
+            </span>
+          </p>
+        )}
       </div>
       <div className="flex flex-wrap gap-1.5">
         {employment && <Tag>{employment}</Tag>}
