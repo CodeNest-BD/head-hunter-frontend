@@ -14,6 +14,7 @@ import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 
 import { forgotPassword } from "../api/auth";
+import { OTP_TTL_LABEL, markOtpSent } from "../hooks/useOtpCountdown";
 
 const schema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email"),
@@ -41,6 +42,10 @@ export function ForgotPasswordForm() {
       // Deliberately swallowed: the reset flow must read identically whether
       // or not the account exists, including on transient failures.
     }
+    // Starts the expiry countdown the reset screen shows — recorded on the
+    // same terms as the response above, so it can't leak whether a code was
+    // really sent.
+    markOtpSent(data.email);
     setSubmitted(true);
     toast("Check your email", {
       description:
@@ -56,7 +61,8 @@ export function ForgotPasswordForm() {
           Forgot your password?
         </h1>
         <p className="text-sm text-muted-foreground">
-          Enter your email and we&apos;ll send a six-digit reset code.
+          Enter your email and we&apos;ll send a six-digit reset code. It
+          expires {OTP_TTL_LABEL} after it&apos;s sent.
         </p>
       </div>
 

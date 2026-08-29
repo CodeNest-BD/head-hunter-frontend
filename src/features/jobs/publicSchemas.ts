@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { salaryRatePeriodSchema } from "./schemas";
+
 /**
  * Guest-facing job shapes for /public/jobs*.
  *
@@ -21,6 +23,7 @@ export const publicJobCardSchema = z.object({
   isRemote: z.boolean().catch(false),
   salaryMinMinor: z.number().nullable().catch(null),
   salaryMaxMinor: z.number().nullable().catch(null),
+  salaryRatePeriod: salaryRatePeriodSchema.nullable().catch(null),
   recruiterFeeMinor: z.number().catch(0),
   publishedAt: z.coerce.date().nullable().catch(null),
 });

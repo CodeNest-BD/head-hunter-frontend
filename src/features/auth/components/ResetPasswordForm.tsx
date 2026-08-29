@@ -15,6 +15,7 @@ import { Label } from "@/shared/ui-components/controls/label";
 import { PasswordInput } from "@/shared/ui-components/controls/password-input";
 
 import { forgotPassword, resetPassword } from "../api/auth";
+import { OTP_TTL_LABEL, useOtpCountdown } from "../hooks/useOtpCountdown";
 
 // Mirrors the sign-up password rule so both screens agree on what's valid.
 const schema = z.object({
@@ -39,11 +40,16 @@ function ResetPasswordFormInner() {
     register,
     handleSubmit,
     getValues,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { email: searchParams.get("email") ?? "" },
   });
+
+  // Gated per address: editing the email to one that has no outstanding code
+  // must not leave the user waiting out the previous address's countdown.
+  const { secondsLeft, label, markSent } = useOtpCountdown(watch("email"));
 
   // Send a fresh reset code without leaving the page — the same endpoint the
   // Forgot Password screen uses, so "Request another" actually re-issues a code
@@ -57,6 +63,7 @@ function ResetPasswordFormInner() {
     setResending(true);
     try {
       await forgotPassword(email);
+      markSent();
       toast.success("Code sent", {
         description: `We emailed a new reset code to ${email}.`,
       });
@@ -94,7 +101,8 @@ function ResetPasswordFormInner() {
           Set a new password
         </h1>
         <p className="text-sm text-muted-foreground">
-          Enter the six-digit code we emailed you and choose a new password.
+          Enter the six-digit code we emailed you and choose a new password. The
+          code expires {OTP_TTL_LABEL} after it&apos;s sent.
         </p>
       </div>
 
@@ -159,10 +167,14 @@ function ResetPasswordFormInner() {
         <button
           type="button"
           onClick={onResend}
-          disabled={resending}
-          className="rounded-sm font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+          disabled={resending || secondsLeft > 0}
+          className="rounded-sm font-medium text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:no-underline"
         >
-          {resending ? "Sending…" : "Request another"}
+          {resending
+            ? "Sending…"
+            : secondsLeft > 0
+              ? `Request another in ${label}`
+              : "Request another"}
         </button>
       </p>
     </form>

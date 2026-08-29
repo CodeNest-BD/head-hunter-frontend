@@ -50,6 +50,8 @@ const SIDEBAR_COLLAPSED_KEY = "hh-sidebar-collapsed";
 /**
  * Company top-bar actions: the available balance follows you across every page
  * (so you never publish into an empty wallet by surprise) next to Post a job.
+ * The balance appears from `lg`, the width at which the top bar stops being
+ * the drawer-plus-logo layout — below that the Wallet nav item carries it.
  */
 function CompanyTopBarActions() {
   const { data } = useWallet();
@@ -57,7 +59,7 @@ function CompanyTopBarActions() {
     <div className="flex items-center gap-2">
       <Link
         href="/company/wallet"
-        className="hidden items-center gap-1.5 rounded-md border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary sm:inline-flex"
+        className="hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary lg:inline-flex"
       >
         <span className="text-muted-foreground">Available</span>
         <span className="tabular-nums">
@@ -206,7 +208,9 @@ function NotificationBell() {
 /**
  * Top-bar account menu: avatar + name opening a popover with the full role
  * navigation (Profile included) plus Log out — a complete mirror of the
- * sidebar, so everything is reachable from either place.
+ * sidebar, so everything is reachable from either place. Below `xl` only the
+ * avatar shows: the name and role are the bar's most expendable text, and the
+ * popover repeats them the moment it opens.
  */
 function UserMenu() {
   const { user, logout } = useAuth();
@@ -224,12 +228,12 @@ function UserMenu() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex h-9 shrink-0 items-center gap-2 rounded-md px-0.5 text-left transition-colors hover:bg-accent sm:pl-1 sm:pr-2"
+          className="flex h-9 shrink-0 items-center gap-2 rounded-md px-0.5 text-left transition-colors hover:bg-accent xl:pl-1 xl:pr-2"
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
             {initials || <UserRound className="h-4 w-4" />}
           </span>
-          <span className="hidden min-w-0 flex-col leading-tight sm:flex">
+          <span className="hidden min-w-0 flex-col leading-tight xl:flex">
             <span className="truncate text-sm font-semibold text-navy">
               {user.firstName} {user.lastName}
             </span>
@@ -237,7 +241,7 @@ function UserMenu() {
               {user.role}
             </span>
           </span>
-          <ChevronDown className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" />
+          <ChevronDown className="hidden h-4 w-4 shrink-0 text-muted-foreground xl:block" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-60">
@@ -525,7 +529,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Full-width top navbar: logo + global links on the left; role actions,
        * notifications and the account menu on the right. Spans the whole width,
        * with the sidebar sitting beneath it. */}
-      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center gap-2 border-b border-border/70 bg-secondary/80 px-3 backdrop-blur-md sm:gap-3 sm:px-6 lg:px-10">
+      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center gap-1.5 border-b border-border/70 bg-secondary/80 px-3 backdrop-blur-md sm:gap-3 sm:px-6 lg:px-10">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
@@ -545,10 +549,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <Logo className="max-w-full [&>span]:truncate" />
         </Link>
         {/* Global site links, shown to every signed-in user on app pages
-         * (public pages get the marketing nav). */}
+         * (public pages get the marketing nav). Tied to the same breakpoint as
+         * the sidebar: while the hamburger is up, these live in the drawer's
+         * Explore group, and duplicating them here is what crowded the tablet
+         * bar into wrapping. */}
         <nav
           aria-label="Site"
-          className="ml-4 hidden items-center gap-4 md:flex"
+          className="ml-4 hidden shrink-0 items-center gap-4 whitespace-nowrap lg:flex"
         >
           <Link
             href="/#how"
