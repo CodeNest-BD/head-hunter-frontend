@@ -1,6 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 
+import { useIsTruncated } from "@/shared/hooks/useIsTruncated";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui-components/controls/tooltip";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { formatMinor } from "@/shared/utils/money";
 
@@ -64,6 +73,8 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
   const isFree = job.recruiterFeeMinor === 0;
   const posted = postedAgo(job.publishedAt);
   const salary = formatSalaryRange(job);
+  const { ref: titleRef, isTruncated: isTitleTruncated } =
+    useIsTruncated<HTMLHeadingElement>();
 
   return (
     <article className="flex h-full flex-col rounded-md border border-brand-line bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover sm:p-5">
@@ -78,10 +89,26 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
         )}
       </div>
 
-      <h3 className="mt-3 font-heading text-lg font-extrabold leading-snug text-navy">
-        {job.title}
-      </h3>
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-brand-gray">
+      {/* Clamped so one long title can't stretch every card in its row. Past
+       * three lines the rest is only a hover away, and the tooltip is offered
+       * solely when there is genuinely something hidden. */}
+      <TooltipProvider delayDuration={150}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <h3
+              ref={titleRef}
+              className="mt-3 line-clamp-3 font-heading text-lg font-extrabold leading-snug text-navy"
+            >
+              {job.title}
+            </h3>
+          </TooltipTrigger>
+          {isTitleTruncated && <TooltipContent>{job.title}</TooltipContent>}
+        </Tooltip>
+      </TooltipProvider>
+      {/* Company and location each keep their own row. Wrapping them together
+       * put the location beside the company on one card and beneath it on the
+       * next, which is the bulk of what read as ragged across a row. */}
+      <div className="mt-1.5 flex flex-col gap-1 text-sm text-brand-gray">
         <span className="flex min-w-0 items-center gap-2">
           <CompanyLogo
             companyProfileId={job.companyProfileId}
@@ -97,7 +124,11 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
         </span>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      {/* `mt-auto` belongs here rather than on the footer: the slack left by a
+       * one- versus three-line title collects above the tags, so the tag row —
+       * and the divider under it — sit at the same height on every card in a
+       * row instead of floating up behind a short title. */}
+      <div className="mt-auto flex flex-wrap gap-2 pt-3">
         {tags(job).map((tag) => (
           <span
             key={tag}
@@ -113,14 +144,21 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
        * salary range, a fee and the action on one row without clipping. The
        * reference side-by-side footer returns once the columns are wide
        * enough for it. */}
-      <div className="mt-auto flex flex-col gap-3 border-t border-brand-line pt-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
+      <div className="mt-3 flex flex-col gap-3 border-t border-brand-line pt-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
         <div className="min-w-0">
-          {salary && (
+          {/* Always one line, stated either way — an omitted salary used to
+           * leave a card a line shorter than its neighbours, which pulled its
+           * fee and button out of step with theirs. */}
+          {salary ? (
             <p className="mb-1.5 text-sm font-bold text-navy">
               {salary}
               <span className="ml-1.5 text-xs font-medium text-brand-gray">
                 salary
               </span>
+            </p>
+          ) : (
+            <p className="mb-1.5 text-sm font-medium text-brand-gray-light">
+              Salary not disclosed
             </p>
           )}
           <p className="font-heading text-xl font-extrabold leading-none text-primary">
@@ -128,9 +166,6 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
             <span className="ml-1.5 text-sm font-medium text-brand-gray">
               recruiter fee
             </span>
-          </p>
-          <p className="mt-1 text-xs text-brand-gray-light">
-            Paid upon successful hire
           </p>
         </div>
         <Link

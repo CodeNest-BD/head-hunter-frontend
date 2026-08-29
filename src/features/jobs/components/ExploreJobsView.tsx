@@ -963,9 +963,14 @@ function ResultsBody({
         </div>
       ) : (
         <div className="overflow-hidden rounded-md border border-brand-line">
-          <div className="hidden grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] gap-6 border-b border-brand-line bg-secondary/50 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray md:grid">
+          {/* Column template is repeated on JobRow below — the two must stay
+           * in step. Salary earns its own column only from `xl`: the filters
+           * rail leaves the results about 600px at `lg`, which four columns
+           * already fill. */}
+          <div className="hidden grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] gap-6 border-b border-brand-line bg-secondary/50 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray md:grid xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
             <span>Role</span>
             <span>Terms</span>
+            <span className="hidden xl:block">Salary</span>
             <span>Recruiter fee</span>
             <span className="text-right">Posted</span>
           </div>
@@ -1015,7 +1020,7 @@ function JobRow({ job }: { job: PublicJobCardData }) {
   const salary = formatSalaryRange(job);
 
   return (
-    <li className="grid grid-cols-1 gap-2.5 px-3 py-3.5 sm:gap-3 sm:px-4 sm:py-4 md:grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] md:items-center md:gap-6">
+    <li className="grid grid-cols-1 gap-2.5 px-3 py-3.5 sm:gap-3 sm:px-4 sm:py-4 md:grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] md:items-center md:gap-6 xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
       <div className="min-w-0">
         <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-primary">
           {category}
@@ -1034,8 +1039,10 @@ function JobRow({ job }: { job: PublicJobCardData }) {
             {job.companyName || "A company"} · {location}
           </span>
         </div>
+        {/* Below `xl` there is no salary column, so it rides under the role;
+         * from `xl` the cell after Terms carries it. */}
         {salary && (
-          <p className="mt-0.5 truncate text-[13px] font-semibold text-navy">
+          <p className="mt-0.5 truncate text-[13px] font-semibold text-navy xl:hidden">
             {salary}
             <span className="ml-1.5 text-xs font-medium text-brand-gray">
               salary
@@ -1046,6 +1053,9 @@ function JobRow({ job }: { job: PublicJobCardData }) {
       <div className="flex flex-wrap gap-1.5">
         {employment && <Tag>{employment}</Tag>}
         <Tag>{job.isRemote ? "Remote" : "On-site"}</Tag>
+      </div>
+      <div className="hidden text-sm font-semibold text-navy xl:block">
+        {salary ?? <span className="font-normal text-brand-gray">—</span>}
       </div>
       <div className="whitespace-nowrap">
         <span className="font-heading text-lg font-extrabold text-primary">
