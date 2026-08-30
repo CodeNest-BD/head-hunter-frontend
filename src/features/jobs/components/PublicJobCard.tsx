@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 
@@ -75,6 +76,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
   const salary = formatSalaryRange(job);
   const { ref: titleRef, isTruncated: isTitleTruncated } =
     useIsTruncated<HTMLHeadingElement>();
+  const [isTitleRevealed, setIsTitleRevealed] = useState(false);
 
   return (
     <article className="flex h-full flex-col rounded-md border border-brand-line bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover sm:p-5">
@@ -90,19 +92,27 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
       </div>
 
       {/* Clamped so one long title can't stretch every card in its row. Past
-       * three lines the rest is only a hover away, and the tooltip is offered
-       * solely when there is genuinely something hidden. */}
+       * two lines the rest is a hover, a tap or a focus away, and the tooltip
+       * is offered solely when there is genuinely something hidden. */}
       <TooltipProvider delayDuration={150}>
-        <Tooltip>
+        <Tooltip
+          open={isTitleTruncated && isTitleRevealed}
+          onOpenChange={setIsTitleRevealed}
+        >
           <TooltipTrigger asChild>
             <h3
               ref={titleRef}
-              className="mt-3 line-clamp-3 font-heading text-lg font-extrabold leading-snug text-navy"
+              // Touch has no hover: a tap is the only way to reach the rest of
+              // the title on a phone or tablet, and the tab stop is the
+              // keyboard equivalent. Neither is offered on a title that fits.
+              tabIndex={isTitleTruncated ? 0 : undefined}
+              onClick={() => setIsTitleRevealed(true)}
+              className="mt-3 line-clamp-2 font-heading text-lg font-extrabold leading-snug text-navy outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {job.title}
             </h3>
           </TooltipTrigger>
-          {isTitleTruncated && <TooltipContent>{job.title}</TooltipContent>}
+          <TooltipContent>{job.title}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
       {/* Company and location each keep their own row. Wrapping them together
