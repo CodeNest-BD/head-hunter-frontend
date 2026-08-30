@@ -122,7 +122,12 @@ export default function AuthLayout({
        * never shifts the fixed brand panel. `min-h-full` keeps short forms
        * (sign-in) vertically centred while letting tall ones scroll from the
        * top without the flex-centering clip. */}
-      <section className="lg:h-screen lg:overflow-y-auto">
+      {/* `relative` is load-bearing: Radix Select renders an aria-hidden
+       * `position: absolute` <select> for form integration. Without a
+       * positioned ancestor its containing block is the viewport, so it
+       * escapes this scroller *and* the clip on <main> and stretches the
+       * document — the dead space below the sign-up form. */}
+      <section className="relative lg:h-screen lg:overflow-y-auto">
         {/* `justify-center` at every width closes the dead band under a short
          * form on a phone. Safe against the flex-centring clip because the
          * height here is a minimum, not a fixed one — a tall form grows the
