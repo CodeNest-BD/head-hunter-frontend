@@ -1,17 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
-import { DecorativeUsMap } from "./DecorativeUsMap";
 import { LandingCta } from "./LandingCta";
 import { StatsStrip } from "./StatsStrip";
 
 /**
  * Light hero per the client reference: dark-blue display headline with a
- * primary-blue accent, the client's body copy, two CTAs, and the illustrative
- * USA map on the right. (The "For companies / For recruiters" mini-cards from
+ * primary-blue accent, the client's body copy, two CTAs, and the marketplace
+ * map image on the right. (The "For companies / For recruiters" mini-cards from
  * the old mock are explicitly removed in the client feedback.)
  */
 export function Hero() {
@@ -23,7 +23,7 @@ export function Hero() {
               sits opposite the map, instead of clinging to the top edge. */}
           <div className="my-auto">
             <h1 className="mb-6 font-heading text-3xl font-extrabold leading-[1.15] tracking-tight text-navy sm:text-5xl">
-              Set Your Own Price.{" "}
+              Set Your Price.{" "}
               <span className="text-primary">Hire the Right Talent.</span>
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-brand-slate">
@@ -55,7 +55,18 @@ export function Hero() {
         </div>
 
         <div className="flex flex-col gap-6 [animation:fadeUp_600ms_120ms_ease_both]">
-          <DecorativeUsMap />
+          <Image
+            src="/assets/brand/hero.png"
+            alt="Open roles and recruiter fees on a world map"
+            width={1774}
+            height={887}
+            priority
+            // Roughly half the viewport from lg (two-column hero), full width
+            // below — so the optimizer serves a right-sized variant, not the
+            // full 1774px source, on smaller screens.
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="h-auto w-full"
+          />
           {/* Live marketplace stats sit directly under the map (per the
               client reference), scoped to the map column. */}
           <StatsStrip />

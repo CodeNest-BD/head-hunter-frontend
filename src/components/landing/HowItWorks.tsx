@@ -12,7 +12,7 @@ const STEPS: readonly Step[] = [
   {
     icon: FilePen,
     title: "1. Companies Post",
-    body: "Post your job and name your own price for a successful placement.",
+    body: "Post your job and name your own price for a successful hire.",
   },
   {
     icon: Globe2,
