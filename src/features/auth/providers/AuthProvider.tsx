@@ -29,6 +29,9 @@ const PUBLIC_ROUTES = new Set([
   "/jobs",
   "/terms",
   "/privacy",
+  "/about",
+  "/raise-a-dispute",
+  "/contact-support",
   ...AUTH_ROUTES,
 ]);
 

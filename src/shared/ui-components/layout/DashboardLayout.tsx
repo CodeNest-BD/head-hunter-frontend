@@ -450,18 +450,11 @@ function SidebarContent({
               Explore
             </p>
             <Link
-              href="/#how"
-              onClick={onNavigate}
-              className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
-            >
-              How It Works
-            </Link>
-            <Link
               href="/explore-jobs"
               onClick={onNavigate}
               className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
             >
-              Explore Jobs
+              Live Map
             </Link>
           </div>
         )}
@@ -584,16 +577,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           className="ml-4 hidden shrink-0 items-center gap-4 whitespace-nowrap lg:flex"
         >
           <Link
-            href="/#how"
-            className="text-sm font-semibold text-navy transition-colors hover:text-primary"
-          >
-            How It Works
-          </Link>
-          <Link
             href="/explore-jobs"
             className="text-sm font-semibold text-navy transition-colors hover:text-primary"
           >
-            Explore Jobs
+            Live Map
           </Link>
         </nav>
         {/* `shrink-0` so the account avatar is never the thing squeezed off the

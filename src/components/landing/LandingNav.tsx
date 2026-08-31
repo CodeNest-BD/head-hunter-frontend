@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { LogOut, Menu, UserRound, X } from "lucide-react";
+import * as Dropdown from "@radix-ui/react-dropdown-menu";
+import { ChevronDown, LogOut, Menu, UserRound, X } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { Logo } from "@/shared/ui-components/layout/Logo";
 import { UserMenu } from "@/shared/ui-components/layout/UserMenu";
@@ -10,21 +11,124 @@ import { NAV_BY_ROLE } from "@/shared/ui-components/layout/dashboardNav";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
 
-interface NavLink {
+interface NavItemLink {
   href: string;
   label: string;
+  /** A same-page anchor (e.g. "/#how"), rendered as a plain <a>. */
+  anchor?: boolean;
 }
 
-const NAV_LINKS: readonly NavLink[] = [
-  { href: "/#how", label: "How It Works" },
-  { href: "/explore-jobs", label: "Explore Jobs" },
+/** Resources are the same for everyone. */
+const RESOURCES: readonly NavItemLink[] = [
+  { href: "/raise-a-dispute", label: "Raise A Dispute" },
+  { href: "/contact-support", label: "Contact customer support" },
 ];
 
+/** The always-shown marketing links, before the audience/resources menus. */
+const PRIMARY_LINKS: readonly NavItemLink[] = [
+  { href: "/#how", label: "How It Works", anchor: true },
+  { href: "/explore-jobs", label: "Live Map" },
+  { href: "/about", label: "About" },
+];
+
+/** A link that respects the anchor flag (plain <a> for hashes, Link for routes). */
+function NavItemAnchor({
+  item,
+  className,
+  onClick,
+}: {
+  item: NavItemLink;
+  className?: string;
+  onClick?: () => void;
+}) {
+  return item.anchor ? (
+    <a href={item.href} className={className} onClick={onClick}>
+      {item.label}
+    </a>
+  ) : (
+    <Link href={item.href} className={className} onClick={onClick}>
+      {item.label}
+    </Link>
+  );
+}
+
+/** Desktop dropdown: a labelled trigger opening a small menu of links. */
+function NavDropdown({
+  label,
+  items,
+}: {
+  label: string;
+  items: readonly NavItemLink[];
+}) {
+  return (
+    <Dropdown.Root>
+      <Dropdown.Trigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-brand-slate outline-none transition-colors hover:text-primary data-[state=open]:text-primary"
+        >
+          {label}
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      </Dropdown.Trigger>
+      <Dropdown.Portal>
+        <Dropdown.Content
+          align="start"
+          sideOffset={12}
+          className="z-50 min-w-[210px] rounded-md border border-border bg-popover p-1 shadow-card-lg"
+        >
+          {items.map((item) => (
+            <Dropdown.Item key={item.href} asChild>
+              <Link
+                href={item.href}
+                className="block rounded-sm px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent focus:bg-accent"
+              >
+                {item.label}
+              </Link>
+            </Dropdown.Item>
+          ))}
+        </Dropdown.Content>
+      </Dropdown.Portal>
+    </Dropdown.Root>
+  );
+}
+
+/** A labelled group of links in the mobile sheet. */
+function MobileGroup({
+  label,
+  items,
+  onNavigate,
+}: {
+  label: string;
+  items: readonly NavItemLink[];
+  onNavigate: () => void;
+}) {
+  return (
+    <div>
+      <p className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-gray-light">
+        {label}
+      </p>
+      <div className="flex flex-col gap-1">
+        {items.map((item) => (
+          <NavItemAnchor
+            key={item.href}
+            item={item}
+            onClick={onNavigate}
+            className="rounded-md px-2.5 py-2.5 text-sm font-semibold text-brand-slate hover:bg-accent hover:text-primary"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /**
- * Sticky white marketing nav copied from the v2 mock: brand lockup left,
- * anchor links center-right, and auth CTAs. Signed-in visitors see a single
- * "Go to dashboard" action instead of "Log in" / "Get started". Collapses to a
- * hamburger sheet on small screens.
+ * Sticky white marketing nav: brand lockup left, then the primary links and the
+ * For Companies / For Recruiters / Resources menus, and the auth CTAs. Signed-in
+ * visitors see the account menu instead of Log in / Sign up, and the audience
+ * menu for the *other* role is hidden (a recruiter has no "For Companies"). The
+ * "My Dashboard" links go to the dashboard when signed in, or to Log in for a
+ * guest. Collapses to a hamburger sheet below `lg`.
  */
 export function LandingNav({ fluid = false }: { fluid?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -36,6 +140,18 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
   // page. Render a neutral placeholder during boot instead.
   const booting = status === "booting";
   const navItems = user ? NAV_BY_ROLE[user.role] : [];
+
+  // A recruiter has no "For Companies" menu, and a company has no "For
+  // Recruiters"; a guest and an admin see both.
+  const showForCompanies = user?.role !== "recruiter";
+  const showForRecruiters = user?.role !== "company";
+  // Guests are sent to sign in; signed-in users go straight to their dashboard.
+  const dashboardHref = isAuthed ? "/dashboard" : "/login";
+  const dashboardItems: readonly NavItemLink[] = [
+    { href: dashboardHref, label: "My Dashboard" },
+  ];
+
+  const closeSheet = () => setOpen(false);
 
   return (
     <>
@@ -53,19 +169,24 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
 
           <div className="flex-1" />
 
-          <div className="hidden items-center gap-7 md:flex">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
+          <div className="hidden items-center gap-6 lg:flex">
+            {PRIMARY_LINKS.map((item) => (
+              <NavItemAnchor
+                key={item.href}
+                item={item}
                 className="text-sm font-semibold text-brand-slate transition-colors hover:text-primary"
-              >
-                {link.label}
-              </a>
+              />
             ))}
+            {showForCompanies && (
+              <NavDropdown label="For Companies" items={dashboardItems} />
+            )}
+            {showForRecruiters && (
+              <NavDropdown label="For Recruiters" items={dashboardItems} />
+            )}
+            <NavDropdown label="Resources" items={RESOURCES} />
           </div>
 
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-3 lg:flex">
             {booting ? (
               <span
                 aria-hidden="true"
@@ -91,7 +212,7 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
 
           <button
             type="button"
-            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#C9D0DF] text-navy md:hidden"
+            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#C9D0DF] text-navy lg:hidden"
             aria-label="Open menu"
             aria-expanded={open}
             onClick={() => setOpen(true)}
@@ -110,7 +231,7 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
        * nested here this would size itself to the header rather than the
        * viewport. */}
       {open && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div
             className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
             onClick={() => setOpen(false)}
@@ -167,32 +288,38 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
                 </nav>
               )}
 
-              {/* The two marketing links are a different kind of destination
-               * from the account nav, so they read as their own labelled
-               * group rather than as more menu items. */}
               <div
                 className={cn(
-                  "p-3",
+                  "flex flex-col gap-4 p-3",
                   isAuthed &&
                     navItems.length > 0 &&
                     "border-t border-brand-line",
                 )}
               >
-                <p className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-gray-light">
-                  Explore
-                </p>
-                <div className="flex flex-col gap-1">
-                  {NAV_LINKS.map((link) => (
-                    <a
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setOpen(false)}
-                      className="rounded-md px-2.5 py-2.5 text-sm font-semibold text-brand-slate hover:bg-accent hover:text-primary"
-                    >
-                      {link.label}
-                    </a>
-                  ))}
-                </div>
+                <MobileGroup
+                  label="Menu"
+                  items={PRIMARY_LINKS}
+                  onNavigate={closeSheet}
+                />
+                {showForCompanies && (
+                  <MobileGroup
+                    label="For Companies"
+                    items={dashboardItems}
+                    onNavigate={closeSheet}
+                  />
+                )}
+                {showForRecruiters && (
+                  <MobileGroup
+                    label="For Recruiters"
+                    items={dashboardItems}
+                    onNavigate={closeSheet}
+                  />
+                )}
+                <MobileGroup
+                  label="Resources"
+                  items={RESOURCES}
+                  onNavigate={closeSheet}
+                />
               </div>
             </div>
 
