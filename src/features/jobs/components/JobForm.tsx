@@ -31,8 +31,19 @@ import {
   minorToMajorInput,
 } from "@/shared/utils/money";
 import {
+  BENEFIT_CHECKBOXES,
   EMPLOYMENT_TYPES,
   EMPLOYMENT_TYPE_LABELS,
+  INTERVIEW_DURATIONS,
+  INTERVIEW_TYPES,
+  INTERVIEW_TYPE_LABELS,
+  MAX_INTERVIEW_STAGES,
+  MAX_QUALIFICATIONS,
+  MAX_QUALIFICATION_LENGTH,
+  OFFER_TIMELINES,
+  OFFER_TIMELINE_LABELS,
+  OTHER_SOURCING_LABELS,
+  OTHER_SOURCING_OPTIONS,
   ROLE_CATEGORIES,
   ROLE_CATEGORY_LABELS,
   SALARY_RATE_PERIODS,
@@ -41,6 +52,11 @@ import {
   type Job,
   type JobFormValues,
 } from "../schemas";
+import { intakeToFormValues, toIntakeInput } from "../utils/jobIntake";
+import { PayRangeField } from "./PayRangeField";
+import { ChipListField } from "@/shared/ui-components/controls/ChipListField";
+import { Checkbox } from "@/shared/ui-components/controls/checkbox";
+import { useMyCompanyProfile } from "@/features/companies";
 import type { JobWriteInput } from "../api/jobs";
 import { useStateCities } from "@/shared/hooks/useStateCities";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
@@ -77,6 +93,7 @@ function toDefaults(job?: Job): JobFormValues {
     // Older jobs saved before rate period existed default to the common case.
     salaryRatePeriod: job?.salaryRatePeriod ?? "per_year",
     recruiterFee: minorToMajorInput(job?.recruiterFeeMinor),
+    ...intakeToFormValues(job?.intake ?? null),
   };
 }
 
@@ -149,6 +166,44 @@ function WorkModelControl({
   );
 }
 
+/**
+ * A row of radio options bound to one string value. Native radios rather than a
+ * Radix group: these are two- to three-option questions on a long form, and the
+ * plain control is both lighter and keyboard-correct for free.
+ */
+function RadioRow({
+  name,
+  value,
+  onChange,
+  options,
+}: {
+  name: string;
+  value: string;
+  onChange: (next: string) => void;
+  options: ReadonlyArray<{ value: string; label: string }>;
+}) {
+  return (
+    <div className="flex flex-wrap gap-x-5 gap-y-2">
+      {options.map((option) => (
+        <label
+          key={option.value}
+          className="flex items-center gap-2 text-sm text-foreground"
+        >
+          <input
+            type="radio"
+            name={name}
+            value={option.value}
+            checked={value === option.value}
+            onChange={() => onChange(option.value)}
+            className="h-4 w-4 accent-primary"
+          />
+          {option.label}
+        </label>
+      ))}
+    </div>
+  );
+}
+
 /** A money field with a leading "$" adornment. */
 const MoneyInput = forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, ...props }, ref) => (
@@ -179,6 +234,7 @@ export function JobForm({
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
     watch,
   } = useForm<JobFormValues>({
@@ -193,6 +249,23 @@ export function JobForm({
   // Same state-scoped city source the explore page uses, so the two stay in
   // step and a company picks from a real, complete list rather than a stub.
   const cityOptions = useStateCities(locationState || undefined);
+
+  // A new job's worksite defaults to the company's own address — most roles sit
+  // there, and a multi-site employer edits it. Only ever fills a blank field, so
+  // it cannot overwrite what the company typed or what an existing job stored.
+  const { data: companyProfile } = useMyCompanyProfile();
+  const profileAddress = [
+    companyProfile?.addressLine,
+    companyProfile?.city,
+    companyProfile?.state,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  useEffect(() => {
+    if (job || profileAddress === "") return;
+    setValue("worksiteAddress", profileAddress);
+    // Runs once the profile resolves; `setValue` is stable across renders.
+  }, [job, profileAddress, setValue]);
 
   // Default open so first-time posters see the preview; the choice then sticks.
   const [previewOpen, setPreviewOpen] = useState(true);
@@ -251,6 +324,7 @@ export function JobForm({
     salaryRatePeriod: formValues.salaryRatePeriod,
     // Required by the schema, so a plain conversion is safe here.
     recruiterFeeMinor: majorToMinor(Number(formValues.recruiterFee)),
+    intake: toIntakeInput(formValues, job?.intake ?? null),
   });
 
   // Which action fired: the primary save (Enter or "Save") vs. "Publish".
@@ -354,6 +428,47 @@ export function JobForm({
                 )}
               </div>
             </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="daysAndHours">
+                  Working days &amp; hours{" "}
+                  <span className="font-normal text-muted-foreground">
+                    Optional
+                  </span>
+                </Label>
+                <Input
+                  id="daysAndHours"
+                  className={CONTROL_HEIGHT}
+                  placeholder="Mon-Fri, 9-5. List any expected overtime."
+                  {...register("daysAndHours")}
+                />
+                {errors.daysAndHours && (
+                  <p className="text-xs text-destructive">
+                    {errors.daysAndHours.message}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="reportsTo">
+                  Reports to{" "}
+                  <span className="font-normal text-muted-foreground">
+                    Optional
+                  </span>
+                </Label>
+                <Input
+                  id="reportsTo"
+                  className={CONTROL_HEIGHT}
+                  placeholder="VP of Engineering"
+                  {...register("reportsTo")}
+                />
+                {errors.reportsTo && (
+                  <p className="text-xs text-destructive">
+                    {errors.reportsTo.message}
+                  </p>
+                )}
+              </div>
+            </div>
           </StepSection>
 
           <StepSection
@@ -422,33 +537,69 @@ export function JobForm({
                 />
               </div>
             </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="worksiteAddress">
+                Worksite address{" "}
+                <span className="font-normal text-muted-foreground">
+                  Optional
+                </span>
+              </Label>
+              <Input
+                id="worksiteAddress"
+                className={CONTROL_HEIGHT}
+                placeholder="123 Market St, San Francisco, CA"
+                {...register("worksiteAddress")}
+              />
+              <p className="text-xs text-muted-foreground">
+                Shared with recruiters working the role, never on the public
+                listing. Prefilled from your company address for a new job.
+              </p>
+              {errors.worksiteAddress && (
+                <p className="text-xs text-destructive">
+                  {errors.worksiteAddress.message}
+                </p>
+              )}
+            </div>
           </StepSection>
 
           <StepSection
             step={3}
             title="Compensation"
-            hint="The salary band for the candidate, and the fee for the recruiter."
+            hint="The pay band for the candidate, and the fee for the recruiter."
           >
             <div className="flex flex-col gap-2">
               <Label>
-                Salary range{" "}
+                Pay Range{" "}
                 <span className="font-normal text-muted-foreground">
                   Optional
                 </span>
               </Label>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <MoneyInput
-                  aria-label="Salary minimum"
-                  placeholder="Min"
-                  {...register("salaryMin")}
-                />
-                <span className="text-muted-foreground">–</span>
-                <MoneyInput
-                  aria-label="Salary maximum"
-                  placeholder="Max"
-                  {...register("salaryMax")}
-                />
-              </div>
+              <PayRangeField
+                min={values.salaryMin}
+                max={values.salaryMax}
+                ratePeriod={values.salaryRatePeriod}
+                onChange={(next) => {
+                  // From the slider: mark dirty so the sticky bar and the
+                  // preview react the same as they do to typing.
+                  setValue("salaryMin", next.min, { shouldDirty: true });
+                  setValue("salaryMax", next.max, { shouldDirty: true });
+                }}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <MoneyInput
+                    aria-label="Pay minimum"
+                    placeholder="Min"
+                    {...register("salaryMin")}
+                  />
+                  <span className="text-muted-foreground">–</span>
+                  <MoneyInput
+                    aria-label="Pay maximum"
+                    placeholder="Max"
+                    {...register("salaryMax")}
+                  />
+                </div>
+              </PayRangeField>
               {(errors.salaryMin || errors.salaryMax) && (
                 <p className="text-xs text-destructive">
                   {errors.salaryMin?.message ?? errors.salaryMax?.message}
@@ -540,8 +691,363 @@ export function JobForm({
 
           <StepSection
             step={4}
-            title="Description"
-            hint="Sell the role. Recruiters read this before deciding to work it."
+            title="Hiring process"
+            hint="How fast you need to hire, what the candidate must bring, and how many interviews it takes. All optional — recruiters see whatever you fill in."
+          >
+            <div className="flex flex-col gap-2 sm:max-w-[16rem]">
+              <Label htmlFor="timelineToHire">Timeline to hire</Label>
+              <Controller
+                control={control}
+                name="timelineToHire"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger
+                      id="timelineToHire"
+                      className={CONTROL_HEIGHT}
+                    >
+                      <SelectValue placeholder="Not specified" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {OFFER_TIMELINES.map((timeline) => (
+                        <SelectItem key={timeline} value={timeline}>
+                          {OFFER_TIMELINE_LABELS[timeline]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="mustHave">Must-haves</Label>
+              <Controller
+                control={control}
+                name="mustHave"
+                render={({ field }) => (
+                  <ChipListField
+                    id="mustHave"
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="e.g. 5+ years Python"
+                    ariaLabel="Add a must-have"
+                    max={MAX_QUALIFICATIONS}
+                    maxLength={MAX_QUALIFICATION_LENGTH}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="niceToHave">Nice-to-haves</Label>
+              <Controller
+                control={control}
+                name="niceToHave"
+                render={({ field }) => (
+                  <ChipListField
+                    id="niceToHave"
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="e.g. AWS"
+                    ariaLabel="Add a nice-to-have"
+                    max={MAX_QUALIFICATIONS}
+                    maxLength={MAX_QUALIFICATION_LENGTH}
+                  />
+                )}
+              />
+            </div>
+
+            <Controller
+              control={control}
+              name="interviewRounds"
+              render={({ field }) => (
+                <div className="flex flex-col gap-3">
+                  <span className="text-sm font-medium leading-none text-foreground">
+                    Interview rounds{" "}
+                    <span className="font-normal text-muted-foreground">
+                      (up to {MAX_INTERVIEW_STAGES})
+                    </span>
+                  </span>
+                  {field.value.map((round, index) => (
+                    <div
+                      key={index}
+                      className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+                    >
+                      <Select
+                        value={round.type}
+                        onValueChange={(type) =>
+                          field.onChange(
+                            field.value.map((existing, position) =>
+                              position === index
+                                ? { ...existing, type }
+                                : existing,
+                            ),
+                          )
+                        }
+                      >
+                        <SelectTrigger
+                          className={CONTROL_HEIGHT}
+                          aria-label={`Round ${index + 1} type`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {INTERVIEW_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {INTERVIEW_TYPE_LABELS[type]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={round.durationMinutes}
+                        onValueChange={(durationMinutes) =>
+                          field.onChange(
+                            field.value.map((existing, position) =>
+                              position === index
+                                ? { ...existing, durationMinutes }
+                                : existing,
+                            ),
+                          )
+                        }
+                      >
+                        <SelectTrigger
+                          className={CONTROL_HEIGHT}
+                          aria-label={`Round ${index + 1} length`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {INTERVIEW_DURATIONS.map((duration) => (
+                            <SelectItem
+                              key={duration.minutes}
+                              value={String(duration.minutes)}
+                            >
+                              {duration.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          field.onChange(
+                            field.value.filter(
+                              (_, position) => position !== index,
+                            ),
+                          )
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  {field.value.length < MAX_INTERVIEW_STAGES && (
+                    <div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          field.onChange([
+                            ...field.value,
+                            { type: "phone", durationMinutes: "30" },
+                          ])
+                        }
+                      >
+                        + Add a round
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            />
+
+            <div className="flex flex-col gap-2.5">
+              <span className="text-sm font-medium leading-none text-foreground">
+                Availability to start interviewing
+              </span>
+              <Controller
+                control={control}
+                name="interviewingAsap"
+                render={({ field }) => (
+                  <RadioRow
+                    name="interviewingAsap"
+                    value={field.value ? "asap" : "range"}
+                    onChange={(next) => field.onChange(next === "asap")}
+                    options={[
+                      { value: "asap", label: "ASAP" },
+                      { value: "range", label: "A date range" },
+                    ]}
+                  />
+                )}
+              />
+              {!values.interviewingAsap && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    type="date"
+                    aria-label="Interviewing from"
+                    className={cn(CONTROL_HEIGHT, "w-auto")}
+                    {...register("interviewingFrom")}
+                  />
+                  <span className="text-muted-foreground">–</span>
+                  <Input
+                    type="date"
+                    aria-label="Interviewing until"
+                    className={cn(CONTROL_HEIGHT, "w-auto")}
+                    {...register("interviewingTo")}
+                  />
+                </div>
+              )}
+              {errors.interviewingTo && (
+                <p className="text-xs text-destructive">
+                  {errors.interviewingTo.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <span className="text-sm font-medium leading-none text-foreground">
+                Is this position posted online?
+              </span>
+              <Controller
+                control={control}
+                name="postedOnline"
+                render={({ field }) => (
+                  <RadioRow
+                    name="postedOnline"
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={[
+                      { value: "yes", label: "Yes" },
+                      { value: "no", label: "No" },
+                    ]}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <span className="text-sm font-medium leading-none text-foreground">
+                Any other means of sourcing this role?
+              </span>
+              <Controller
+                control={control}
+                name="otherSourcing"
+                render={({ field }) => (
+                  <RadioRow
+                    name="otherSourcing"
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={OTHER_SOURCING_OPTIONS.map((option) => ({
+                      value: option,
+                      label: OTHER_SOURCING_LABELS[option],
+                    }))}
+                  />
+                )}
+              />
+            </div>
+          </StepSection>
+
+          <StepSection
+            step={5}
+            title="Benefits"
+            hint="What the hire gets beyond the pay band. Recruiters sell on these."
+          >
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              {BENEFIT_CHECKBOXES.map((benefit) => (
+                <Controller
+                  key={benefit.key}
+                  control={control}
+                  name={`benefits.${benefit.key}`}
+                  render={({ field }) => (
+                    <label className="flex items-center gap-2.5 text-sm text-foreground">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                      {benefit.label}
+                    </label>
+                  )}
+                />
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Controller
+                control={control}
+                name="benefits.retirement401k"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2.5 text-sm text-foreground">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                    />
+                    401(k)
+                  </label>
+                )}
+              />
+              {values.benefits.retirement401k && (
+                <div className="flex items-center gap-2">
+                  <Input
+                    aria-label="401(k) match percent"
+                    inputMode="decimal"
+                    placeholder="4"
+                    className={cn(CONTROL_HEIGHT, "w-20")}
+                    {...register("benefits.retirement401kMatch")}
+                  />
+                  <span className="text-sm text-muted-foreground">% match</span>
+                </div>
+              )}
+            </div>
+            {errors.benefits?.retirement401kMatch && (
+              <p className="text-xs text-destructive">
+                {errors.benefits.retirement401kMatch.message}
+              </p>
+            )}
+
+            <div className="flex flex-col gap-2.5">
+              <Controller
+                control={control}
+                name="benefits.ancillary"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2.5 text-sm text-foreground">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                    />
+                    Ancillary benefits
+                  </label>
+                )}
+              />
+              {values.benefits.ancillary && (
+                <Input
+                  aria-label="Ancillary benefit details"
+                  className={CONTROL_HEIGHT}
+                  placeholder="List details"
+                  {...register("benefits.ancillaryDetails")}
+                />
+              )}
+              {errors.benefits?.ancillaryDetails && (
+                <p className="text-xs text-destructive">
+                  {errors.benefits.ancillaryDetails.message}
+                </p>
+              )}
+            </div>
+          </StepSection>
+
+          <StepSection
+            step={6}
+            title="Position duties"
+            hint="The responsibilities and tasks. Recruiters read this before deciding to work the role."
           >
             <Controller
               control={control}

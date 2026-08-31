@@ -1,5 +1,12 @@
 import { z } from "zod";
 import { personNameSchema } from "@/shared/libs/personName";
+import {
+  addressLineSchema,
+  citySchema,
+  stateSchema,
+  zipSchema,
+} from "@/shared/libs/usAddress";
+import { toE164UsPhone, usPhoneDigitsSchema } from "@/shared/libs/usPhone";
 import { specializationsSchema } from "@/shared/utils/specializations";
 import { signupRoleSchema, type SignupRole } from "./types";
 
@@ -85,7 +92,9 @@ export type SignUpReferenceValues = z.infer<typeof signUpReferenceSchema>;
  * Sign-up form. Mirrors the backend SignUpDto: optional text fields stay
  * strings where "" means unset (converted at submit by `toSignUpPayload`).
  * Role-conditional presence the object schema can't express — a company must
- * name itself — lives in the superRefine, matching the backend service check.
+ * name itself, a recruiter must supply at least one reference — lives in the
+ * superRefine, matching the backend service check. The address is required for
+ * both roles.
  *
  * No `username`: sign-in is by email and nothing ever looked an account up by
  * handle, so the concept was dropped from the platform entirely rather than
@@ -112,7 +121,9 @@ export const signUpSchema = z
         },
       ),
     confirmPassword: z.string(),
-    phone: z.string().trim().max(32, "Keep it under 32 characters"),
+    // Bare national digits; the locked +1 lives in the input's chrome and is
+    // re-attached by `toSignUpPayload`.
+    phone: usPhoneDigitsSchema,
     companyName: z.string().trim().max(160, "Keep it under 160 characters"),
     linkedinUrl: z
       .string()
@@ -125,18 +136,10 @@ export const signUpSchema = z
     references: z
       .array(signUpReferenceSchema)
       .max(MAX_SIGNUP_REFERENCES, "At most 3 references"),
-    addressLine: z.string().trim().max(200, "Keep it under 200 characters"),
-    city: z.string().trim().max(120, "Keep it under 120 characters"),
-    state: z
-      .string()
-      .trim()
-      .regex(/^[A-Za-z]{2}$/, "Use the two-letter state code")
-      .or(z.literal("")),
-    zip: z
-      .string()
-      .trim()
-      .regex(/^\d{5}(-\d{4})?$/, "Enter a 5-digit ZIP or ZIP+4, e.g. 94103")
-      .or(z.literal("")),
+    addressLine: addressLineSchema,
+    city: citySchema,
+    state: stateSchema,
+    zip: zipSchema,
   })
   .superRefine((values, ctx) => {
     // Checked here rather than on the field so it re-runs when either half
@@ -155,6 +158,13 @@ export const signUpSchema = z
         message: "Company name is required",
       });
     }
+    if (values.role === "recruiter" && values.references.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["references"],
+        message: "At least one reference is required",
+      });
+    }
   });
 export type SignUpFormData = z.infer<typeof signUpSchema>;
 
@@ -171,11 +181,11 @@ interface SignUpPayloadBase {
   confirmPassword: string;
   firstName: string;
   lastName: string;
-  phone?: string;
-  addressLine?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
+  phone: string;
+  addressLine: string;
+  city: string;
+  state: string;
+  zip: string;
 }
 
 /**
@@ -219,11 +229,11 @@ export function toSignUpPayload(values: SignUpFormData): SignUpPayload {
     confirmPassword: values.confirmPassword,
     firstName: values.firstName,
     lastName: values.lastName,
-    ...(values.phone === "" ? {} : { phone: values.phone }),
-    ...(values.addressLine === "" ? {} : { addressLine: values.addressLine }),
-    ...(values.city === "" ? {} : { city: values.city }),
-    ...(values.state === "" ? {} : { state: values.state.toUpperCase() }),
-    ...(values.zip === "" ? {} : { zip: values.zip }),
+    phone: toE164UsPhone(values.phone),
+    addressLine: values.addressLine,
+    city: values.city,
+    state: values.state.toUpperCase(),
+    zip: values.zip,
   };
 
   if (values.role === "company") {

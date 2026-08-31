@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { JobFormValues } from "../schemas";
+import { intakeToFormValues } from "../utils/jobIntake";
 import { JobLivePreview } from "./JobLivePreview";
 
 const values: JobFormValues = {
@@ -16,6 +17,8 @@ const values: JobFormValues = {
   salaryMax: "200000",
   salaryRatePeriod: "per_year",
   recruiterFee: "12000",
+  // The intake half of the form, unanswered.
+  ...intakeToFormValues(null),
 };
 
 const noop = () => {};

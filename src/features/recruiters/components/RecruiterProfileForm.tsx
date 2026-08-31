@@ -12,6 +12,8 @@ import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
+import { UsPhoneInput } from "@/shared/ui-components/controls/UsPhoneInput";
+import { toE164UsPhone, toUsPhoneDigits } from "@/shared/libs/usPhone";
 import { useUpdateMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 import {
   MAX_EXPERIENCES,
@@ -155,7 +157,8 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
       state: profile.state ?? "",
       zip: profile.zip ?? "",
       linkedinUrl: profile.linkedinUrl ?? "",
-      phone: profile.phone ?? "",
+      // Stored in E.164; the field holds bare national digits.
+      phone: toUsPhoneDigits(profile.phone ?? ""),
       experiences: profile.experiences.map((experience) => ({
         firmName: experience.firmName,
         years: String(experience.years),
@@ -173,13 +176,15 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
   const onSubmit = handleSubmit((values) => {
     update.mutate(
       {
-        // null clears; undefined would be dropped by axios and keep the old value.
-        addressLine: values.addressLine === "" ? null : values.addressLine,
-        city: values.city === "" ? null : values.city,
-        state: values.state === "" ? null : values.state.toUpperCase(),
-        zip: values.zip === "" ? null : values.zip,
+        // Address and phone are required since sign-up, so they are always sent
+        // and never nulled — the API refuses a null on them. For the rest, null
+        // clears; undefined would be dropped by axios and keep the old value.
+        addressLine: values.addressLine,
+        city: values.city,
+        state: values.state.toUpperCase(),
+        zip: values.zip,
         linkedinUrl: values.linkedinUrl === "" ? null : values.linkedinUrl,
-        phone: values.phone === "" ? null : values.phone,
+        phone: toE164UsPhone(values.phone),
         // Sent whole: the API replaces the list rather than merging it, which
         // is what makes removing a firm here actually remove it.
         experiences: values.experiences.map((firm) => ({
@@ -357,11 +362,18 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
         >
           <div className="flex flex-col gap-2 sm:max-w-sm">
             <Label htmlFor="phone">Phone</Label>
-            <Input
-              id="phone"
-              inputMode="tel"
-              placeholder="+1-202-555-0100"
-              {...register("phone")}
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <UsPhoneInput
+                  id="phone"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={errors.phone !== undefined}
+                />
+              )}
             />
             {errors.phone && (
               <p className="text-xs text-destructive">{errors.phone.message}</p>

@@ -14,39 +14,211 @@ export const JOB_STATUSES = [
 export const jobStatusSchema = z.enum(JOB_STATUSES);
 export type JobStatus = z.infer<typeof jobStatusSchema>;
 
-export const EMPLOYMENT_TYPES = ["full_time", "part_time", "contract"] as const;
+export const EMPLOYMENT_TYPES = ["full_time", "part_time"] as const;
 export const employmentTypeSchema = z.enum(EMPLOYMENT_TYPES);
 export type EmploymentType = z.infer<typeof employmentTypeSchema>;
 
-/** How the salary range is quoted — mirrors the backend salary_rate_period enum. */
-export const SALARY_RATE_PERIODS = [
-  "per_year",
-  "per_month",
-  "per_week",
-  "per_day",
-  "per_hour",
-] as const;
+/** How the pay range is quoted — mirrors the backend salary_rate_period enum,
+ * which still carries the retired per-month/week/day values for old rows. */
+export const SALARY_RATE_PERIODS = ["per_year", "per_hour"] as const;
 export const salaryRatePeriodSchema = z.enum(SALARY_RATE_PERIODS);
 export type SalaryRatePeriod = z.infer<typeof salaryRatePeriodSchema>;
 
 export const SALARY_RATE_PERIOD_LABELS: Record<SalaryRatePeriod, string> = {
   per_year: "Per Year",
-  per_month: "Per Month",
-  per_week: "Per Week",
-  per_day: "Per Day",
   per_hour: "Per Hour",
 };
 
 /** Compact suffix for showing a range inline, e.g. "$120k – $150k / yr". */
 export const SALARY_RATE_PERIOD_SUFFIX: Record<SalaryRatePeriod, string> = {
   per_year: "/ yr",
-  per_month: "/ mo",
-  per_week: "/ wk",
-  per_day: "/ day",
   per_hour: "/ hr",
 };
 
-/** Mirrors the backend role_category enum. */
+/** How soon the company wants to hire — mirrors the backend OfferTimeline. */
+export const OFFER_TIMELINES = [
+  "asap",
+  "within_2_weeks",
+  "within_1_month",
+  "flexible",
+] as const;
+export const offerTimelineSchema = z.enum(OFFER_TIMELINES);
+export type OfferTimeline = z.infer<typeof offerTimelineSchema>;
+
+export const OFFER_TIMELINE_LABELS: Record<OfferTimeline, string> = {
+  asap: "ASAP",
+  within_2_weeks: "Within 2 Weeks",
+  within_1_month: "Within 1 Month",
+  flexible: "Flexible",
+};
+
+/** Card-sized wording: a pill sits beside Full-Time / On-site and has no room
+ * for the full phrasing the detail page uses. */
+export const OFFER_TIMELINE_SHORT_LABELS: Record<OfferTimeline, string> = {
+  asap: "ASAP",
+  within_2_weeks: "2 weeks",
+  within_1_month: "1 month",
+  flexible: "Flexible",
+};
+
+/** Mirrors the backend InterviewType. */
+export const INTERVIEW_TYPES = [
+  "phone",
+  "video",
+  "video_panel",
+  "in_person",
+] as const;
+export const interviewTypeSchema = z.enum(INTERVIEW_TYPES);
+export type InterviewType = z.infer<typeof interviewTypeSchema>;
+
+export const INTERVIEW_TYPE_LABELS: Record<InterviewType, string> = {
+  phone: "Phone",
+  video: "Video",
+  video_panel: "Video panel",
+  in_person: "In person",
+};
+
+export const MAX_INTERVIEW_STAGES = 5;
+export const MAX_QUALIFICATIONS = 10;
+export const MAX_QUALIFICATION_LENGTH = 80;
+
+/** What else the company is doing to fill the role — mirrors OtherSourcing. */
+export const OTHER_SOURCING_OPTIONS = [
+  "other_agencies",
+  "internal_talent_team",
+  "none",
+] as const;
+export const otherSourcingSchema = z.enum(OTHER_SOURCING_OPTIONS);
+export type OtherSourcing = z.infer<typeof otherSourcingSchema>;
+
+export const OTHER_SOURCING_LABELS: Record<OtherSourcing, string> = {
+  other_agencies: "Yes - Other Agencies",
+  internal_talent_team: "Yes - Internal Talent Acquisition Team",
+  none: "No",
+};
+
+export const benefitsSchema = z.object({
+  medical: z.boolean(),
+  dental: z.boolean(),
+  vision: z.boolean(),
+  sickTime: z.boolean(),
+  vacation: z.boolean(),
+  ancillary: z.boolean(),
+  ancillaryDetails: z.string().optional(),
+  retirement401k: z.object({
+    offered: z.boolean(),
+    matchPercent: z.number().optional(),
+    details: z.string().optional(),
+  }),
+});
+export type Benefits = z.infer<typeof benefitsSchema>;
+
+/** The benefit checkboxes, in the order the client listed them. */
+export const BENEFIT_CHECKBOXES: ReadonlyArray<{
+  key: "medical" | "dental" | "vision" | "sickTime" | "vacation";
+  label: string;
+}> = [
+  { key: "medical", label: "Medical" },
+  { key: "dental", label: "Dental" },
+  { key: "vision", label: "Vision" },
+  { key: "sickTime", label: "Sick Time" },
+  { key: "vacation", label: "Vacation" },
+];
+
+export const interviewingAvailabilitySchema = z.object({
+  asap: z.boolean(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+});
+export type InterviewingAvailability = z.infer<
+  typeof interviewingAvailabilitySchema
+>;
+
+/** The stage durations the form offers, in minutes, with their wording. */
+export const INTERVIEW_DURATIONS: ReadonlyArray<{
+  minutes: number;
+  label: string;
+}> = [
+  { minutes: 30, label: "30 min" },
+  { minutes: 45, label: "45 min" },
+  { minutes: 60, label: "1 hr" },
+  { minutes: 90, label: "1.5 hr" },
+  { minutes: 240, label: "Half day" },
+  { minutes: 480, label: "Full day" },
+];
+
+const DURATION_LABEL_BY_MINUTES = new Map(
+  INTERVIEW_DURATIONS.map((option) => [option.minutes, option.label]),
+);
+
+/** Renders a stage duration: a preset reads as its wording, anything else (an
+ * older job, or an intake written by another client) falls back to minutes. */
+export function interviewDurationLabel(minutes: number): string {
+  return DURATION_LABEL_BY_MINUTES.get(minutes) ?? `${minutes} min`;
+}
+
+/** A must-have / nice-to-have chip list, bounded the way the API bounds it. */
+export const qualificationListSchema = z
+  .array(
+    z
+      .string()
+      .trim()
+      .min(1, "A requirement can't be empty")
+      .max(
+        MAX_QUALIFICATION_LENGTH,
+        `Keep each requirement under ${MAX_QUALIFICATION_LENGTH} characters`,
+      ),
+  )
+  .max(MAX_QUALIFICATIONS, `Up to ${MAX_QUALIFICATIONS} requirements`);
+
+export const interviewStageSchema = z.object({
+  order: z.number(),
+  type: interviewTypeSchema,
+  durationMinutes: z.number(),
+});
+export type InterviewStage = z.infer<typeof interviewStageSchema>;
+
+/**
+ * The job intake questionnaire, as the company's own job returns it.
+ *
+ * `.passthrough()` is load-bearing: the backend blob also holds the worksite
+ * address, benefits and company details, which this app never renders. Keeping
+ * the unknown keys means an edit through the job form writes back the fields it
+ * collects without destroying the ones it does not.
+ */
+export const jobIntakeSchema = z
+  .object({
+    worksiteAddress: z.string().optional().catch(undefined),
+    daysAndHours: z.string().optional().catch(undefined),
+    reportsTo: z.string().optional().catch(undefined),
+    benefits: benefitsSchema.optional().catch(undefined),
+    offerTimeline: offerTimelineSchema.optional().catch(undefined),
+    qualifications: z
+      .object({
+        mustHave: z.array(z.string()).catch([]),
+        niceToHave: z.array(z.string()).catch([]),
+      })
+      .optional()
+      .catch(undefined),
+    interviewProcess: z.array(interviewStageSchema).optional().catch(undefined),
+    interviewingAvailability: interviewingAvailabilitySchema
+      .optional()
+      .catch(undefined),
+    postedOnlineElsewhere: z.boolean().optional().catch(undefined),
+    otherSourcing: otherSourcingSchema.optional().catch(undefined),
+  })
+  .passthrough();
+export type JobIntake = z.infer<typeof jobIntakeSchema>;
+
+/**
+ * Mirrors the backend role_category enum.
+ *
+ * Deliberately NOT the same vocabulary as a recruiter's
+ * `SPECIALIZATION_SUGGESTIONS`: this describes what a job is (a fixed DB enum
+ * companies pick from and recruiters filter on), while a specialization
+ * describes a recruiter's expertise and is free text. The overlap in names is
+ * coincidence — do not derive one list from the other, and do not "sync" them.
+ */
 export const ROLE_CATEGORIES = [
   "engineering",
   "product",
@@ -71,7 +243,9 @@ export const jobSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string().nullable(),
-  employmentType: employmentTypeSchema.nullable(),
+  // `.catch(null)` so a row still holding the retired `contract` value reads as
+  // unset instead of failing the whole job's parse.
+  employmentType: employmentTypeSchema.nullable().catch(null),
   roleCategory: roleCategorySchema,
   locationState: z.string().nullable(),
   locationCity: z.string().nullable(),
@@ -95,6 +269,8 @@ export const jobSchema = z.object({
   companyName: z.string().nullable().catch(null),
   /** True when the company has a logo; served from the id-based URL. */
   hasLogo: z.boolean().catch(false),
+  // The intake questionnaire. Null on jobs posted before it existed.
+  intake: jobIntakeSchema.nullable().catch(null),
 });
 export type Job = z.infer<typeof jobSchema>;
 
@@ -118,9 +294,8 @@ export const ROLE_CATEGORY_LABELS: Record<RoleCategory, string> = {
 };
 
 export const EMPLOYMENT_TYPE_LABELS: Record<EmploymentType, string> = {
-  full_time: "Full time",
-  part_time: "Part time",
-  contract: "Contract",
+  full_time: "Full-Time",
+  part_time: "Part-Time",
 };
 
 /**
@@ -198,6 +373,52 @@ export const jobFormSchema = z
       .refine((value) => Number(value) <= MAX_MONEY_MAJOR, {
         message: `Commission must be under ${MAX_MONEY_MAJOR_LABEL}`,
       }),
+    // ---- the intake questionnaire; all optional, all stored in `intake` ----
+    // "" is "not said": a company that skips these publishes exactly as before.
+    worksiteAddress: z.string().trim().max(200, "Keep it under 200 characters"),
+    daysAndHours: z.string().trim().max(200, "Keep it under 200 characters"),
+    reportsTo: z.string().trim().max(120, "Keep it under 120 characters"),
+    benefits: z.object({
+      medical: z.boolean(),
+      dental: z.boolean(),
+      vision: z.boolean(),
+      sickTime: z.boolean(),
+      vacation: z.boolean(),
+      retirement401k: z.boolean(),
+      // A string because the input produces one; "" means "offered, unstated".
+      retirement401kMatch: z
+        .string()
+        .trim()
+        .refine(
+          (value) =>
+            value === "" ||
+            (/^\d{1,3}(\.\d)?$/.test(value) && Number(value) <= 100),
+          { message: "Enter a match between 0 and 100" },
+        ),
+      ancillary: z.boolean(),
+      ancillaryDetails: z
+        .string()
+        .trim()
+        .max(200, "Keep it under 200 characters"),
+    }),
+    // Interviewing availability: ASAP, or a date range.
+    interviewingAsap: z.boolean(),
+    interviewingFrom: z.string().trim(),
+    interviewingTo: z.string().trim(),
+    postedOnline: z.union([z.literal("yes"), z.literal("no"), z.literal("")]),
+    otherSourcing: otherSourcingSchema.or(z.literal("")),
+    timelineToHire: offerTimelineSchema.or(z.literal("")),
+    mustHave: qualificationListSchema,
+    niceToHave: qualificationListSchema,
+    interviewRounds: z
+      .array(
+        z.object({
+          type: interviewTypeSchema,
+          // A select of preset minutes, so the string is always parseable.
+          durationMinutes: z.string(),
+        }),
+      )
+      .max(MAX_INTERVIEW_STAGES, `At most ${MAX_INTERVIEW_STAGES} rounds`),
   })
   .refine(
     (values) => {
@@ -221,6 +442,19 @@ export const jobFormSchema = z
         code: z.ZodIssueCode.custom,
         path: ["locationState"],
         message: "Pick a state, or mark the role remote",
+      });
+    }
+    // Checked here rather than on the field because it spans two of them.
+    if (
+      !values.interviewingAsap &&
+      values.interviewingFrom !== "" &&
+      values.interviewingTo !== "" &&
+      values.interviewingTo < values.interviewingFrom
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["interviewingTo"],
+        message: "End the range on or after it starts",
       });
     }
   });

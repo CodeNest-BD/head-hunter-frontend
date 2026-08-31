@@ -8,10 +8,21 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 
 import {
+  BENEFIT_CHECKBOXES,
   EMPLOYMENT_TYPE_LABELS,
+  INTERVIEW_TYPE_LABELS,
+  OFFER_TIMELINE_LABELS,
+  OTHER_SOURCING_LABELS,
   ROLE_CATEGORY_LABELS,
   SALARY_RATE_PERIOD_SUFFIX,
+  interviewDurationLabel,
+  type Benefits,
   type EmploymentType,
+  type InterviewStage,
+  type InterviewType,
+  type InterviewingAvailability,
+  type OfferTimeline,
+  type OtherSourcing,
   type RoleCategory,
   type SalaryRatePeriod,
 } from "../schemas";
@@ -41,6 +52,21 @@ export interface JobView {
   companyProfileId?: string;
   companyName?: string | null;
   hasLogo?: boolean;
+  // From the intake questionnaire. Optional and empty-by-default: a job posted
+  // before the questionnaire existed simply shows none of these blocks.
+  offerTimeline?: OfferTimeline | null;
+  mustHave?: string[];
+  niceToHave?: string[];
+  interviewProcess?: InterviewStage[];
+  // Authed surfaces only — the public card and detail never carry these, so a
+  // guest cannot read a company's worksite address or hiring intel.
+  worksiteAddress?: string;
+  daysAndHours?: string;
+  reportsTo?: string;
+  benefits?: Benefits;
+  interviewingAvailability?: InterviewingAvailability;
+  postedOnlineElsewhere?: boolean;
+  otherSourcing?: OtherSourcing;
 }
 
 /** One label/value fact in the header card. */
@@ -111,12 +137,153 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
       <div className="grid flex-1 grid-cols-1 gap-x-6 gap-y-4 p-5 sm:grid-cols-2 sm:p-6">
         <Fact label="Category" value={category} />
         <Fact label="Location" value={location} />
-        <Fact label="Salary range" value={salary} />
+        <Fact label="Pay Range" value={salary} />
         <Fact label="Employment type" value={employmentType} />
         <Fact label="Posted" value={posted} />
         <Fact label="Work model" value={job.isRemote ? "Remote" : "On-site"} />
+        {job.offerTimeline && (
+          <Fact
+            label="Timeline to Hire"
+            value={OFFER_TIMELINE_LABELS[job.offerTimeline]}
+          />
+        )}
       </div>
     </div>
+  );
+}
+
+/** One requirement group as a pill row; renders nothing when the list is empty
+ * so a job that skipped the questionnaire shows no hollow heading. */
+function RequirementRow({
+  label,
+  entries,
+}: {
+  label: string;
+  entries: string[];
+}) {
+  if (entries.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+        {label}
+      </p>
+      <ul className="flex flex-wrap gap-2">
+        {entries.map((entry) => (
+          <li
+            key={entry}
+            className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+          >
+            {entry}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** The benefits the company ticked, as one readable line. */
+function benefitsLine(benefits: Benefits): string {
+  const named = BENEFIT_CHECKBOXES.filter(
+    (benefit) => benefits[benefit.key],
+  ).map((benefit) => benefit.label);
+  if (benefits.retirement401k.offered) {
+    const match = benefits.retirement401k.matchPercent;
+    named.push(match === undefined ? "401(k)" : `401(k) (${match}% match)`);
+  }
+  if (benefits.ancillary) {
+    named.push(
+      benefits.ancillaryDetails
+        ? `Ancillary: ${benefits.ancillaryDetails}`
+        : "Ancillary benefits",
+    );
+  }
+  return named.join(" · ");
+}
+
+/** How soon the company can start interviewing, ASAP or a window. */
+function availabilityLine(availability: InterviewingAvailability): string {
+  if (availability.asap) return "ASAP";
+  const window = [availability.from, availability.to].filter(Boolean);
+  return window.length === 2 ? window.join(" – ") : (window[0] ?? "");
+}
+
+/** Requirements + planned interview stages, the part of the intake a recruiter
+ * reads before deciding whether they can fill the role. */
+function HiringProcessCard({ job }: { job: JobView }) {
+  const mustHave = job.mustHave ?? [];
+  const niceToHave = job.niceToHave ?? [];
+  const rounds = job.interviewProcess ?? [];
+  const benefits = job.benefits ? benefitsLine(job.benefits) : "";
+  const availability = job.interviewingAvailability
+    ? availabilityLine(job.interviewingAvailability)
+    : "";
+  const details: ReadonlyArray<{ label: string; value: string }> = [
+    { label: "Worksite", value: job.worksiteAddress ?? "" },
+    { label: "Days & hours", value: job.daysAndHours ?? "" },
+    { label: "Reports to", value: job.reportsTo ?? "" },
+    { label: "Benefits", value: benefits },
+    { label: "Interviewing from", value: availability },
+    {
+      label: "Posted online elsewhere",
+      value:
+        job.postedOnlineElsewhere === undefined
+          ? ""
+          : job.postedOnlineElsewhere
+            ? "Yes"
+            : "No",
+    },
+    {
+      label: "Other sourcing",
+      value: job.otherSourcing ? OTHER_SOURCING_LABELS[job.otherSourcing] : "",
+    },
+  ].filter((detail) => detail.value !== "");
+
+  if (
+    mustHave.length === 0 &&
+    niceToHave.length === 0 &&
+    rounds.length === 0 &&
+    details.length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <section className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+      <RequirementRow label="Must-Haves" entries={mustHave} />
+      <RequirementRow label="Nice-to-Haves" entries={niceToHave} />
+      {rounds.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            Interview process
+          </p>
+          <ol className="flex flex-col gap-1.5">
+            {rounds.map((round, index) => (
+              <li key={round.order} className="text-sm text-navy">
+                <span className="font-medium">{index + 1}.</span>{" "}
+                {INTERVIEW_TYPE_LABELS[round.type as InterviewType] ??
+                  round.type}
+                <span className="text-muted-foreground">
+                  {" · "}
+                  {interviewDurationLabel(round.durationMinutes)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+      {details.length > 0 && (
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+          {details.map((detail) => (
+            <div key={detail.label} className="min-w-0">
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                {detail.label}
+              </dt>
+              <dd className="mt-0.5 text-sm text-navy">{detail.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </section>
   );
 }
 
@@ -174,6 +341,7 @@ export function JobDetailBody({
         </div>
       ) : null}
       <FactsCard job={job} compact={compact} />
+      <HiringProcessCard job={job} />
       {cta ? (
         <div
           className={

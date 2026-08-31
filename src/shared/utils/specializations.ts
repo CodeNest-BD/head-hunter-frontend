@@ -2,7 +2,10 @@ import { z } from "zod";
 
 /**
  * Curated specializations shown as chips on the sign-up form and the
- * recruiter profile form. `value` is the slug stored in the backend's
+ * recruiter profile form. The single source for what is offered — the backend
+ * stores `specializations` as free text and keeps no copy of this list. Unrelated
+ * to a job's `ROLE_CATEGORIES`, which is a fixed backend enum describing the
+ * role rather than the recruiter. `value` is the slug stored in the backend's
  * `specializations` `text[]` column and sent over the wire; `label` is what
  * the chip displays. A recruiter can also add a specialization that isn't
  * listed here via the "+ Add" chip — that custom entry is stored verbatim
@@ -16,35 +19,21 @@ export interface SpecializationSuggestion {
 export const SPECIALIZATION_SUGGESTIONS: readonly SpecializationSuggestion[] = [
   { value: "accounting", label: "Accounting" },
   { value: "finance", label: "Finance" },
-  { value: "human_resources", label: "Human resources" },
+  { value: "human_resources", label: "Human Resources" },
+  { value: "administrative", label: "Administrative" },
+  { value: "customer_service", label: "Customer Service" },
   { value: "technology", label: "Technology" },
-  { value: "engineering", label: "Engineering" },
-  { value: "product", label: "Product" },
-  { value: "design", label: "Design" },
-  { value: "data", label: "Data" },
-  { value: "sales", label: "Sales" },
   { value: "marketing", label: "Marketing" },
-  { value: "operations", label: "Operations" },
   { value: "legal", label: "Legal" },
+  { value: "engineering", label: "Engineering" },
+  { value: "sales", label: "Sales" },
+  { value: "operations", label: "Operations" },
   { value: "healthcare", label: "Healthcare" },
-  { value: "medical", label: "Medical" },
   { value: "pharma", label: "Pharma" },
   { value: "biotech", label: "Biotech" },
-  { value: "education", label: "Education" },
-  { value: "customer_success", label: "Customer success" },
-  { value: "executive_search", label: "Executive search" },
-  { value: "skilled_trades", label: "Skilled trades" },
-  { value: "construction", label: "Construction" },
-  { value: "manufacturing", label: "Manufacturing" },
-  { value: "logistics_supply_chain", label: "Logistics & supply chain" },
+  { value: "skilled_trades", label: "Skilled Trades" },
+  { value: "logistics_supply_chain", label: "Logistics & Supply Chain" },
   { value: "hospitality", label: "Hospitality" },
-  { value: "real_estate", label: "Real estate" },
-  { value: "insurance", label: "Insurance" },
-  { value: "non_profit", label: "Non-profit" },
-  { value: "government", label: "Government" },
-  { value: "energy", label: "Energy" },
-  { value: "retail", label: "Retail" },
-  { value: "aerospace_defense", label: "Aerospace & defense" },
 ] as const;
 
 const LABEL_BY_VALUE = new Map<string, string>(
@@ -53,7 +42,7 @@ const LABEL_BY_VALUE = new Map<string, string>(
 
 /**
  * Renders a stored specialization for display: a recognized curated slug
- * (e.g. `human_resources`) renders as its label ("Human resources"); anything
+ * (e.g. `human_resources`) renders as its label ("Human Resources"); anything
  * else — a custom entry, or a slug from before the suggestion list changed —
  * passes through unchanged rather than being mangled.
  */
@@ -62,8 +51,9 @@ export function getSpecializationLabel(value: string): string {
 }
 
 /** Collapses case and separator differences so a curated slug and its typed
- * label compare equal — `human_resources` and "Human resources" both key to
- * "human resources", as do `non_profit` and "Non-profit". Exported so callers
+ * label compare equal — `human_resources` and "Human Resources" both key to
+ * "human resources", as do `skilled_trades` and "Skilled-Trades". Exported so
+ * callers
  * (e.g. the custom-entry dedupe in `useSpecializationsField`) can compare two
  * arbitrary specializations the same way this module compares against the
  * curated suggestions. */

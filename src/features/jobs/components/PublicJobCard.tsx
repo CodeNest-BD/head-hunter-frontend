@@ -17,6 +17,7 @@ import { formatMinor } from "@/shared/utils/money";
 import type { PublicJobCard as PublicJobCardData } from "../publicSchemas";
 import {
   EMPLOYMENT_TYPE_LABELS,
+  OFFER_TIMELINE_SHORT_LABELS,
   ROLE_CATEGORY_LABELS,
   type EmploymentType,
   type RoleCategory,
@@ -51,7 +52,11 @@ function postedAgo(date: Date | null): string {
   return `${Math.floor(days / 365)}y ago`;
 }
 
-/** The employment type and work mode, as up to two neutral tag pills. */
+/**
+ * The pills under the location: employment type and work mode, then the two
+ * intake facts a recruiter triages on — how soon the company hires, and how
+ * many interviews it takes. The last two only appear when the company said.
+ */
 function tags(job: PublicJobCardData): string[] {
   const out: string[] = [];
   if (job.employmentType) {
@@ -61,6 +66,14 @@ function tags(job: PublicJobCardData): string[] {
     );
   }
   out.push(job.isRemote ? "Remote" : "On-site");
+  if (job.offerTimeline) {
+    out.push(OFFER_TIMELINE_SHORT_LABELS[job.offerTimeline]);
+  }
+  if (job.interviewCount > 0) {
+    out.push(
+      `${job.interviewCount} ${job.interviewCount === 1 ? "Interview" : "Interviews"}`,
+    );
+  }
   return out;
 }
 
@@ -163,12 +176,12 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
             <p className="mb-1.5 text-sm font-bold text-navy">
               {salary}
               <span className="ml-1.5 text-xs font-medium text-brand-gray">
-                salary
+                pay
               </span>
             </p>
           ) : (
             <p className="mb-1.5 text-sm font-medium text-brand-gray-light">
-              Salary not disclosed
+              Pay not disclosed
             </p>
           )}
           <p className="font-heading text-xl font-extrabold leading-none text-primary">
@@ -176,6 +189,15 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
             <span className="ml-1.5 text-sm font-medium text-brand-gray">
               recruiter fee
             </span>
+          </p>
+          {/* How much competition the role already has. Stated at zero too, so
+           * "nobody has submitted yet" is visible rather than inferred from a
+           * missing line. */}
+          <p className="mt-1.5 text-xs font-medium text-brand-gray">
+            {job.submittedCandidates}{" "}
+            {job.submittedCandidates === 1
+              ? "submitted candidate"
+              : "submitted candidates"}
           </p>
         </div>
         <Link

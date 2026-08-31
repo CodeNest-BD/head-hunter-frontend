@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -23,6 +23,7 @@ import { Input } from "@/shared/ui-components/controls/input";
 import { PasswordInput } from "@/shared/ui-components/controls/password-input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
+import { UsPhoneInput } from "@/shared/ui-components/controls/UsPhoneInput";
 import {
   signUpSchema,
   toSignUpPayload,
@@ -33,16 +34,9 @@ import {
 } from "../schemas";
 import { signUp } from "../api/auth";
 import { GoogleAuthButton } from "./GoogleAuthButton";
-import type { Role } from "../types";
-
-const ROLE_OPTIONS: ReadonlyArray<{
-  value: Role;
-  label: string;
-  hint: string;
-}> = [
-  { value: "company", label: "Company", hint: "Hire talent" },
-  { value: "recruiter", label: "Recruiter", hint: "Find placements" },
-];
+import { SignUpRoleStep } from "./SignUpRoleStep";
+import { SIGNUP_ROLE_DETAILS } from "./signUpRoles";
+import type { SignupRole } from "../types";
 
 const optionalHint = (
   <span className="font-normal text-muted-foreground">(optional)</span>
@@ -186,8 +180,8 @@ function SpecializationsChips({
 
 const EMPTY_REFERENCE = { name: "", company: "", title: "", phone: "" };
 
-const DEFAULT_VALUES: SignUpFormData = {
-  role: "company",
+const defaultValuesFor = (role: SignupRole): SignUpFormData => ({
+  role,
   firstName: "",
   lastName: "",
   email: "",
@@ -197,14 +191,33 @@ const DEFAULT_VALUES: SignUpFormData = {
   companyName: "",
   linkedinUrl: "",
   experiences: [],
-  references: [],
+  // A recruiter must supply at least one, so the first row starts open.
+  references: role === "recruiter" ? [EMPTY_REFERENCE] : [],
   addressLine: "",
   city: "",
   state: "",
   zip: "",
-};
+});
 
+/**
+ * Sign-up in two phases: pick an account type, then fill in the details for it.
+ * The role lives here rather than in the form so going back to phase one
+ * unmounts the form and starts the next role with clean defaults.
+ */
 export function SignUpForm() {
+  const [role, setRole] = useState<SignupRole | null>(null);
+
+  if (role === null) return <SignUpRoleStep onSelect={setRole} />;
+
+  return <SignUpDetailsForm role={role} onChangeRole={() => setRole(null)} />;
+}
+
+interface SignUpDetailsFormProps {
+  role: SignupRole;
+  onChangeRole: () => void;
+}
+
+function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
   const router = useRouter();
   const passwordRequirementsId = useId();
   const {
@@ -215,7 +228,7 @@ export function SignUpForm() {
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: DEFAULT_VALUES,
+    defaultValues: defaultValuesFor(role),
   });
   const {
     fields: referenceFields,
@@ -225,7 +238,6 @@ export function SignUpForm() {
 
   const firms = useFieldArray({ control, name: "experiences" });
 
-  const selectedRole = watch("role");
   // City options are scoped to the chosen state, matching every other address.
   const stateValue = watch("state");
   const cityOptions = useStateCities(stateValue || undefined);
@@ -262,51 +274,19 @@ export function SignUpForm() {
         </p>
       </div>
 
-      <Controller
-        control={control}
-        name="role"
-        render={({ field }) => (
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-sm font-medium leading-none text-foreground">
-              I am a…
-            </legend>
-            {/* Two short cards; side by side even on a phone, where stacking
-                them pushes the whole form down a screen for no gain. */}
-            <div className="grid grid-cols-2 gap-3">
-              {ROLE_OPTIONS.map((option) => {
-                const active = field.value === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => field.onChange(option.value)}
-                    aria-pressed={active}
-                    className={cn(
-                      "flex flex-col rounded-md border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                      active
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-accent",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "text-sm font-semibold",
-                        active && "text-primary",
-                      )}
-                    >
-                      {option.label}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {option.hint}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <FieldError message={errors.role?.message} />
-          </fieldset>
-        )}
-      />
+      <div className="flex items-center justify-between gap-3 rounded-md border border-primary bg-primary/10 px-4 py-3">
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-primary">
+            {SIGNUP_ROLE_DETAILS[role].label}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {SIGNUP_ROLE_DETAILS[role].hint}
+          </span>
+        </div>
+        <Button type="button" variant="ghost" size="sm" onClick={onChangeRole}>
+          Change
+        </Button>
+      </div>
 
       {/* First/last are short enough to share a row at 360px. */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -381,20 +361,25 @@ export function SignUpForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="phone">Phone {optionalHint}</Label>
-        <Input
-          id="phone"
-          type="tel"
-          autoComplete="tel"
-          aria-invalid={errors.phone ? true : undefined}
-          {...register("phone")}
-          className={cn("h-11", errors.phone && "border-destructive")}
-          placeholder="+1-202-555-0100"
+        <Label htmlFor="phone">Phone</Label>
+        <Controller
+          control={control}
+          name="phone"
+          render={({ field }) => (
+            <UsPhoneInput
+              id="phone"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              invalid={errors.phone !== undefined}
+              className="h-11"
+            />
+          )}
         />
         <FieldError message={errors.phone?.message} />
       </div>
 
-      {selectedRole === "company" && (
+      {role === "company" && (
         <div className="flex flex-col gap-2">
           <Label htmlFor="companyName">Company name</Label>
           <Input
@@ -410,7 +395,7 @@ export function SignUpForm() {
         </div>
       )}
 
-      {selectedRole === "recruiter" && (
+      {role === "recruiter" && (
         <>
           <div className="flex flex-col gap-2">
             <Label htmlFor="linkedinUrl">LinkedIn URL {optionalHint}</Label>
@@ -520,9 +505,9 @@ export function SignUpForm() {
 
           <div className="flex flex-col gap-3">
             <span className="text-sm font-medium leading-none text-foreground">
-              References{" "}
+              Recruiting Firm References{" "}
               <span className="font-normal text-muted-foreground">
-                (optional, up to {MAX_SIGNUP_REFERENCES})
+                (at least 1, up to {MAX_SIGNUP_REFERENCES})
               </span>
             </span>
             {referenceFields.map((referenceField, index) => (
@@ -534,14 +519,16 @@ export function SignUpForm() {
                   <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Reference {index + 1}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => removeReference(index)}
-                    className="inline-flex items-center gap-1 rounded-sm text-xs font-medium text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <X className="h-3.5 w-3.5" aria-hidden="true" />
-                    Remove
-                  </button>
+                  {referenceFields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeReference(index)}
+                      className="inline-flex items-center gap-1 rounded-sm text-xs font-medium text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <X className="h-3.5 w-3.5" aria-hidden="true" />
+                      Remove
+                    </button>
+                  )}
                 </div>
                 <Input
                   type="text"
@@ -588,13 +575,18 @@ export function SignUpForm() {
                 + Add reference
               </Button>
             )}
+            <FieldError
+              message={
+                errors.references?.root?.message ?? errors.references?.message
+              }
+            />
           </div>
         </>
       )}
 
       <div className="flex flex-col gap-3">
         <span className="text-sm font-medium leading-none text-foreground">
-          Mailing address {optionalHint}
+          Address
         </span>
         <Input
           type="text"
@@ -651,7 +643,7 @@ export function SignUpForm() {
       {/* Google signup carries the chosen role + name so the backend can
           provision a brand-new google user. */}
       <GoogleAuthButton
-        role={selectedRole}
+        role={role}
         name={enteredName === "" ? undefined : enteredName}
       />
 

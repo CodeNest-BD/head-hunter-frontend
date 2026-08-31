@@ -1,6 +1,13 @@
 import { z } from "zod";
 
 import { personNameSchema } from "@/shared/libs/personName";
+import {
+  addressLineSchema,
+  citySchema,
+  stateSchema,
+  zipSchema,
+} from "@/shared/libs/usAddress";
+import { usPhoneDigitsSchema } from "@/shared/libs/usPhone";
 import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
 
 /** Admin approval states, shared with the recruiter side. */
@@ -113,21 +120,12 @@ export const companyProfileFormSchema = z
     // oversized figure is caught here rather than after a round-trip.
     commissionMin: commissionAmount,
     commissionMax: commissionAmount,
-    addressLine: z.string().trim().max(200, "Keep it under 200 characters"),
-    city: z.string().trim().max(120, "Keep it under 120 characters"),
-    state: z
-      .string()
-      .trim()
-      .regex(/^[A-Za-z]{2}$/, "Use the two-letter state code")
-      .or(z.literal("")),
-    // Stricter than the API, which takes any string here: the sign-up form
-    // already holds the user to this shape, so the profile should not quietly
-    // accept a ZIP it would have rejected an hour earlier.
-    zip: z
-      .string()
-      .trim()
-      .regex(/^\d{5}(-\d{4})?$/, "Enter a 5-digit ZIP or ZIP+4, e.g. 94103")
-      .or(z.literal("")),
+    // The same four rules sign-up applies — required, not merely well-shaped.
+    // An account cannot edit its way out of having an address.
+    addressLine: addressLineSchema,
+    city: citySchema,
+    state: stateSchema,
+    zip: zipSchema,
     industry: z.string().trim().max(120, "Keep it under 120 characters"),
     yearFounded: z
       .string()
@@ -166,7 +164,7 @@ export type CompanyProfileFormValues = z.infer<typeof companyProfileFormSchema>;
 export const companyEmployeeInfoFormSchema = z.object({
   firstName: personNameSchema("First name"),
   lastName: personNameSchema("Last name"),
-  phone: z.string().trim().max(32, "Keep it under 32 characters"),
+  phone: usPhoneDigitsSchema,
 });
 export type CompanyEmployeeInfoFormValues = z.infer<
   typeof companyEmployeeInfoFormSchema

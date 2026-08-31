@@ -11,10 +11,10 @@ const valid = {
   description: "",
   commissionMin: "",
   commissionMax: "",
-  addressLine: "",
-  city: "",
-  state: "",
-  zip: "",
+  addressLine: "123 Market St",
+  city: "San Francisco",
+  state: "CA",
+  zip: "94103",
   industry: "",
   yearFounded: "",
   employeeSize: "",
@@ -27,17 +27,22 @@ const errorPaths = (overrides: Record<string, unknown>): string[] => {
 };
 
 describe("companyProfileFormSchema", () => {
-  it("accepts a profile with only a name", () => {
+  it("accepts a profile with a name and an address", () => {
     expect(companyProfileFormSchema.safeParse(valid).success).toBe(true);
   });
 
-  it("accepts the address and business details, all optional", () => {
+  // The address is required at sign-up, so the profile screen must not be a
+  // way to blank it back out.
+  it("refuses to blank the address it was signed up with", () => {
+    expect(errorPaths({ addressLine: "  " })).toContain("addressLine");
+    expect(errorPaths({ city: "" })).toContain("city");
+    expect(errorPaths({ state: "" })).toContain("state");
+    expect(errorPaths({ zip: "" })).toContain("zip");
+  });
+
+  it("accepts the business details, all optional", () => {
     expect(
       errorPaths({
-        addressLine: "123 Market St",
-        city: "San Francisco",
-        state: "CA",
-        zip: "94103",
         industry: "SaaS",
         yearFounded: "2014",
         employeeSize: "51-200",
@@ -119,7 +124,11 @@ describe("companyProfileFormSchema", () => {
 });
 
 describe("companyEmployeeInfoFormSchema", () => {
-  const employee = { firstName: "Jane", lastName: "Doe", phone: "" };
+  const employee = {
+    firstName: "Jane",
+    lastName: "Doe",
+    phone: "2025550100",
+  };
   const employeeErrorPaths = (overrides: Record<string, unknown>): string[] => {
     const result = companyEmployeeInfoFormSchema.safeParse({
       ...employee,
@@ -130,7 +139,7 @@ describe("companyEmployeeInfoFormSchema", () => {
       : result.error.issues.map((i) => i.path.join("."));
   };
 
-  it("accepts a contact with no phone yet", () => {
+  it("accepts a contact with a ten-digit US phone", () => {
     expect(companyEmployeeInfoFormSchema.safeParse(employee).success).toBe(
       true,
     );
@@ -144,7 +153,11 @@ describe("companyEmployeeInfoFormSchema", () => {
     expect(employeeErrorPaths({ lastName: "Doe2" })).toContain("lastName");
   });
 
-  it("accepts a phone number", () => {
-    expect(employeeErrorPaths({ phone: "+1-202-555-0100" })).toEqual([]);
+  // The field holds bare digits; the +1 is fixed chrome on the input and is
+  // re-attached at the submit boundary.
+  it("requires ten digits, rejecting a formatted or cleared number", () => {
+    expect(employeeErrorPaths({ phone: "+1-202-555-0100" })).toContain("phone");
+    expect(employeeErrorPaths({ phone: "" })).toContain("phone");
+    expect(employeeErrorPaths({ phone: "202555010" })).toContain("phone");
   });
 });

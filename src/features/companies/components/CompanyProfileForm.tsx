@@ -85,13 +85,15 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
         description: values.description === "" ? null : values.description,
         commissionRangeMinMinor: majorInputToMinor(values.commissionMin),
         commissionRangeMaxMinor: majorInputToMinor(values.commissionMax),
+        // Required since sign-up, so these four are always sent and never
+        // nulled — the API refuses a null on them.
+        addressLine: values.addressLine,
+        city: values.city,
+        state: values.state.toUpperCase(),
+        zip: values.zip,
         // "" is how the form spells "cleared"; the API wants null, since an
         // empty string would fail the validators that guard these columns.
         ...blankToNull({
-          addressLine: values.addressLine,
-          city: values.city,
-          state: values.state === "" ? "" : values.state.toUpperCase(),
-          zip: values.zip,
           industry: values.industry,
           employeeSize: values.employeeSize,
           revenue: values.revenue,
@@ -223,7 +225,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
         </CompanyFormSection>
 
         <CompanyFormSection
-          title="Mailing address"
+          title="Address"
           hint="Not shown publicly — used for contracts and billing."
         >
           <div className="flex flex-col gap-2">

@@ -19,7 +19,10 @@ import {
 import { formatDistanceToNow } from "date-fns";
 
 import { useAuth } from "@/features/auth";
-import { useWallet } from "@/features/billing/hooks/useBilling";
+import {
+  useRecruiterWallet,
+  useWallet,
+} from "@/features/billing/hooks/useBilling";
 import {
   useMessageUnreadCount,
   useUnreadRealtime,
@@ -75,6 +78,29 @@ function CompanyTopBarActions() {
         <span className="hidden sm:inline">Post a job</span>
       </Link>
     </div>
+  );
+}
+
+/**
+ * Recruiter top-bar figure: commission released so far this calendar year, the
+ * recruiter's counterpart to the company's available balance. Links to the
+ * wallet, where the same money is broken down by placement.
+ */
+function RecruiterTopBarActions() {
+  // The wallet endpoint sits behind the approved-account gate, so a pending
+  // recruiter must not fetch it — there is no commission to show yet either.
+  const { isApproved } = useAccountApproval();
+  const { data } = useRecruiterWallet(isApproved);
+  if (!isApproved) return null;
+  return (
+    <Link
+      href="/recruiter/wallet"
+      title="Commission earned year to date"
+      className="hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary lg:inline-flex"
+    >
+      <span className="text-muted-foreground">Commission</span>
+      <span className="tabular-nums">{formatMinor(data?.earnedYtdMinor)}</span>
+    </Link>
   );
 }
 
@@ -574,6 +600,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
          * end of a narrow top bar. */}
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">
           {user?.role === "company" && <CompanyTopBarActions />}
+          {user?.role === "recruiter" && <RecruiterTopBarActions />}
           {(user?.role === "company" || user?.role === "recruiter") && (
             <NotificationBell />
           )}

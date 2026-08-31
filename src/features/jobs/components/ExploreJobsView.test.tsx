@@ -61,6 +61,9 @@ function samplePublicJob(
     salaryRatePeriod: null,
     recruiterFeeMinor: 500_000,
     publishedAt: new Date("2026-01-01"),
+    offerTimeline: null,
+    interviewCount: 0,
+    submittedCandidates: 0,
     ...overrides,
   };
 }

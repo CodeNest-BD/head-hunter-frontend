@@ -29,9 +29,9 @@ describe("normalizeSpecialization", () => {
 
 describe("getSpecializationLabel", () => {
   it("renders a known curated slug as its label", () => {
-    expect(getSpecializationLabel("human_resources")).toBe("Human resources");
+    expect(getSpecializationLabel("human_resources")).toBe("Human Resources");
     expect(getSpecializationLabel("logistics_supply_chain")).toBe(
-      "Logistics & supply chain",
+      "Logistics & Supply Chain",
     );
   });
 
@@ -53,7 +53,7 @@ describe("findSuggestionValue", () => {
 
   it("treats underscores and spaces as equivalent separators", () => {
     expect(findSuggestionValue("human resources")).toBe("human_resources");
-    expect(findSuggestionValue("Non-profit")).toBe("non_profit");
+    expect(findSuggestionValue("Skilled-Trades")).toBe("skilled_trades");
   });
 
   it("returns undefined for a value that matches no suggestion", () => {

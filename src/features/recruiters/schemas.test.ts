@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 import { recruiterProfileFormSchema } from "./schemas";
 
 const valid = {
-  addressLine: "",
-  city: "",
-  state: "",
-  zip: "",
+  addressLine: "12 Baker Street",
+  city: "Austin",
+  state: "TX",
+  zip: "78701",
   linkedinUrl: "",
-  phone: "",
+  phone: "2025550100",
   experiences: [],
 };
 
@@ -28,8 +28,18 @@ const errorPaths = (overrides: Record<string, unknown>): string[] => {
 };
 
 describe("recruiterProfileFormSchema", () => {
-  it("accepts a profile with everything empty", () => {
+  it("accepts a profile with only the fields sign-up required", () => {
     expect(recruiterProfileFormSchema.safeParse(valid).success).toBe(true);
+  });
+
+  // Both are required at sign-up, so the profile screen must not be a way to
+  // blank them back out.
+  it("refuses to blank the address or the phone", () => {
+    expect(errorPaths({ addressLine: "  " })).toContain("addressLine");
+    expect(errorPaths({ city: "" })).toContain("city");
+    expect(errorPaths({ state: "" })).toContain("state");
+    expect(errorPaths({ zip: "" })).toContain("zip");
+    expect(errorPaths({ phone: "" })).toContain("phone");
   });
 
   it("accepts a list of staffing firms", () => {

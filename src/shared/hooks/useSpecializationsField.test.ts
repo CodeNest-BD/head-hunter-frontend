@@ -8,11 +8,11 @@ import {
 import { useSpecializationsField } from "./useSpecializationsField";
 
 const TECHNOLOGY = "technology";
-const RETAIL = "retail";
 const FIRST_15_SLUGS = SPECIALIZATION_SUGGESTIONS.slice(
   0,
   MAX_SPECIALIZATIONS,
 ).map((s) => s.value);
+const UNSELECTED_SLUG = SPECIALIZATION_SUGGESTIONS[MAX_SPECIALIZATIONS].value;
 
 /** A controlled harness mirroring how a Controller-driven form field wires
  * `value`/`onChange` into the hook. */
@@ -42,7 +42,7 @@ describe("useSpecializationsField", () => {
   it("refuses to select past the maximum number of specializations", () => {
     const { result } = renderHook(() => useHarness([...FIRST_15_SLUGS]));
 
-    act(() => result.current.toggle(RETAIL));
+    act(() => result.current.toggle(UNSELECTED_SLUG));
 
     expect(result.current.value).toEqual(FIRST_15_SLUGS);
     expect(result.current.error).toMatch(/up to 15/);
@@ -72,10 +72,10 @@ describe("useSpecializationsField", () => {
   it("matches a slug-style entry to its suggestion regardless of separators", () => {
     const { result } = renderHook(() => useHarness([]));
 
-    act(() => result.current.setDraft("non-profit"));
+    act(() => result.current.setDraft("skilled-trades"));
     act(() => result.current.commitAdd());
 
-    expect(result.current.value).toEqual(["non_profit"]);
+    expect(result.current.value).toEqual(["skilled_trades"]);
   });
 
   it("is a no-op when the typed value already matches a selected suggestion", () => {

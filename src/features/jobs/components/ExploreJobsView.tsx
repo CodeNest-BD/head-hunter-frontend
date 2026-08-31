@@ -970,7 +970,7 @@ function ResultsBody({
           <div className="hidden grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] gap-6 border-b border-brand-line bg-secondary/50 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray md:grid xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
             <span>Role</span>
             <span>Terms</span>
-            <span className="hidden xl:block">Salary</span>
+            <span className="hidden xl:block">Pay</span>
             <span>Recruiter fee</span>
             <span className="text-right">Posted</span>
           </div>
