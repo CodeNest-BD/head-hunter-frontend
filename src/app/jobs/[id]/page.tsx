@@ -7,6 +7,7 @@ import { AlertCircle, ArrowLeft, Send } from "lucide-react";
 import { RequireApprovedRecruiter, useAuth } from "@/features/auth";
 import { useJob } from "@/features/jobs";
 import { JobDetailBody } from "@/features/jobs/components/JobDetailView";
+import { jobToJobView } from "@/features/jobs/utils/toJobView";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { PublicShell } from "@/components/landing/PublicShell";
 import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
@@ -115,7 +116,7 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
         </div>
       ) : (
         <JobDetailBody
-          job={job}
+          job={jobToJobView(job)}
           cta={role === "recruiter" ? <RecruiterCta jobId={jobId} /> : null}
         />
       )}

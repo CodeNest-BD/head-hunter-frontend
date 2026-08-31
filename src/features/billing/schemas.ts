@@ -64,6 +64,8 @@ export const PLACEMENT_STATUS_LABELS: Record<PlacementStatus, string> = {
 export const recruiterWalletSummarySchema = z.object({
   totalMinor: z.number(),
   releasedMinor: z.number(),
+  /** Commission released within the current calendar year. */
+  earnedYtdMinor: z.number(),
   inEscrowMinor: z.number(),
   inDisputeMinor: z.number(),
   placementsCount: z.number(),

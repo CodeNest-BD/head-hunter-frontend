@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
+import { toE164UsPhone, toUsPhoneDigits } from "@/shared/libs/usPhone";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { UsPhoneInput } from "@/shared/ui-components/controls/UsPhoneInput";
 import {
   companyEmployeeInfoFormSchema,
   type CompanyEmployeeInfoFormValues,
@@ -26,13 +28,15 @@ export function CompanyEmployeeInfoForm({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isDirty },
   } = useForm<CompanyEmployeeInfoFormValues>({
     resolver: zodResolver(companyEmployeeInfoFormSchema),
     defaultValues: {
       firstName: profile.firstName,
       lastName: profile.lastName,
-      phone: profile.phone ?? "",
+      // Stored in E.164; the field holds bare national digits.
+      phone: toUsPhoneDigits(profile.phone ?? ""),
     },
   });
 
@@ -43,9 +47,9 @@ export function CompanyEmployeeInfoForm({
         // already refused an empty one.
         firstName: values.firstName,
         lastName: values.lastName,
-        // "" is how the form spells "cleared"; the API wants null, since an
-        // empty string would fail the validator guarding this column.
-        phone: values.phone === "" ? null : values.phone,
+        // Required since sign-up, so it can be changed but never cleared; the
+        // API takes E.164 while the field holds bare digits.
+        phone: toE164UsPhone(values.phone),
       },
       // Re-baseline the form so the Save button disables again until the next
       // real edit, instead of staying enabled after a successful save.
@@ -82,11 +86,18 @@ export function CompanyEmployeeInfoForm({
           </div>
           <div className="flex flex-col gap-2 sm:max-w-sm">
             <Label htmlFor="phone">Phone</Label>
-            <Input
-              id="phone"
-              inputMode="tel"
-              placeholder="+1-202-555-0100"
-              {...register("phone")}
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <UsPhoneInput
+                  id="phone"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={errors.phone !== undefined}
+                />
+              )}
             />
             {errors.phone && (
               <p className="text-xs text-destructive">{errors.phone.message}</p>

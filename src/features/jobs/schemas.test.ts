@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { jobFormSchema } from "./schemas";
+import { intakeToFormValues } from "./utils/jobIntake";
 
 const valid = {
   title: "Senior Software Engineer",
@@ -13,6 +14,8 @@ const valid = {
   salaryMax: "",
   salaryRatePeriod: "per_year" as const,
   recruiterFee: "10000",
+  // The intake half of the form, unanswered.
+  ...intakeToFormValues(null),
 };
 
 const errorPaths = (overrides: Record<string, unknown>): string[] => {
@@ -44,6 +47,35 @@ describe("jobFormSchema", () => {
 
   it("rejects a state code that is not two characters", () => {
     expect(errorPaths({ locationState: "CAL" })).toContain("locationState");
+  });
+
+  // The intake questionnaire is optional throughout, so the only rules worth
+  // a test are the two that can actually be got wrong.
+  it("rejects an interviewing window that ends before it starts", () => {
+    expect(
+      errorPaths({
+        interviewingAsap: false,
+        interviewingFrom: "2026-09-30",
+        interviewingTo: "2026-09-01",
+      }),
+    ).toContain("interviewingTo");
+    expect(
+      errorPaths({
+        interviewingAsap: false,
+        interviewingFrom: "2026-09-01",
+        interviewingTo: "2026-09-30",
+      }),
+    ).toEqual([]);
+  });
+
+  it("rejects a 401(k) match that is not a percentage", () => {
+    const withMatch = (retirement401kMatch: string): string[] =>
+      errorPaths({ benefits: { ...valid.benefits, retirement401kMatch } });
+
+    expect(withMatch("101")).toContain("benefits.retirement401kMatch");
+    expect(withMatch("four")).toContain("benefits.retirement401kMatch");
+    expect(withMatch("4.5")).toEqual([]);
+    expect(withMatch("")).toEqual([]);
   });
 
   it("requires a state on an on-site role, because the job map skips rows without one", () => {

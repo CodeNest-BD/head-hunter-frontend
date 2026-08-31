@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  addressLineSchema,
+  citySchema,
+  stateSchema,
+  zipSchema,
+} from "@/shared/libs/usAddress";
+import { usPhoneDigitsSchema } from "@/shared/libs/usPhone";
 import { specializationsSchema } from "@/shared/utils/specializations";
 
 export const SUBSCRIPTION_STATUSES = [
@@ -101,20 +108,17 @@ export type ExperienceFormValues = z.infer<typeof experienceFormSchema>;
 
 /** Profile edit form. Strings throughout; converted at the submit boundary. */
 export const recruiterProfileFormSchema = z.object({
-  addressLine: z.string().trim(),
-  city: z.string().trim(),
-  state: z
-    .string()
-    .trim()
-    .length(2, "Use the two-letter state code")
-    .or(z.literal("")),
-  zip: z.string().trim(),
+  // The same four rules sign-up applies — required, not merely well-shaped.
+  addressLine: addressLineSchema,
+  city: citySchema,
+  state: stateSchema,
+  zip: zipSchema,
   linkedinUrl: z
     .string()
     .trim()
     .url("Enter a full URL, including https://")
     .or(z.literal("")),
-  phone: z.string().trim().max(32, "Keep it under 32 characters"),
+  phone: usPhoneDigitsSchema,
   experiences: z
     .array(experienceFormSchema)
     .max(MAX_EXPERIENCES, `At most ${MAX_EXPERIENCES} firms`),

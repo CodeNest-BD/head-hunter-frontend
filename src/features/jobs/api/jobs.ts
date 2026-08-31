@@ -4,6 +4,7 @@ import {
   jobMapEntrySchema,
   jobSchema,
   type Job,
+  type JobIntake,
   type JobMapEntry,
   type JobStatus,
 } from "../schemas";
@@ -41,6 +42,9 @@ export interface JobWriteInput {
   salaryMaxMinor?: number | null;
   salaryRatePeriod?: string | null;
   recruiterFeeMinor: number;
+  /** The whole intake blob — the API replaces it wholesale, so callers must
+   * merge rather than send only the fields they collect. */
+  intake?: JobIntake;
 }
 
 /** GET /v1/jobs */

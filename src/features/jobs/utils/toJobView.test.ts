@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { JobFormValues } from "../schemas";
+import { intakeToFormValues } from "./jobIntake";
 import { formValuesToJobView } from "./toJobView";
 
 const base: JobFormValues = {
@@ -15,6 +16,8 @@ const base: JobFormValues = {
   salaryMax: "160000",
   salaryRatePeriod: "per_year",
   recruiterFee: "10000",
+  // The intake half of the form, unanswered.
+  ...intakeToFormValues(null),
 };
 
 describe("formValuesToJobView", () => {

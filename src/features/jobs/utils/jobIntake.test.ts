@@ -1,0 +1,246 @@
+import { describe, expect, it } from "vitest";
+
+import type { JobIntake } from "../schemas";
+import { intakeToFormValues, toIntakeInput } from "./jobIntake";
+
+/** "Nothing answered", straight from the reader — so this fixture cannot drift
+ * away from what the form actually starts with. */
+const emptyForm = intakeToFormValues(null);
+
+describe("toIntakeInput", () => {
+  it("writes the three groups the form owns", () => {
+    const intake = toIntakeInput(
+      {
+        ...emptyForm,
+        timelineToHire: "within_2_weeks",
+        mustHave: ["5+ years Python"],
+        niceToHave: ["AWS"],
+        interviewRounds: [
+          { type: "phone", durationMinutes: "30" },
+          { type: "video_panel", durationMinutes: "120" },
+        ],
+      },
+      null,
+    );
+
+    expect(intake).toEqual({
+      offerTimeline: "within_2_weeks",
+      qualifications: { mustHave: ["5+ years Python"], niceToHave: ["AWS"] },
+      interviewProcess: [
+        { order: 1, type: "phone", durationMinutes: 30 },
+        { order: 2, type: "video_panel", durationMinutes: 120 },
+      ],
+    });
+  });
+
+  // The blob also carries the worksite address, benefits and company details,
+  // which this form never renders. Replacing it wholesale would delete them.
+  it("preserves intake keys the form does not collect", () => {
+    const existing: JobIntake = {
+      positionDuties: "Own the billing subsystem",
+      postedOnlineElsewhere: true,
+      otherSourcing: "none",
+      offerTimeline: "asap",
+    };
+
+    const intake = toIntakeInput(
+      { ...emptyForm, mustHave: ["Python"] },
+      existing,
+    );
+
+    // `positionDuties` is written by no surface this app renders, so it must
+    // ride through an edit untouched.
+    expect(intake).toMatchObject({
+      positionDuties: "Own the billing subsystem",
+    });
+  });
+
+  it("drops a group the company cleared, without touching the rest", () => {
+    const existing: JobIntake = {
+      positionDuties: "Own the billing subsystem",
+      worksiteAddress: "123 Market St",
+      offerTimeline: "asap",
+      qualifications: { mustHave: ["Python"], niceToHave: [] },
+      interviewProcess: [{ order: 1, type: "phone", durationMinutes: 30 }],
+    };
+
+    const intake = toIntakeInput(emptyForm, existing);
+
+    // The worksite address goes too: it is a field this form owns, so an empty
+    // box means the company cleared it.
+    expect(intake).toEqual({ positionDuties: "Own the billing subsystem" });
+  });
+
+  it("writes the benefits block only when something was ticked", () => {
+    expect(toIntakeInput(emptyForm, null)?.benefits).toBeUndefined();
+
+    const intake = toIntakeInput(
+      {
+        ...emptyForm,
+        benefits: {
+          ...emptyForm.benefits,
+          medical: true,
+          retirement401k: true,
+          retirement401kMatch: "4",
+          ancillary: true,
+          ancillaryDetails: "Commuter benefit",
+        },
+      },
+      null,
+    );
+
+    expect(intake?.benefits).toEqual({
+      medical: true,
+      dental: false,
+      vision: false,
+      sickTime: false,
+      vacation: false,
+      ancillary: true,
+      ancillaryDetails: "Commuter benefit",
+      retirement401k: { offered: true, matchPercent: 4 },
+    });
+  });
+
+  // ASAP and a date range are alternatives; an ASAP answer must not smuggle a
+  // stale range back to the API.
+  it("sends no dates alongside an ASAP availability", () => {
+    const intake = toIntakeInput(
+      {
+        ...emptyForm,
+        interviewingAsap: true,
+        interviewingFrom: "2026-09-01",
+        interviewingTo: "2026-09-30",
+      },
+      null,
+    );
+
+    expect(intake?.interviewingAvailability).toEqual({
+      asap: true,
+      from: undefined,
+      to: undefined,
+    });
+  });
+
+  it("maps the yes/no answers to booleans and the sourcing enum through", () => {
+    const intake = toIntakeInput(
+      { ...emptyForm, postedOnline: "no", otherSourcing: "other_agencies" },
+      null,
+    );
+
+    expect(intake).toMatchObject({
+      postedOnlineElsewhere: false,
+      otherSourcing: "other_agencies",
+    });
+  });
+
+  it("returns undefined rather than an empty intake for a job that had none", () => {
+    expect(toIntakeInput(emptyForm, null)).toBeUndefined();
+  });
+
+  it("renumbers rounds by position, so removing one leaves no gap", () => {
+    const intake = toIntakeInput(
+      {
+        ...emptyForm,
+        interviewRounds: [
+          { type: "video", durationMinutes: "60" },
+          { type: "in_person", durationMinutes: "480" },
+        ],
+      },
+      { interviewProcess: [{ order: 7, type: "phone", durationMinutes: 30 }] },
+    );
+
+    expect(intake?.interviewProcess?.map((stage) => stage.order)).toEqual([
+      1, 2,
+    ]);
+  });
+});
+
+describe("intakeToFormValues", () => {
+  it("reads an intake back into form values, rounds in order", () => {
+    expect(
+      intakeToFormValues({
+        offerTimeline: "flexible",
+        qualifications: { mustHave: ["Go"], niceToHave: ["K8s"] },
+        interviewProcess: [
+          { order: 2, type: "video", durationMinutes: 60 },
+          { order: 1, type: "phone", durationMinutes: 30 },
+        ],
+      }),
+    ).toMatchObject({
+      timelineToHire: "flexible",
+      mustHave: ["Go"],
+      niceToHave: ["K8s"],
+      interviewRounds: [
+        { type: "phone", durationMinutes: "30" },
+        { type: "video", durationMinutes: "60" },
+      ],
+    });
+  });
+
+  it("reads the benefits block back into checkbox and match values", () => {
+    const values = intakeToFormValues({
+      benefits: {
+        medical: true,
+        dental: false,
+        vision: true,
+        sickTime: false,
+        vacation: true,
+        ancillary: true,
+        ancillaryDetails: "Commuter benefit",
+        retirement401k: { offered: true, matchPercent: 4 },
+      },
+      interviewingAvailability: {
+        asap: false,
+        from: "2026-09-01",
+        to: "2026-09-30",
+      },
+      postedOnlineElsewhere: true,
+    });
+
+    expect(values.benefits).toEqual({
+      medical: true,
+      dental: false,
+      vision: true,
+      sickTime: false,
+      vacation: true,
+      retirement401k: true,
+      retirement401kMatch: "4",
+      ancillary: true,
+      ancillaryDetails: "Commuter benefit",
+    });
+    expect(values).toMatchObject({
+      interviewingAsap: false,
+      interviewingFrom: "2026-09-01",
+      interviewingTo: "2026-09-30",
+      postedOnline: "yes",
+    });
+  });
+
+  it("gives a job with no intake a blank, unticked form", () => {
+    expect(intakeToFormValues(null)).toEqual({
+      worksiteAddress: "",
+      daysAndHours: "",
+      reportsTo: "",
+      benefits: {
+        medical: false,
+        dental: false,
+        vision: false,
+        sickTime: false,
+        vacation: false,
+        retirement401k: false,
+        retirement401kMatch: "",
+        ancillary: false,
+        ancillaryDetails: "",
+      },
+      timelineToHire: "",
+      mustHave: [],
+      niceToHave: [],
+      interviewRounds: [],
+      interviewingAsap: false,
+      interviewingFrom: "",
+      interviewingTo: "",
+      postedOnline: "",
+      otherSourcing: "",
+    });
+  });
+});

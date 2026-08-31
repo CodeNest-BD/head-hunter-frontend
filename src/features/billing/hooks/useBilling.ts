@@ -41,10 +41,11 @@ export function useRecruiterPrice() {
   });
 }
 
-export function useRecruiterWallet() {
+export function useRecruiterWallet(enabled = true) {
   return useQuery({
     queryKey: billingKeys.recruiterWallet,
     queryFn: fetchRecruiterWallet,
+    enabled,
   });
 }
 

@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { salaryRatePeriodSchema } from "./schemas";
+import {
+  interviewStageSchema,
+  offerTimelineSchema,
+  salaryRatePeriodSchema,
+} from "./schemas";
 
 /**
  * Guest-facing job shapes for /public/jobs*.
@@ -26,12 +30,20 @@ export const publicJobCardSchema = z.object({
   salaryRatePeriod: salaryRatePeriodSchema.nullable().catch(null),
   recruiterFeeMinor: z.number().catch(0),
   publishedAt: z.coerce.date().nullable().catch(null),
+  // From the job's intake questionnaire: how soon they want to hire, how many
+  // interview stages they plan, and how much competition a recruiter faces.
+  offerTimeline: offerTimelineSchema.nullable().catch(null),
+  interviewCount: z.number().catch(0),
+  submittedCandidates: z.number().catch(0),
 });
 export type PublicJobCard = z.infer<typeof publicJobCardSchema>;
 
 export const publicJobDetailSchema = publicJobCardSchema.extend({
   description: z.string().nullable().catch(null),
   expiresAt: z.coerce.date().nullable().catch(null),
+  mustHave: z.array(z.string()).catch([]),
+  niceToHave: z.array(z.string()).catch([]),
+  interviewProcess: z.array(interviewStageSchema).catch([]),
 });
 export type PublicJobDetail = z.infer<typeof publicJobDetailSchema>;
 

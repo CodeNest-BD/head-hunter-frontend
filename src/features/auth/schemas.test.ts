@@ -8,25 +8,29 @@ const validCompany: SignUpFormData = {
   email: "jane@acme.com",
   password: "S3cureP@ssw0rd",
   confirmPassword: "S3cureP@ssw0rd",
-  phone: "",
+  phone: "2025550100",
   companyName: "Acme Inc.",
   linkedinUrl: "",
   experiences: [],
   references: [],
-  addressLine: "",
-  city: "",
-  state: "",
-  zip: "",
+  addressLine: "123 Market St",
+  city: "San Francisco",
+  state: "CA",
+  zip: "94103",
 };
 
 const validRecruiter: SignUpFormData = {
   ...validCompany,
   role: "recruiter",
   companyName: "",
+  references: [{ name: "John Smith", company: "", title: "", phone: "" }],
 };
 
 const errorPaths = (overrides: Partial<SignUpFormData>): string[] => {
-  const result = signUpSchema.safeParse({ ...validCompany, ...overrides });
+  // The role decides the baseline, so a recruiter case starts from a payload
+  // that satisfies the recruiter-only rules (a reference) and vice versa.
+  const base = overrides.role === "recruiter" ? validRecruiter : validCompany;
+  const result = signUpSchema.safeParse({ ...base, ...overrides });
   return result.success ? [] : result.error.issues.map((i) => i.path.join("."));
 };
 
@@ -35,8 +39,15 @@ describe("signUpSchema", () => {
     expect(signUpSchema.safeParse(validCompany).success).toBe(true);
   });
 
-  it("accepts a recruiter sign-up with every optional field empty", () => {
+  it("accepts a recruiter sign-up with one reference and no other extras", () => {
     expect(signUpSchema.safeParse(validRecruiter).success).toBe(true);
+  });
+
+  it("requires a reference only for the recruiter role", () => {
+    expect(errorPaths({ role: "recruiter", references: [] })).toContain(
+      "references",
+    );
+    expect(errorPaths({ references: [] })).toEqual([]);
   });
 
   it("rejects a confirmation that does not match the password", () => {
@@ -83,8 +94,8 @@ describe("signUpSchema", () => {
     }
   });
 
-  it("accepts an empty state, otherwise requires a two-letter code", () => {
-    expect(errorPaths({ state: "" })).toEqual([]);
+  it("requires a state, given as a two-letter code", () => {
+    expect(errorPaths({ state: "" })).toContain("state");
     expect(errorPaths({ state: "ca" })).toEqual([]);
     expect(errorPaths({ state: "Cal" })).toContain("state");
   });
@@ -93,10 +104,28 @@ describe("signUpSchema", () => {
     expect(errorPaths({ zip: "ABCDEF" })).toContain("zip");
   });
 
-  it("accepts a 5-digit zip, a ZIP+4, and an empty zip", () => {
+  it("accepts a 5-digit zip or a ZIP+4, but not an empty one", () => {
     expect(errorPaths({ zip: "94103" })).toEqual([]);
     expect(errorPaths({ zip: "94103-1234" })).toEqual([]);
-    expect(errorPaths({ zip: "" })).toEqual([]);
+    expect(errorPaths({ zip: "" })).toContain("zip");
+  });
+
+  it("requires ten phone digits for both roles", () => {
+    for (const role of ["company", "recruiter"] as const) {
+      expect(errorPaths({ role, phone: "" })).toContain("phone");
+      expect(errorPaths({ role, phone: "202555010" })).toContain("phone");
+      expect(errorPaths({ role, phone: "+1-202-555-0100" })).toContain("phone");
+      expect(errorPaths({ role, phone: "2025550100" })).toEqual([]);
+    }
+  });
+
+  it("requires the whole address for both roles", () => {
+    for (const role of ["company", "recruiter"] as const) {
+      expect(errorPaths({ role, addressLine: "  " })).toContain("addressLine");
+      expect(errorPaths({ role, city: "" })).toContain("city");
+      expect(errorPaths({ role, state: "" })).toContain("state");
+      expect(errorPaths({ role, zip: "" })).toContain("zip");
+    }
   });
 
   it("rejects passwords missing a character class", () => {
@@ -201,6 +230,11 @@ describe("toSignUpPayload", () => {
       password: "S3cureP@ssw0rd",
       confirmPassword: "S3cureP@ssw0rd",
       companyName: "Acme Inc.",
+      phone: "+12025550100",
+      addressLine: "123 Market St",
+      city: "San Francisco",
+      state: "CA",
+      zip: "94103",
     });
   });
 
@@ -218,20 +252,15 @@ describe("toSignUpPayload", () => {
     expect(toSignUpPayload(validCompany)).not.toHaveProperty("username");
   });
 
-  it("omits empty optional fields and uppercases the state", () => {
-    const payload = toSignUpPayload({
-      ...validCompany,
-      phone: "+1-202-555-0100",
-      state: "ca",
-      city: "San Francisco",
-    });
+  it("uppercases the state and sends the phone with the US country code", () => {
+    const payload = toSignUpPayload({ ...validCompany, state: "ca" });
     expect(payload).toMatchObject({
-      phone: "+1-202-555-0100",
       state: "CA",
       city: "San Francisco",
+      addressLine: "123 Market St",
+      zip: "94103",
+      phone: "+12025550100",
     });
-    expect(payload).not.toHaveProperty("addressLine");
-    expect(payload).not.toHaveProperty("zip");
   });
 
   it("converts each firm's years to a number and keeps its specializations", () => {
@@ -273,7 +302,6 @@ describe("toSignUpPayload", () => {
     const payload = toSignUpPayload(validRecruiter);
     expect(payload).not.toHaveProperty("experiences");
     expect(payload).not.toHaveProperty("linkedinUrl");
-    expect(payload).not.toHaveProperty("references");
   });
 
   it("drops empty optional fields inside each reference", () => {
