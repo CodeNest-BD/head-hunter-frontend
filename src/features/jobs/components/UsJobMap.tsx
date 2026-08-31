@@ -31,6 +31,12 @@ import {
 } from "@/shared/data/usStatesGeo";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui-components/controls/tooltip";
 import { formatMinor } from "@/shared/utils/money";
 
 import {
@@ -60,11 +66,21 @@ interface UsJobMapProps {
   readonly selection: MapSelection;
   readonly onSelect: (selection: MapSelection) => void;
   /**
-   * Embedded in a page-owned card: hides the city combobox and the internal
-   * legend (the card supplies its own header + legend) and fixes the map to a
-   * contained height instead of the full aspect ratio.
+   * "View Jobs" in a bubble's popup — an explicit "take me to the results"
+   * action. Selects like onSelect, but the caller also scrolls the list into
+   * view. Falls back to onSelect when not provided.
+   */
+  readonly onViewJobs?: (selection: MapSelection) => void;
+  /**
+   * Embedded in a page-owned card: renders the map's own header bar (with the
+   * `header` content on the left and the zoom/clear controls on the right) and
+   * fixes the map to a contained height instead of the full aspect ratio.
    */
   readonly embedded?: boolean;
+  /** Left side of the embedded header bar (e.g. the card's title + hint). */
+  readonly header?: ReactNode;
+  /** Overlaid on the map canvas, bottom-right (e.g. the bubble-size legend). */
+  readonly legend?: ReactNode;
 }
 
 /** Pre-projected city dots in the 960x600 frame; computed once at module load. */
@@ -165,7 +181,10 @@ export function UsJobMap({
   cityData,
   selection,
   onSelect,
+  onViewJobs,
   embedded = false,
+  header,
+  legend,
 }: UsJobMapProps) {
   const titleId = useId();
   const [hoveredState, setHoveredState] = useState<string | null>(null);
@@ -393,8 +412,75 @@ export function UsJobMap({
         ? (US_STATE_NAME_BY_CODE[selection.state] ?? selection.state)
         : "All states";
 
+  // Clear drops the selection AND returns the map to the full, un-zoomed view —
+  // otherwise a "clear" left you zoomed into a now-deselected state.
+  const handleClear = (): void => {
+    onSelect({ kind: "none" });
+    setZoom(MIN_ZOOM);
+    setPan({ x: 0, y: 0 });
+  };
+
   return (
     <div className={cn("flex flex-col", !embedded && "gap-4")}>
+      {/* The map's header bar: the card's title on the left, and the current
+          selection (with a text Clear) plus the zoom controls on the right. */}
+      {embedded && (
+        <div className="flex flex-col gap-3 border-b border-brand-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
+          <div className="min-w-0">{header}</div>
+          <div className="flex flex-wrap items-center gap-2">
+            {selection.kind !== "none" && (
+              <>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-navy">
+                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                  {selectionLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="text-xs font-semibold text-primary transition-colors hover:underline"
+                >
+                  Clear
+                </button>
+              </>
+            )}
+            <div className="flex items-center gap-1">
+              <MapControlButton
+                label="Zoom in"
+                onClick={() =>
+                  setZoom((z) => Math.min(MAX_ZOOM, z * ZOOM_STEP))
+                }
+                disabled={zoom >= MAX_ZOOM}
+              >
+                <Plus className="h-4 w-4" />
+              </MapControlButton>
+              <MapControlButton
+                label="Zoom out"
+                onClick={() =>
+                  setZoom((z) => Math.max(MIN_ZOOM, z / ZOOM_STEP))
+                }
+                disabled={zoom <= MIN_ZOOM}
+              >
+                <Minus className="h-4 w-4" />
+              </MapControlButton>
+              {/* Reset is redundant once Clear is shown — Clear already resets
+                  the zoom — so it only appears when nothing is selected. */}
+              {selection.kind === "none" && (
+                <MapControlButton
+                  label="Reset view"
+                  onClick={() => {
+                    setZoom(MIN_ZOOM);
+                    setPan({ x: 0, y: 0 });
+                  }}
+                  disabled={zoom <= MIN_ZOOM}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </MapControlButton>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toolbar: searchable city combobox, selection chip, clear. */}
       {!embedded && (
         <div className="flex flex-wrap items-center gap-3">
@@ -479,38 +565,15 @@ export function UsJobMap({
           onViewJobs={(bubble) => {
             cancelHideCity();
             setHoveredCity(null);
-            // "View Jobs" always drills into the city (never a toggle-off).
-            onSelect({ kind: "city", state: bubble.state, city: bubble.city });
+            // "View Jobs" always drills into the city (never a toggle-off) and,
+            // unlike a plain bubble click, asks the page to scroll to the list.
+            (onViewJobs ?? onSelect)({
+              kind: "city",
+              state: bubble.state,
+              city: bubble.city,
+            });
           }}
         />
-
-        {/* Zoom controls. */}
-        <div className="absolute right-3 top-3 z-10 flex flex-col gap-1">
-          <MapControlButton
-            label="Zoom in"
-            onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z * ZOOM_STEP))}
-            disabled={zoom >= MAX_ZOOM}
-          >
-            <Plus className="h-4 w-4" />
-          </MapControlButton>
-          <MapControlButton
-            label="Zoom out"
-            onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z / ZOOM_STEP))}
-            disabled={zoom <= MIN_ZOOM}
-          >
-            <Minus className="h-4 w-4" />
-          </MapControlButton>
-          <MapControlButton
-            label="Reset view"
-            onClick={() => {
-              setZoom(MIN_ZOOM);
-              setPan({ x: 0, y: 0 });
-            }}
-            disabled={zoom <= MIN_ZOOM}
-          >
-            <RotateCcw className="h-4 w-4" />
-          </MapControlButton>
-        </div>
 
         <svg
           ref={svgRef}
@@ -598,6 +661,24 @@ export function UsJobMap({
               );
             })}
 
+            {/* Two-letter state code at each state's centroid. pointer-events
+                off so it never intercepts a click meant for the state. */}
+            {US_STATES.map((geo) => (
+              <text
+                key={`label-${geo.code}`}
+                x={geo.cx}
+                y={geo.cy}
+                textAnchor="middle"
+                dominantBaseline="central"
+                className="pointer-events-none select-none"
+                fontSize={11}
+                fontWeight={700}
+                fill={selectedState === geo.code ? "#034AEF" : "#5B6472"}
+              >
+                {geo.code}
+              </text>
+            ))}
+
             {/* Per-city demand bubbles: one translucent bordered circle per
                 placeable city, sized by available fee. Hovering shows the city
                 popup; clicking selects (or clears) that specific city. */}
@@ -650,6 +731,9 @@ export function UsJobMap({
           </g>
         </svg>
 
+        {/* Card-supplied overlay (the bubble-size legend), bottom-right. */}
+        {legend}
+
         {/* Legend */}
         {!embedded && (
           <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-3 text-xs text-muted-foreground">
@@ -685,15 +769,27 @@ function MapControlButton({
   children: ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-      disabled={disabled}
-      className="flex h-8 w-8 items-center justify-center rounded-md border border-border/70 bg-background/80 text-muted-foreground backdrop-blur transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
-    >
-      {children}
-    </button>
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        {/* The trigger is the wrapping span, not the button: a disabled button
+            emits no pointer events, so hovering it directly would never show
+            the tooltip — exactly when (zoom at its limit) a hint is useful. */}
+        <TooltipTrigger asChild>
+          <span className="inline-flex">
+            <button
+              type="button"
+              aria-label={label}
+              onClick={onClick}
+              disabled={disabled}
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-border/70 bg-background/80 text-muted-foreground backdrop-blur transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+            >
+              {children}
+            </button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 

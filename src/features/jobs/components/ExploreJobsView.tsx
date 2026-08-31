@@ -211,19 +211,23 @@ export function ExploreJobsView() {
     setPage(1);
   };
 
-  // The map sits above the list, so picking a state brings the now-filtered
-  // results into view rather than leaving the change off-screen.
-  const resultsRef = useRef<HTMLDivElement>(null);
+  // A map click just narrows the list in place — it does NOT scroll the page
+  // down to the results, which was jarring when quickly comparing bubbles.
   const handleSelect = (selection: MapSelection): void => {
     setFilter({ selection });
-    if (selection.kind !== "none") {
-      requestAnimationFrame(() =>
-        resultsRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        }),
-      );
-    }
+  };
+
+  // "View Jobs" in a bubble's popup is an explicit "take me to the results"
+  // action, so it selects AND scrolls the list into view.
+  const resultsRef = useRef<HTMLElement>(null);
+  const handleViewJobs = (selection: MapSelection): void => {
+    setFilter({ selection });
+    requestAnimationFrame(() =>
+      resultsRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      }),
+    );
   };
 
   // City is the one filter the API can't do, so refine the fetched rows by it.
@@ -269,7 +273,7 @@ export function ExploreJobsView() {
           <p className="mt-3 max-w-2xl text-sm text-white/65 md:text-base">
             Every job on the map carries a committed recruiter fee, loaded by
             the employer before publishing and ready for secure payment to you.
-            Search a specific location or pick a state to see open roles.
+            Search a specific Job Type or pick a state to see open roles.
           </p>
         </div>
       </header>
@@ -295,6 +299,7 @@ export function ExploreJobsView() {
               listParams={listParams}
               selection={filters.selection}
               onSelect={handleSelect}
+              onViewJobs={handleViewJobs}
             />
 
             <section
@@ -311,15 +316,6 @@ export function ExploreJobsView() {
                   <span className="shrink-0 text-sm text-brand-gray">
                     {total} roles
                   </span>
-                  {filters.selection.kind !== "none" && (
-                    <button
-                      type="button"
-                      onClick={() => setFilter({ selection: { kind: "none" } })}
-                      className="text-sm font-semibold text-brand-secondary hover:underline"
-                    >
-                      Clear
-                    </button>
-                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {/* Choosing a layout is a desktop affordance: a phone is one
@@ -659,6 +655,7 @@ function MapCard({
   listParams,
   selection,
   onSelect,
+  onViewJobs,
 }: {
   isLoading: boolean;
   /** Verified recruiters and admins may read the live map. */
@@ -668,6 +665,7 @@ function MapCard({
   listParams: MapListParams;
   selection: MapSelection;
   onSelect: (selection: MapSelection) => void;
+  onViewJobs: (selection: MapSelection) => void;
 }) {
   // Session/verification is still resolving — show a loader rather than briefly
   // flashing the locked overlay to a recruiter who is in fact verified.
@@ -686,6 +684,7 @@ function MapCard({
       listParams={listParams}
       selection={selection}
       onSelect={onSelect}
+      onViewJobs={onViewJobs}
     />
   );
 }
@@ -730,10 +729,12 @@ function LiveMapCard({
   listParams,
   selection,
   onSelect,
+  onViewJobs,
 }: {
   listParams: MapListParams;
   selection: MapSelection;
   onSelect: (selection: MapSelection) => void;
+  onViewJobs: (selection: MapSelection) => void;
 }) {
   // A chosen state narrows the map server-side, exactly like the list. A chosen
   // city does NOT collapse the map: the map stays populated so the user keeps
@@ -774,26 +775,25 @@ function LiveMapCard({
 
   return (
     <section className="overflow-hidden rounded-md border border-brand-line bg-white shadow-card">
-      <div className={MAP_HEADER}>
-        <div>
-          <span className="font-heading text-base font-bold text-navy">
-            Where roles are open
-          </span>{" "}
-          <span className="text-sm text-brand-gray">
-            Click a state or city bubble to load its roles
-          </span>
-        </div>
-      </div>
-      <div className="relative p-3 sm:p-5">
-        <UsJobMap
-          embedded
-          stats={stats}
-          cityData={cityData}
-          selection={selection}
-          onSelect={onSelect}
-        />
-        <BubbleSizeLegend />
-      </div>
+      <UsJobMap
+        embedded
+        header={
+          <div>
+            <span className="font-heading text-base font-bold text-navy">
+              Where roles are open
+            </span>{" "}
+            <span className="text-sm text-brand-gray">
+              Click a state or city bubble to load its roles
+            </span>
+          </div>
+        }
+        legend={<BubbleSizeLegend />}
+        stats={stats}
+        cityData={cityData}
+        selection={selection}
+        onSelect={onSelect}
+        onViewJobs={onViewJobs}
+      />
     </section>
   );
 }
@@ -842,20 +842,14 @@ function LockedMapCard({ pending }: { pending: boolean }) {
             <h3 className="font-heading text-lg font-extrabold text-navy">
               The live map is for verified recruiters
             </h3>
-            {pending ? (
-              <p className="mt-2 text-sm text-brand-gray">
-                Your account is awaiting verification. Once an admin approves
-                it, live per-state demand unlocks here.
-              </p>
-            ) : (
-              <p className="mt-2 text-sm text-brand-gray">
-                Sign up as a recruiter and get verified to see live openings and
-                average fees in every state.
-              </p>
-            )}
+            <p className="mt-2 text-sm text-brand-gray">
+              Your account is awaiting verification. Once an Admin approves it,
+              you will have access to the live job map showing real-world
+              openings with companies willing to pay a fee.
+            </p>
             {!pending && (
               <Button asChild className="mt-4 font-bold">
-                <Link href="/signup">Sign Up as a Recruiter</Link>
+                <Link href="/signup">Sign Up</Link>
               </Button>
             )}
           </div>
