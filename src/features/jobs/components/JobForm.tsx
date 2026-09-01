@@ -3,11 +3,12 @@
 import { forwardRef, useEffect, useState, type ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { Info, PanelRightOpen } from "lucide-react";
+import { Info, PanelRightOpen, X } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { Textarea } from "@/shared/ui-components/controls/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -32,6 +33,7 @@ import {
 } from "@/shared/utils/money";
 import {
   BENEFIT_CHECKBOXES,
+  COMPANY_DETAIL_FIELDS,
   EMPLOYMENT_TYPES,
   EMPLOYMENT_TYPE_LABELS,
   INTERVIEW_DURATIONS,
@@ -41,16 +43,22 @@ import {
   MAX_QUALIFICATIONS,
   MAX_QUALIFICATION_LENGTH,
   OFFER_TIMELINES,
-  OFFER_TIMELINE_LABELS,
+  MAX_SELECTION_KEYS,
+  OFFER_TIMELINE_QUESTION_LABELS,
   OTHER_SOURCING_LABELS,
   OTHER_SOURCING_OPTIONS,
+  POSITION_OPEN_REASONS,
+  POSITION_OPEN_REASON_LABELS,
   ROLE_CATEGORIES,
   ROLE_CATEGORY_LABELS,
   SALARY_RATE_PERIODS,
   SALARY_RATE_PERIOD_LABELS,
+  WORK_MODELS,
+  WORK_MODEL_LABELS,
   jobFormSchema,
   type Job,
   type JobFormValues,
+  type WorkModel,
 } from "../schemas";
 import { intakeToFormValues, toIntakeInput } from "../utils/jobIntake";
 import { PayRangeField } from "./PayRangeField";
@@ -66,8 +74,16 @@ import { JobLivePreview } from "./JobLivePreview";
 /** Persists the live-preview open/closed choice across navigations and reloads. */
 const PREVIEW_OPEN_KEY = "hh-job-preview-open";
 
-/** Consistent, spacious control height across the form (matches the reference). */
-const CONTROL_HEIGHT = "h-11";
+/** Consistent control height across the form's dense single-card layout. */
+const CONTROL_HEIGHT = "h-10";
+
+type BenefitKey = (typeof BENEFIT_CHECKBOXES)[number]["key"];
+
+/** The benefit grid places its cells by hand to match the intake layout, so the
+ * shared label list is read by key rather than mapped in its own order. */
+const BENEFIT_LABELS = new Map<BenefitKey, string>(
+  BENEFIT_CHECKBOXES.map((benefit) => [benefit.key, benefit.label]),
+);
 
 interface JobFormProps {
   job?: Job;
@@ -87,70 +103,98 @@ function toDefaults(job?: Job): JobFormValues {
     employmentType: job?.employmentType ?? "",
     locationState: job?.locationState ?? "",
     locationCity: job?.locationCity ?? "",
-    isRemote: job?.isRemote ?? false,
     salaryMin: minorToMajorInput(job?.salaryMinMinor),
     salaryMax: minorToMajorInput(job?.salaryMaxMinor),
     // Older jobs saved before rate period existed default to the common case.
     salaryRatePeriod: job?.salaryRatePeriod ?? "per_year",
     recruiterFee: minorToMajorInput(job?.recruiterFeeMinor),
+    // Filled from the company profile once it resolves — it is not stored on
+    // the job, so there is nothing to read back here.
+    companyName: "",
     ...intakeToFormValues(job?.intake ?? null),
+    // Jobs saved before the three-state control only have the boolean, so it
+    // seeds the model unless the intake already recorded one.
+    workModel: job?.intake?.workModel ?? (job?.isRemote ? "remote" : "on_site"),
   };
 }
 
-/** A numbered form section: step badge + title + hint on the left, fields right. */
-function StepSection({
-  step,
-  title,
+/** A labelled field cell: label, control, then a hint or its error in one slot. */
+function Field({
+  label,
+  htmlFor,
+  optional,
   hint,
+  error,
+  className,
   children,
 }: {
-  step: number;
-  title: string;
-  hint?: string;
+  label: ReactNode;
+  htmlFor?: string;
+  optional?: boolean;
+  hint?: ReactNode;
+  error?: string;
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <div className="grid gap-x-8 gap-y-4 p-5 sm:p-6 md:grid-cols-[minmax(0,15rem)_1fr]">
-      <div className="flex gap-3">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-muted-foreground">
-          {step}
-        </span>
-        <div>
-          <h2 className="text-sm font-bold text-navy">{title}</h2>
-          {hint && (
-            <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-              {hint}
-            </p>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col gap-4">{children}</div>
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <Label htmlFor={htmlFor} className="text-[13px] font-semibold text-navy">
+        {label}
+        {optional && (
+          <span className="ml-1 font-normal text-muted-foreground">
+            Optional
+          </span>
+        )}
+      </Label>
+      {children}
+      {error ? (
+        <p className="text-xs text-destructive">{error}</p>
+      ) : (
+        hint && <p className="text-xs text-muted-foreground">{hint}</p>
+      )}
     </div>
   );
 }
 
-/** Segmented On-site / Remote toggle, bound to the `isRemote` boolean. */
+/** A titled block in the flat card — the questionnaire's own section headings. */
+function Block({
+  title,
+  intro,
+  children,
+}: {
+  title: string;
+  intro?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="text-[13px] font-bold text-navy">{title}</h2>
+      {intro && (
+        <p className="text-xs leading-relaxed text-muted-foreground">{intro}</p>
+      )}
+      {children}
+    </section>
+  );
+}
+
+/** Segmented On-site / Remote / Hybrid toggle. */
 function WorkModelControl({
   value,
   onChange,
 }: {
-  value: boolean;
-  onChange: (isRemote: boolean) => void;
+  value: WorkModel;
+  onChange: (next: WorkModel) => void;
 }) {
-  const options = [
-    { label: "On-site", isRemote: false },
-    { label: "Remote", isRemote: true },
-  ] as const;
   return (
     <div className="inline-flex rounded-lg border border-border bg-secondary/60 p-1">
-      {options.map((option) => {
-        const active = value === option.isRemote;
+      {WORK_MODELS.map((model) => {
+        const active = value === model;
         return (
           <button
-            key={option.label}
+            key={model}
             type="button"
             aria-pressed={active}
-            onClick={() => onChange(option.isRemote)}
+            onClick={() => onChange(model)}
             className={cn(
               "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
               active
@@ -158,7 +202,7 @@ function WorkModelControl({
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {option.label}
+            {WORK_MODEL_LABELS[model]}
           </button>
         );
       })}
@@ -204,6 +248,16 @@ function RadioRow({
   );
 }
 
+/** One intake question: its wording, then the answers beneath it. */
+function Question({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[13px] font-semibold text-navy">{label}</span>
+      {children}
+    </div>
+  );
+}
+
 /** A money field with a leading "$" adornment. */
 const MoneyInput = forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, ...props }, ref) => (
@@ -245,15 +299,13 @@ export function JobForm({
   // The whole form is watched so the live preview reacts as the company types;
   // individual fields are read off the snapshot.
   const values = watch();
-  const { isRemote, locationState } = values;
+  const { workModel, locationState } = values;
   // Same state-scoped city source the explore page uses, so the two stay in
   // step and a company picks from a real, complete list rather than a stub.
   const cityOptions = useStateCities(locationState || undefined);
 
-  // A new job's worksite defaults to the company's own address — most roles sit
-  // there, and a multi-site employer edits it. Only ever fills a blank field, so
-  // it cannot overwrite what the company typed or what an existing job stored.
   const { data: companyProfile } = useMyCompanyProfile();
+  const profileName = companyProfile?.companyName ?? "";
   const profileAddress = [
     companyProfile?.addressLine,
     companyProfile?.city,
@@ -261,10 +313,20 @@ export function JobForm({
   ]
     .filter(Boolean)
     .join(", ");
+
+  // The company name is not editable, so it tracks the profile on an edit too —
+  // a renamed company should not keep showing its old name on an old job.
+  useEffect(() => {
+    if (profileName !== "") setValue("companyName", profileName);
+    // Runs once the profile resolves; `setValue` is stable across renders.
+  }, [profileName, setValue]);
+
+  // A new job's worksite defaults to the account's address — most roles sit
+  // there, and a multi-site employer edits it. Skipped when editing, so a
+  // stored address is never overwritten.
   useEffect(() => {
     if (job || profileAddress === "") return;
     setValue("worksiteAddress", profileAddress);
-    // Runs once the profile resolves; `setValue` is stable across renders.
   }, [job, profileAddress, setValue]);
 
   // Default open so first-time posters see the preview; the choice then sticks.
@@ -285,7 +347,7 @@ export function JobForm({
   const requiredChecks = [
     values.title.trim() !== "",
     values.employmentType !== "",
-    values.isRemote || values.locationState !== "",
+    values.workModel === "remote" || values.locationState !== "",
     values.recruiterFee.trim() !== "",
     values.description.trim() !== "",
   ];
@@ -318,7 +380,9 @@ export function JobForm({
         : formValues.locationState.toUpperCase(),
     locationCity:
       formValues.locationCity === "" ? undefined : formValues.locationCity,
-    isRemote: formValues.isRemote,
+    // Derived: a hybrid role has a worksite, so only a fully remote one reads
+    // as remote to the job map and the recruiter filters.
+    isRemote: formValues.workModel === "remote",
     salaryMinMinor: majorInputToMinor(formValues.salaryMin),
     salaryMaxMinor: majorInputToMinor(formValues.salaryMax),
     salaryRatePeriod: formValues.salaryRatePeriod,
@@ -337,6 +401,28 @@ export function JobForm({
       ? "Ready to publish. Recruiters are notified immediately."
       : `${remaining} field${remaining === 1 ? "" : "s"} left before you can publish.`;
 
+  // The two free-text benefit inputs sit inline in the grid, with no room for a
+  // message each; whichever is wrong reports under the block.
+  const benefitsError =
+    errors.benefits?.retirement401kMatch?.message ??
+    errors.benefits?.ancillaryDetails?.message;
+
+  const benefitToggle = (key: BenefitKey) => (
+    <Controller
+      control={control}
+      name={`benefits.${key}`}
+      render={({ field }) => (
+        <label className="flex items-center gap-2.5 text-sm text-foreground">
+          <Checkbox
+            checked={field.value}
+            onCheckedChange={(checked) => field.onChange(checked === true)}
+          />
+          {BENEFIT_LABELS.get(key) ?? key}
+        </label>
+      )}
+    />
+  );
+
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
       {/* The form takes ~70% and the preview ~30% of the row (flex 7:3). */}
@@ -344,157 +430,169 @@ export function JobForm({
         onSubmit={emit("draft")}
         className="flex min-w-0 flex-col gap-4 lg:flex-[7]"
       >
-        <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
-          <StepSection
-            step={1}
-            title="Basics"
-            hint="What the role is and where it sits in your org."
-          >
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="title">Job title</Label>
+        <div className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* Read-only: the name recruiters see is the account's, not a
+                per-job value. Still registered so it is snapshotted onto the
+                job's intake at save. */}
+            <Field label="Company Name" htmlFor="companyName">
+              <Input
+                id="companyName"
+                readOnly
+                tabIndex={-1}
+                className={cn(
+                  CONTROL_HEIGHT,
+                  "cursor-default bg-secondary/60 text-muted-foreground focus-visible:ring-0",
+                )}
+                {...register("companyName")}
+              />
+            </Field>
+            <Field
+              label="Job Title"
+              htmlFor="title"
+              error={errors.title?.message}
+            >
               <Input
                 id="title"
                 className={CONTROL_HEIGHT}
-                placeholder="Senior Software Engineer"
+                placeholder="e.g., Senior Software Engineer"
                 {...register("title")}
               />
-              {errors.title ? (
-                <p className="text-xs text-destructive">
-                  {errors.title.message}
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Recruiters search on this. Be specific about seniority.
-                </p>
-              )}
-            </div>
+            </Field>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="roleCategory">Role category</Label>
-                <Controller
-                  control={control}
-                  name="roleCategory"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger
-                        id="roleCategory"
-                        className={CONTROL_HEIGHT}
-                      >
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ROLE_CATEGORIES.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {ROLE_CATEGORY_LABELS[category]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="employmentType">Employment type</Label>
-                <Controller
-                  control={control}
-                  name="employmentType"
-                  render={({ field }) => (
-                    <Select
-                      value={field.value === "" ? undefined : field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger
-                        id="employmentType"
-                        className={CONTROL_HEIGHT}
-                      >
-                        <SelectValue placeholder="Select employment type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {EMPLOYMENT_TYPES.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {EMPLOYMENT_TYPE_LABELS[type]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.employmentType && (
-                  <p className="text-xs text-destructive">
-                    {errors.employmentType.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="daysAndHours">
-                  Working days &amp; hours{" "}
-                  <span className="font-normal text-muted-foreground">
-                    Optional
-                  </span>
-                </Label>
-                <Input
-                  id="daysAndHours"
-                  className={CONTROL_HEIGHT}
-                  placeholder="Mon-Fri, 9-5. List any expected overtime."
-                  {...register("daysAndHours")}
-                />
-                {errors.daysAndHours && (
-                  <p className="text-xs text-destructive">
-                    {errors.daysAndHours.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="reportsTo">
-                  Reports to{" "}
-                  <span className="font-normal text-muted-foreground">
-                    Optional
-                  </span>
-                </Label>
-                <Input
-                  id="reportsTo"
-                  className={CONTROL_HEIGHT}
-                  placeholder="VP of Engineering"
-                  {...register("reportsTo")}
-                />
-                {errors.reportsTo && (
-                  <p className="text-xs text-destructive">
-                    {errors.reportsTo.message}
-                  </p>
-                )}
-              </div>
-            </div>
-          </StepSection>
-
-          <StepSection
-            step={2}
-            title="Location"
-            hint="Where the work happens, and how often on site."
-          >
-            <div className="flex flex-col gap-2">
-              <Label>Work model</Label>
+            <Field label="Role Category" htmlFor="roleCategory">
               <Controller
                 control={control}
-                name="isRemote"
+                name="roleCategory"
                 render={({ field }) => (
-                  <WorkModelControl
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="roleCategory" className={CONTROL_HEIGHT}>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLE_CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {ROLE_CATEGORY_LABELS[category]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
               />
-            </div>
+            </Field>
+            <Field
+              label="Employment Type"
+              htmlFor="employmentType"
+              error={errors.employmentType?.message}
+            >
+              <Controller
+                control={control}
+                name="employmentType"
+                render={({ field }) => (
+                  <Select
+                    value={field.value === "" ? undefined : field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger
+                      id="employmentType"
+                      className={CONTROL_HEIGHT}
+                    >
+                      <SelectValue placeholder="Select employment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EMPLOYMENT_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {EMPLOYMENT_TYPE_LABELS[type]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="locationState">
-                  State{isRemote ? " (optional)" : ""}
-                </Label>
+            <Field
+              label="Worksite Street Address"
+              htmlFor="worksiteAddress"
+              optional
+              error={errors.worksiteAddress?.message}
+            >
+              <Input
+                id="worksiteAddress"
+                className={CONTROL_HEIGHT}
+                placeholder="e.g., 123 Market St"
+                {...register("worksiteAddress")}
+              />
+            </Field>
+            <Field
+              label="Worksite ZIP"
+              htmlFor="worksiteZip"
+              optional
+              error={errors.worksiteZip?.message}
+            >
+              <Input
+                id="worksiteZip"
+                className={CONTROL_HEIGHT}
+                inputMode="numeric"
+                placeholder="e.g., 94103"
+                {...register("worksiteZip")}
+              />
+            </Field>
+            <Field
+              label="Hours"
+              htmlFor="daysAndHours"
+              optional
+              error={errors.daysAndHours?.message}
+            >
+              <Input
+                id="daysAndHours"
+                className={CONTROL_HEIGHT}
+                {...register("daysAndHours")}
+              />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Work Model">
+              <div className="flex flex-wrap items-center gap-3">
+                <Controller
+                  control={control}
+                  name="workModel"
+                  render={({ field }) => (
+                    <WorkModelControl
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                {/* Only a hybrid role has on-site days to state. */}
+                {workModel === "hybrid" && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      aria-label="Days on site per week"
+                      inputMode="numeric"
+                      className="h-9 w-14"
+                      {...register("onsiteDaysPerWeek")}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      days on site / week
+                    </span>
+                  </div>
+                )}
+              </div>
+              {errors.onsiteDaysPerWeek && (
+                <p className="text-xs text-destructive">
+                  {errors.onsiteDaysPerWeek.message}
+                </p>
+              )}
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="State"
+                htmlFor="locationState"
+                optional={workModel === "remote"}
+                error={errors.locationState?.message}
+              >
                 <Controller
                   control={control}
                   name="locationState"
@@ -507,22 +605,11 @@ export function JobForm({
                     />
                   )}
                 />
-                {errors.locationState && (
-                  <p className="text-xs text-destructive">
-                    {errors.locationState.message}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>
-                  City{" "}
-                  <span className="font-normal text-muted-foreground">
-                    Optional
-                  </span>
-                </Label>
-                {/* The same searchable, state-scoped city picker the explore
-                    map uses, so the job's city matches the values recruiters
-                    filter by. Disabled until a state is chosen. */}
+              </Field>
+              {/* The same searchable, state-scoped city picker the explore map
+                  uses, so the job's city matches the values recruiters filter
+                  by. Disabled until a state is chosen. */}
+              <Field label="City" optional>
                 <Controller
                   control={control}
                   name="locationCity"
@@ -535,46 +622,41 @@ export function JobForm({
                     />
                   )}
                 />
+              </Field>
+            </div>
+          </div>
+
+          <div className="grid items-start gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-[13px] font-semibold text-navy">
+                  Pay Range{" "}
+                  <span className="font-normal text-muted-foreground">
+                    Optional
+                  </span>
+                </Label>
+                <Controller
+                  control={control}
+                  name="salaryRatePeriod"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger
+                        aria-label="Pay Type"
+                        className="h-7 w-auto gap-1 border-none bg-secondary/60 px-2 text-xs shadow-none"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SALARY_RATE_PERIODS.map((period) => (
+                          <SelectItem key={period} value={period}>
+                            {SALARY_RATE_PERIOD_LABELS[period]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="worksiteAddress">
-                Worksite address{" "}
-                <span className="font-normal text-muted-foreground">
-                  Optional
-                </span>
-              </Label>
-              <Input
-                id="worksiteAddress"
-                className={CONTROL_HEIGHT}
-                placeholder="123 Market St, San Francisco, CA"
-                {...register("worksiteAddress")}
-              />
-              <p className="text-xs text-muted-foreground">
-                Shared with recruiters working the role, never on the public
-                listing. Prefilled from your company address for a new job.
-              </p>
-              {errors.worksiteAddress && (
-                <p className="text-xs text-destructive">
-                  {errors.worksiteAddress.message}
-                </p>
-              )}
-            </div>
-          </StepSection>
-
-          <StepSection
-            step={3}
-            title="Compensation"
-            hint="The pay band for the candidate, and the fee for the recruiter."
-          >
-            <div className="flex flex-col gap-2">
-              <Label>
-                Pay Range{" "}
-                <span className="font-normal text-muted-foreground">
-                  Optional
-                </span>
-              </Label>
               <PayRangeField
                 min={values.salaryMin}
                 max={values.salaryMax}
@@ -586,7 +668,7 @@ export function JobForm({
                   setValue("salaryMax", next.max, { shouldDirty: true });
                 }}
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-2">
                   <MoneyInput
                     aria-label="Pay minimum"
                     placeholder="Min"
@@ -607,172 +689,357 @@ export function JobForm({
               )}
             </div>
 
-            <div className="flex flex-col gap-2 sm:max-w-[16rem]">
-              <Label htmlFor="salaryRatePeriod">Rate period</Label>
-              <Controller
-                control={control}
-                name="salaryRatePeriod"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger
-                      id="salaryRatePeriod"
-                      className={CONTROL_HEIGHT}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SALARY_RATE_PERIODS.map((period) => (
-                        <SelectItem key={period} value={period}>
-                          {SALARY_RATE_PERIOD_LABELS[period]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+            <Field
+              label="Reports To"
+              htmlFor="reportsTo"
+              optional
+              error={errors.reportsTo?.message}
+            >
+              <Input
+                id="reportsTo"
+                className={CONTROL_HEIGHT}
+                placeholder="Title this role reports to"
+                {...register("reportsTo")}
               />
-            </div>
+            </Field>
+          </div>
 
-            {/* The recruiter fee is the money that drives the marketplace, so
-                  it gets its own emphasized panel. */}
-            <div className="rounded-lg bg-secondary/50 p-4">
-              <div className="flex items-center gap-1.5">
-                <Label htmlFor="recruiterFee">Recruiter fee</Label>
-                <TooltipProvider delayDuration={150}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Why the fee is fixed"
-                        className="text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      >
-                        <Info className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      You can&rsquo;t change the fee once the job is posted.
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <MoneyInput
-                  id="recruiterFee"
-                  placeholder="10000"
-                  className="max-w-[12rem] bg-card"
-                  {...register("recruiterFee")}
-                />
-                {feeMeetsMinimum && (
-                  <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                    Meets the publishing minimum
-                  </span>
-                )}
-              </div>
-              {errors.recruiterFee ? (
-                <p className="mt-2 text-xs text-destructive">
-                  {errors.recruiterFee.message}
-                </p>
-              ) : (
-                <p className="mt-2 text-[13px] text-muted-foreground">
-                  {minFee ? (
-                    <>
-                      A minimum recruiter fee of{" "}
-                      <span className="font-semibold text-navy">
-                        {formatMinor(minFee.amountMinor)}
-                      </span>{" "}
-                      is required to publish any role.
-                    </>
-                  ) : (
-                    "Paid only on a successful hire."
-                  )}
-                </p>
+          {/* The recruiter fee is the money that drives the marketplace, so it
+              gets its own emphasized panel. */}
+          <div className="rounded-lg bg-secondary/50 p-4">
+            <div className="flex items-center gap-1.5">
+              <Label
+                htmlFor="recruiterFee"
+                className="text-[13px] font-semibold text-navy"
+              >
+                Recruiter Fee
+              </Label>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Why the fee is fixed"
+                      className="text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      <Info className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    You can&rsquo;t change the fee once the job is posted.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <MoneyInput
+                id="recruiterFee"
+                placeholder="10000"
+                className="max-w-[12rem] bg-card"
+                {...register("recruiterFee")}
+              />
+              {feeMeetsMinimum && (
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  Meets the publishing minimum
+                </span>
               )}
             </div>
-          </StepSection>
+            {errors.recruiterFee ? (
+              <p className="mt-2 text-xs text-destructive">
+                {errors.recruiterFee.message}
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {minFee ? (
+                  <>
+                    A minimum recruiter fee of{" "}
+                    <span className="font-semibold text-navy">
+                      {formatMinor(minFee.amountMinor)}
+                    </span>{" "}
+                    is required to publish any role. The higher the fee, the
+                    more attention your job will get from recruiters &mdash; and
+                    faster candidates for you.
+                  </>
+                ) : (
+                  "Paid only on a successful hire."
+                )}
+              </p>
+            )}
+          </div>
 
-          <StepSection
-            step={4}
-            title="Hiring process"
-            hint="How fast you need to hire, what the candidate must bring, and how many interviews it takes. All optional — recruiters see whatever you fill in."
+          <Block title="Benefits Provided">
+            <div className="grid gap-x-4 gap-y-3 sm:grid-cols-3">
+              {benefitToggle("medical")}
+              {benefitToggle("dental")}
+              {benefitToggle("vision")}
+
+              <div className="flex items-center gap-2">
+                <Controller
+                  control={control}
+                  name="benefits.retirement401k"
+                  render={({ field }) => (
+                    <label className="flex items-center gap-2.5 text-sm text-foreground">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                      401K/403B
+                    </label>
+                  )}
+                />
+                {/* Typing a figure is itself the answer, so it ticks the box:
+                    an unticked 401(k) drops the match on save. */}
+                <Input
+                  aria-label="401K/403B match percent"
+                  inputMode="decimal"
+                  className="h-8 w-14"
+                  onFocus={() =>
+                    setValue("benefits.retirement401k", true, {
+                      shouldDirty: true,
+                    })
+                  }
+                  {...register("benefits.retirement401kMatch")}
+                />
+                <span className="text-sm text-muted-foreground">(% Match)</span>
+              </div>
+              {/* Day counts sit beside their own checkbox and tick it on focus,
+                  the same way the 401K match does. */}
+              <div className="flex items-center gap-2">
+                {benefitToggle("sickTime")}
+                <Input
+                  aria-label="Sick days"
+                  inputMode="numeric"
+                  className="h-8 w-14"
+                  onFocus={() =>
+                    setValue("benefits.sickTime", true, { shouldDirty: true })
+                  }
+                  {...register("benefits.sickDays")}
+                />
+                <span className="text-sm text-muted-foreground">days</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {benefitToggle("vacation")}
+                <Input
+                  aria-label="Vacation days"
+                  inputMode="numeric"
+                  className="h-8 w-14"
+                  onFocus={() =>
+                    setValue("benefits.vacation", true, { shouldDirty: true })
+                  }
+                  {...register("benefits.vacationDays")}
+                />
+                <span className="text-sm text-muted-foreground">days</span>
+              </div>
+
+              <Controller
+                control={control}
+                name="benefits.educationReimbursement"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2.5 text-sm text-foreground">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                    />
+                    Education Reimbursement
+                  </label>
+                )}
+              />
+              {/* Last, and spanning the remaining columns: its free-text box
+                  needs the room the single-word checkboxes do not. */}
+              <div className="flex items-center gap-2.5 sm:col-span-2">
+                <Controller
+                  control={control}
+                  name="benefits.ancillary"
+                  render={({ field }) => (
+                    <label className="flex shrink-0 items-center gap-2.5 text-sm text-foreground">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                      Other Benefits
+                    </label>
+                  )}
+                />
+                <Input
+                  aria-label="Other benefits"
+                  className="h-8"
+                  onFocus={() =>
+                    setValue("benefits.ancillary", true, { shouldDirty: true })
+                  }
+                  {...register("benefits.ancillaryDetails")}
+                />
+              </div>
+            </div>
+            {benefitsError && (
+              <p className="text-xs text-destructive">{benefitsError}</p>
+            )}
+
+            <Field
+              label="Benefits Summary"
+              htmlFor="benefitsSummary"
+              optional
+              error={errors.benefitsSummary?.message}
+            >
+              <Textarea
+                id="benefitsSummary"
+                rows={3}
+                placeholder="Anything worth calling out beyond the boxes above."
+                {...register("benefitsSummary")}
+              />
+            </Field>
+          </Block>
+
+          <Block
+            title="Company Details"
+            intro="Employers submit clear job details so recruiters instantly understand expectations, urgency, and value."
           >
-            <div className="flex flex-col gap-2 sm:max-w-[16rem]">
-              <Label htmlFor="timelineToHire">Timeline to hire</Label>
-              <Controller
-                control={control}
-                name="timelineToHire"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger
-                      id="timelineToHire"
-                      className={CONTROL_HEIGHT}
-                    >
-                      <SelectValue placeholder="Not specified" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {OFFER_TIMELINES.map((timeline) => (
-                        <SelectItem key={timeline} value={timeline}>
-                          {OFFER_TIMELINE_LABELS[timeline]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="mustHave">Must-haves</Label>
-              <Controller
-                control={control}
-                name="mustHave"
-                render={({ field }) => (
-                  <ChipListField
-                    id="mustHave"
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="e.g. 5+ years Python"
-                    ariaLabel="Add a must-have"
-                    max={MAX_QUALIFICATIONS}
-                    maxLength={MAX_QUALIFICATION_LENGTH}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {COMPANY_DETAIL_FIELDS.map((detail) => (
+                <Field
+                  key={detail.key}
+                  label={detail.label}
+                  htmlFor={`companyDetails.${detail.key}`}
+                  error={errors.companyDetails?.[detail.key]?.message}
+                >
+                  <Input
+                    id={`companyDetails.${detail.key}`}
+                    className={CONTROL_HEIGHT}
+                    inputMode={
+                      detail.key === "yearsInBusiness" ? "numeric" : undefined
+                    }
+                    placeholder={detail.placeholder}
+                    {...register(`companyDetails.${detail.key}`)}
                   />
-                )}
-              />
+                </Field>
+              ))}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Provide details for better candidate matching to keep your result.
+              All four are saved together.
+            </p>
+          </Block>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="niceToHave">Nice-to-haves</Label>
-              <Controller
-                control={control}
-                name="niceToHave"
-                render={({ field }) => (
-                  <ChipListField
-                    id="niceToHave"
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="e.g. AWS"
-                    ariaLabel="Add a nice-to-have"
-                    max={MAX_QUALIFICATIONS}
-                    maxLength={MAX_QUALIFICATION_LENGTH}
-                  />
-                )}
-              />
+          <Block title="Position Responsibilities">
+            <Controller
+              control={control}
+              name="description"
+              render={({ field }) => (
+                <RichTextEditor
+                  id="description"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="e.g., list key responsibilities and tasks..."
+                />
+              )}
+            />
+            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+              <span>Roles with 300+ words get 2x more recruiter interest.</span>
+              <span className="shrink-0 tabular-nums">
+                {wordCount} {wordCount === 1 ? "word" : "words"}
+              </span>
             </div>
+            {errors.description && (
+              <p className="text-xs text-destructive">
+                {errors.description.message}
+              </p>
+            )}
+          </Block>
 
+          <Block title="Qualifications">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Must Haves" htmlFor="mustHave">
+                <Controller
+                  control={control}
+                  name="mustHave"
+                  render={({ field }) => (
+                    <ChipListField
+                      id="mustHave"
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="e.g., specific skills, education, years of experience..."
+                      ariaLabel="Add a must-have"
+                      max={MAX_QUALIFICATIONS}
+                      maxLength={MAX_QUALIFICATION_LENGTH}
+                    />
+                  )}
+                />
+              </Field>
+              <Field label="Nice to Haves" htmlFor="niceToHave">
+                <Controller
+                  control={control}
+                  name="niceToHave"
+                  render={({ field }) => (
+                    <ChipListField
+                      id="niceToHave"
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="e.g., AWS, startup experience..."
+                      ariaLabel="Add a nice-to-have"
+                      max={MAX_QUALIFICATIONS}
+                      maxLength={MAX_QUALIFICATION_LENGTH}
+                    />
+                  )}
+                />
+              </Field>
+            </div>
+          </Block>
+
+          <Block
+            title="Top 3 Keys You Will Make a Hiring Decision Based On"
+            intro="The three things that actually decide it. Recruiters screen against these."
+          >
+            <Controller
+              control={control}
+              name="selectionKeys"
+              render={({ field }) => (
+                <div className="grid gap-2.5">
+                  {Array.from({ length: MAX_SELECTION_KEYS }, (_, index) => (
+                    <div key={index} className="flex items-center gap-2.5">
+                      <span className="w-4 shrink-0 text-sm font-medium text-navy">
+                        {index + 1}.
+                      </span>
+                      <Input
+                        aria-label={`Hiring decision key ${index + 1}`}
+                        className={CONTROL_HEIGHT}
+                        value={field.value[index] ?? ""}
+                        onChange={(event) => {
+                          // A fixed three rows over a sparse array, so typing in
+                          // row 3 first does not collapse into row 1.
+                          const next = Array.from(
+                            { length: MAX_SELECTION_KEYS },
+                            (_, position) => field.value[position] ?? "",
+                          );
+                          next[index] = event.target.value;
+                          field.onChange(next);
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            />
+          </Block>
+
+          <Block title="Interview Process">
             <Controller
               control={control}
               name="interviewRounds"
               render={({ field }) => (
-                <div className="flex flex-col gap-3">
-                  <span className="text-sm font-medium leading-none text-foreground">
-                    Interview rounds{" "}
-                    <span className="font-normal text-muted-foreground">
-                      (up to {MAX_INTERVIEW_STAGES})
-                    </span>
-                  </span>
+                <div className="flex flex-wrap items-center gap-2">
                   {field.value.map((round, index) => (
                     <div
                       key={index}
-                      className="grid gap-2.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+                      className="flex items-center gap-0.5 rounded-md border border-border bg-secondary/40 py-1 pl-2.5 pr-1"
                     >
+                      <span className="text-sm font-medium text-navy">
+                        {index + 1}.
+                      </span>
                       <Select
                         value={round.type}
                         onValueChange={(type) =>
@@ -786,8 +1053,8 @@ export function JobForm({
                         }
                       >
                         <SelectTrigger
-                          className={CONTROL_HEIGHT}
                           aria-label={`Round ${index + 1} type`}
+                          className="h-7 w-auto gap-1 border-none bg-transparent px-1.5 text-sm shadow-none"
                         >
                           <SelectValue />
                         </SelectTrigger>
@@ -812,8 +1079,8 @@ export function JobForm({
                         }
                       >
                         <SelectTrigger
-                          className={CONTROL_HEIGHT}
                           aria-label={`Round ${index + 1} length`}
+                          className="h-7 w-auto gap-1 border-none bg-transparent px-1.5 text-sm shadow-none"
                         >
                           <SelectValue />
                         </SelectTrigger>
@@ -828,10 +1095,9 @@ export function JobForm({
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="sm"
+                        aria-label={`Remove round ${index + 1}`}
                         onClick={() =>
                           field.onChange(
                             field.value.filter(
@@ -839,239 +1105,183 @@ export function JobForm({
                             ),
                           )
                         }
+                        className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
                       >
-                        Remove
-                      </Button>
+                        <X className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   ))}
                   {field.value.length < MAX_INTERVIEW_STAGES && (
-                    <div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          field.onChange([
-                            ...field.value,
-                            { type: "phone", durationMinutes: "30" },
-                          ])
-                        }
-                      >
-                        + Add a round
-                      </Button>
-                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        field.onChange([
+                          ...field.value,
+                          { type: "phone", durationMinutes: "30" },
+                        ])
+                      }
+                    >
+                      + Add a round
+                    </Button>
                   )}
                 </div>
               )}
             />
+          </Block>
 
-            <div className="flex flex-col gap-2.5">
-              <span className="text-sm font-medium leading-none text-foreground">
-                Availability to start interviewing
-              </span>
-              <Controller
-                control={control}
-                name="interviewingAsap"
-                render={({ field }) => (
-                  <RadioRow
+          <Block title="Timeline & Strategy">
+            <div className="flex flex-col gap-3">
+              <Question label="Availability for Interviewing?">
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                  <Controller
+                    control={control}
                     name="interviewingAsap"
-                    value={field.value ? "asap" : "range"}
-                    onChange={(next) => field.onChange(next === "asap")}
-                    options={[
-                      { value: "asap", label: "ASAP" },
-                      { value: "range", label: "A date range" },
-                    ]}
-                  />
-                )}
-              />
-              {!values.interviewingAsap && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Input
-                    type="date"
-                    aria-label="Interviewing from"
-                    className={cn(CONTROL_HEIGHT, "w-auto")}
-                    {...register("interviewingFrom")}
-                  />
-                  <span className="text-muted-foreground">–</span>
-                  <Input
-                    type="date"
-                    aria-label="Interviewing until"
-                    className={cn(CONTROL_HEIGHT, "w-auto")}
-                    {...register("interviewingTo")}
+                    render={({ field }) => (
+                      <>
+                        <label className="flex items-center gap-2 text-sm text-foreground">
+                          <input
+                            type="radio"
+                            name="interviewingAsap"
+                            checked={field.value}
+                            onChange={() => field.onChange(true)}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          ASAP
+                        </label>
+                        {/* The dates stay enabled and sit outside the radio's
+                            label: reaching for one is how you choose a range,
+                            and a disabled input swallows the click that would
+                            otherwise select it. */}
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="radio"
+                            name="interviewingAsap"
+                            aria-label="A date range"
+                            checked={!field.value}
+                            onChange={() => field.onChange(false)}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          <Input
+                            type="date"
+                            aria-label="Interviewing from"
+                            className="h-8 w-auto"
+                            onFocus={() => field.onChange(false)}
+                            {...register("interviewingFrom")}
+                          />
+                          <span className="text-muted-foreground">–</span>
+                          <Input
+                            type="date"
+                            aria-label="Interviewing until"
+                            className="h-8 w-auto"
+                            onFocus={() => field.onChange(false)}
+                            {...register("interviewingTo")}
+                          />
+                        </div>
+                      </>
+                    )}
                   />
                 </div>
-              )}
-              {errors.interviewingTo && (
-                <p className="text-xs text-destructive">
-                  {errors.interviewingTo.message}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2.5">
-              <span className="text-sm font-medium leading-none text-foreground">
-                Is this position posted online?
-              </span>
-              <Controller
-                control={control}
-                name="postedOnline"
-                render={({ field }) => (
-                  <RadioRow
-                    name="postedOnline"
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={[
-                      { value: "yes", label: "Yes" },
-                      { value: "no", label: "No" },
-                    ]}
-                  />
+                {errors.interviewingTo && (
+                  <p className="text-xs text-destructive">
+                    {errors.interviewingTo.message}
+                  </p>
                 )}
-              />
-            </div>
+              </Question>
 
-            <div className="flex flex-col gap-2.5">
-              <span className="text-sm font-medium leading-none text-foreground">
-                Any other means of sourcing this role?
-              </span>
-              <Controller
-                control={control}
-                name="otherSourcing"
-                render={({ field }) => (
-                  <RadioRow
-                    name="otherSourcing"
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={OTHER_SOURCING_OPTIONS.map((option) => ({
-                      value: option,
-                      label: OTHER_SOURCING_LABELS[option],
-                    }))}
-                  />
-                )}
-              />
-            </div>
-          </StepSection>
-
-          <StepSection
-            step={5}
-            title="Benefits"
-            hint="What the hire gets beyond the pay band. Recruiters sell on these."
-          >
-            <div className="grid gap-2.5 sm:grid-cols-2">
-              {BENEFIT_CHECKBOXES.map((benefit) => (
+              <Question label="Why is This Position Open?">
                 <Controller
-                  key={benefit.key}
                   control={control}
-                  name={`benefits.${benefit.key}`}
+                  name="positionOpenReason"
                   render={({ field }) => (
-                    <label className="flex items-center gap-2.5 text-sm text-foreground">
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true)
-                        }
-                      />
-                      {benefit.label}
-                    </label>
+                    <RadioRow
+                      name="positionOpenReason"
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={POSITION_OPEN_REASONS.map((reason) => ({
+                        value: reason,
+                        label: POSITION_OPEN_REASON_LABELS[reason],
+                      }))}
+                    />
                   )}
                 />
-              ))}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Controller
-                control={control}
-                name="benefits.retirement401k"
-                render={({ field }) => (
-                  <label className="flex items-center gap-2.5 text-sm text-foreground">
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(checked) =>
-                        field.onChange(checked === true)
-                      }
-                    />
-                    401(k)
-                  </label>
-                )}
-              />
-              {values.benefits.retirement401k && (
-                <div className="flex items-center gap-2">
-                  <Input
-                    aria-label="401(k) match percent"
-                    inputMode="decimal"
-                    placeholder="4"
-                    className={cn(CONTROL_HEIGHT, "w-20")}
-                    {...register("benefits.retirement401kMatch")}
+                {/* Only meaningful against a current employee's seat — the
+                    write path drops it for the other answers. */}
+                {values.positionOpenReason === "replacing_current" && (
+                  <Controller
+                    control={control}
+                    name="confidentialSearch"
+                    render={({ field }) => (
+                      <label className="mt-1 flex items-center gap-2.5 text-sm text-foreground">
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked === true)
+                          }
+                        />
+                        Confidential Search?
+                      </label>
+                    )}
                   />
-                  <span className="text-sm text-muted-foreground">% match</span>
-                </div>
-              )}
-            </div>
-            {errors.benefits?.retirement401kMatch && (
-              <p className="text-xs text-destructive">
-                {errors.benefits.retirement401kMatch.message}
-              </p>
-            )}
-
-            <div className="flex flex-col gap-2.5">
-              <Controller
-                control={control}
-                name="benefits.ancillary"
-                render={({ field }) => (
-                  <label className="flex items-center gap-2.5 text-sm text-foreground">
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(checked) =>
-                        field.onChange(checked === true)
-                      }
-                    />
-                    Ancillary benefits
-                  </label>
                 )}
-              />
-              {values.benefits.ancillary && (
-                <Input
-                  aria-label="Ancillary benefit details"
-                  className={CONTROL_HEIGHT}
-                  placeholder="List details"
-                  {...register("benefits.ancillaryDetails")}
-                />
-              )}
-              {errors.benefits?.ancillaryDetails && (
-                <p className="text-xs text-destructive">
-                  {errors.benefits.ancillaryDetails.message}
-                </p>
-              )}
-            </div>
-          </StepSection>
+              </Question>
 
-          <StepSection
-            step={6}
-            title="Position duties"
-            hint="The responsibilities and tasks. Recruiters read this before deciding to work the role."
-          >
-            <Controller
-              control={control}
-              name="description"
-              render={({ field }) => (
-                <RichTextEditor
-                  id="description"
-                  value={field.value}
-                  onChange={field.onChange}
+              <Question label="When Do You Hope to Make an Offer?">
+                <Controller
+                  control={control}
+                  name="timelineToHire"
+                  render={({ field }) => (
+                    <RadioRow
+                      name="timelineToHire"
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={OFFER_TIMELINES.map((timeline) => ({
+                        value: timeline,
+                        label: OFFER_TIMELINE_QUESTION_LABELS[timeline],
+                      }))}
+                    />
+                  )}
                 />
-              )}
-            />
-            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-              <span>Roles with 300+ words get 2x more recruiter interest.</span>
-              <span className="shrink-0 tabular-nums">
-                {wordCount} {wordCount === 1 ? "word" : "words"}
-              </span>
+              </Question>
+
+              <Question label="Is This Position Posted Online?">
+                <Controller
+                  control={control}
+                  name="postedOnline"
+                  render={({ field }) => (
+                    <RadioRow
+                      name="postedOnline"
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={[
+                        { value: "yes", label: "Yes" },
+                        { value: "no", label: "No" },
+                      ]}
+                    />
+                  )}
+                />
+              </Question>
+
+              <Question label="Do You Have Any Other Means for Sourcing This Role?">
+                <Controller
+                  control={control}
+                  name="otherSourcing"
+                  render={({ field }) => (
+                    <RadioRow
+                      name="otherSourcing"
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={OTHER_SOURCING_OPTIONS.map((option) => ({
+                        value: option,
+                        label: OTHER_SOURCING_LABELS[option],
+                      }))}
+                    />
+                  )}
+                />
+              </Question>
             </div>
-            {errors.description && (
-              <p className="text-xs text-destructive">
-                {errors.description.message}
-              </p>
-            )}
-          </StepSection>
+          </Block>
         </div>
 
         {/* Sticky action bar so Save is always reachable in a long form. */}

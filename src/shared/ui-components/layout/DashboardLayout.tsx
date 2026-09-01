@@ -444,7 +444,7 @@ function SidebarContent({
          * role nav, so they close the list as their own labelled group rather
          * than sitting above it unmarked. Drawer only — the top bar carries
          * them on desktop. */}
-        {isDrawer && (
+        {isDrawer && user.role === "recruiter" && (
           <div className="mt-3 space-y-1 border-t border-sidebar-border pt-3">
             <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/50">
               Explore
@@ -572,17 +572,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
          * the sidebar: while the hamburger is up, these live in the drawer's
          * Explore group, and duplicating them here is what crowded the tablet
          * bar into wrapping. */}
-        <nav
-          aria-label="Site"
-          className="ml-4 hidden shrink-0 items-center gap-4 whitespace-nowrap lg:flex"
-        >
-          <Link
-            href="/explore-jobs"
-            className="text-sm font-semibold text-navy transition-colors hover:text-primary"
+        {user?.role === "recruiter" && (
+          <nav
+            aria-label="Site"
+            className="ml-4 hidden shrink-0 items-center gap-4 whitespace-nowrap lg:flex"
           >
-            Live Map
-          </Link>
-        </nav>
+            <Link
+              href="/explore-jobs"
+              className="text-sm font-semibold text-navy transition-colors hover:text-primary"
+            >
+              Live Map
+            </Link>
+          </nav>
+        )}
         {/* `shrink-0` so the account avatar is never the thing squeezed off the
          * end of a narrow top bar. */}
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">

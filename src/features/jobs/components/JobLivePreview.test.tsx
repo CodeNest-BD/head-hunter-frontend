@@ -12,11 +12,11 @@ const values: JobFormValues = {
   employmentType: "full_time",
   locationState: "NY",
   locationCity: "New York",
-  isRemote: false,
   salaryMin: "150000",
   salaryMax: "200000",
   salaryRatePeriod: "per_year",
   recruiterFee: "12000",
+  companyName: "Northwind Robotics",
   // The intake half of the form, unanswered.
   ...intakeToFormValues(null),
 };
@@ -43,15 +43,68 @@ describe("JobLivePreview", () => {
     ).toBeInTheDocument();
   });
 
-  it("omits the description entirely — the preview is facts only", () => {
+  it("shows the description as recruiters read it", () => {
     render(<JobLivePreview values={values} onCollapse={noop} />);
 
     expect(
-      screen.queryByText("Own the deployment pipeline."),
-    ).not.toBeInTheDocument();
+      screen.getByText("Own the deployment pipeline."),
+    ).toBeInTheDocument();
+  });
+
+  // Blank money must not preview as NaN or $0 noise — the old form->view
+  // adapter guarded this, and the panel now owns it.
+  it("previews an unentered fee as $0 and an unset pay range as a dash", () => {
+    render(
+      <JobLivePreview
+        values={{ ...values, recruiterFee: "", salaryMin: "", salaryMax: "" }}
+        onCollapse={noop}
+      />,
+    );
+
+    expect(screen.getByText("$0")).toBeInTheDocument();
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+  });
+
+  it("names the full state and the work model in the location line", () => {
+    render(
+      <JobLivePreview
+        values={{ ...values, workModel: "hybrid", onsiteDaysPerWeek: "3" }}
+        onCollapse={noop}
+      />,
+    );
+
     expect(
-      screen.queryByText("No description provided for this role."),
-    ).not.toBeInTheDocument();
+      screen.getByText("New York, New York (Hybrid, 3 days on site)"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the hiring decision keys the company entered", () => {
+    render(
+      <JobLivePreview
+        values={{ ...values, selectionKeys: ["Ships code", "Mentors"] }}
+        onCollapse={noop}
+      />,
+    );
+
+    expect(screen.getByText("Ships code")).toBeInTheDocument();
+    expect(screen.getByText("Mentors")).toBeInTheDocument();
+  });
+
+  it("flags a confidential replacement search", () => {
+    render(
+      <JobLivePreview
+        values={{
+          ...values,
+          positionOpenReason: "replacing_current",
+          confidentialSearch: true,
+        }}
+        onCollapse={noop}
+      />,
+    );
+
+    expect(
+      screen.getByText("Replacing Current Employee (confidential)"),
+    ).toBeInTheDocument();
   });
 
   it("collapses when the header control is clicked", () => {

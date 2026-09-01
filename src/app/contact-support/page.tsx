@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ContactSupportPage() {
-  return <PlaceholderPage title="Contact customer support" />;
+  return <PlaceholderPage title="Contact Customer Support" />;
 }

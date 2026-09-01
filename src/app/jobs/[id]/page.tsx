@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AlertCircle, ArrowLeft, Send } from "lucide-react";
+import { AlertCircle, ArrowLeft, Send, SquarePen } from "lucide-react";
 
 import { RequireApprovedRecruiter, useAuth } from "@/features/auth";
-import { useJob } from "@/features/jobs";
+import { useJob, usePublishJob } from "@/features/jobs";
+import type { Job } from "@/features/jobs/schemas";
+import { useMyCompanyProfile } from "@/features/companies";
 import { JobDetailBody } from "@/features/jobs/components/JobDetailView";
 import { jobToJobView } from "@/features/jobs/utils/toJobView";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
@@ -54,6 +56,35 @@ function SubmitCandidatesButton({ jobId }: { jobId: string }) {
   );
 }
 
+/**
+ * Edit and Publish, for the company that owns this job. Gated on the viewer's
+ * own profile id rather than their role: recruiters and admins reach this page
+ * too, and must never get edit controls on somebody else's listing. Publish
+ * only shows while the job is a draft — the one status change made here.
+ */
+function CompanyJobActions({ job }: { job: Job }) {
+  const { data: profile } = useMyCompanyProfile();
+  const { publish, isPending } = usePublishJob(job.id);
+
+  if (!profile || profile.id !== job.companyProfileId) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button asChild type="button" variant="outline" size="sm">
+        <Link href={`/company/jobs/${job.id}`}>
+          <SquarePen className="h-4 w-4" />
+          Edit
+        </Link>
+      </Button>
+      {job.status === "draft" && (
+        <Button type="button" size="sm" disabled={isPending} onClick={publish}>
+          {isPending ? "Publishing…" : "Publish job"}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 function RecruiterCta({ jobId }: { jobId: string }) {
   const { isVerified, verificationStatus, isLoading } =
     useIsVerifiedRecruiter();
@@ -97,6 +128,9 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
         title={job?.title ?? "Job detail"}
         subtitle="The fee, the role, and everything you need before you submit a candidate."
         className="mb-0"
+        actions={
+          role === "company" && job ? <CompanyJobActions job={job} /> : null
+        }
       />
       {isPending ? (
         <DetailSkeleton />

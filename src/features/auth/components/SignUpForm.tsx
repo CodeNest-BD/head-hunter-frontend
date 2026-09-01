@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   useForm,
   useFieldArray,
@@ -36,7 +36,7 @@ import { signUp } from "../api/auth";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 import { SignUpRoleStep } from "./SignUpRoleStep";
 import { SIGNUP_ROLE_DETAILS } from "./signUpRoles";
-import type { SignupRole } from "../types";
+import { signupRoleSchema, type SignupRole } from "../types";
 
 const optionalHint = (
   <span className="font-normal text-muted-foreground">(optional)</span>
@@ -203,9 +203,18 @@ const defaultValuesFor = (role: SignupRole): SignUpFormData => ({
  * Sign-up in two phases: pick an account type, then fill in the details for it.
  * The role lives here rather than in the form so going back to phase one
  * unmounts the form and starts the next role with clean defaults.
+ *
+ * `?role=` seeds the choice, which is how the landing nav's Sign Up dropdown
+ * sends an employer or a recruiter straight to their own questionnaire. The
+ * picker is still the fallback for a bare /signup, and "Change" still returns
+ * to it. Parsed rather than trusted: an unknown value just shows the picker.
  */
 export function SignUpForm() {
-  const [role, setRole] = useState<SignupRole | null>(null);
+  const searchParams = useSearchParams();
+  const requested = signupRoleSchema.safeParse(searchParams.get("role"));
+  const [role, setRole] = useState<SignupRole | null>(
+    requested.success ? requested.data : null,
+  );
 
   if (role === null) return <SignUpRoleStep onSelect={setRole} />;
 

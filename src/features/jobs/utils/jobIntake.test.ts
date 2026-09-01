@@ -24,6 +24,9 @@ describe("toIntakeInput", () => {
     );
 
     expect(intake).toEqual({
+      // Always present: the work model is a required field with a default, so
+      // it is answered even when the company skipped everything else.
+      workModel: "on_site",
       offerTimeline: "within_2_weeks",
       qualifications: { mustHave: ["5+ years Python"], niceToHave: ["AWS"] },
       interviewProcess: [
@@ -68,7 +71,10 @@ describe("toIntakeInput", () => {
 
     // The worksite address goes too: it is a field this form owns, so an empty
     // box means the company cleared it.
-    expect(intake).toEqual({ positionDuties: "Own the billing subsystem" });
+    expect(intake).toEqual({
+      positionDuties: "Own the billing subsystem",
+      workModel: "on_site",
+    });
   });
 
   it("writes the benefits block only when something was ticked", () => {
@@ -98,6 +104,9 @@ describe("toIntakeInput", () => {
       ancillary: true,
       ancillaryDetails: "Commuter benefit",
       retirement401k: { offered: true, matchPercent: 4 },
+      educationReimbursement: false,
+      vacationDays: undefined,
+      sickDays: undefined,
     });
   });
 
@@ -133,8 +142,46 @@ describe("toIntakeInput", () => {
     });
   });
 
-  it("returns undefined rather than an empty intake for a job that had none", () => {
-    expect(toIntakeInput(emptyForm, null)).toBeUndefined();
+  // The API requires all four company-detail fields once the object is sent,
+  // and rejects the whole save when one is missing.
+  it("writes company details only when all four fields are filled", () => {
+    const partial = toIntakeInput(
+      {
+        ...emptyForm,
+        companyDetails: {
+          industry: "SaaS",
+          employeeSize: "51-200",
+          revenue: "",
+          yearsInBusiness: "12",
+        },
+      },
+      null,
+    );
+    expect(partial?.companyDetails).toBeUndefined();
+
+    const complete = toIntakeInput(
+      {
+        ...emptyForm,
+        companyDetails: {
+          industry: "SaaS",
+          employeeSize: "51-200",
+          revenue: "$50M",
+          yearsInBusiness: "12",
+        },
+      },
+      null,
+    );
+    expect(complete?.companyDetails).toEqual({
+      industry: "SaaS",
+      employeeSize: "51-200",
+      revenue: "$50M",
+      // A number for the API, though the input produces a string.
+      yearsInBusiness: 12,
+    });
+  });
+
+  it("writes only the work model for a job whose questionnaire is untouched", () => {
+    expect(toIntakeInput(emptyForm, null)).toEqual({ workModel: "on_site" });
   });
 
   it("renumbers rounds by position, so removing one leaves no gap", () => {
@@ -207,6 +254,9 @@ describe("intakeToFormValues", () => {
       retirement401kMatch: "4",
       ancillary: true,
       ancillaryDetails: "Commuter benefit",
+      educationReimbursement: false,
+      vacationDays: "",
+      sickDays: "",
     });
     expect(values).toMatchObject({
       interviewingAsap: false,
@@ -218,6 +268,19 @@ describe("intakeToFormValues", () => {
 
   it("gives a job with no intake a blank, unticked form", () => {
     expect(intakeToFormValues(null)).toEqual({
+      companyDetails: {
+        industry: "",
+        employeeSize: "",
+        revenue: "",
+        yearsInBusiness: "",
+      },
+      workModel: "on_site",
+      onsiteDaysPerWeek: "",
+      worksiteZip: "",
+      benefitsSummary: "",
+      selectionKeys: [],
+      positionOpenReason: "",
+      confidentialSearch: false,
       worksiteAddress: "",
       daysAndHours: "",
       reportsTo: "",
@@ -231,6 +294,9 @@ describe("intakeToFormValues", () => {
         retirement401kMatch: "",
         ancillary: false,
         ancillaryDetails: "",
+        educationReimbursement: false,
+        vacationDays: "",
+        sickDays: "",
       },
       timelineToHire: "",
       mustHave: [],
