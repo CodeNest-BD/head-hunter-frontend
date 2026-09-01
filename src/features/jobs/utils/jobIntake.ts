@@ -10,7 +10,14 @@ import type {
 type FormOwnedIntake = Pick<
   JobFormValues,
   | "companyDetails"
+  | "workModel"
+  | "onsiteDaysPerWeek"
   | "worksiteAddress"
+  | "worksiteZip"
+  | "benefitsSummary"
+  | "selectionKeys"
+  | "positionOpenReason"
+  | "confidentialSearch"
   | "daysAndHours"
   | "reportsTo"
   | "benefits"
@@ -28,7 +35,14 @@ type FormOwnedIntake = Pick<
 /** The intake keys this form re-derives on every save. */
 const FORM_OWNED_KEYS = [
   "companyDetails",
+  "workModel",
+  "onsiteDaysPerWeek",
   "worksiteAddress",
+  "worksiteZip",
+  "benefitsSummary",
+  "selectionKeys",
+  "positionOpenReason",
+  "confidentialSearch",
   "daysAndHours",
   "reportsTo",
   "benefits",
@@ -42,6 +56,14 @@ const FORM_OWNED_KEYS = [
 
 const orUndefined = (value: string): string | undefined =>
   value.trim() === "" ? undefined : value.trim();
+
+/** A stored number as the form's string input holds it; absent reads as "". */
+const numberToInput = (value: number | undefined): string =>
+  value === undefined ? "" : String(value);
+
+/** A typed count as the API wants it — omitted rather than sent as NaN. */
+const inputToNumber = (value: string): number | undefined =>
+  value.trim() === "" ? undefined : Number(value);
 
 /**
  * The API requires all four company-detail fields once the object is sent at
@@ -80,7 +102,10 @@ function hasBenefits(values: FormOwnedIntake["benefits"]): boolean {
     values.vacation ||
     values.retirement401k ||
     values.ancillary ||
-    values.ancillaryDetails.trim() !== ""
+    values.ancillaryDetails.trim() !== "" ||
+    values.educationReimbursement ||
+    values.vacationDays.trim() !== "" ||
+    values.sickDays.trim() !== ""
   );
 }
 
@@ -93,6 +118,9 @@ function toBenefitsInput(values: FormOwnedIntake["benefits"]): Benefits {
     vacation: values.vacation,
     ancillary: values.ancillary,
     ancillaryDetails: orUndefined(values.ancillaryDetails),
+    educationReimbursement: values.educationReimbursement,
+    vacationDays: inputToNumber(values.vacationDays),
+    sickDays: inputToNumber(values.sickDays),
     retirement401k: {
       offered: values.retirement401k,
       // Only meaningful alongside an offer, and only when a figure was given.
@@ -109,6 +137,15 @@ export function intakeToFormValues(intake: JobIntake | null): FormOwnedIntake {
   const benefits = intake?.benefits;
   const availability = intake?.interviewingAvailability;
   return {
+    // Older jobs predate the three-state control: an existing `isRemote` is the
+    // only signal, and nothing was ever hybrid before now.
+    workModel: intake?.workModel ?? "on_site",
+    onsiteDaysPerWeek: numberToInput(intake?.onsiteDaysPerWeek),
+    worksiteZip: intake?.worksiteZip ?? "",
+    benefitsSummary: intake?.benefitsSummary ?? "",
+    selectionKeys: intake?.selectionKeys ?? [],
+    positionOpenReason: intake?.positionOpenReason ?? "",
+    confidentialSearch: intake?.confidentialSearch ?? false,
     companyDetails: {
       industry: intake?.companyDetails?.industry ?? "",
       employeeSize: intake?.companyDetails?.employeeSize ?? "",
@@ -134,6 +171,9 @@ export function intakeToFormValues(intake: JobIntake | null): FormOwnedIntake {
           : String(benefits.retirement401k.matchPercent),
       ancillary: benefits?.ancillary ?? false,
       ancillaryDetails: benefits?.ancillaryDetails ?? "",
+      educationReimbursement: benefits?.educationReimbursement ?? false,
+      vacationDays: numberToInput(benefits?.vacationDays),
+      sickDays: numberToInput(benefits?.sickDays),
     },
     timelineToHire: intake?.offerTimeline ?? "",
     mustHave: intake?.qualifications?.mustHave ?? [],
@@ -180,8 +220,34 @@ export function toIntakeInput(
 
   const companyDetails = toCompanyDetailsInput(values.companyDetails);
   if (companyDetails !== undefined) merged.companyDetails = companyDetails;
+  merged.workModel = values.workModel;
+  // Only a hybrid role has on-site days; an on-site or remote one must not
+  // smuggle a stale count back to the API.
+  const onsiteDays =
+    values.workModel === "hybrid"
+      ? inputToNumber(values.onsiteDaysPerWeek)
+      : undefined;
+  if (onsiteDays !== undefined) merged.onsiteDaysPerWeek = onsiteDays;
+
   const worksiteAddress = orUndefined(values.worksiteAddress);
   if (worksiteAddress !== undefined) merged.worksiteAddress = worksiteAddress;
+  const worksiteZip = orUndefined(values.worksiteZip);
+  if (worksiteZip !== undefined) merged.worksiteZip = worksiteZip;
+  const benefitsSummary = orUndefined(values.benefitsSummary);
+  if (benefitsSummary !== undefined) merged.benefitsSummary = benefitsSummary;
+
+  const selectionKeys = values.selectionKeys.filter(
+    (entry) => entry.trim() !== "",
+  );
+  if (selectionKeys.length > 0) merged.selectionKeys = selectionKeys;
+
+  if (values.positionOpenReason !== "") {
+    merged.positionOpenReason = values.positionOpenReason;
+    // Only meaningful against a current employee's seat.
+    if (values.positionOpenReason === "replacing_current") {
+      merged.confidentialSearch = values.confidentialSearch;
+    }
+  }
   const daysAndHours = orUndefined(values.daysAndHours);
   if (daysAndHours !== undefined) merged.daysAndHours = daysAndHours;
   const reportsTo = orUndefined(values.reportsTo);

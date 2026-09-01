@@ -24,9 +24,11 @@ export const SALARY_RATE_PERIODS = ["per_year", "per_hour"] as const;
 export const salaryRatePeriodSchema = z.enum(SALARY_RATE_PERIODS);
 export type SalaryRatePeriod = z.infer<typeof salaryRatePeriodSchema>;
 
+/** Shown on the form's Pay Type control. The `/ yr` and `/ hr` suffixes below
+ * are the compact display form of the same two values. */
 export const SALARY_RATE_PERIOD_LABELS: Record<SalaryRatePeriod, string> = {
-  per_year: "Per Year",
-  per_hour: "Per Hour",
+  per_year: "Yearly",
+  per_hour: "Hourly",
 };
 
 /** Compact suffix for showing a range inline, e.g. "$120k – $150k / yr". */
@@ -69,6 +71,37 @@ export const OFFER_TIMELINE_QUESTION_LABELS: Record<OfferTimeline, string> = {
   within_1_month: "Within 1 Month",
   flexible: "I'm Flexible",
 };
+
+/** Where the work happens — mirrors the backend WorkModel. `Job.isRemote` stays
+ * the filterable column and is derived from this, so a hybrid role keeps its
+ * worksite and still appears on the state map. */
+export const WORK_MODELS = ["on_site", "remote", "hybrid"] as const;
+export const workModelSchema = z.enum(WORK_MODELS);
+export type WorkModel = z.infer<typeof workModelSchema>;
+
+export const WORK_MODEL_LABELS: Record<WorkModel, string> = {
+  on_site: "On-site",
+  remote: "Remote",
+  hybrid: "Hybrid",
+};
+
+/** Why the seat is open — mirrors the backend PositionOpenReason. */
+export const POSITION_OPEN_REASONS = [
+  "adding_on",
+  "replacing_former",
+  "replacing_current",
+] as const;
+export const positionOpenReasonSchema = z.enum(POSITION_OPEN_REASONS);
+export type PositionOpenReason = z.infer<typeof positionOpenReasonSchema>;
+
+export const POSITION_OPEN_REASON_LABELS: Record<PositionOpenReason, string> = {
+  adding_on: "Adding On",
+  replacing_former: "Replacing Former Employee",
+  replacing_current: "Replacing Current Employee",
+};
+
+/** The client asks for exactly three hiring-decision keys. */
+export const MAX_SELECTION_KEYS = 3;
 
 /** Mirrors the backend InterviewType. */
 export const INTERVIEW_TYPES = [
@@ -119,6 +152,11 @@ export const benefitsSchema = z.object({
     matchPercent: z.number().optional(),
     details: z.string().optional(),
   }),
+  educationReimbursement: z.boolean().optional(),
+  // Day counts are optional on top of the flags: a company may offer the
+  // benefit without committing to a number.
+  vacationDays: z.number().optional(),
+  sickDays: z.number().optional(),
 });
 export type Benefits = z.infer<typeof benefitsSchema>;
 
@@ -130,8 +168,8 @@ export const BENEFIT_CHECKBOXES: ReadonlyArray<{
   { key: "medical", label: "Medical" },
   { key: "dental", label: "Dental" },
   { key: "vision", label: "Vision" },
-  { key: "sickTime", label: "Sick Time" },
-  { key: "vacation", label: "Vacation" },
+  { key: "sickTime", label: "Personal/Sick Time" },
+  { key: "vacation", label: "Vacation Time" },
 ];
 
 /**
@@ -227,7 +265,14 @@ export type InterviewStage = z.infer<typeof interviewStageSchema>;
 export const jobIntakeSchema = z
   .object({
     companyDetails: companyDetailsSchema.optional().catch(undefined),
+    workModel: workModelSchema.optional().catch(undefined),
+    onsiteDaysPerWeek: z.number().optional().catch(undefined),
     worksiteAddress: z.string().optional().catch(undefined),
+    worksiteZip: z.string().optional().catch(undefined),
+    benefitsSummary: z.string().optional().catch(undefined),
+    selectionKeys: z.array(z.string()).optional().catch(undefined),
+    positionOpenReason: positionOpenReasonSchema.optional().catch(undefined),
+    confidentialSearch: z.boolean().optional().catch(undefined),
     daysAndHours: z.string().optional().catch(undefined),
     reportsTo: z.string().optional().catch(undefined),
     benefits: benefitsSchema.optional().catch(undefined),
@@ -337,6 +382,16 @@ export const EMPLOYMENT_TYPE_LABELS: Record<EmploymentType, string> = {
   part_time: "Part-Time",
 };
 
+/** A day count as the input holds it; "" means the company didn't quantify it. */
+const dayCountField = z
+  .string()
+  .trim()
+  .refine(
+    (value) =>
+      value === "" || (/^\d{1,3}$/.test(value) && Number(value) <= 365),
+    { message: "Enter a number of days between 0 and 365" },
+  );
+
 /**
  * Job form. Numbers stay strings here because inputs produce strings; they are
  * converted to minor units at submit. Mirrors the backend CreateJobDto,
@@ -363,15 +418,25 @@ export const jobFormSchema = z
       .refine((value) => value.length > 0, {
         message: "Pick an employment type",
       }),
-    // Two letters when given; whether it may be omitted depends on isRemote,
-    // which a field-level rule cannot see — see the superRefine below.
+    // Two letters when given; whether it may be omitted depends on the work
+    // model, which a field-level rule cannot see — see the superRefine below.
     locationState: z
       .string()
       .trim()
       .length(2, "Use the two-letter state code")
       .or(z.literal("")),
     locationCity: z.string().trim(),
-    isRemote: z.boolean(),
+    // Three-state, with `isRemote` derived at submit: a hybrid role has a
+    // worksite, so it must not read as remote to the map or the filters.
+    workModel: workModelSchema,
+    // A string because the input produces one; "" means "not said". Only
+    // meaningful for a hybrid role.
+    onsiteDaysPerWeek: z
+      .string()
+      .trim()
+      .refine((value) => value === "" || /^[0-7]$/.test(value), {
+        message: "Enter a number of days between 0 and 7",
+      }),
     salaryMin: z
       .string()
       .trim()
@@ -431,6 +496,12 @@ export const jobFormSchema = z
         }),
     }),
     worksiteAddress: z.string().trim().max(200, "Keep it under 200 characters"),
+    worksiteZip: z
+      .string()
+      .trim()
+      .refine((value) => value === "" || /^\d{5}(-\d{4})?$/.test(value), {
+        message: "Enter a 5-digit ZIP, or ZIP+4",
+      }),
     daysAndHours: z.string().trim().max(200, "Keep it under 200 characters"),
     reportsTo: z.string().trim().max(120, "Keep it under 120 characters"),
     benefits: z.object({
@@ -455,7 +526,20 @@ export const jobFormSchema = z
         .string()
         .trim()
         .max(200, "Keep it under 200 characters"),
+      educationReimbursement: z.boolean(),
+      // Strings because the inputs produce them; "" means "not quantified".
+      vacationDays: dayCountField,
+      sickDays: dayCountField,
     }),
+    benefitsSummary: z
+      .string()
+      .trim()
+      .max(2000, "Keep it under 2,000 characters"),
+    selectionKeys: z
+      .array(z.string().trim().max(200, "Keep it under 200 characters"))
+      .max(MAX_SELECTION_KEYS, `Up to ${MAX_SELECTION_KEYS} keys`),
+    positionOpenReason: positionOpenReasonSchema.or(z.literal("")),
+    confidentialSearch: z.boolean(),
     // Interviewing availability: ASAP, or a date range.
     interviewingAsap: z.boolean(),
     interviewingFrom: z.string().trim(),
@@ -492,11 +576,11 @@ export const jobFormSchema = z
   // without one, so a stateless on-site job is invisible on the marketplace's
   // main discovery surface. A remote role has no state to give.
   .superRefine((values, ctx) => {
-    if (!values.isRemote && values.locationState === "") {
+    if (values.workModel !== "remote" && values.locationState === "") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["locationState"],
-        message: "Pick a state, or mark the role remote",
+        message: "Pick a state, or set the work model to Remote",
       });
     }
     // Checked here rather than on the field because it spans two of them.

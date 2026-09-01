@@ -9,7 +9,6 @@ const valid = {
   employmentType: "full_time" as const,
   locationState: "CA",
   locationCity: "",
-  isRemote: false,
   salaryMin: "",
   salaryMax: "",
   salaryRatePeriod: "per_year" as const,
@@ -81,17 +80,23 @@ describe("jobFormSchema", () => {
   });
 
   it("requires a state on an on-site role, because the job map skips rows without one", () => {
-    expect(errorPaths({ locationState: "", isRemote: false })).toContain(
+    expect(errorPaths({ locationState: "", workModel: "on_site" })).toContain(
       "locationState",
     );
   });
 
   it("does not require a state on a remote role, which has none to give", () => {
-    expect(errorPaths({ locationState: "", isRemote: true })).toEqual([]);
+    expect(errorPaths({ locationState: "", workModel: "remote" })).toEqual([]);
+  });
+
+  it("requires a state on a hybrid role, which still has a worksite", () => {
+    expect(errorPaths({ locationState: "", workModel: "hybrid" })).toContain(
+      "locationState",
+    );
   });
 
   it("still rejects a malformed state code on a remote role", () => {
-    expect(errorPaths({ locationState: "CAL", isRemote: true })).toContain(
+    expect(errorPaths({ locationState: "CAL", workModel: "remote" })).toContain(
       "locationState",
     );
   });

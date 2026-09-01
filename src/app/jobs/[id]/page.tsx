@@ -58,9 +58,9 @@ function SubmitCandidatesButton({ jobId }: { jobId: string }) {
 
 /**
  * Edit and Publish, for the company that owns this job. Gated on the viewer's
- * own profile id rather than their role: a company must not get edit controls
- * on somebody else's listing. Publish only shows while the job is a draft —
- * it is the one status change this page makes.
+ * own profile id rather than their role: recruiters and admins reach this page
+ * too, and must never get edit controls on somebody else's listing. Publish
+ * only shows while the job is a draft — the one status change made here.
  */
 function CompanyJobActions({ job }: { job: Job }) {
   const { data: profile } = useMyCompanyProfile();
@@ -124,12 +124,13 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
 
   return (
     <>
-      {/* Static: the role's own company, title and location head the body
-          below, so repeating the title here would say it twice. */}
       <PageHeader
-        title="Job detail"
+        title={job?.title ?? "Job detail"}
         subtitle="The fee, the role, and everything you need before you submit a candidate."
         className="mb-0"
+        actions={
+          role === "company" && job ? <CompanyJobActions job={job} /> : null
+        }
       />
       {isPending ? (
         <DetailSkeleton />
@@ -151,7 +152,6 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
         <JobDetailBody
           job={jobToJobView(job)}
           cta={role === "recruiter" ? <RecruiterCta jobId={jobId} /> : null}
-          actions={role === "company" ? <CompanyJobActions job={job} /> : null}
         />
       )}
     </>

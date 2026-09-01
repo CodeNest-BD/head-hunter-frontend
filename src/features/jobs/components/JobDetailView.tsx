@@ -2,13 +2,11 @@ import type { ReactNode } from "react";
 import { Wallet } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-import { US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { RichTextView } from "@/shared/ui-components/data/RichTextView";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 
-import { formatSalaryRange } from "../utils/formatSalaryRange";
 import {
   BENEFIT_CHECKBOXES,
   EMPLOYMENT_TYPE_LABELS,
@@ -16,6 +14,7 @@ import {
   OFFER_TIMELINE_LABELS,
   OTHER_SOURCING_LABELS,
   ROLE_CATEGORY_LABELS,
+  SALARY_RATE_PERIOD_SUFFIX,
   interviewDurationLabel,
   type Benefits,
   type EmploymentType,
@@ -48,8 +47,8 @@ export interface JobView {
   publishedAt: Date | null;
   description: string | null;
   // Company identity — present on the marketplace/authed job (recruiters,
-  // admins see who's hiring), absent on a company's own job (it already knows
-  // whose it is), so all three are optional.
+  // admins see who's hiring), absent on the create/edit preview draft and on a
+  // company's own job (it already knows whose it is), so all three are optional.
   companyProfileId?: string;
   companyName?: string | null;
   hasLogo?: boolean;
@@ -70,157 +69,83 @@ export interface JobView {
   otherSourcing?: OtherSourcing;
 }
 
-/** The micro-label above every block — the panel's one heading style. */
-function BlockLabel({ children }: { children: ReactNode }) {
+/** One label/value fact in the header card. */
+function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-      {children}
-    </p>
-  );
-}
-
-/** Company, title, and the one-line where-and-what beneath it. */
-function JobHeader({ job }: { job: JobView }) {
-  const title = job.title.trim();
-  // The stored value is a USPS code; recruiters read the state's name.
-  const state =
-    job.locationState === null
-      ? null
-      : (US_STATE_NAME_BY_CODE[job.locationState] ?? job.locationState);
-  const place =
-    [job.locationCity, state].filter(Boolean).join(", ") ||
-    (job.isRemote ? "" : "Location TBC");
-  const workModel = job.isRemote ? "Remote" : "On-site";
-  const where = place === "" ? workModel : `${place} (${workModel})`;
-
-  const facts = [
-    job.employmentType
-      ? EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType]
-      : null,
-    ROLE_CATEGORY_LABELS[job.roleCategory as RoleCategory],
-    job.publishedAt
-      ? `Posted ${formatDistanceToNow(job.publishedAt, { addSuffix: true })}`
-      : null,
-  ].filter(Boolean);
-
-  return (
-    <div className="flex flex-col gap-3">
-      {job.companyName ? (
-        <div className="flex items-center gap-2.5">
-          <CompanyLogo
-            companyProfileId={job.companyProfileId ?? ""}
-            hasLogo={job.hasLogo ?? false}
-            name={job.companyName}
-            size="sm"
-          />
-          <p className="min-w-0 truncate font-heading text-sm font-bold text-navy">
-            {job.companyName}
-          </p>
-        </div>
-      ) : null}
-      <div>
-        {/* Only a draft-in-progress reaches here untitled, and a blank heading
-            reads as a broken page on either surface. */}
-        <h2
-          className={cn(
-            "font-heading text-xl font-extrabold tracking-tight",
-            title === "" ? "text-muted-foreground/60" : "text-navy",
-          )}
-        >
-          {title === "" ? "Untitled role" : title}
-        </h2>
-        <p className="mt-0.5 text-sm text-muted-foreground">{where}</p>
-        {facts.length > 0 && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            {facts.join(" · ")}
-          </p>
-        )}
-      </div>
+    <div className="min-w-0">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 truncate font-medium text-navy">{value}</p>
     </div>
   );
 }
 
 /**
- * A bordered block. `preview` tightens the padding for the sidebar, where the
- * panel already supplies its own.
+ * Fee + the role's facts, the strip a recruiter scans first. `compact` stacks
+ * the fee block above the facts and never switches to the side-by-side row —
+ * for the create/edit preview, which lives in a narrow sidebar where the
+ * viewport-based `md:` row layout would otherwise squeeze the facts.
  */
-function Card({
-  preview,
-  className,
-  children,
-}: {
-  preview?: boolean;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section
-      className={cn(
-        "rounded-md border border-border bg-card shadow-card",
-        preview ? "p-4" : "p-5 sm:p-6",
-        className,
-      )}
-    >
-      {children}
-    </section>
-  );
-}
-
-/**
- * The money strip: the fee that decides whether a recruiter works the role, and
- * beside it the band and urgency they pitch the candidate on. Three cells side
- * by side on the full page; stacked in the sidebar, whose width the viewport-
- * based breakpoints cannot see.
- */
-function MoneyStrip({ job, preview }: { job: JobView; preview?: boolean }) {
-  const salary = formatSalaryRange({
-    salaryMinMinor: job.salaryMinMinor,
-    salaryMaxMinor: job.salaryMaxMinor,
-    salaryRatePeriod: job.salaryRatePeriod ?? null,
-  });
+function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
+  const location = job.isRemote
+    ? "Remote"
+    : [job.locationCity, job.locationState].filter(Boolean).join(", ") || "—";
+  const salary =
+    job.salaryMinMinor === null && job.salaryMaxMinor === null
+      ? "—"
+      : `${formatMinor(job.salaryMinMinor)} – ${formatMinor(job.salaryMaxMinor)}${
+          job.salaryRatePeriod
+            ? ` ${SALARY_RATE_PERIOD_SUFFIX[job.salaryRatePeriod]}`
+            : ""
+        }`;
+  const employmentType = job.employmentType
+    ? (EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType] ?? "—")
+    : "—";
+  const posted = job.publishedAt
+    ? formatDistanceToNow(job.publishedAt, { addSuffix: true })
+    : "—";
+  const category =
+    ROLE_CATEGORY_LABELS[job.roleCategory as RoleCategory] ?? "Other";
 
   return (
     <div
       className={cn(
-        "grid divide-y divide-border overflow-hidden rounded-md border border-border bg-card shadow-card",
-        !preview && "sm:grid-cols-3 sm:divide-x sm:divide-y-0",
+        "flex flex-col divide-y divide-border rounded-md border border-border bg-card shadow-card",
+        !compact && "md:flex-row md:divide-x md:divide-y-0",
       )}
     >
       <div
         className={cn(
-          "flex items-center gap-3 bg-accent/40",
-          preview ? "p-4" : "p-5",
+          "flex items-center gap-3 p-5 sm:p-6",
+          !compact && "md:w-72",
         )}
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-card text-primary shadow-sm">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
           <Wallet className="h-5 w-5" />
         </span>
         <div className="min-w-0">
-          <BlockLabel>Recruiter fee</BlockLabel>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            Recruiter fee
+          </p>
           <p className="font-heading text-2xl font-extrabold tabular-nums text-navy">
             {formatMinor(job.recruiterFeeMinor)}
           </p>
           <p className="text-xs text-muted-foreground">on a successful hire</p>
         </div>
       </div>
-      <div
-        className={cn("flex flex-col justify-center", preview ? "p-4" : "p-5")}
-      >
-        <BlockLabel>Pay range</BlockLabel>
-        <p className="mt-1 font-heading text-lg font-bold text-primary">
-          {salary ?? "—"}
-        </p>
-      </div>
-      <div
-        className={cn("flex flex-col justify-center", preview ? "p-4" : "p-5")}
-      >
-        <BlockLabel>Timeline to hire</BlockLabel>
-        {job.offerTimeline ? (
-          <span className="mt-1.5 inline-flex w-fit items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
-            {OFFER_TIMELINE_LABELS[job.offerTimeline]}
-          </span>
-        ) : (
-          <p className="mt-1 font-medium text-muted-foreground">—</p>
+      <div className="grid flex-1 grid-cols-1 gap-x-6 gap-y-4 p-5 sm:grid-cols-2 sm:p-6">
+        <Fact label="Category" value={category} />
+        <Fact label="Location" value={location} />
+        <Fact label="Pay Range" value={salary} />
+        <Fact label="Employment type" value={employmentType} />
+        <Fact label="Posted" value={posted} />
+        <Fact label="Work model" value={job.isRemote ? "Remote" : "On-site"} />
+        {job.offerTimeline && (
+          <Fact
+            label="Timeline to Hire"
+            value={OFFER_TIMELINE_LABELS[job.offerTimeline]}
+          />
         )}
       </div>
     </div>
@@ -239,7 +164,9 @@ function RequirementRow({
   if (entries.length === 0) return null;
   return (
     <div className="flex flex-col gap-2">
-      <BlockLabel>{label}</BlockLabel>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+        {label}
+      </p>
       <ul className="flex flex-wrap gap-2">
         {entries.map((entry) => (
           <li
@@ -280,15 +207,11 @@ function availabilityLine(availability: InterviewingAvailability): string {
   return window.length === 2 ? window.join(" – ") : (window[0] ?? "");
 }
 
-/** The operational half of the intake: how they interview and what the job is
- * like day to day. Sits below the pitch, which is what a recruiter reads first. */
-function HiringProcessCard({
-  job,
-  preview,
-}: {
-  job: JobView;
-  preview?: boolean;
-}) {
+/** Requirements + planned interview stages, the part of the intake a recruiter
+ * reads before deciding whether they can fill the role. */
+function HiringProcessCard({ job }: { job: JobView }) {
+  const mustHave = job.mustHave ?? [];
+  const niceToHave = job.niceToHave ?? [];
   const rounds = job.interviewProcess ?? [];
   const benefits = job.benefits ? benefitsLine(job.benefits) : "";
   const availability = job.interviewingAvailability
@@ -315,13 +238,24 @@ function HiringProcessCard({
     },
   ].filter((detail) => detail.value !== "");
 
-  if (rounds.length === 0 && details.length === 0) return null;
+  if (
+    mustHave.length === 0 &&
+    niceToHave.length === 0 &&
+    rounds.length === 0 &&
+    details.length === 0
+  ) {
+    return null;
+  }
 
   return (
-    <Card preview={preview} className="flex flex-col gap-5">
+    <section className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+      <RequirementRow label="Must-Haves" entries={mustHave} />
+      <RequirementRow label="Nice-to-Haves" entries={niceToHave} />
       {rounds.length > 0 && (
         <div className="flex flex-col gap-2">
-          <BlockLabel>Interview process</BlockLabel>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            Interview process
+          </p>
           <ol className="flex flex-col gap-1.5">
             {rounds.map((round, index) => (
               <li key={round.order} className="text-sm text-navy">
@@ -338,12 +272,7 @@ function HiringProcessCard({
         </div>
       )}
       {details.length > 0 && (
-        <dl
-          className={cn(
-            "grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2",
-            !preview && "lg:grid-cols-3",
-          )}
-        >
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
           {details.map((detail) => (
             <div key={detail.label} className="min-w-0">
               <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
@@ -354,93 +283,91 @@ function HiringProcessCard({
           ))}
         </dl>
       )}
-    </Card>
+    </section>
   );
 }
 
-/** The role as the company wrote it. Only rendered when there is something to
- * show, or on the published page, where silence would read as a bug. */
-function Description({ description }: { description: string | null }) {
-  if (!description) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No description provided for this role.
-      </p>
-    );
-  }
-  return <RichTextView value={description} />;
+function DescriptionCard({ description }: { description: string | null }) {
+  return (
+    <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+      <h2 className="mb-3 font-heading text-lg font-bold tracking-tight text-navy">
+        Description
+      </h2>
+      {description ? (
+        <RichTextView value={description} />
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          No description provided for this role.
+        </p>
+      )}
+    </section>
+  );
 }
 
 /**
- * The recruiter-facing job body, shared by the real detail page and the
- * create/edit sidebar preview so the two can never drift. When a `cta` is given
- * (the signed-in recruiter's submit action) it sits in a sticky sidebar beside
- * the body.
+ * The recruiter-facing job body: the facts strip plus the description. When a
+ * `cta` is given (the signed-in recruiter's submit action) it sits in a sticky
+ * sidebar beside the description; otherwise the description spans full width.
  */
 export function JobDetailBody({
   job,
   cta,
-  actions,
-  preview,
+  compact,
+  hideDescription,
 }: {
   job: JobView;
   cta?: ReactNode;
-  /** Owner controls (edit, publish) shown beside the title. */
-  actions?: ReactNode;
-  /** Sidebar rendering: tighter padding, a stacked money strip (viewport
-   * breakpoints cannot see the sidebar's width), and no empty-description card. */
-  preview?: boolean;
+  /** Narrow-container layout for the create/edit preview sidebar. */
+  compact?: boolean;
+  /** Drop the description card — the post-a-job preview doesn't need it. */
+  hideDescription?: boolean;
 }) {
-  const hasRequirements =
-    (job.mustHave?.length ?? 0) > 0 || (job.niceToHave?.length ?? 0) > 0;
-  // A draft with nothing written yet shows no card at all; the published page
-  // still says so explicitly.
-  const showDescription = (job.description ?? "").trim() !== "" || !preview;
-
-  const body = (
-    <div className="flex flex-col gap-5">
-      <Card preview={preview}>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <JobHeader job={job} />
-          {actions && <div className="shrink-0">{actions}</div>}
-        </div>
-      </Card>
-      <MoneyStrip job={job} preview={preview} />
-      {hasRequirements && (
-        <Card preview={preview} className="flex flex-col gap-5">
-          <RequirementRow label="Must-Haves" entries={job.mustHave ?? []} />
-          <RequirementRow
-            label="Nice-to-Haves"
-            entries={job.niceToHave ?? []}
-          />
-        </Card>
-      )}
-      {showDescription && (
-        <Card preview={preview} className="flex flex-col gap-3">
-          <BlockLabel>Description</BlockLabel>
-          <Description description={job.description} />
-        </Card>
-      )}
-      <HiringProcessCard job={job} preview={preview} />
-    </div>
-  );
-
-  if (!cta) return body;
-
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      {body}
-      <aside className="h-fit lg:sticky lg:top-24">
-        <div className="rounded-md border border-border bg-card p-5 shadow-card">
-          <h2 className="font-heading text-base font-bold text-navy">
-            Ready to submit?
-          </h2>
-          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-            Open the workspace to add candidates and message the company.
-          </p>
-          <div className="mt-4">{cta}</div>
+    <div className="flex flex-col gap-6">
+      {job.companyName ? (
+        <div className="flex items-center gap-3">
+          <CompanyLogo
+            companyProfileId={job.companyProfileId ?? ""}
+            hasLogo={job.hasLogo ?? false}
+            name={job.companyName}
+            size="md"
+          />
+          <div className="min-w-0">
+            <p className="truncate font-heading text-base font-bold text-navy">
+              {job.companyName}
+            </p>
+            <p className="text-xs text-muted-foreground">Hiring company</p>
+          </div>
         </div>
-      </aside>
+      ) : null}
+      <FactsCard job={job} compact={compact} />
+      <HiringProcessCard job={job} />
+      {cta ? (
+        <div
+          className={
+            hideDescription
+              ? undefined
+              : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
+          }
+        >
+          {!hideDescription && (
+            <DescriptionCard description={job.description} />
+          )}
+          <aside className="h-fit lg:sticky lg:top-24">
+            <div className="rounded-md border border-border bg-card p-5 shadow-card">
+              <h2 className="font-heading text-base font-bold text-navy">
+                Ready to submit?
+              </h2>
+              <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+                Open the workspace to add candidates and message the company.
+              </p>
+              <div className="mt-4">{cta}</div>
+            </div>
+          </aside>
+        </div>
+      ) : hideDescription ? null : (
+        <DescriptionCard description={job.description} />
+      )}
     </div>
   );
 }

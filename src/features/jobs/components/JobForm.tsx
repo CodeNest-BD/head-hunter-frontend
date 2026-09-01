@@ -8,6 +8,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { Textarea } from "@/shared/ui-components/controls/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -42,16 +43,22 @@ import {
   MAX_QUALIFICATIONS,
   MAX_QUALIFICATION_LENGTH,
   OFFER_TIMELINES,
+  MAX_SELECTION_KEYS,
   OFFER_TIMELINE_QUESTION_LABELS,
   OTHER_SOURCING_LABELS,
   OTHER_SOURCING_OPTIONS,
+  POSITION_OPEN_REASONS,
+  POSITION_OPEN_REASON_LABELS,
   ROLE_CATEGORIES,
   ROLE_CATEGORY_LABELS,
   SALARY_RATE_PERIODS,
   SALARY_RATE_PERIOD_LABELS,
+  WORK_MODELS,
+  WORK_MODEL_LABELS,
   jobFormSchema,
   type Job,
   type JobFormValues,
+  type WorkModel,
 } from "../schemas";
 import { intakeToFormValues, toIntakeInput } from "../utils/jobIntake";
 import { PayRangeField } from "./PayRangeField";
@@ -96,7 +103,6 @@ function toDefaults(job?: Job): JobFormValues {
     employmentType: job?.employmentType ?? "",
     locationState: job?.locationState ?? "",
     locationCity: job?.locationCity ?? "",
-    isRemote: job?.isRemote ?? false,
     salaryMin: minorToMajorInput(job?.salaryMinMinor),
     salaryMax: minorToMajorInput(job?.salaryMaxMinor),
     // Older jobs saved before rate period existed default to the common case.
@@ -106,6 +112,9 @@ function toDefaults(job?: Job): JobFormValues {
     // the job, so there is nothing to read back here.
     companyName: "",
     ...intakeToFormValues(job?.intake ?? null),
+    // Jobs saved before the three-state control only have the boolean, so it
+    // seeds the model unless the intake already recorded one.
+    workModel: job?.intake?.workModel ?? (job?.isRemote ? "remote" : "on_site"),
   };
 }
 
@@ -168,28 +177,24 @@ function Block({
   );
 }
 
-/** Segmented On-site / Remote toggle, bound to the `isRemote` boolean. */
+/** Segmented On-site / Remote / Hybrid toggle. */
 function WorkModelControl({
   value,
   onChange,
 }: {
-  value: boolean;
-  onChange: (isRemote: boolean) => void;
+  value: WorkModel;
+  onChange: (next: WorkModel) => void;
 }) {
-  const options = [
-    { label: "On-site", isRemote: false },
-    { label: "Remote", isRemote: true },
-  ] as const;
   return (
     <div className="inline-flex rounded-lg border border-border bg-secondary/60 p-1">
-      {options.map((option) => {
-        const active = value === option.isRemote;
+      {WORK_MODELS.map((model) => {
+        const active = value === model;
         return (
           <button
-            key={option.label}
+            key={model}
             type="button"
             aria-pressed={active}
-            onClick={() => onChange(option.isRemote)}
+            onClick={() => onChange(model)}
             className={cn(
               "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
               active
@@ -197,7 +202,7 @@ function WorkModelControl({
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {option.label}
+            {WORK_MODEL_LABELS[model]}
           </button>
         );
       })}
@@ -294,7 +299,7 @@ export function JobForm({
   // The whole form is watched so the live preview reacts as the company types;
   // individual fields are read off the snapshot.
   const values = watch();
-  const { isRemote, locationState } = values;
+  const { workModel, locationState } = values;
   // Same state-scoped city source the explore page uses, so the two stay in
   // step and a company picks from a real, complete list rather than a stub.
   const cityOptions = useStateCities(locationState || undefined);
@@ -342,7 +347,7 @@ export function JobForm({
   const requiredChecks = [
     values.title.trim() !== "",
     values.employmentType !== "",
-    values.isRemote || values.locationState !== "",
+    values.workModel === "remote" || values.locationState !== "",
     values.recruiterFee.trim() !== "",
     values.description.trim() !== "",
   ];
@@ -375,7 +380,9 @@ export function JobForm({
         : formValues.locationState.toUpperCase(),
     locationCity:
       formValues.locationCity === "" ? undefined : formValues.locationCity,
-    isRemote: formValues.isRemote,
+    // Derived: a hybrid role has a worksite, so only a fully remote one reads
+    // as remote to the job map and the recruiter filters.
+    isRemote: formValues.workModel === "remote",
     salaryMinMinor: majorInputToMinor(formValues.salaryMin),
     salaryMaxMinor: majorInputToMinor(formValues.salaryMax),
     salaryRatePeriod: formValues.salaryRatePeriod,
@@ -505,7 +512,7 @@ export function JobForm({
             </Field>
 
             <Field
-              label="Worksites Address"
+              label="Worksite Street Address"
               htmlFor="worksiteAddress"
               optional
               error={errors.worksiteAddress?.message}
@@ -513,12 +520,26 @@ export function JobForm({
               <Input
                 id="worksiteAddress"
                 className={CONTROL_HEIGHT}
-                placeholder="e.g., 123 Market St, San Francisco, CA"
+                placeholder="e.g., 123 Market St"
                 {...register("worksiteAddress")}
               />
             </Field>
             <Field
-              label="Days & Hours"
+              label="Worksite ZIP"
+              htmlFor="worksiteZip"
+              optional
+              error={errors.worksiteZip?.message}
+            >
+              <Input
+                id="worksiteZip"
+                className={CONTROL_HEIGHT}
+                inputMode="numeric"
+                placeholder="e.g., 94103"
+                {...register("worksiteZip")}
+              />
+            </Field>
+            <Field
+              label="Hours"
               htmlFor="daysAndHours"
               optional
               error={errors.daysAndHours?.message}
@@ -526,7 +547,6 @@ export function JobForm({
               <Input
                 id="daysAndHours"
                 className={CONTROL_HEIGHT}
-                placeholder="List any expected overtime"
                 {...register("daysAndHours")}
               />
             </Field>
@@ -534,22 +554,43 @@ export function JobForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Work Model">
-              <Controller
-                control={control}
-                name="isRemote"
-                render={({ field }) => (
-                  <WorkModelControl
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
+              <div className="flex flex-wrap items-center gap-3">
+                <Controller
+                  control={control}
+                  name="workModel"
+                  render={({ field }) => (
+                    <WorkModelControl
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                {/* Only a hybrid role has on-site days to state. */}
+                {workModel === "hybrid" && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      aria-label="Days on site per week"
+                      inputMode="numeric"
+                      className="h-9 w-14"
+                      {...register("onsiteDaysPerWeek")}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      days on site / week
+                    </span>
+                  </div>
                 )}
-              />
+              </div>
+              {errors.onsiteDaysPerWeek && (
+                <p className="text-xs text-destructive">
+                  {errors.onsiteDaysPerWeek.message}
+                </p>
+              )}
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
                 label="State"
                 htmlFor="locationState"
-                optional={isRemote}
+                optional={workModel === "remote"}
                 error={errors.locationState?.message}
               >
                 <Controller
@@ -600,7 +641,7 @@ export function JobForm({
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger
-                        aria-label="Rate period"
+                        aria-label="Pay Type"
                         className="h-7 w-auto gap-1 border-none bg-secondary/60 px-2 text-xs shadow-none"
                       >
                         <SelectValue />
@@ -715,7 +756,9 @@ export function JobForm({
                     <span className="font-semibold text-navy">
                       {formatMinor(minFee.amountMinor)}
                     </span>{" "}
-                    is required to publish any role.
+                    is required to publish any role. The higher the fee, the
+                    more attention your job will get from recruiters &mdash; and
+                    faster candidates for you.
                   </>
                 ) : (
                   "Paid only on a successful hire."
@@ -728,23 +771,8 @@ export function JobForm({
             <div className="grid gap-x-4 gap-y-3 sm:grid-cols-3">
               {benefitToggle("medical")}
               {benefitToggle("dental")}
-              <Controller
-                control={control}
-                name="benefits.ancillary"
-                render={({ field }) => (
-                  <label className="flex items-center gap-2.5 text-sm text-foreground">
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(checked) =>
-                        field.onChange(checked === true)
-                      }
-                    />
-                    Ancillary Benefits
-                  </label>
-                )}
-              />
-
               {benefitToggle("vision")}
+
               <div className="flex items-center gap-2">
                 <Controller
                   control={control}
@@ -757,14 +785,14 @@ export function JobForm({
                           field.onChange(checked === true)
                         }
                       />
-                      401K
+                      401K/403B
                     </label>
                   )}
                 />
                 {/* Typing a figure is itself the answer, so it ticks the box:
                     an unticked 401(k) drops the match on save. */}
                 <Input
-                  aria-label="401K match percent"
+                  aria-label="401K/403B match percent"
                   inputMode="decimal"
                   className="h-8 w-14"
                   onFocus={() =>
@@ -776,22 +804,95 @@ export function JobForm({
                 />
                 <span className="text-sm text-muted-foreground">(% Match)</span>
               </div>
-              <Input
-                aria-label="Ancillary benefit details"
-                className="h-8"
-                placeholder="List details"
-                onFocus={() =>
-                  setValue("benefits.ancillary", true, { shouldDirty: true })
-                }
-                {...register("benefits.ancillaryDetails")}
-              />
+              {/* Day counts sit beside their own checkbox and tick it on focus,
+                  the same way the 401K match does. */}
+              <div className="flex items-center gap-2">
+                {benefitToggle("sickTime")}
+                <Input
+                  aria-label="Sick days"
+                  inputMode="numeric"
+                  className="h-8 w-14"
+                  onFocus={() =>
+                    setValue("benefits.sickTime", true, { shouldDirty: true })
+                  }
+                  {...register("benefits.sickDays")}
+                />
+                <span className="text-sm text-muted-foreground">days</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {benefitToggle("vacation")}
+                <Input
+                  aria-label="Vacation days"
+                  inputMode="numeric"
+                  className="h-8 w-14"
+                  onFocus={() =>
+                    setValue("benefits.vacation", true, { shouldDirty: true })
+                  }
+                  {...register("benefits.vacationDays")}
+                />
+                <span className="text-sm text-muted-foreground">days</span>
+              </div>
 
-              {benefitToggle("sickTime")}
-              {benefitToggle("vacation")}
+              <Controller
+                control={control}
+                name="benefits.educationReimbursement"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2.5 text-sm text-foreground">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                    />
+                    Education Reimbursement
+                  </label>
+                )}
+              />
+              {/* Last, and spanning the remaining columns: its free-text box
+                  needs the room the single-word checkboxes do not. */}
+              <div className="flex items-center gap-2.5 sm:col-span-2">
+                <Controller
+                  control={control}
+                  name="benefits.ancillary"
+                  render={({ field }) => (
+                    <label className="flex shrink-0 items-center gap-2.5 text-sm text-foreground">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                      Other Benefits
+                    </label>
+                  )}
+                />
+                <Input
+                  aria-label="Other benefits"
+                  className="h-8"
+                  onFocus={() =>
+                    setValue("benefits.ancillary", true, { shouldDirty: true })
+                  }
+                  {...register("benefits.ancillaryDetails")}
+                />
+              </div>
             </div>
             {benefitsError && (
               <p className="text-xs text-destructive">{benefitsError}</p>
             )}
+
+            <Field
+              label="Benefits Summary"
+              htmlFor="benefitsSummary"
+              optional
+              error={errors.benefitsSummary?.message}
+            >
+              <Textarea
+                id="benefitsSummary"
+                rows={3}
+                placeholder="Anything worth calling out beyond the boxes above."
+                {...register("benefitsSummary")}
+              />
+            </Field>
           </Block>
 
           <Block
@@ -824,7 +925,7 @@ export function JobForm({
             </p>
           </Block>
 
-          <Block title="Position Duties">
+          <Block title="Position Responsibilities">
             <Controller
               control={control}
               name="description"
@@ -850,7 +951,7 @@ export function JobForm({
             )}
           </Block>
 
-          <Block title="Qualifications (List Must Haves vs Nice to Haves)">
+          <Block title="Qualifications">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Must Haves" htmlFor="mustHave">
                 <Controller
@@ -887,6 +988,42 @@ export function JobForm({
                 />
               </Field>
             </div>
+          </Block>
+
+          <Block
+            title="Top 3 Keys You Will Make a Hiring Decision Based On"
+            intro="The three things that actually decide it. Recruiters screen against these."
+          >
+            <Controller
+              control={control}
+              name="selectionKeys"
+              render={({ field }) => (
+                <div className="grid gap-2.5">
+                  {Array.from({ length: MAX_SELECTION_KEYS }, (_, index) => (
+                    <div key={index} className="flex items-center gap-2.5">
+                      <span className="w-4 shrink-0 text-sm font-medium text-navy">
+                        {index + 1}.
+                      </span>
+                      <Input
+                        aria-label={`Hiring decision key ${index + 1}`}
+                        className={CONTROL_HEIGHT}
+                        value={field.value[index] ?? ""}
+                        onChange={(event) => {
+                          // A fixed three rows over a sparse array, so typing in
+                          // row 3 first does not collapse into row 1.
+                          const next = Array.from(
+                            { length: MAX_SELECTION_KEYS },
+                            (_, position) => field.value[position] ?? "",
+                          );
+                          next[index] = event.target.value;
+                          field.onChange(next);
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            />
           </Block>
 
           <Block title="Interview Process">
@@ -994,7 +1131,7 @@ export function JobForm({
             />
           </Block>
 
-          <Block title="Timeline & Sourcing">
+          <Block title="Timeline & Strategy">
             <div className="flex flex-col gap-3">
               <Question label="Availability for Interviewing?">
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -1050,6 +1187,43 @@ export function JobForm({
                   <p className="text-xs text-destructive">
                     {errors.interviewingTo.message}
                   </p>
+                )}
+              </Question>
+
+              <Question label="Why is This Position Open?">
+                <Controller
+                  control={control}
+                  name="positionOpenReason"
+                  render={({ field }) => (
+                    <RadioRow
+                      name="positionOpenReason"
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={POSITION_OPEN_REASONS.map((reason) => ({
+                        value: reason,
+                        label: POSITION_OPEN_REASON_LABELS[reason],
+                      }))}
+                    />
+                  )}
+                />
+                {/* Only meaningful against a current employee's seat — the
+                    write path drops it for the other answers. */}
+                {values.positionOpenReason === "replacing_current" && (
+                  <Controller
+                    control={control}
+                    name="confidentialSearch"
+                    render={({ field }) => (
+                      <label className="mt-1 flex items-center gap-2.5 text-sm text-foreground">
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked === true)
+                          }
+                        />
+                        Confidential Search?
+                      </label>
+                    )}
+                  />
                 )}
               </Question>
 

@@ -24,6 +24,9 @@ describe("toIntakeInput", () => {
     );
 
     expect(intake).toEqual({
+      // Always present: the work model is a required field with a default, so
+      // it is answered even when the company skipped everything else.
+      workModel: "on_site",
       offerTimeline: "within_2_weeks",
       qualifications: { mustHave: ["5+ years Python"], niceToHave: ["AWS"] },
       interviewProcess: [
@@ -68,7 +71,10 @@ describe("toIntakeInput", () => {
 
     // The worksite address goes too: it is a field this form owns, so an empty
     // box means the company cleared it.
-    expect(intake).toEqual({ positionDuties: "Own the billing subsystem" });
+    expect(intake).toEqual({
+      positionDuties: "Own the billing subsystem",
+      workModel: "on_site",
+    });
   });
 
   it("writes the benefits block only when something was ticked", () => {
@@ -98,6 +104,9 @@ describe("toIntakeInput", () => {
       ancillary: true,
       ancillaryDetails: "Commuter benefit",
       retirement401k: { offered: true, matchPercent: 4 },
+      educationReimbursement: false,
+      vacationDays: undefined,
+      sickDays: undefined,
     });
   });
 
@@ -171,8 +180,8 @@ describe("toIntakeInput", () => {
     });
   });
 
-  it("returns undefined rather than an empty intake for a job that had none", () => {
-    expect(toIntakeInput(emptyForm, null)).toBeUndefined();
+  it("writes only the work model for a job whose questionnaire is untouched", () => {
+    expect(toIntakeInput(emptyForm, null)).toEqual({ workModel: "on_site" });
   });
 
   it("renumbers rounds by position, so removing one leaves no gap", () => {
@@ -245,6 +254,9 @@ describe("intakeToFormValues", () => {
       retirement401kMatch: "4",
       ancillary: true,
       ancillaryDetails: "Commuter benefit",
+      educationReimbursement: false,
+      vacationDays: "",
+      sickDays: "",
     });
     expect(values).toMatchObject({
       interviewingAsap: false,
@@ -262,6 +274,13 @@ describe("intakeToFormValues", () => {
         revenue: "",
         yearsInBusiness: "",
       },
+      workModel: "on_site",
+      onsiteDaysPerWeek: "",
+      worksiteZip: "",
+      benefitsSummary: "",
+      selectionKeys: [],
+      positionOpenReason: "",
+      confidentialSearch: false,
       worksiteAddress: "",
       daysAndHours: "",
       reportsTo: "",
@@ -275,6 +294,9 @@ describe("intakeToFormValues", () => {
         retirement401kMatch: "",
         ancillary: false,
         ancillaryDetails: "",
+        educationReimbursement: false,
+        vacationDays: "",
+        sickDays: "",
       },
       timelineToHire: "",
       mustHave: [],
