@@ -15,7 +15,6 @@ export function WalletSummary() {
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
       <StatCard
         className="col-span-2 sm:col-span-1"
-        tone="navy"
         label="Available to spend"
         value={formatMinor(data?.availableMinor)}
         hint="Spendable on new job posts"

@@ -103,7 +103,6 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       <BalanceCard
-        tone="navy"
         label="Total balance"
         valueMinor={data?.totalMinor}
         hint="Everything you've earned so far"

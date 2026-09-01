@@ -197,7 +197,6 @@ export function AdminOverview({ firstName }: { firstName: string }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         <StatCard
           className="col-span-2 sm:col-span-1"
-          tone="navy"
           label="Wallet total"
           value={formatMinor(data.walletTotalMinor)}
           hint={`across ${data.companies.total} company wallets`}
