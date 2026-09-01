@@ -780,7 +780,7 @@ function LiveMapCard({
         header={
           <div>
             <span className="font-heading text-base font-bold text-navy">
-              Current Live Openings - The live map is for verified recruiters
+              The live map is for verified recruiters
             </span>{" "}
             <span className="text-sm text-brand-gray">
               Click a state or city bubble to load its roles
@@ -805,7 +805,7 @@ function LoadingMapCard() {
       <div className={MAP_HEADER}>
         <div>
           <span className="font-heading text-base font-bold text-navy">
-            Current Live Openings - The live map is for verified recruiters
+            The live map is for verified recruiters
           </span>{" "}
           <span className="text-sm text-brand-gray">Loading your map…</span>
         </div>
@@ -823,7 +823,7 @@ function LockedMapCard({ pending }: { pending: boolean }) {
       <div className={MAP_HEADER}>
         <div>
           <span className="font-heading text-base font-bold text-navy">
-            Current Live Openings - The live map is for verified recruiters
+            The live map is for verified recruiters
           </span>
         </div>
       </div>
