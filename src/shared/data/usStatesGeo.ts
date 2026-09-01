@@ -380,3 +380,21 @@ export const US_STATES: readonly UsStateGeo[] = [
 
 export const US_STATE_NAME_BY_CODE: Readonly<Record<string, string>> =
   Object.freeze(Object.fromEntries(US_STATES.map((s) => [s.code, s.name])));
+
+const US_STATE_CODE_BY_NAME: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(US_STATES.map((s) => [s.name.toLowerCase(), s.code])),
+);
+
+/**
+ * The canonical two-letter code for a stored state value, or "" when it names
+ * no US state. Accepts the shapes an account's address can hold — a padded or
+ * lower-case code, or a full state name — so a record written outside the
+ * shared `StateSelect` still resolves to a code the select can show.
+ */
+export function toUsStateCode(value: string | null | undefined): string {
+  const trimmed = (value ?? "").trim();
+  if (trimmed === "") return "";
+  const upper = trimmed.toUpperCase();
+  if (upper in US_STATE_NAME_BY_CODE) return upper;
+  return US_STATE_CODE_BY_NAME[trimmed.toLowerCase()] ?? "";
+}

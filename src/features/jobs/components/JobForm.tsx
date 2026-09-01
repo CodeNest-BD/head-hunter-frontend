@@ -33,11 +33,10 @@ import {
 } from "@/shared/utils/money";
 import {
   BENEFIT_CHECKBOXES,
-  COMPANY_DETAIL_FIELDS,
   EMPLOYMENT_TYPES,
   EMPLOYMENT_TYPE_LABELS,
   INTERVIEW_DURATIONS,
-  INTERVIEW_TYPES,
+  INTERVIEW_TYPE_OPTIONS,
   INTERVIEW_TYPE_LABELS,
   MAX_INTERVIEW_STAGES,
   MAX_QUALIFICATIONS,
@@ -69,6 +68,7 @@ import type { JobWriteInput } from "../api/jobs";
 import { useStateCities } from "@/shared/hooks/useStateCities";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
+import { toUsStateCode } from "@/shared/data/usStatesGeo";
 import { JobLivePreview } from "./JobLivePreview";
 
 /** Persists the live-preview open/closed choice across navigations and reloads. */
@@ -313,6 +313,12 @@ export function JobForm({
   ]
     .filter(Boolean)
     .join(", ");
+  const profileZip = companyProfile?.zip ?? "";
+  // Normalized because the select only matches a canonical code, and a city is
+  // only meaningful under a state — carrying one without the other would leave
+  // a value the disabled city picker cannot show or change.
+  const profileState = toUsStateCode(companyProfile?.state);
+  const profileCity = profileState === "" ? "" : (companyProfile?.city ?? "");
 
   // The company name is not editable, so it tracks the profile on an edit too —
   // a renamed company should not keep showing its old name on an old job.
@@ -321,13 +327,18 @@ export function JobForm({
     // Runs once the profile resolves; `setValue` is stable across renders.
   }, [profileName, setValue]);
 
-  // A new job's worksite defaults to the account's address — most roles sit
+  // A new job's location defaults to the account's address — most roles sit
   // there, and a multi-site employer edits it. Skipped when editing, so a
-  // stored address is never overwritten.
+  // stored location is never overwritten. The profile's state and city come
+  // from the same StateSelect/CityCombobox sources these fields use, so the
+  // values are always valid options here.
   useEffect(() => {
-    if (job || profileAddress === "") return;
-    setValue("worksiteAddress", profileAddress);
-  }, [job, profileAddress, setValue]);
+    if (job) return;
+    if (profileAddress !== "") setValue("worksiteAddress", profileAddress);
+    if (profileZip !== "") setValue("worksiteZip", profileZip);
+    if (profileState !== "") setValue("locationState", profileState);
+    if (profileCity !== "") setValue("locationCity", profileCity);
+  }, [job, profileAddress, profileZip, profileState, profileCity, setValue]);
 
   // Default open so first-time posters see the preview; the choice then sticks.
   const [previewOpen, setPreviewOpen] = useState(true);
@@ -539,7 +550,7 @@ export function JobForm({
               />
             </Field>
             <Field
-              label="Hours"
+              label="Hours (Weekly)"
               htmlFor="daysAndHours"
               optional
               error={errors.daysAndHours?.message}
@@ -895,37 +906,7 @@ export function JobForm({
             </Field>
           </Block>
 
-          <Block
-            title="Company Details"
-            intro="Employers submit clear job details so recruiters instantly understand expectations, urgency, and value."
-          >
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {COMPANY_DETAIL_FIELDS.map((detail) => (
-                <Field
-                  key={detail.key}
-                  label={detail.label}
-                  htmlFor={`companyDetails.${detail.key}`}
-                  error={errors.companyDetails?.[detail.key]?.message}
-                >
-                  <Input
-                    id={`companyDetails.${detail.key}`}
-                    className={CONTROL_HEIGHT}
-                    inputMode={
-                      detail.key === "yearsInBusiness" ? "numeric" : undefined
-                    }
-                    placeholder={detail.placeholder}
-                    {...register(`companyDetails.${detail.key}`)}
-                  />
-                </Field>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Provide details for better candidate matching to keep your result.
-              All four are saved together.
-            </p>
-          </Block>
-
-          <Block title="Position Responsibilities">
+          <Block title="Position Details">
             <Controller
               control={control}
               name="description"
@@ -1059,7 +1040,7 @@ export function JobForm({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {INTERVIEW_TYPES.map((type) => (
+                          {INTERVIEW_TYPE_OPTIONS.map((type) => (
                             <SelectItem key={type} value={type}>
                               {INTERVIEW_TYPE_LABELS[type]}
                             </SelectItem>
