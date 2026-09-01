@@ -5,6 +5,7 @@ import {
   Inbox,
   LayoutDashboard,
   type LucideIcon,
+  Map,
   Send,
   Settings,
   Users,
@@ -42,9 +43,9 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   ],
   recruiter: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    // "Explore Jobs" (the job map) lives in the global top bar and the mobile
-    // drawer's site links; Notifications live in the bell dropdown — so neither
-    // is repeated here.
+    // The job map is a primary recruiter surface, so it sits in the sidebar
+    // nav alongside the dashboard. Notifications stay in the bell dropdown.
+    { href: "/explore-jobs", label: "Live Map", icon: Map },
     { href: "/companies", label: "Companies", icon: Building2 },
     {
       href: "/recruiter/inbox",
@@ -87,7 +88,9 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
  * rather than the sidebar.
  */
 const UNAPPROVED_LABELS: Record<Role, readonly string[]> = {
-  recruiter: ["Profile"],
+  // The map stays reachable while unapproved — it renders its own locked
+  // teaser, nudging the recruiter to finish verification.
+  recruiter: ["Live Map", "Profile"],
   company: ["Profile"],
   admin: [],
 };

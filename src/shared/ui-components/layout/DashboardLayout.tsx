@@ -439,25 +439,6 @@ function SidebarContent({
             onNavigate={onNavigate}
           />
         ))}
-
-        {/* The global site links are a different kind of destination from the
-         * role nav, so they close the list as their own labelled group rather
-         * than sitting above it unmarked. Drawer only — the top bar carries
-         * them on desktop. */}
-        {isDrawer && user.role === "recruiter" && (
-          <div className="mt-3 space-y-1 border-t border-sidebar-border pt-3">
-            <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/50">
-              Explore
-            </p>
-            <Link
-              href="/explore-jobs"
-              onClick={onNavigate}
-              className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
-            >
-              Live Map
-            </Link>
-          </div>
-        )}
       </nav>
 
       <div className="border-t border-sidebar-border p-3">
@@ -567,24 +548,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         >
           <Logo className="max-w-full [&>span]:truncate" />
         </Link>
-        {/* Global site links, shown to every signed-in user on app pages
-         * (public pages get the marketing nav). Tied to the same breakpoint as
-         * the sidebar: while the hamburger is up, these live in the drawer's
-         * Explore group, and duplicating them here is what crowded the tablet
-         * bar into wrapping. */}
-        {user?.role === "recruiter" && (
-          <nav
-            aria-label="Site"
-            className="ml-4 hidden shrink-0 items-center gap-4 whitespace-nowrap lg:flex"
-          >
-            <Link
-              href="/explore-jobs"
-              className="text-sm font-semibold text-navy transition-colors hover:text-primary"
-            >
-              Live Map
-            </Link>
-          </nav>
-        )}
         {/* `shrink-0` so the account avatar is never the thing squeezed off the
          * end of a narrow top bar. */}
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">

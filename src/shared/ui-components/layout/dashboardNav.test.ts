@@ -9,24 +9,25 @@ describe("recruiter navigation", () => {
   it("shows an approved recruiter their phase-1 workspace", () => {
     const labels = navForRole("recruiter", true).map((item) => item.label);
 
-    expect(labels).toEqual(["Dashboard", "Profile"]);
+    expect(labels).toEqual(["Dashboard", "Live Map", "Profile"]);
     expect(labels).not.toContain("Companies");
     expect(labels).not.toContain("Inbox");
     expect(labels).not.toContain("Wallet");
   });
 
-  it("reduces an unapproved recruiter to their profile alone", () => {
-    // The dashboard goes with the rest: every tile on it reads an endpoint the
-    // approval gate refuses, so it could only ever render the pending banner.
+  it("keeps an unapproved recruiter's map (locked teaser) and profile", () => {
+    // The dashboard goes: every tile on it reads an endpoint the approval gate
+    // refuses, so it could only ever render the pending banner. The map stays —
+    // it renders its own locked teaser nudging the recruiter to verify.
     const labels = navForRole("recruiter", false).map((item) => item.label);
 
-    expect(labels).toEqual(["Profile"]);
+    expect(labels).toEqual(["Live Map", "Profile"]);
   });
 
-  it("keeps the top-bar-only destinations (job map, notifications) out of the sidebar", () => {
+  it("keeps notifications out of the sidebar (bell dropdown only)", () => {
     const labels = navForRole("recruiter", true).map((item) => item.label);
 
-    expect(labels).not.toContain("Job map");
+    expect(labels).toContain("Live Map");
     expect(labels).not.toContain("Notifications");
   });
 
