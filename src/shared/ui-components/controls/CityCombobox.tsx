@@ -83,7 +83,7 @@ export function CityCombobox({
           )}
         >
           <span className="line-clamp-1 text-left">
-            {disabled ? "Select a state first" : (value ?? "All cities")}
+            {value ?? (disabled ? "Select a state first" : "All cities")}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </button>

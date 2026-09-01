@@ -120,6 +120,15 @@ export const INTERVIEW_TYPE_LABELS: Record<InterviewType, string> = {
   in_person: "In person",
 };
 
+/** What a company can pick for a round. Narrower than the backend enum, which
+ * still carries `video_panel` so rounds saved before it was dropped keep
+ * parsing and rendering their label. */
+export const INTERVIEW_TYPE_OPTIONS: ReadonlyArray<InterviewType> = [
+  "phone",
+  "video",
+  "in_person",
+];
+
 export const MAX_INTERVIEW_STAGES = 5;
 export const MAX_QUALIFICATIONS = 10;
 export const MAX_QUALIFICATION_LENGTH = 80;
@@ -184,22 +193,6 @@ export const companyDetailsSchema = z.object({
   yearsInBusiness: z.number(),
 });
 export type CompanyDetails = z.infer<typeof companyDetailsSchema>;
-
-/** The company-detail inputs, in the order the client listed them. */
-export const COMPANY_DETAIL_FIELDS: ReadonlyArray<{
-  key: "industry" | "employeeSize" | "revenue" | "yearsInBusiness";
-  label: string;
-  placeholder: string;
-}> = [
-  { key: "industry", label: "Industry", placeholder: "e.g., SaaS" },
-  { key: "employeeSize", label: "Employee Size", placeholder: "e.g., 51-200" },
-  { key: "revenue", label: "Revenue", placeholder: "e.g., $50M" },
-  {
-    key: "yearsInBusiness",
-    label: "Years in Business",
-    placeholder: "e.g., 12",
-  },
-];
 
 export const interviewingAvailabilitySchema = z.object({
   asap: z.boolean(),

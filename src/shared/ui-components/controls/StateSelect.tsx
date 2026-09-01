@@ -37,7 +37,14 @@ export function StateSelect({
   return (
     <Select
       value={value === "" ? undefined : value}
-      onValueChange={onChange}
+      // Inside a form, Radix mirrors the value into a hidden native <select>
+      // and echoes a change event back. Until its options have registered that
+      // echo reports "", which would wipe a value set programmatically (the
+      // job form seeding the company's state). No option here is empty, so a
+      // real choice never is either — the echo is the only source of "".
+      onValueChange={(next) => {
+        if (next !== "") onChange(next);
+      }}
       disabled={disabled}
     >
       <SelectTrigger id={id} className={className}>

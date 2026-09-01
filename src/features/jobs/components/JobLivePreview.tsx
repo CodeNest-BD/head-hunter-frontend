@@ -297,7 +297,7 @@ export function JobLivePreview({
 
         {values.description.trim() !== "" && (
           <div className="flex flex-col gap-2">
-            <BlockLabel>Position responsibilities</BlockLabel>
+            <BlockLabel>Position Details</BlockLabel>
             <RichTextView value={values.description} />
           </div>
         )}
