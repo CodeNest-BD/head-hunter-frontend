@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { titleCase } from "@/shared/utils/titleCase";
+
 /**
  * Account roles a user can hold. `admin` is provisioned out of band and cannot
  * be self-assigned at sign-up, but it MUST be parseable here — omitting it made
@@ -24,8 +26,11 @@ export type SignupRole = z.infer<typeof signupRoleSchema>;
 export const authUserSchema = z.object({
   id: z.string(),
   email: z.string().email(),
-  firstName: z.string(),
-  lastName: z.string(),
+  // Normalized to title case at the boundary so every display of the signed-in
+  // user's name (greeting, nav, account menu) is capitalized consistently,
+  // whatever case it was entered in.
+  firstName: z.string().transform(titleCase),
+  lastName: z.string().transform(titleCase),
   phone: z.string().nullable(),
   role: roleSchema,
   emailVerified: z.boolean(),

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { titleCase } from "@/shared/utils/titleCase";
+
 // Imported from the conversations feature's schemas module directly, not its
 // barrel: the barrel also re-exports Thread and its hooks, which pull in
 // features/conversations' API client — this file only needs the
@@ -37,8 +39,8 @@ export type AdminVerificationStatus = z.infer<typeof verificationStatusSchema>;
 export const recruiterListItemSchema = z.object({
   userId: z.string(),
   recruiterProfileId: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
+  firstName: z.string().transform(titleCase),
+  lastName: z.string().transform(titleCase),
   email: z.string(),
   status: accountStatusSchema,
   subscriptionStatus: subscriptionStatusSchema,
@@ -104,8 +106,8 @@ export const companyDetailSchema = companyListItemSchema.extend({
   verifiedAt: z.string().nullable().catch(null),
   verificationNote: z.string().nullable().catch(null),
   // The contact person on the account, not a company profile column.
-  firstName: z.string().catch(""),
-  lastName: z.string().catch(""),
+  firstName: z.string().catch("").transform(titleCase),
+  lastName: z.string().catch("").transform(titleCase),
   phone: z.string().nullable(),
   website: z.string().nullable(),
   description: z.string().nullable(),
@@ -146,11 +148,11 @@ export type AdminCandidateStatus = z.infer<typeof candidateStatusSchema>;
 
 export const conversationListItemSchema = z.object({
   candidateId: z.string(),
-  candidateName: z.string(),
+  candidateName: z.string().transform(titleCase),
   companyProfileId: z.string(),
   companyName: z.string(),
   recruiterProfileId: z.string(),
-  recruiterName: z.string(),
+  recruiterName: z.string().transform(titleCase),
   jobId: z.string(),
   jobTitle: z.string(),
   status: candidateStatusSchema,
@@ -273,8 +275,8 @@ export type RecruiterPricing = z.infer<typeof recruiterPricingSchema>;
 export const adminUserSchema = z.object({
   userId: z.string(),
   email: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
+  firstName: z.string().transform(titleCase),
+  lastName: z.string().transform(titleCase),
   createdAt: z.string(),
 });
 export type AdminUser = z.infer<typeof adminUserSchema>;

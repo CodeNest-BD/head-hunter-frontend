@@ -4,6 +4,8 @@ import { z } from "zod";
 // barrel pulls in components and hooks, and this file only needs the
 // dependency-free candidate shape (candidates/schemas.ts imports nothing but
 // zod and the money helpers).
+import { titleCase } from "@/shared/utils/titleCase";
+
 import { candidateSchema } from "@/features/candidates/schemas";
 import { paginatedSchema } from "@/shared/libs/pagination";
 import { tolerantEnum } from "@/shared/libs/zodTolerantEnum";
@@ -118,7 +120,10 @@ export type ConversationEvent = z.infer<typeof conversationEventSchema>;
 export const conversationThreadHeaderSchema = z.object({
   candidate: candidateSchema,
   company: z.object({ profileId: z.string(), name: z.string() }),
-  recruiter: z.object({ profileId: z.string(), name: z.string() }),
+  recruiter: z.object({
+    profileId: z.string(),
+    name: z.string().transform(titleCase),
+  }),
   job: z.object({
     id: z.string(),
     title: z.string(),
