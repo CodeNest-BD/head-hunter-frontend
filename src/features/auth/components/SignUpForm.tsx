@@ -41,6 +41,9 @@ import { signupRoleSchema, type SignupRole } from "../types";
 const optionalHint = (
   <span className="font-normal text-muted-foreground">(optional)</span>
 );
+const atLeastOneHint = (
+  <span className="font-normal text-muted-foreground">(At Least 1)</span>
+);
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -115,7 +118,7 @@ function SpecializationsChips({
   return (
     <div className="flex flex-col gap-2.5">
       <span className="text-sm font-medium leading-none text-foreground">
-        Specializations {optionalHint}
+        Specializations {atLeastOneHint}
       </span>
       <div className="flex flex-wrap gap-2">
         {chips.map((specialization) => {
@@ -421,9 +424,9 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
 
           <div className="flex flex-col gap-3">
             <span className="text-sm font-medium leading-none text-foreground">
-              Staffing experience{" "}
+              Recruiting Experience{" "}
               <span className="font-normal text-muted-foreground">
-                (optional, up to {MAX_SIGNUP_EXPERIENCES} firms)
+                (optional, up to {MAX_SIGNUP_EXPERIENCES} companies)
               </span>
             </span>
 
@@ -434,7 +437,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
               >
                 <div className="flex items-start justify-between gap-4">
                   <span className="text-sm font-semibold text-foreground">
-                    Firm {index + 1}
+                    Company {index + 1}
                   </span>
                   <Button
                     type="button"
@@ -449,7 +452,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem]">
                   <div className="flex flex-col gap-2">
                     <Label htmlFor={`experiences.${index}.firmName`}>
-                      Firm name
+                      Company name
                     </Label>
                     <Input
                       id={`experiences.${index}.firmName`}
@@ -506,7 +509,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
                     })
                   }
                 >
-                  + Add a firm
+                  + Add a company
                 </Button>
               </div>
             )}
@@ -514,9 +517,9 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
 
           <div className="flex flex-col gap-3">
             <span className="text-sm font-medium leading-none text-foreground">
-              Recruiting Firm References{" "}
+              Recruiting Company References{" "}
               <span className="font-normal text-muted-foreground">
-                (at least 1, up to {MAX_SIGNUP_REFERENCES})
+                (At Least 1)
               </span>
             </span>
             {referenceFields.map((referenceField, index) => (

@@ -251,12 +251,12 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
         </Section>
 
         <Section
-          title="Staffing experience"
-          description="The firms you have recruited for. Your total years and the sectors shown on your profile are added up from these."
+          title="Recruiting Experience"
+          description="The companies you have recruited for. Your total years and the sectors shown on your profile are added up from these."
         >
           {firms.fields.length === 0 && (
             <p className="text-[13px] text-muted-foreground">
-              No firms listed yet. Add one so companies can see your track
+              No companies listed yet. Add one so companies can see your track
               record.
             </p>
           )}
@@ -268,7 +268,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
             >
               <div className="flex items-start justify-between gap-4">
                 <span className="text-sm font-semibold text-navy">
-                  Firm {index + 1}
+                  Company {index + 1}
                 </span>
                 <Button
                   type="button"
@@ -283,7 +283,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor={`experiences.${index}.firmName`}>
-                    Firm name
+                    Company name
                   </Label>
                   <Input
                     id={`experiences.${index}.firmName`}
@@ -313,7 +313,12 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label>Specializations</Label>
+                <Label>
+                  Specializations{" "}
+                  <span className="font-normal text-muted-foreground">
+                    (At Least 1)
+                  </span>
+                </Label>
                 <Controller
                   control={control}
                   name={`experiences.${index}.specializations`}
@@ -345,13 +350,13 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
                   })
                 }
               >
-                + Add another firm
+                + Add another company
               </Button>
             </div>
           )}
           {firms.fields.length >= MAX_EXPERIENCES && (
             <p className="text-[13px] text-muted-foreground">
-              You can list up to {MAX_EXPERIENCES} firms.
+              You can list up to {MAX_EXPERIENCES} companies.
             </p>
           )}
         </Section>
