@@ -109,7 +109,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         <StatCard
           className="col-span-2 sm:col-span-1"
-          tone="navy"
           label="Available to spend"
           value={formatMinor(wallet.data?.availableMinor)}
           // `availableMinor` is balance MINUS reserved, so the old
