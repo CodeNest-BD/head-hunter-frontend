@@ -53,9 +53,11 @@ function postedAgo(date: Date | null): string {
 }
 
 /**
- * The pills under the location: employment type and work mode, then the two
- * intake facts a recruiter triages on — how soon the company hires, and how
- * many interviews it takes. The last two only appear when the company said.
+ * The pills under the location: employment type, then the two intake facts a
+ * recruiter triages on — how soon the company hires, and how many interviews it
+ * takes. Work mode is omitted: the location line already says "Remote" or the
+ * city, so a Remote/On-site pill would just repeat it. The last two only appear
+ * when the company said.
  */
 function tags(job: PublicJobCardData): string[] {
   const out: string[] = [];
@@ -65,7 +67,6 @@ function tags(job: PublicJobCardData): string[] {
         job.employmentType,
     );
   }
-  out.push(job.isRemote ? "Remote" : "On-site");
   if (job.offerTimeline) {
     out.push(OFFER_TIMELINE_SHORT_LABELS[job.offerTimeline]);
   }
