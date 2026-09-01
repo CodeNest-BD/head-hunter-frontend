@@ -66,7 +66,7 @@ export function CompanyEmployeeInfoForm({
         >
           <div className="grid gap-4 sm:max-w-lg sm:grid-cols-2">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="firstName">First name</Label>
+              <Label htmlFor="firstName">First Name</Label>
               <Input id="firstName" {...register("firstName")} />
               {errors.firstName && (
                 <p className="text-xs text-destructive">
@@ -75,7 +75,7 @@ export function CompanyEmployeeInfoForm({
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="lastName">Last name</Label>
+              <Label htmlFor="lastName">Last Name</Label>
               <Input id="lastName" {...register("lastName")} />
               {errors.lastName && (
                 <p className="text-xs text-destructive">

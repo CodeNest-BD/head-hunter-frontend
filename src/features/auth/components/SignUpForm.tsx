@@ -303,7 +303,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
       {/* First/last are short enough to share a row at 360px. */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="firstName">First name</Label>
+          <Label htmlFor="firstName">First Name</Label>
           <Input
             id="firstName"
             type="text"
@@ -316,7 +316,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
           <FieldError message={errors.firstName?.message} />
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="lastName">Last name</Label>
+          <Label htmlFor="lastName">Last Name</Label>
           <Input
             id="lastName"
             type="text"
@@ -360,7 +360,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="confirmPassword">Re-type password</Label>
+        <Label htmlFor="confirmPassword">Re-type Password</Label>
         <PasswordInput
           id="confirmPassword"
           autoComplete="new-password"
@@ -393,7 +393,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
 
       {role === "company" && (
         <div className="flex flex-col gap-2">
-          <Label htmlFor="companyName">Company name</Label>
+          <Label htmlFor="companyName">Company Name</Label>
           <Input
             id="companyName"
             type="text"
