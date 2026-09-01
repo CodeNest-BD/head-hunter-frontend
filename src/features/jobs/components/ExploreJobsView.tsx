@@ -780,6 +780,9 @@ function LiveMapCard({
         header={
           <div>
             <span className="font-heading text-base font-bold text-navy">
+              Current Live Openings
+            </span>{" "}
+            <span className="text-sm text-brand-gray">
               The live map is for verified recruiters
             </span>
           </div>
@@ -802,7 +805,7 @@ function LoadingMapCard() {
       <div className={MAP_HEADER}>
         <div>
           <span className="font-heading text-base font-bold text-navy">
-            The live map is for verified recruiters
+            Current Live Openings
           </span>{" "}
           <span className="text-sm text-brand-gray">Loading your map…</span>
         </div>
@@ -820,6 +823,9 @@ function LockedMapCard({ pending }: { pending: boolean }) {
       <div className={MAP_HEADER}>
         <div>
           <span className="font-heading text-base font-bold text-navy">
+            Current Live Openings
+          </span>{" "}
+          <span className="text-sm text-brand-gray">
             The live map is for verified recruiters
           </span>
         </div>
