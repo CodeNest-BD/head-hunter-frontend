@@ -781,9 +781,6 @@ function LiveMapCard({
           <div>
             <span className="font-heading text-base font-bold text-navy">
               The live map is for verified recruiters
-            </span>{" "}
-            <span className="text-sm text-brand-gray">
-              Click a state or city bubble to load its roles
             </span>
           </div>
         }
