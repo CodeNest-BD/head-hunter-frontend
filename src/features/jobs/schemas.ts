@@ -61,6 +61,15 @@ export const OFFER_TIMELINE_SHORT_LABELS: Record<OfferTimeline, string> = {
   flexible: "Flexible",
 };
 
+/** The intake question's own wording ("When Do You Hope to Make an Offer?"),
+ * which reads in the first person where the display labels read as a value. */
+export const OFFER_TIMELINE_QUESTION_LABELS: Record<OfferTimeline, string> = {
+  asap: "ASAP",
+  within_2_weeks: "Within 2 Weeks",
+  within_1_month: "Within 1 Month",
+  flexible: "I'm Flexible",
+};
+
 /** Mirrors the backend InterviewType. */
 export const INTERVIEW_TYPES = [
   "phone",
@@ -125,6 +134,35 @@ export const BENEFIT_CHECKBOXES: ReadonlyArray<{
   { key: "vacation", label: "Vacation" },
 ];
 
+/**
+ * Mirrors the backend CompanyDetailsDto, whose four fields are all required
+ * once the object is sent at all — so the form writes it only when every one
+ * of them is filled (see `toIntakeInput`).
+ */
+export const companyDetailsSchema = z.object({
+  industry: z.string(),
+  employeeSize: z.string(),
+  revenue: z.string(),
+  yearsInBusiness: z.number(),
+});
+export type CompanyDetails = z.infer<typeof companyDetailsSchema>;
+
+/** The company-detail inputs, in the order the client listed them. */
+export const COMPANY_DETAIL_FIELDS: ReadonlyArray<{
+  key: "industry" | "employeeSize" | "revenue" | "yearsInBusiness";
+  label: string;
+  placeholder: string;
+}> = [
+  { key: "industry", label: "Industry", placeholder: "e.g., SaaS" },
+  { key: "employeeSize", label: "Employee Size", placeholder: "e.g., 51-200" },
+  { key: "revenue", label: "Revenue", placeholder: "e.g., $50M" },
+  {
+    key: "yearsInBusiness",
+    label: "Years in Business",
+    placeholder: "e.g., 12",
+  },
+];
+
 export const interviewingAvailabilitySchema = z.object({
   asap: z.boolean(),
   from: z.string().optional(),
@@ -181,13 +219,14 @@ export type InterviewStage = z.infer<typeof interviewStageSchema>;
 /**
  * The job intake questionnaire, as the company's own job returns it.
  *
- * `.passthrough()` is load-bearing: the backend blob also holds the worksite
- * address, benefits and company details, which this app never renders. Keeping
+ * `.passthrough()` is load-bearing: the backend blob holds keys this form does
+ * not collect (`positionDuties`, and whatever a later surface adds). Keeping
  * the unknown keys means an edit through the job form writes back the fields it
  * collects without destroying the ones it does not.
  */
 export const jobIntakeSchema = z
   .object({
+    companyDetails: companyDetailsSchema.optional().catch(undefined),
     worksiteAddress: z.string().optional().catch(undefined),
     daysAndHours: z.string().optional().catch(undefined),
     reportsTo: z.string().optional().catch(undefined),
@@ -375,6 +414,22 @@ export const jobFormSchema = z
       }),
     // ---- the intake questionnaire; all optional, all stored in `intake` ----
     // "" is "not said": a company that skips these publishes exactly as before.
+    // Display only, mirrored from the company profile: the API resolves a job's
+    // company from its owner and strips an intake `companyName` outright, so
+    // this is never written. It backs the read-only field and the preview.
+    companyName: z.string(),
+    companyDetails: z.object({
+      industry: z.string().trim().max(120, "Keep it under 120 characters"),
+      employeeSize: z.string().trim().max(60, "Keep it under 60 characters"),
+      revenue: z.string().trim().max(60, "Keep it under 60 characters"),
+      // A string because the input produces one; "" means "not said".
+      yearsInBusiness: z
+        .string()
+        .trim()
+        .refine((value) => value === "" || /^\d{1,3}$/.test(value), {
+          message: "Enter a whole number of years",
+        }),
+    }),
     worksiteAddress: z.string().trim().max(200, "Keep it under 200 characters"),
     daysAndHours: z.string().trim().max(200, "Keep it under 200 characters"),
     reportsTo: z.string().trim().max(120, "Keep it under 120 characters"),

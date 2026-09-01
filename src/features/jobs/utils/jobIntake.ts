@@ -1,9 +1,15 @@
-import type { Benefits, JobFormValues, JobIntake } from "../schemas";
+import type {
+  Benefits,
+  CompanyDetails,
+  JobFormValues,
+  JobIntake,
+} from "../schemas";
 
 /** The intake groups the job form owns. Everything else in the blob is written
  * by other surfaces and must survive an edit here untouched. */
 type FormOwnedIntake = Pick<
   JobFormValues,
+  | "companyDetails"
   | "worksiteAddress"
   | "daysAndHours"
   | "reportsTo"
@@ -21,6 +27,7 @@ type FormOwnedIntake = Pick<
 
 /** The intake keys this form re-derives on every save. */
 const FORM_OWNED_KEYS = [
+  "companyDetails",
   "worksiteAddress",
   "daysAndHours",
   "reportsTo",
@@ -35,6 +42,33 @@ const FORM_OWNED_KEYS = [
 
 const orUndefined = (value: string): string | undefined =>
   value.trim() === "" ? undefined : value.trim();
+
+/**
+ * The API requires all four company-detail fields once the object is sent at
+ * all, so a half-filled block is withheld rather than rejected on save.
+ */
+function toCompanyDetailsInput(
+  values: FormOwnedIntake["companyDetails"],
+): CompanyDetails | undefined {
+  const industry = orUndefined(values.industry);
+  const employeeSize = orUndefined(values.employeeSize);
+  const revenue = orUndefined(values.revenue);
+  const yearsInBusiness = orUndefined(values.yearsInBusiness);
+  if (
+    industry === undefined ||
+    employeeSize === undefined ||
+    revenue === undefined ||
+    yearsInBusiness === undefined
+  ) {
+    return undefined;
+  }
+  return {
+    industry,
+    employeeSize,
+    revenue,
+    yearsInBusiness: Number(yearsInBusiness),
+  };
+}
 
 /** True when the company ticked or typed anything at all in the benefits block. */
 function hasBenefits(values: FormOwnedIntake["benefits"]): boolean {
@@ -75,6 +109,15 @@ export function intakeToFormValues(intake: JobIntake | null): FormOwnedIntake {
   const benefits = intake?.benefits;
   const availability = intake?.interviewingAvailability;
   return {
+    companyDetails: {
+      industry: intake?.companyDetails?.industry ?? "",
+      employeeSize: intake?.companyDetails?.employeeSize ?? "",
+      revenue: intake?.companyDetails?.revenue ?? "",
+      yearsInBusiness:
+        intake?.companyDetails === undefined
+          ? ""
+          : String(intake.companyDetails.yearsInBusiness),
+    },
     worksiteAddress: intake?.worksiteAddress ?? "",
     daysAndHours: intake?.daysAndHours ?? "",
     reportsTo: intake?.reportsTo ?? "",
@@ -135,6 +178,8 @@ export function toIntakeInput(
     delete merged[key];
   }
 
+  const companyDetails = toCompanyDetailsInput(values.companyDetails);
+  if (companyDetails !== undefined) merged.companyDetails = companyDetails;
   const worksiteAddress = orUndefined(values.worksiteAddress);
   if (worksiteAddress !== undefined) merged.worksiteAddress = worksiteAddress;
   const daysAndHours = orUndefined(values.daysAndHours);

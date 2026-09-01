@@ -69,6 +69,9 @@ export function jobToJobView(job: Job): JobView {
 export function formValuesToJobView(values: JobFormValues): JobView {
   return {
     title: values.title,
+    // No profile id to serve a logo from on an unsaved draft, so the preview's
+    // company row falls back to the initials avatar.
+    companyName: orNull(values.companyName),
     roleCategory: values.roleCategory,
     employmentType: values.employmentType === "" ? null : values.employmentType,
     locationCity: orNull(values.locationCity),

@@ -133,6 +133,44 @@ describe("toIntakeInput", () => {
     });
   });
 
+  // The API requires all four company-detail fields once the object is sent,
+  // and rejects the whole save when one is missing.
+  it("writes company details only when all four fields are filled", () => {
+    const partial = toIntakeInput(
+      {
+        ...emptyForm,
+        companyDetails: {
+          industry: "SaaS",
+          employeeSize: "51-200",
+          revenue: "",
+          yearsInBusiness: "12",
+        },
+      },
+      null,
+    );
+    expect(partial?.companyDetails).toBeUndefined();
+
+    const complete = toIntakeInput(
+      {
+        ...emptyForm,
+        companyDetails: {
+          industry: "SaaS",
+          employeeSize: "51-200",
+          revenue: "$50M",
+          yearsInBusiness: "12",
+        },
+      },
+      null,
+    );
+    expect(complete?.companyDetails).toEqual({
+      industry: "SaaS",
+      employeeSize: "51-200",
+      revenue: "$50M",
+      // A number for the API, though the input produces a string.
+      yearsInBusiness: 12,
+    });
+  });
+
   it("returns undefined rather than an empty intake for a job that had none", () => {
     expect(toIntakeInput(emptyForm, null)).toBeUndefined();
   });
@@ -218,6 +256,12 @@ describe("intakeToFormValues", () => {
 
   it("gives a job with no intake a blank, unticked form", () => {
     expect(intakeToFormValues(null)).toEqual({
+      companyDetails: {
+        industry: "",
+        employeeSize: "",
+        revenue: "",
+        yearsInBusiness: "",
+      },
       worksiteAddress: "",
       daysAndHours: "",
       reportsTo: "",

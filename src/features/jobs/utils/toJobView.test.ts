@@ -16,6 +16,7 @@ const base: JobFormValues = {
   salaryMax: "160000",
   salaryRatePeriod: "per_year",
   recruiterFee: "10000",
+  companyName: "Northwind Robotics",
   // The intake half of the form, unanswered.
   ...intakeToFormValues(null),
 };

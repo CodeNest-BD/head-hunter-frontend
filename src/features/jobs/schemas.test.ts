@@ -14,6 +14,8 @@ const valid = {
   salaryMax: "",
   salaryRatePeriod: "per_year" as const,
   recruiterFee: "10000",
+  // Mirrored from the company profile, not stored on the job.
+  companyName: "Northwind Robotics",
   // The intake half of the form, unanswered.
   ...intakeToFormValues(null),
 };

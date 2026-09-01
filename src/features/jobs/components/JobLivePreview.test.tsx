@@ -17,6 +17,7 @@ const values: JobFormValues = {
   salaryMax: "200000",
   salaryRatePeriod: "per_year",
   recruiterFee: "12000",
+  companyName: "Northwind Robotics",
   // The intake half of the form, unanswered.
   ...intakeToFormValues(null),
 };
@@ -43,12 +44,22 @@ describe("JobLivePreview", () => {
     ).toBeInTheDocument();
   });
 
-  it("omits the description entirely — the preview is facts only", () => {
+  it("shows the description as recruiters read it", () => {
     render(<JobLivePreview values={values} onCollapse={noop} />);
 
     expect(
-      screen.queryByText("Own the deployment pipeline."),
-    ).not.toBeInTheDocument();
+      screen.getByText("Own the deployment pipeline."),
+    ).toBeInTheDocument();
+  });
+
+  it("stays silent about an empty description rather than showing the page's placeholder", () => {
+    render(
+      <JobLivePreview
+        values={{ ...values, description: "" }}
+        onCollapse={noop}
+      />,
+    );
+
     expect(
       screen.queryByText("No description provided for this role."),
     ).not.toBeInTheDocument();
