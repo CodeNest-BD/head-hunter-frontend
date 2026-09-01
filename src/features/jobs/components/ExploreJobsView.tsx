@@ -268,12 +268,12 @@ export function ExploreJobsView() {
         <div className="relative mx-auto flex max-w-3xl flex-col items-center">
           <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-white md:text-4xl">
             Explore Live{" "}
-            <span className="text-primary">Fee-Backed Openings.</span>
+            <span className="text-white">Fee-Backed Openings.</span>
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-white/65 md:text-base">
             Every job on the map carries a committed recruiter fee, loaded by
             the employer before publishing and ready for secure payment to you.
-            Search a specific Job Type or pick a state to see open roles.
+            Search a specific Job type or pick a state to see open roles.
           </p>
         </div>
       </header>
@@ -354,9 +354,9 @@ export function ExploreJobsView() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="publishedAt">Most recent</SelectItem>
+                      <SelectItem value="publishedAt">Most Recent</SelectItem>
                       <SelectItem value="recruiterFeeMinor">
-                        Highest fee
+                        Highest Fee
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -780,7 +780,7 @@ function LiveMapCard({
         header={
           <div>
             <span className="font-heading text-base font-bold text-navy">
-              Where roles are open
+              Current Live Openings - The live map is for verified recruiters
             </span>{" "}
             <span className="text-sm text-brand-gray">
               Click a state or city bubble to load its roles
@@ -805,7 +805,7 @@ function LoadingMapCard() {
       <div className={MAP_HEADER}>
         <div>
           <span className="font-heading text-base font-bold text-navy">
-            Where roles are open
+            Current Live Openings - The live map is for verified recruiters
           </span>{" "}
           <span className="text-sm text-brand-gray">Loading your map…</span>
         </div>
@@ -823,10 +823,7 @@ function LockedMapCard({ pending }: { pending: boolean }) {
       <div className={MAP_HEADER}>
         <div>
           <span className="font-heading text-base font-bold text-navy">
-            Where roles are open
-          </span>{" "}
-          <span className="text-sm text-brand-gray">
-            The live map is for verified recruiters
+            Current Live Openings - The live map is for verified recruiters
           </span>
         </div>
       </div>
@@ -845,7 +842,8 @@ function LockedMapCard({ pending }: { pending: boolean }) {
             <p className="mt-2 text-sm text-brand-gray">
               Your account is awaiting verification. Once an Admin approves it,
               you will have access to the live job map showing real-world
-              openings with companies willing to pay a fee.
+              openings with companies willing to pay a fee for the right
+              candidate.
             </p>
             {!pending && (
               <Button asChild className="mt-4 font-bold">
