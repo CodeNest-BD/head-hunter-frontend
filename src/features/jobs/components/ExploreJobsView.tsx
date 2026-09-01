@@ -702,14 +702,15 @@ function LegendDot({ size }: { size: number }) {
   );
 }
 
-/** The bubble-size key, shown as a card in the map's bottom-right (per the ref). */
+/** The bubble-size key, shown as a strip beneath the map so it never covers a
+ * bubble (an earlier bottom-right overlay obscured the map on narrow screens). */
 function BubbleSizeLegend() {
   return (
-    <div className="pointer-events-none absolute bottom-4 right-4 rounded-md border border-brand-line bg-white/95 px-3 py-2 shadow-card backdrop-blur-sm">
-      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
-        Available fee
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-brand-line px-4 py-3 sm:px-5">
+      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+        Available Fees
       </p>
-      <div className="flex items-end gap-3 text-xs text-muted-foreground">
+      <div className="flex items-end gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <LegendDot size={8} /> Low
         </span>
@@ -1047,7 +1048,6 @@ function JobRow({ job }: { job: PublicJobCardData }) {
       </div>
       <div className="flex flex-wrap gap-1.5">
         {employment && <Tag>{employment}</Tag>}
-        <Tag>{job.isRemote ? "Remote" : "On-site"}</Tag>
       </div>
       <div className="hidden text-sm font-semibold text-navy xl:block">
         {salary ?? <span className="font-normal text-brand-gray">—</span>}

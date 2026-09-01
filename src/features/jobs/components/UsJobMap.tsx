@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from "@/shared/ui-components/controls/tooltip";
 import { formatMinor } from "@/shared/utils/money";
+import { titleCase } from "@/shared/utils/titleCase";
 
 import {
   bubbleRadius,
@@ -79,7 +80,7 @@ interface UsJobMapProps {
   readonly embedded?: boolean;
   /** Left side of the embedded header bar (e.g. the card's title + hint). */
   readonly header?: ReactNode;
-  /** Overlaid on the map canvas, bottom-right (e.g. the bubble-size legend). */
+  /** Rendered as a strip below the map canvas (e.g. the bubble-size legend). */
   readonly legend?: ReactNode;
 }
 
@@ -154,14 +155,14 @@ function CityPopup({
         className="pointer-events-auto w-max min-w-[180px] max-w-[200px] rounded-lg border border-brand-line bg-white px-4 py-3 shadow-card-lg sm:max-w-none"
       >
         <p className="font-heading text-[15px] font-bold text-navy">
-          {bubble.city}
+          {titleCase(bubble.city)}
         </p>
         <p className="mt-1 text-[13px] text-navy">
           <span className="font-bold">{bubble.openRoles.toLocaleString()}</span>{" "}
           Open Roles
         </p>
         <p className="text-[13px] text-navy">
-          Available fee:{" "}
+          Available fees:{" "}
           <span className="font-bold">{formatMinor(bubble.totalFeeMinor)}</span>
         </p>
         <button
@@ -407,7 +408,7 @@ export function UsJobMap({
 
   const selectionLabel =
     selection.kind === "city"
-      ? `${selection.city}, ${selection.state}`
+      ? `${titleCase(selection.city)}, ${selection.state}`
       : selection.kind === "state"
         ? (US_STATE_NAME_BY_CODE[selection.state] ?? selection.state)
         : "All states";
@@ -722,7 +723,7 @@ export function UsJobMap({
                     onSelect(nextBubbleSelection(selection, bubble));
                   }}
                 >
-                  <title>{`${bubble.city}, ${bubble.state} — ${bubble.openRoles} open ${
+                  <title>{`${titleCase(bubble.city)}, ${bubble.state} — ${bubble.openRoles} open ${
                     bubble.openRoles === 1 ? "role" : "roles"
                   }`}</title>
                 </circle>
@@ -730,9 +731,6 @@ export function UsJobMap({
             })}
           </g>
         </svg>
-
-        {/* Card-supplied overlay (the bubble-size legend), bottom-right. */}
-        {legend}
 
         {/* Legend */}
         {!embedded && (
@@ -753,6 +751,10 @@ export function UsJobMap({
           </div>
         )}
       </div>
+
+      {/* Bubble-size key — rendered below the map (not overlaid) so it never
+          hides a bubble. */}
+      {legend}
     </div>
   );
 }
