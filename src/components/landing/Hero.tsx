@@ -24,7 +24,9 @@ export function Hero() {
           <div className="my-auto">
             <h1 className="mb-6 font-heading text-3xl font-extrabold leading-[1.15] tracking-tight text-navy sm:text-5xl">
               Set Your Price.{" "}
-              <span className="text-primary">Hire the Right Talent.</span>
+              {/* Its own line, per the client reference — the accent half is a
+                  second statement, not a continuation of the first. */}
+              <span className="block text-primary">Hire the Right Talent.</span>
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-brand-slate">
               Companies name their own price for professional recruiting

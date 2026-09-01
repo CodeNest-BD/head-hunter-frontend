@@ -21,13 +21,27 @@ interface NavItemLink {
 /** Resources are the same for everyone. */
 const RESOURCES: readonly NavItemLink[] = [
   { href: "/raise-a-dispute", label: "Raise A Dispute" },
-  { href: "/contact-support", label: "Contact customer support" },
+  { href: "/contact-support", label: "Contact Customer Support" },
 ];
 
-/** The always-shown marketing links, before the audience/resources menus. */
+/**
+ * The sign-up dropdown's two audiences. Each carries the role in the query so
+ * the form opens on the right questionnaire instead of asking again — see the
+ * role seeding in `SignUpForm`. "Employers" is the client's word for `company`.
+ */
+const SIGNUP_AUDIENCES: readonly NavItemLink[] = [
+  { href: "/signup?role=company", label: "Employers" },
+  { href: "/signup?role=recruiter", label: "Recruiters" },
+];
+
+/**
+ * The always-shown marketing links, before the audience/resources menus.
+ *
+ * No "Live Map" here: the map is a signed-in recruiter surface, not a public
+ * marketing destination. Guests reach open roles through the hero's "Explore
+ * Open Jobs" CTA instead.
+ */
 const PRIMARY_LINKS: readonly NavItemLink[] = [
-  { href: "/#how", label: "How It Works", anchor: true },
-  { href: "/explore-jobs", label: "Live Map" },
   { href: "/about", label: "About" },
 ];
 
@@ -203,9 +217,32 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
                 >
                   <Link href="/login">Log In</Link>
                 </Button>
-                <Button asChild className="font-bold">
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
+                <Dropdown.Root>
+                  <Dropdown.Trigger asChild>
+                    <Button className="font-bold">
+                      Sign Up
+                      <ChevronDown className="ml-1 h-4 w-4" />
+                    </Button>
+                  </Dropdown.Trigger>
+                  <Dropdown.Portal>
+                    <Dropdown.Content
+                      align="end"
+                      sideOffset={8}
+                      className="z-50 min-w-[180px] rounded-md border border-border bg-popover p-1 shadow-card-lg"
+                    >
+                      {SIGNUP_AUDIENCES.map((item) => (
+                        <Dropdown.Item key={item.href} asChild>
+                          <Link
+                            href={item.href}
+                            className="block rounded-sm px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent focus:bg-accent"
+                          >
+                            {item.label}
+                          </Link>
+                        </Dropdown.Item>
+                      ))}
+                    </Dropdown.Content>
+                  </Dropdown.Portal>
+                </Dropdown.Root>
               </>
             )}
           </div>
@@ -352,11 +389,17 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
                       Log In
                     </Link>
                   </Button>
-                  <Button asChild className="w-full font-bold">
-                    <Link href="/signup" onClick={() => setOpen(false)}>
-                      Sign Up
-                    </Link>
-                  </Button>
+                  {SIGNUP_AUDIENCES.map((item) => (
+                    <Button
+                      key={item.href}
+                      asChild
+                      className="w-full font-bold"
+                    >
+                      <Link href={item.href} onClick={() => setOpen(false)}>
+                        Sign Up &mdash; {item.label}
+                      </Link>
+                    </Button>
+                  ))}
                 </>
               )}
             </div>
