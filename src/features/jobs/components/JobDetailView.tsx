@@ -216,7 +216,7 @@ function PayBenefitsBox({ job }: { job: JobView }) {
 
   return (
     <div className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:flex-row sm:items-stretch sm:gap-6 sm:p-6">
-      <div className="flex shrink-0 items-start gap-3 sm:w-56">
+      <div className="flex shrink-0 items-start gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
           <CircleDollarSign className="h-[18px] w-[18px]" />
         </span>
@@ -225,10 +225,10 @@ function PayBenefitsBox({ job }: { job: JobView }) {
             Pay Range
           </p>
           {hasSalary ? (
-            <p className="mt-1 font-heading text-base font-bold leading-snug text-navy">
+            <p className="mt-1 whitespace-nowrap font-heading text-lg font-bold leading-snug text-navy">
               <span className="tabular-nums">{salaryRange}</span>
               {salaryPeriod && (
-                <span className="ml-1 whitespace-nowrap text-xs font-medium text-muted-foreground">
+                <span className="ml-1 text-xs font-medium text-muted-foreground">
                   {salaryPeriod}
                 </span>
               )}
