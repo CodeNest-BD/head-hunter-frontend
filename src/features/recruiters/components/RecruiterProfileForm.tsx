@@ -15,6 +15,7 @@ import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
 import { UsPhoneInput } from "@/shared/ui-components/controls/UsPhoneInput";
 import { toE164UsPhone, toUsPhoneDigits } from "@/shared/libs/usPhone";
 import { useUpdateMyRecruiterProfile } from "../hooks/useRecruiterProfile";
+import { RecruiterPhotoUploader } from "./RecruiterPhotoUploader";
 import {
   MAX_EXPERIENCES,
   recruiterProfileFormSchema,
@@ -200,6 +201,12 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
+        <Section
+          title="Photo"
+          description="Shown on your profile and in the top-right menu."
+        >
+          <RecruiterPhotoUploader profile={profile} />
+        </Section>
         <Section title="Location" description="Where you're based.">
           <div className="flex flex-col gap-2">
             <Label htmlFor="addressLine">Address</Label>

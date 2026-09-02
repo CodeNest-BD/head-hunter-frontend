@@ -49,6 +49,7 @@ function recruiterProfile(status: VerificationStatus): RecruiterProfile {
     ratingCount: 0,
     hasMarketplaceAccess: status === "verified",
     references: [],
+    hasPhoto: false,
   };
 }
 

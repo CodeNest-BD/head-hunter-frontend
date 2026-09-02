@@ -2,11 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   addReference,
+  deleteRecruiterPhoto,
   devActivateSubscription,
   fetchMyRecruiterProfile,
   reapplyRecruiterVerification,
   removeReference,
   updateMyRecruiterProfile,
+  uploadRecruiterPhoto,
   type CreateReferenceInput,
   type UpdateRecruiterProfileInput,
 } from "../api/recruiterProfiles";
@@ -27,6 +29,30 @@ export function useUpdateMyRecruiterProfile() {
     onSuccess: (profile) => {
       queryClient.setQueryData(recruiterKeys.myProfile, profile);
       toast.success("Profile saved");
+    },
+  });
+}
+
+export function useUploadRecruiterPhoto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => uploadRecruiterPhoto(file),
+    onSuccess: (profile) => {
+      queryClient.setQueryData(recruiterKeys.myProfile, profile);
+      toast.success("Photo updated");
+    },
+    onError: () =>
+      toast.error("Could not upload your photo. Please try again."),
+  });
+}
+
+export function useRemoveRecruiterPhoto() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteRecruiterPhoto(),
+    onSuccess: (profile) => {
+      queryClient.setQueryData(recruiterKeys.myProfile, profile);
+      toast.success("Photo removed");
     },
   });
 }
