@@ -478,6 +478,12 @@ export interface DashboardLayoutProps {
    * pages may still pass a trail but it isn't rendered.
    */
   breadcrumbs?: Crumb[];
+  /**
+   * Drop the desktop left rail and let the content fill the width — for focused
+   * pages (e.g. the recruiter job detail) that read better without the nav. The
+   * top bar (and its mobile drawer) stay, so navigation is never lost.
+   */
+  hideSidebar?: boolean;
 }
 
 /**
@@ -486,7 +492,10 @@ export interface DashboardLayoutProps {
  * choice is remembered); on small screens it is a slide-over toggled from the
  * top bar. The content area is full-width; pages own any narrower column.
  */
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({
+  children,
+  hideSidebar = false,
+}: DashboardLayoutProps) {
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
@@ -551,18 +560,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar — sits below the navbar on desktop (nav only; the account
        * controls live in the top-bar user menu). */}
-      <aside
-        className={cn(
-          "fixed bottom-0 left-0 top-16 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 lg:flex",
-          collapsed ? "w-16" : "w-64",
-        )}
-      >
-        <SidebarContent
-          onNavigate={close}
-          collapsed={collapsed}
-          onToggleCollapse={() => setCollapsed((value) => !value)}
-        />
-      </aside>
+      {!hideSidebar && (
+        <aside
+          className={cn(
+            "fixed bottom-0 left-0 top-16 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 lg:flex",
+            collapsed ? "w-16" : "w-64",
+          )}
+        >
+          <SidebarContent
+            onNavigate={close}
+            collapsed={collapsed}
+            onToggleCollapse={() => setCollapsed((value) => !value)}
+          />
+        </aside>
+      )}
 
       {/* Slide-over sidebar (mobile) — full nav plus the account block, since
        * the top-bar user menu is cramped on small screens. */}
@@ -610,7 +621,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div
         className={cn(
           "pt-16 transition-[padding] duration-200",
-          collapsed ? "lg:pl-16" : "lg:pl-64",
+          hideSidebar ? "" : collapsed ? "lg:pl-16" : "lg:pl-64",
         )}
       >
         {/* Navbar (4rem) is the only chrome above; see TwoColumnDetailLayout's
