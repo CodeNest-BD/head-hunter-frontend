@@ -12,10 +12,13 @@ import {
 } from "../api/companyProfiles";
 import { companyKeys } from "../keys";
 
-export function useMyCompanyProfile() {
+export function useMyCompanyProfile({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: companyKeys.myProfile,
     queryFn: fetchMyCompanyProfile,
+    enabled,
   });
 }
 
