@@ -13,6 +13,12 @@ interface PageBannerProps {
   eyebrow?: ReactNode;
   /** Headline. A blue "." accent is appended automatically. */
   title: ReactNode;
+  /**
+   * Whether to append the brand's blue "." accent after the title. On for the
+   * standard "Hey Ben." greeting; off when the title is a possessive phrase
+   * ("Ben's Dashboard") where a trailing period reads as a typo.
+   */
+  accentPeriod?: boolean;
   subtitle?: ReactNode;
   /**
    * Right-side metric readouts. Rendered as a horizontal row of
@@ -38,6 +44,7 @@ interface PageBannerProps {
 export function PageBanner({
   eyebrow,
   title,
+  accentPeriod = true,
   subtitle,
   metrics,
   actions,
@@ -69,7 +76,7 @@ export function PageBanner({
             )}
           >
             {title}
-            <span className="text-primary">.</span>
+            {accentPeriod && <span className="text-primary">.</span>}
           </h1>
           {subtitle && (
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60">

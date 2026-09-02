@@ -45,8 +45,11 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
     0,
   );
 
-  const openRolesTotal = openRoles.data?.meta.total ?? null;
   const latestRole = openRoles.data?.data[0] ?? null;
+  // "Jobs in process" = jobs you currently have a candidate submitted on, which
+  // is exactly one inbox row each; the total is the paginated count, not the
+  // fetched page's length.
+  const jobsInProcess = inbox.data?.meta.total ?? null;
 
   const candidatesHint =
     candidateCount === 0
@@ -58,10 +61,10 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   const subtitleParts = [
     "Recruiter",
     verificationStatus === "verified"
-      ? "verified"
+      ? "Verified"
       : verificationStatus === "rejected"
-        ? "verification declined"
-        : "pending verification",
+        ? "Verification declined"
+        : "Pending verification",
     yearsExperience !== null
       ? `${yearsExperience} year${yearsExperience === 1 ? "" : "s"} experience`
       : null,
@@ -123,30 +126,20 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   return (
     <div className="flex flex-col gap-6">
       <PageBanner
-        title={`Hey ${firstName}`}
+        title={`${firstName}'s Dashboard`}
+        accentPeriod={false}
         subtitle={subtitleParts.join(" · ")}
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard
-          label="Open roles"
-          value={openRolesTotal ?? "—"}
-          hint="open to you right now"
-          href="/explore-jobs"
+          label="Earned commission YTD"
+          value={formatMinor(wallet.data?.earnedYtdMinor ?? 0)}
+          hint="released to you this year"
+          href="/recruiter/wallet"
         />
         <StatCard
-          label="Candidates in flight"
-          value={inbox.isPending ? "—" : candidateCount}
-          // The hint has to describe the same set as the number, so it counts
-          // the same rows rather than a differently-scoped subset.
-          hint={candidatesHint}
-          href="/recruiter/inbox"
-        />
-        <StatCard
-          // Odd one out in the phone's two-up grid; spanning it keeps the row
-          // from ending on an empty cell.
-          className="col-span-2 sm:col-span-1"
-          label="In escrow"
+          label="Commission pending"
           value={formatMinor(wallet.data?.inEscrowMinor ?? 0)}
           hint={
             wallet.data && wallet.data.placementsCount > 0
@@ -154,6 +147,20 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
               : "released 30 days after a start"
           }
           href="/recruiter/wallet"
+        />
+        <StatCard
+          label="Jobs in process"
+          value={inbox.isPending ? "—" : (jobsInProcess ?? "—")}
+          hint="with a candidate submitted"
+          href="/recruiter/inbox"
+        />
+        <StatCard
+          label="Candidates in process"
+          value={inbox.isPending ? "—" : candidateCount}
+          // The hint has to describe the same set as the number, so it counts
+          // the same rows rather than a differently-scoped subset.
+          hint={candidatesHint}
+          href="/recruiter/inbox"
         />
       </div>
 
