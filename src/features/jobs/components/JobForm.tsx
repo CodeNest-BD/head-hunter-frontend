@@ -99,7 +99,7 @@ function toDefaults(job?: Job): JobFormValues {
   return {
     title: job?.title ?? "",
     description: job?.description ?? "",
-    roleCategory: job?.roleCategory ?? "engineering",
+    roleCategory: job?.roleCategory ?? "",
     employmentType: job?.employmentType ?? "",
     locationState: job?.locationState ?? "",
     locationCity: job?.locationCity ?? "",
@@ -314,6 +314,17 @@ export function JobForm({
     .filter(Boolean)
     .join(", ");
   const profileZip = companyProfile?.zip ?? "";
+  const profileIndustry = companyProfile?.industry ?? "";
+  const profileEmployeeSize = companyProfile?.employeeSize ?? "";
+  const profileRevenue = companyProfile?.revenue ?? "";
+  // The profile stores the founding year; the job form asks for a duration.
+  const profileYearsInBusiness =
+    companyProfile?.yearFounded == null
+      ? ""
+      : String(
+          Math.max(0, new Date().getFullYear() - companyProfile.yearFounded),
+        );
+  const profileWhatTheyDo = companyProfile?.description ?? "";
   // Normalized because the select only matches a canonical code, and a city is
   // only meaningful under a state — carrying one without the other would leave
   // a value the disabled city picker cannot show or change.
@@ -340,6 +351,31 @@ export function JobForm({
     if (profileCity !== "") setValue("locationCity", profileCity);
   }, [job, profileAddress, profileZip, profileState, profileCity, setValue]);
 
+  // Company Info answers the same way: the account's profile is the default and
+  // each job may override it, since a company describes itself differently for
+  // a warehouse role than for a showroom one.
+  useEffect(() => {
+    if (job) return;
+    if (profileIndustry !== "")
+      setValue("companyDetails.industry", profileIndustry);
+    if (profileEmployeeSize !== "")
+      setValue("companyDetails.employeeSize", profileEmployeeSize);
+    if (profileRevenue !== "")
+      setValue("companyDetails.revenue", profileRevenue);
+    if (profileYearsInBusiness !== "")
+      setValue("companyDetails.yearsInBusiness", profileYearsInBusiness);
+    if (profileWhatTheyDo !== "")
+      setValue("companyDetails.whatTheyDo", profileWhatTheyDo);
+  }, [
+    job,
+    profileIndustry,
+    profileEmployeeSize,
+    profileRevenue,
+    profileYearsInBusiness,
+    profileWhatTheyDo,
+    setValue,
+  ]);
+
   // Default open so first-time posters see the preview; the choice then sticks.
   const [previewOpen, setPreviewOpen] = useState(true);
   useEffect(() => {
@@ -354,9 +390,9 @@ export function JobForm({
     });
 
   // Required-for-publish completeness, surfaced in the sticky bar status.
-  // roleCategory always has a default, so it's not counted.
   const requiredChecks = [
     values.title.trim() !== "",
+    values.roleCategory !== "",
     values.employmentType !== "",
     values.workModel === "remote" || values.locationState !== "",
     values.recruiterFee.trim() !== "",
@@ -471,14 +507,21 @@ export function JobForm({
               />
             </Field>
 
-            <Field label="Role Category" htmlFor="roleCategory">
+            <Field
+              label="Role Category"
+              htmlFor="roleCategory"
+              error={errors.roleCategory?.message}
+            >
               <Controller
                 control={control}
                 name="roleCategory"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={field.value === "" ? undefined : field.value}
+                    onValueChange={field.onChange}
+                  >
                     <SelectTrigger id="roleCategory" className={CONTROL_HEIGHT}>
-                      <SelectValue placeholder="Select a category" />
+                      <SelectValue placeholder="Select role category" />
                     </SelectTrigger>
                     <SelectContent>
                       {ROLE_CATEGORIES.map((category) => (
@@ -777,6 +820,80 @@ export function JobForm({
               </p>
             )}
           </div>
+
+          <Block
+            title="Company Info"
+            intro="Prefilled from your company profile — edit it for this role if this job's team is different."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Industry"
+                htmlFor="companyIndustry"
+                optional
+                error={errors.companyDetails?.industry?.message}
+              >
+                <Input
+                  id="companyIndustry"
+                  className={CONTROL_HEIGHT}
+                  placeholder="e.g., Home Furnishings"
+                  {...register("companyDetails.industry")}
+                />
+              </Field>
+              <Field
+                label="Company Size"
+                htmlFor="companyEmployeeSize"
+                optional
+                error={errors.companyDetails?.employeeSize?.message}
+              >
+                <Input
+                  id="companyEmployeeSize"
+                  className={CONTROL_HEIGHT}
+                  placeholder="e.g., 51-200"
+                  {...register("companyDetails.employeeSize")}
+                />
+              </Field>
+              <Field
+                label="Annual Revenue"
+                htmlFor="companyRevenue"
+                optional
+                error={errors.companyDetails?.revenue?.message}
+              >
+                <Input
+                  id="companyRevenue"
+                  className={CONTROL_HEIGHT}
+                  placeholder="e.g., $50M"
+                  {...register("companyDetails.revenue")}
+                />
+              </Field>
+              <Field
+                label="Years In Business"
+                htmlFor="companyYearsInBusiness"
+                optional
+                error={errors.companyDetails?.yearsInBusiness?.message}
+              >
+                <Input
+                  id="companyYearsInBusiness"
+                  inputMode="numeric"
+                  className={CONTROL_HEIGHT}
+                  placeholder="e.g., 12"
+                  {...register("companyDetails.yearsInBusiness")}
+                />
+              </Field>
+            </div>
+            <Field
+              label="What You Do"
+              htmlFor="companyWhatTheyDo"
+              optional
+              error={errors.companyDetails?.whatTheyDo?.message}
+            >
+              <Textarea
+                id="companyWhatTheyDo"
+                rows={3}
+                placeholder="What the company does, in your own words."
+                {...register("companyDetails.whatTheyDo")}
+              />
+            </Field>
+          </Block>
 
           <Block title="Benefits Provided">
             <div className="grid gap-x-4 gap-y-3 sm:grid-cols-3">

@@ -143,7 +143,9 @@ export function JobLivePreview({
     values.employmentType === ""
       ? null
       : EMPLOYMENT_TYPE_LABELS[values.employmentType],
-    ROLE_CATEGORY_LABELS[values.roleCategory],
+    values.roleCategory === ""
+      ? null
+      : ROLE_CATEGORY_LABELS[values.roleCategory],
   ].filter(Boolean);
 
   const salary = formatSalaryRange({

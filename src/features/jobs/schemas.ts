@@ -54,13 +54,13 @@ export const OFFER_TIMELINE_LABELS: Record<OfferTimeline, string> = {
   flexible: "Flexible",
 };
 
-/** Card-sized wording: a pill sits beside Full-Time / On-site and has no room
- * for the full phrasing the detail page uses. */
-export const OFFER_TIMELINE_SHORT_LABELS: Record<OfferTimeline, string> = {
-  asap: "ASAP",
-  within_2_weeks: "2 weeks",
-  within_1_month: "1 month",
-  flexible: "Flexible",
+/** Job-card wording — see POSITION_OPEN_REASON_CARD_LABELS: a bare "2 weeks"
+ * beside the other pills reads as any duration on the listing. */
+export const OFFER_TIMELINE_CARD_LABELS: Record<OfferTimeline, string> = {
+  asap: "Offering ASAP",
+  within_2_weeks: "Offer In 2 Weeks",
+  within_1_month: "Offer In 1 Month",
+  flexible: "Offer Timing Flexible",
 };
 
 /** The intake question's own wording ("When Do You Hope to Make an Offer?"),
@@ -100,8 +100,25 @@ export const POSITION_OPEN_REASON_LABELS: Record<PositionOpenReason, string> = {
   replacing_current: "Replacing Current Employee",
 };
 
+/**
+ * Job-card wording. A card pill carries no caption to say what it answers, so
+ * each label has to name its own fact: "Adding On" beside "Full-Time" reads as
+ * a second employment type.
+ */
+export const POSITION_OPEN_REASON_CARD_LABELS: Record<
+  PositionOpenReason,
+  string
+> = {
+  adding_on: "Add On Role",
+  replacing_former: "Replacing Former Employee",
+  replacing_current: "Replacing Current Employee",
+};
+
 /** The client asks for exactly three hiring-decision keys. */
 export const MAX_SELECTION_KEYS = 3;
+
+/** Mirrors the backend cap: a paragraph about the company, not a pitch deck. */
+export const MAX_WHAT_THEY_DO_LENGTH = 600;
 
 /** Mirrors the backend InterviewType. */
 export const INTERVIEW_TYPES = [
@@ -182,15 +199,17 @@ export const BENEFIT_CHECKBOXES: ReadonlyArray<{
 ];
 
 /**
- * Mirrors the backend CompanyDetailsDto, whose four fields are all required
- * once the object is sent at all — so the form writes it only when every one
- * of them is filled (see `toIntakeInput`).
+ * Mirrors the backend CompanyDetailsDto. Every field is optional there and
+ * here: the job form prefills these from the company profile, which fills up
+ * over time, so a company that has answered only some of them still gets the
+ * ones it has onto the job.
  */
 export const companyDetailsSchema = z.object({
-  industry: z.string(),
-  employeeSize: z.string(),
-  revenue: z.string(),
-  yearsInBusiness: z.number(),
+  industry: z.string().optional(),
+  employeeSize: z.string().optional(),
+  revenue: z.string().optional(),
+  yearsInBusiness: z.number().optional(),
+  whatTheyDo: z.string().optional(),
 });
 export type CompanyDetails = z.infer<typeof companyDetailsSchema>;
 
@@ -400,7 +419,14 @@ export const jobFormSchema = z
       .trim()
       .min(1, "A description is required — recruiters read it before pitching")
       .max(20000, "Description is too long (20,000 characters max)"),
-    roleCategory: roleCategorySchema,
+    // Same union-with-"" treatment as employmentType below: nothing is
+    // preselected, so the company picks the category rather than inheriting
+    // whichever one happened to sort first.
+    roleCategory: roleCategorySchema
+      .or(z.literal(""))
+      .refine((value) => value.length > 0, {
+        message: "Pick a role category",
+      }),
     // Kept as a union with "" so the form can start empty; the refine is what
     // makes it required, and RHF's default value still type-checks.
     employmentType: employmentTypeSchema
@@ -487,6 +513,10 @@ export const jobFormSchema = z
         .refine((value) => value === "" || /^\d{1,3}$/.test(value), {
           message: "Enter a whole number of years",
         }),
+      whatTheyDo: z
+        .string()
+        .trim()
+        .max(MAX_WHAT_THEY_DO_LENGTH, "Keep it under 600 characters"),
     }),
     worksiteAddress: z.string().trim().max(200, "Keep it under 200 characters"),
     worksiteZip: z

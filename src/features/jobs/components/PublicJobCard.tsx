@@ -17,7 +17,8 @@ import { formatMinor } from "@/shared/utils/money";
 import type { PublicJobCard as PublicJobCardData } from "../publicSchemas";
 import {
   EMPLOYMENT_TYPE_LABELS,
-  OFFER_TIMELINE_SHORT_LABELS,
+  OFFER_TIMELINE_CARD_LABELS,
+  POSITION_OPEN_REASON_CARD_LABELS,
   ROLE_CATEGORY_LABELS,
   type EmploymentType,
   type RoleCategory,
@@ -53,11 +54,14 @@ function postedAgo(date: Date | null): string {
 }
 
 /**
- * The pills under the location: employment type, then the two intake facts a
- * recruiter triages on — how soon the company hires, and how many interviews it
- * takes. Work mode is omitted: the location line already says "Remote" or the
- * city, so a Remote/On-site pill would just repeat it. The last two only appear
- * when the company said.
+ * The pills under the location, in the order a recruiter triages them: what the
+ * seat is, why it is open, how soon the company hires, and how many interviews
+ * it takes. Each label names its own fact rather than stating a bare value,
+ * since the pills carry no captions to tell a recruiter which question they
+ * answer — so the row is allowed to wrap rather than shrink back to bare values.
+ * Work mode is omitted: the location line already says "Remote" or the city, so
+ * a Remote/On-site pill would just repeat it. All but employment type only
+ * appear when the company said.
  */
 function tags(job: PublicJobCardData): string[] {
   const out: string[] = [];
@@ -67,8 +71,11 @@ function tags(job: PublicJobCardData): string[] {
         job.employmentType,
     );
   }
+  if (job.positionOpenReason) {
+    out.push(POSITION_OPEN_REASON_CARD_LABELS[job.positionOpenReason]);
+  }
   if (job.offerTimeline) {
-    out.push(OFFER_TIMELINE_SHORT_LABELS[job.offerTimeline]);
+    out.push(OFFER_TIMELINE_CARD_LABELS[job.offerTimeline]);
   }
   if (job.interviewCount > 0) {
     out.push(
