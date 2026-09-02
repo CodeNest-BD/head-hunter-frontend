@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Wallet } from "lucide-react";
+import { Banknote } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
@@ -13,18 +13,22 @@ import {
   INTERVIEW_TYPE_LABELS,
   OFFER_TIMELINE_LABELS,
   OTHER_SOURCING_LABELS,
+  POSITION_OPEN_REASON_LABELS,
   ROLE_CATEGORY_LABELS,
   SALARY_RATE_PERIOD_SUFFIX,
-  interviewDurationLabel,
+  WORK_MODEL_LABELS,
   type Benefits,
+  type CompanyDetails,
   type EmploymentType,
   type InterviewStage,
   type InterviewType,
   type InterviewingAvailability,
   type OfferTimeline,
   type OtherSourcing,
+  type PositionOpenReason,
   type RoleCategory,
   type SalaryRatePeriod,
+  type WorkModel,
 } from "../schemas";
 
 /**
@@ -61,12 +65,16 @@ export interface JobView {
   // Authed surfaces only — the public card and detail never carry these, so a
   // guest cannot read a company's worksite address or hiring intel.
   worksiteAddress?: string;
+  workModel?: WorkModel;
   daysAndHours?: string;
   reportsTo?: string;
   benefits?: Benefits;
   interviewingAvailability?: InterviewingAvailability;
   postedOnlineElsewhere?: boolean;
   otherSourcing?: OtherSourcing;
+  positionOpenReason?: PositionOpenReason;
+  selectionKeys?: string[];
+  companyDetails?: CompanyDetails;
 }
 
 /** One label/value fact in the header card. */
@@ -91,22 +99,71 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
   const location = job.isRemote
     ? "Remote"
     : [job.locationCity, job.locationState].filter(Boolean).join(", ") || "—";
-  const salary =
-    job.salaryMinMinor === null && job.salaryMaxMinor === null
-      ? "—"
-      : `${formatMinor(job.salaryMinMinor)} – ${formatMinor(job.salaryMaxMinor)}${
-          job.salaryRatePeriod
-            ? ` ${SALARY_RATE_PERIOD_SUFFIX[job.salaryRatePeriod]}`
-            : ""
-        }`;
+  const worksite = job.worksiteAddress?.trim()
+    ? [
+        job.worksiteAddress,
+        [job.locationCity, job.locationState].filter(Boolean).join(", "),
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : location;
+  const workModel = job.workModel
+    ? WORK_MODEL_LABELS[job.workModel]
+    : job.isRemote
+      ? "Remote"
+      : "On-Site";
   const employmentType = job.employmentType
     ? (EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType] ?? "—")
     : "—";
   const posted = job.publishedAt
     ? formatDistanceToNow(job.publishedAt, { addSuffix: true })
     : "—";
-  const category =
-    ROLE_CATEGORY_LABELS[job.roleCategory as RoleCategory] ?? "Other";
+  const rounds = job.interviewProcess ?? [];
+  const interviewProcess = rounds
+    .map(
+      (round) =>
+        INTERVIEW_TYPE_LABELS[round.type as InterviewType] ?? round.type,
+    )
+    .join(" → ");
+
+  // Ordered exactly as the client's spec pairs them across two columns. The
+  // four core facts always show; the intake-only ones appear when captured.
+  const facts = [
+    { label: "Worksite Address", value: worksite, always: true },
+    { label: "Work Model", value: workModel, always: true },
+    { label: "Posted", value: posted, always: true },
+    { label: "Employment Type", value: employmentType, always: true },
+    {
+      label: "Start Interviewing",
+      value: job.interviewingAvailability
+        ? availabilityLine(job.interviewingAvailability)
+        : "",
+    },
+    {
+      label: "Make a Hire",
+      value: job.offerTimeline ? OFFER_TIMELINE_LABELS[job.offerTimeline] : "",
+    },
+    { label: "Interview Process", value: interviewProcess },
+    {
+      label: "Posted Online",
+      value:
+        job.postedOnlineElsewhere === undefined
+          ? ""
+          : job.postedOnlineElsewhere
+            ? "Yes"
+            : "No",
+    },
+    {
+      label: "Other Sourcing",
+      value: job.otherSourcing ? OTHER_SOURCING_LABELS[job.otherSourcing] : "",
+    },
+    {
+      label: "Why Open",
+      value: job.positionOpenReason
+        ? POSITION_OPEN_REASON_LABELS[job.positionOpenReason]
+        : "",
+    },
+  ].filter((fact) => fact.always || fact.value !== "");
 
   return (
     <div
@@ -121,12 +178,12 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
           !compact && "md:w-72",
         )}
       >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
-          <Wallet className="h-5 w-5" />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Banknote className="h-5 w-5" />
         </span>
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-            Recruiter fee
+            Recruiter Fee
           </p>
           <p className="font-heading text-2xl font-extrabold tabular-nums text-navy">
             {formatMinor(job.recruiterFeeMinor)}
@@ -135,18 +192,43 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
         </div>
       </div>
       <div className="grid flex-1 grid-cols-1 gap-x-6 gap-y-4 p-5 sm:grid-cols-2 sm:p-6">
-        <Fact label="Category" value={category} />
-        <Fact label="Location" value={location} />
-        <Fact label="Pay Range" value={salary} />
-        <Fact label="Employment type" value={employmentType} />
-        <Fact label="Posted" value={posted} />
-        <Fact label="Work model" value={job.isRemote ? "Remote" : "On-site"} />
-        {job.offerTimeline && (
-          <Fact
-            label="Timeline to Hire"
-            value={OFFER_TIMELINE_LABELS[job.offerTimeline]}
-          />
-        )}
+        {facts.map((fact) => (
+          <Fact key={fact.label} label={fact.label} value={fact.value || "—"} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** The narrow pay + benefits strip that sits between the facts card and the
+ * requirements card, per the client's layout. */
+function PayBenefitsBox({ job }: { job: JobView }) {
+  const salary =
+    job.salaryMinMinor === null && job.salaryMaxMinor === null
+      ? ""
+      : `${formatMinor(job.salaryMinMinor)} – ${formatMinor(job.salaryMaxMinor)}${
+          job.salaryRatePeriod
+            ? ` ${SALARY_RATE_PERIOD_SUFFIX[job.salaryRatePeriod]}`
+            : ""
+        }`;
+  const benefits = job.benefits ? benefitsLine(job.benefits) : "";
+  if (salary === "" && benefits === "") return null;
+
+  return (
+    <div className="grid grid-cols-1 gap-4 rounded-md border border-border bg-card p-5 shadow-card sm:grid-cols-2 sm:p-6">
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          Pay Range
+        </p>
+        <p className="mt-0.5 font-medium text-navy">{salary || "—"}</p>
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          Benefits
+        </p>
+        <p className="mt-0.5 text-sm leading-relaxed text-navy">
+          {benefits || "—"}
+        </p>
       </div>
     </div>
   );
@@ -207,42 +289,43 @@ function availabilityLine(availability: InterviewingAvailability): string {
   return window.length === 2 ? window.join(" – ") : (window[0] ?? "");
 }
 
-/** Requirements + planned interview stages, the part of the intake a recruiter
- * reads before deciding whether they can fill the role. */
+/** One line summarising the hiring company, from the intake's company details. */
+function companyInfoItems(
+  company: CompanyDetails,
+): ReadonlyArray<{ label: string; value: string }> {
+  const revenue = company.revenue?.trim()
+    ? company.revenue.startsWith("$")
+      ? company.revenue
+      : `$${company.revenue}`
+    : "";
+  return [
+    { label: "Industry", value: company.industry?.trim() ?? "" },
+    { label: "Employees", value: company.employeeSize?.trim() ?? "" },
+    { label: "Revenue", value: revenue },
+    {
+      label: "Years in business",
+      value: company.yearsInBusiness ? String(company.yearsInBusiness) : "",
+    },
+  ].filter((item) => item.value !== "");
+}
+
+/** The requirements a recruiter reads before deciding whether they can fill the
+ * role: must/nice-to-haves, the company's top selection keys, and a snapshot of
+ * the hiring company. (Interview process, benefits, sourcing and posting details
+ * moved up into the facts/pay cards.) */
 function HiringProcessCard({ job }: { job: JobView }) {
   const mustHave = job.mustHave ?? [];
   const niceToHave = job.niceToHave ?? [];
-  const rounds = job.interviewProcess ?? [];
-  const benefits = job.benefits ? benefitsLine(job.benefits) : "";
-  const availability = job.interviewingAvailability
-    ? availabilityLine(job.interviewingAvailability)
-    : "";
-  const details: ReadonlyArray<{ label: string; value: string }> = [
-    { label: "Worksite", value: job.worksiteAddress ?? "" },
-    { label: "Days & hours", value: job.daysAndHours ?? "" },
-    { label: "Reports to", value: job.reportsTo ?? "" },
-    { label: "Benefits", value: benefits },
-    { label: "Interviewing from", value: availability },
-    {
-      label: "Posted online elsewhere",
-      value:
-        job.postedOnlineElsewhere === undefined
-          ? ""
-          : job.postedOnlineElsewhere
-            ? "Yes"
-            : "No",
-    },
-    {
-      label: "Other sourcing",
-      value: job.otherSourcing ? OTHER_SOURCING_LABELS[job.otherSourcing] : "",
-    },
-  ].filter((detail) => detail.value !== "");
+  const topKeys = job.selectionKeys ?? [];
+  const company = job.companyDetails
+    ? companyInfoItems(job.companyDetails)
+    : [];
 
   if (
     mustHave.length === 0 &&
     niceToHave.length === 0 &&
-    rounds.length === 0 &&
-    details.length === 0
+    topKeys.length === 0 &&
+    company.length === 0
   ) {
     return null;
   }
@@ -251,37 +334,23 @@ function HiringProcessCard({ job }: { job: JobView }) {
     <section className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
       <RequirementRow label="Must-Haves" entries={mustHave} />
       <RequirementRow label="Nice-to-Haves" entries={niceToHave} />
-      {rounds.length > 0 && (
+      <RequirementRow label="Top 3 Keys" entries={topKeys} />
+      {company.length > 0 && (
         <div className="flex flex-col gap-2">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-            Interview process
+            Company Info
           </p>
-          <ol className="flex flex-col gap-1.5">
-            {rounds.map((round, index) => (
-              <li key={round.order} className="text-sm text-navy">
-                <span className="font-medium">{index + 1}.</span>{" "}
-                {INTERVIEW_TYPE_LABELS[round.type as InterviewType] ??
-                  round.type}
-                <span className="text-muted-foreground">
-                  {" · "}
-                  {interviewDurationLabel(round.durationMinutes)}
-                </span>
-              </li>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+            {company.map((item) => (
+              <div key={item.label} className="min-w-0">
+                <dt className="text-xs text-muted-foreground">{item.label}</dt>
+                <dd className="mt-0.5 text-sm font-medium text-navy">
+                  {item.value}
+                </dd>
+              </div>
             ))}
-          </ol>
+          </dl>
         </div>
-      )}
-      {details.length > 0 && (
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-          {details.map((detail) => (
-            <div key={detail.label} className="min-w-0">
-              <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                {detail.label}
-              </dt>
-              <dd className="mt-0.5 text-sm text-navy">{detail.value}</dd>
-            </div>
-          ))}
-        </dl>
       )}
     </section>
   );
@@ -291,7 +360,7 @@ function DescriptionCard({ description }: { description: string | null }) {
   return (
     <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
       <h2 className="mb-3 font-heading text-lg font-bold tracking-tight text-navy">
-        Description
+        Job Duties
       </h2>
       {description ? (
         <RichTextView value={description} />
@@ -341,6 +410,7 @@ export function JobDetailBody({
         </div>
       ) : null}
       <FactsCard job={job} compact={compact} />
+      <PayBenefitsBox job={job} />
       <HiringProcessCard job={job} />
       {cta ? (
         <div
