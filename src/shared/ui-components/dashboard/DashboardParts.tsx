@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
+import { ArrowRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
 
 export interface DashboardPanel {
@@ -88,7 +89,9 @@ export function PanelGroup({
 }
 
 /**
- * A single headline metric. Navy tone leads a dashboard's most important number.
+ * A single headline metric on the light scheme: an optional circular icon badge
+ * leads, the label/figure/hint stack in the middle, and a trailing arrow appears
+ * when the card links somewhere — echoing the dashboard's left-to-right flow.
  *
  * Pass `href` when the number has somewhere to go: a stat the reader cannot act
  * on is decoration, and the figure is usually the reason they came to the page.
@@ -97,59 +100,59 @@ export function StatCard({
   label,
   value,
   hint,
-  tone = "white",
+  icon: Icon,
   href,
   className: classNameProp,
 }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
-  tone?: "navy" | "white";
+  /** Optional leading icon, shown in a soft blue circle. */
+  icon?: LucideIcon;
   href?: string;
   /** Grid placement from the caller, e.g. a lead card spanning both columns. */
   className?: string;
 }) {
-  const navy = tone === "navy";
   const className = cn(
-    "block rounded-md p-4 shadow-card sm:p-5",
-    navy ? "bg-navy" : "border border-border bg-card",
+    "group block rounded-md border border-border bg-card p-4 shadow-card sm:p-5",
     href && "transition-colors hover:border-primary/40",
     classNameProp,
   );
   const body = (
-    <>
-      <p
-        className={cn(
-          "text-[11px] font-semibold uppercase tracking-[0.12em]",
-          navy ? "text-white/55" : "text-muted-foreground",
-        )}
-      >
-        {label}
-      </p>
-      {/* Figure over hint, always stacked: beside the number, a multi-word hint
-          collides with a large figure once the card is narrow (e.g. the 3-up
-          wallet grid). Stacking keeps it clean at every width. */}
-      <div className="mt-1.5 flex flex-col gap-0.5 sm:mt-2">
+    <div className="flex items-start gap-3">
+      {Icon && (
         <span
-          className={cn(
-            "text-2xl font-extrabold tracking-[-0.02em] tabular-nums sm:text-3xl",
-            navy ? "text-white" : "text-navy",
-          )}
+          aria-hidden="true"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
         >
-          {value}
+          <Icon className="h-5 w-5" />
         </span>
-        {hint && (
-          <span
-            className={cn(
-              "text-xs sm:text-sm",
-              navy ? "text-white/60" : "text-muted-foreground",
-            )}
-          >
-            {hint}
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary/70">
+          {label}
+        </p>
+        {/* Figure over hint, always stacked: beside the number, a multi-word
+            hint collides with a large figure once the card is narrow (e.g. the
+            3-up wallet grid). Stacking keeps it clean at every width. */}
+        <div className="mt-1.5 flex flex-col gap-0.5 sm:mt-2">
+          <span className="text-2xl font-extrabold tracking-[-0.02em] tabular-nums text-navy sm:text-3xl">
+            {value}
           </span>
-        )}
+          {hint && (
+            <span className="text-xs text-muted-foreground sm:text-sm">
+              {hint}
+            </span>
+          )}
+        </div>
       </div>
-    </>
+      {href && (
+        <ArrowRight
+          aria-hidden="true"
+          className="mt-0.5 h-4 w-4 shrink-0 text-primary/70 transition-transform group-hover:translate-x-0.5"
+        />
+      )}
+    </div>
   );
 
   return href ? (

@@ -37,7 +37,7 @@ export default function AuthLayout({
   return (
     <main className="grid min-h-screen bg-background text-foreground lg:h-screen lg:grid-cols-[2fr_3fr] lg:overflow-hidden">
       {/* Brand panel — desktop only. */}
-      <aside className="relative hidden overflow-hidden bg-gradient-to-br from-[#0b1526] via-[#0d1b31] to-[#0b1526] lg:flex lg:flex-col lg:justify-between lg:p-14">
+      <aside className="relative hidden overflow-hidden border-r border-brand-line bg-gradient-to-br from-[#EEF4FD] via-white to-[#E7F0FC] lg:flex lg:flex-col lg:justify-between lg:p-14">
         {/* Soft drifting blue glows, echoing the landing aesthetic. */}
         <div
           aria-hidden="true"
@@ -61,19 +61,19 @@ export default function AuthLayout({
             href="/"
             className="inline-flex rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            <Logo tone="onDark" />
+            <Logo />
           </Link>
         </div>
 
         <div className="relative max-w-md">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#85B1F3]/40 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#B4DBFD]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#4F80E6] animate-pulse" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             The recruiting marketplace
           </span>
-          <h1 className="mt-7 font-heading text-4xl font-extrabold leading-[1.08] tracking-[-0.03em] text-white text-balance">
+          <h1 className="mt-7 font-heading text-4xl font-extrabold leading-[1.08] tracking-[-0.03em] text-navy text-balance">
             Where great companies meet great recruiters.
           </h1>
-          <p className="mt-4 max-w-sm text-base leading-relaxed text-white/70">
+          <p className="mt-4 max-w-sm text-base leading-relaxed text-muted-foreground">
             One focused workspace to source talent, manage placements, and get
             paid — without the noise.
           </p>
@@ -85,15 +85,15 @@ export default function AuthLayout({
                 <li key={item.title} className="flex gap-3.5">
                   <span
                     aria-hidden="true"
-                    className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[#85B1F3] ring-1 ring-inset ring-white/10"
+                    className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-primary/15"
                   >
                     <Icon className="h-4 w-4" />
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-navy">
                       {item.title}
                     </p>
-                    <p className="mt-0.5 text-sm leading-relaxed text-white/60">
+                    <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
                       {item.body}
                     </p>
                   </div>
@@ -105,7 +105,7 @@ export default function AuthLayout({
 
         <div
           aria-hidden="true"
-          className="relative h-[3px] w-56 overflow-hidden rounded-full bg-slate-400/20"
+          className="relative h-[3px] w-56 overflow-hidden rounded-full bg-primary/10"
         >
           <div
             className="h-full w-2/5 rounded-full animate-[gradient-shift_8s_linear_infinite]"

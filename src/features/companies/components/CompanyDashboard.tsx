@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Briefcase, DollarSign, Lock, Users } from "lucide-react";
 
 import { useWallet } from "@/features/billing";
 import { useMessageUnreadCount } from "@/features/conversations";
@@ -102,19 +103,24 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
   return (
     <div className="flex flex-col gap-6">
       <PageBanner
-        title={`Hey ${firstName}`}
+        title={`${firstName}'s Dashboard`}
+        accentPeriod={false}
         subtitle={subtitleParts.join(" · ")}
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+      {/* Ordered left-to-right as the employer's flow: post jobs → review
+          candidates → the funds that back it all. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard
-          className="col-span-2 sm:col-span-1"
-          label="Available to spend"
-          value={formatMinor(wallet.data?.availableMinor)}
-          // `availableMinor` is balance MINUS reserved, so the old
-          // "before fees are reserved" said the opposite of what it is.
-          hint="free for new job fees"
-          href="/company/wallet"
+          label="Published jobs"
+          value={published.isPending ? "—" : publishedTotal}
+          hint={
+            noFeeCount > 0
+              ? `${noFeeCount} without a fee`
+              : "live on the job map"
+          }
+          icon={Briefcase}
+          href="/company/jobs"
         />
         <StatCard
           label="New candidates"
@@ -124,25 +130,21 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
               ? "nothing waiting on you"
               : `across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"}`
           }
+          icon={Users}
           href="/company/inbox"
         />
         <StatCard
-          label="Published jobs"
-          value={published.isPending ? "—" : publishedTotal}
-          hint={
-            noFeeCount > 0
-              ? `${noFeeCount} without a fee`
-              : "live on the job map"
-          }
-          href="/company/jobs"
+          label="Available funds"
+          value={formatMinor(wallet.data?.availableMinor)}
+          hint="free funds to post jobs"
+          icon={DollarSign}
+          href="/company/wallet"
         />
         <StatCard
-          // Odd one out in the phone's two-up grid; spanning it keeps the row
-          // from ending on an empty cell.
-          className="col-span-2 sm:col-span-1"
-          label="Reserved"
+          label="Reserved funds"
           value={formatMinor(wallet.data?.reservedMinor)}
-          hint="held against live posts"
+          hint="held for live jobs"
+          icon={Lock}
           href="/company/wallet"
         />
       </div>

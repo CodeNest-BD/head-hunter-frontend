@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Briefcase, Clock, Users, Wallet2 } from "lucide-react";
 
 import { useJobs } from "@/features/jobs";
 import { useNotifications } from "@/features/notifications";
@@ -136,6 +137,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
           label="Earned commission YTD"
           value={formatMinor(wallet.data?.earnedYtdMinor ?? 0)}
           hint="released to you this year"
+          icon={Wallet2}
           href="/recruiter/wallet"
         />
         <StatCard
@@ -146,12 +148,14 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
               ? `across ${wallet.data.placementsCount} placement${wallet.data.placementsCount === 1 ? "" : "s"}`
               : "released 30 days after a start"
           }
+          icon={Clock}
           href="/recruiter/wallet"
         />
         <StatCard
           label="Jobs in process"
           value={inbox.isPending ? "—" : (jobsInProcess ?? "—")}
           hint="with a candidate submitted"
+          icon={Briefcase}
           href="/recruiter/inbox"
         />
         <StatCard
@@ -160,6 +164,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
           // The hint has to describe the same set as the number, so it counts
           // the same rows rather than a differently-scoped subset.
           hint={candidatesHint}
+          icon={Users}
           href="/recruiter/inbox"
         />
       </div>

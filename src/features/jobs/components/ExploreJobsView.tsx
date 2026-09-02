@@ -44,7 +44,6 @@ import {
   type RoleCategory,
 } from "../schemas";
 import { formatSalaryRange } from "../utils/formatSalaryRange";
-import { BrandGlow } from "@/shared/ui-components/brand";
 import { DecorativeUsMap } from "@/components/landing/DecorativeUsMap";
 import { US_STATES, US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
 import { useStateCities } from "@/shared/hooks/useStateCities";
@@ -262,18 +261,16 @@ export function ExploreJobsView() {
 
   return (
     <div className="w-full">
-      {/* Hero band — navy, centered */}
-      <header className="relative overflow-hidden bg-navy px-4 py-8 text-center sm:px-5 sm:py-12 md:px-10 md:py-14">
-        <BrandGlow />
+      {/* Hero band — light, centered */}
+      <header className="relative overflow-hidden bg-gradient-to-b from-white to-secondary px-4 py-8 text-center sm:px-5 sm:py-12 md:px-10 md:py-14">
         <div className="relative mx-auto flex max-w-3xl flex-col items-center">
-          <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-white md:text-4xl">
-            Explore Live{" "}
-            <span className="text-white">Fee-Backed Openings.</span>
+          <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-primary md:text-4xl">
+            Explore Live Fee-Backed Openings.
           </h1>
-          <p className="mt-3 max-w-2xl text-sm text-white/65 md:text-base">
+          <p className="mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
             Every job on the map carries a committed recruiter fee, loaded by
             the employer before publishing and ready for secure payment to you.
-            Search a specific Job type or pick a state to see open roles.
+            Search a specific job type or pick a state to see open roles.
           </p>
         </div>
       </header>
