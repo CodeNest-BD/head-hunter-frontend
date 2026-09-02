@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { CircleDollarSign, Gift } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
@@ -215,31 +216,48 @@ function PayBenefitsBox({ job }: { job: JobView }) {
   if (salary === "" && benefits.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 gap-x-8 gap-y-4 rounded-md border border-border bg-card p-5 shadow-card sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:p-6">
-      <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-          Pay Range
-        </p>
-        <p className="mt-1 font-semibold text-navy">{salary || "—"}</p>
+    <div className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:flex-row sm:items-stretch sm:gap-6 sm:p-6">
+      <div className="flex shrink-0 items-start gap-3 sm:w-56">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <CircleDollarSign className="h-[18px] w-[18px]" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            Pay Range
+          </p>
+          <p className="mt-1 font-heading text-lg font-bold tabular-nums text-navy">
+            {salary || "—"}
+          </p>
+        </div>
       </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-          Benefits
-        </p>
-        {benefits.length > 0 ? (
-          <ul className="mt-1.5 flex flex-wrap gap-2">
-            {benefits.map((benefit) => (
-              <li
-                key={benefit}
-                className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-              >
-                {benefit}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-1 text-sm text-navy">—</p>
-        )}
+
+      {/* Divider between the two facts so the wide box doesn't read as two items
+          stranded at opposite edges. */}
+      <div className="hidden w-px shrink-0 self-stretch bg-border sm:block" />
+
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Gift className="h-[18px] w-[18px]" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            Benefits
+          </p>
+          {benefits.length > 0 ? (
+            <ul className="mt-1.5 flex flex-wrap gap-2">
+              {benefits.map((benefit) => (
+                <li
+                  key={benefit}
+                  className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                >
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1 text-sm text-navy">—</p>
+          )}
+        </div>
       </div>
     </div>
   );
