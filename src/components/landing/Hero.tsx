@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { Button } from "@/shared/ui-components/controls/button";
+import { HeroWorldMap } from "./HeroWorldMap";
 import { LandingCta } from "./LandingCta";
 import { StatsStrip } from "./StatsStrip";
 
@@ -76,18 +76,8 @@ export function Hero() {
         </div>
 
         <div className="flex flex-col gap-6 [animation:fadeUp_600ms_120ms_ease_both]">
-          <Image
-            src="/assets/brand/hero.png"
-            alt="Open roles and recruiter fees on a world map"
-            width={1774}
-            height={887}
-            priority
-            // Roughly half the viewport from lg (two-column hero), full width
-            // below — so the optimizer serves a right-sized variant, not the
-            // full 1774px source, on smaller screens.
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            className="h-auto w-full"
-          />
+          {/* Vector world map — stays crisp at any size, unlike the old PNG. */}
+          <HeroWorldMap />
           {/* Live marketplace stats sit directly under the map (per the
               client reference), scoped to the map column. */}
           <StatsStrip />
