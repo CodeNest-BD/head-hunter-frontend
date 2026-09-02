@@ -3,24 +3,28 @@
 import { UserRound } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { useMyCompanyProfile } from "@/features/companies/hooks/useCompanyProfile";
 import { useMyRecruiterProfile } from "@/features/recruiters/hooks/useRecruiterProfile";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { RecruiterPhoto } from "@/shared/ui-components/data/RecruiterPhoto";
 
 /**
  * The signed-in user's avatar, shown in the top bar, account menu and sidebar.
- * A recruiter's uploaded photo renders here (falling back to their initials);
- * every other role gets initials. Recruiters are the only role with a personal
- * photo, so the profile is fetched only for them — and it shares the cached
- * `recruiterKeys.myProfile` query the dashboard/profile already load.
+ * A recruiter's uploaded photo and a company's uploaded logo render here (each
+ * falling back to a monogram); admins get initials. The role's own profile is
+ * fetched only for that role, sharing the cached `myProfile` query the
+ * dashboard/profile already load.
  *
  * `className` sets the size (e.g. `h-8 w-8 text-xs`); tailwind-merge lets it
- * override RecruiterPhoto's default size classes.
+ * override the default size classes.
  */
 export function CurrentUserAvatar({ className }: { className?: string }) {
   const { user } = useAuth();
   const isRecruiter = user?.role === "recruiter";
-  const { data: profile } = useMyRecruiterProfile({ enabled: isRecruiter });
+  const isCompany = user?.role === "company";
+  const { data: recruiter } = useMyRecruiterProfile({ enabled: isRecruiter });
+  const { data: company } = useMyCompanyProfile({ enabled: isCompany });
 
   if (!user) return null;
 
@@ -29,11 +33,24 @@ export function CurrentUserAvatar({ className }: { className?: string }) {
   if (isRecruiter) {
     return (
       <RecruiterPhoto
-        recruiterProfileId={profile?.id ?? ""}
-        hasPhoto={profile?.hasPhoto ?? false}
+        recruiterProfileId={recruiter?.id ?? ""}
+        hasPhoto={recruiter?.hasPhoto ?? false}
         name={name}
         size="sm"
         className={className}
+      />
+    );
+  }
+
+  if (isCompany) {
+    return (
+      <CompanyLogo
+        companyProfileId={company?.id ?? ""}
+        hasLogo={company?.hasLogo ?? false}
+        name={company?.companyName || name}
+        size="sm"
+        // Round to a circle so a logo reads as an avatar in the chip.
+        className={cn("rounded-full", className)}
       />
     );
   }
