@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
+import { useAuth } from "@/features/auth";
 import { Button } from "@/shared/ui-components/controls/button";
 import { LandingCta } from "./LandingCta";
 import { StatsStrip } from "./StatsStrip";
@@ -15,6 +16,12 @@ import { StatsStrip } from "./StatsStrip";
  * the old mock are explicitly removed in the client feedback.)
  */
 export function Hero() {
+  const { status, user } = useAuth();
+  // The live job map is a recruiter surface. A signed-in employer clicking
+  // "Explore Open Jobs" would land on a map that isn't for them, so the CTA is
+  // disabled for them (guests and recruiters still follow it).
+  const isEmployer = status === "authenticated" && user?.role === "company";
+
   return (
     <section className="relative overflow-hidden bg-background">
       <div className="mx-auto grid max-w-[1240px] items-stretch gap-12 px-4 pb-16 pt-10 sm:px-5 md:px-10 md:pb-20 lg:grid-cols-[1fr_1.05fr]">
@@ -43,16 +50,28 @@ export function Hero() {
               Post a Job &amp; Set Your Price
               <ArrowRight className="ml-1 h-4 w-4" />
             </LandingCta>
-            <Button
-              asChild
-              variant="outline"
-              className="h-auto w-full rounded-[10px] border-brand-primary px-6 py-4 text-base font-bold text-primary hover:bg-accent hover:text-primary sm:w-auto"
-            >
-              <Link href="/explore-jobs">
+            {isEmployer ? (
+              <Button
+                variant="outline"
+                disabled
+                title="The live job map is for recruiters."
+                className="h-auto w-full cursor-not-allowed rounded-[10px] border-brand-primary px-6 py-4 text-base font-bold text-primary sm:w-auto"
+              >
                 Explore Open Jobs
                 <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
+              </Button>
+            ) : (
+              <Button
+                asChild
+                variant="outline"
+                className="h-auto w-full rounded-[10px] border-brand-primary px-6 py-4 text-base font-bold text-primary hover:bg-accent hover:text-primary sm:w-auto"
+              >
+                <Link href="/explore-jobs">
+                  Explore Open Jobs
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
