@@ -758,6 +758,134 @@ export function JobForm({
             </Field>
           </div>
 
+          <Block title="Benefits Provided">
+            <div className="grid gap-x-4 gap-y-3 sm:grid-cols-3">
+              {benefitToggle("medical")}
+              {benefitToggle("dental")}
+              {benefitToggle("vision")}
+
+              <div className="flex items-center gap-2">
+                <Controller
+                  control={control}
+                  name="benefits.retirement401k"
+                  render={({ field }) => (
+                    <label className="flex items-center gap-2.5 text-sm text-foreground">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                      401K/403B
+                    </label>
+                  )}
+                />
+                {/* Typing a figure is itself the answer, so it ticks the box:
+                    an unticked 401(k) drops the match on save. */}
+                <Input
+                  aria-label="401K/403B match percent"
+                  inputMode="decimal"
+                  className="h-8 w-14"
+                  onFocus={() =>
+                    setValue("benefits.retirement401k", true, {
+                      shouldDirty: true,
+                    })
+                  }
+                  {...register("benefits.retirement401kMatch")}
+                />
+                <span className="text-sm text-muted-foreground">(% Match)</span>
+              </div>
+              {/* Day counts sit beside their own checkbox and tick it on focus,
+                  the same way the 401K match does. */}
+              <div className="flex items-center gap-2">
+                {benefitToggle("sickTime")}
+                <Input
+                  aria-label="Sick days"
+                  inputMode="numeric"
+                  className="h-8 w-14"
+                  onFocus={() =>
+                    setValue("benefits.sickTime", true, { shouldDirty: true })
+                  }
+                  {...register("benefits.sickDays")}
+                />
+                <span className="text-sm text-muted-foreground">days</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {benefitToggle("vacation")}
+                <Input
+                  aria-label="Vacation days"
+                  inputMode="numeric"
+                  className="h-8 w-14"
+                  onFocus={() =>
+                    setValue("benefits.vacation", true, { shouldDirty: true })
+                  }
+                  {...register("benefits.vacationDays")}
+                />
+                <span className="text-sm text-muted-foreground">days</span>
+              </div>
+
+              <Controller
+                control={control}
+                name="benefits.educationReimbursement"
+                render={({ field }) => (
+                  <label className="flex items-center gap-2.5 text-sm text-foreground">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                    />
+                    Education Reimbursement
+                  </label>
+                )}
+              />
+              {/* Last, and spanning the remaining columns: its free-text box
+                  needs the room the single-word checkboxes do not. */}
+              <div className="flex items-center gap-2.5 sm:col-span-2">
+                <Controller
+                  control={control}
+                  name="benefits.ancillary"
+                  render={({ field }) => (
+                    <label className="flex shrink-0 items-center gap-2.5 text-sm text-foreground">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                      Other Benefits
+                    </label>
+                  )}
+                />
+                <Input
+                  aria-label="Other benefits"
+                  className="h-8"
+                  onFocus={() =>
+                    setValue("benefits.ancillary", true, { shouldDirty: true })
+                  }
+                  {...register("benefits.ancillaryDetails")}
+                />
+              </div>
+            </div>
+            {benefitsError && (
+              <p className="text-xs text-destructive">{benefitsError}</p>
+            )}
+
+            <Field
+              label="Benefits Summary"
+              htmlFor="benefitsSummary"
+              optional
+              error={errors.benefitsSummary?.message}
+            >
+              <Textarea
+                id="benefitsSummary"
+                rows={3}
+                placeholder="Anything worth calling out beyond the boxes above."
+                {...register("benefitsSummary")}
+              />
+            </Field>
+          </Block>
+
           {/* The recruiter fee is the money that drives the marketplace, so it
               gets its own emphasized panel. */}
           <div className="rounded-lg bg-secondary/50 p-4">
@@ -895,135 +1023,10 @@ export function JobForm({
             </Field>
           </Block>
 
-          <Block title="Benefits Provided">
-            <div className="grid gap-x-4 gap-y-3 sm:grid-cols-3">
-              {benefitToggle("medical")}
-              {benefitToggle("dental")}
-              {benefitToggle("vision")}
-
-              <div className="flex items-center gap-2">
-                <Controller
-                  control={control}
-                  name="benefits.retirement401k"
-                  render={({ field }) => (
-                    <label className="flex items-center gap-2.5 text-sm text-foreground">
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true)
-                        }
-                      />
-                      401K/403B
-                    </label>
-                  )}
-                />
-                {/* Typing a figure is itself the answer, so it ticks the box:
-                    an unticked 401(k) drops the match on save. */}
-                <Input
-                  aria-label="401K/403B match percent"
-                  inputMode="decimal"
-                  className="h-8 w-14"
-                  onFocus={() =>
-                    setValue("benefits.retirement401k", true, {
-                      shouldDirty: true,
-                    })
-                  }
-                  {...register("benefits.retirement401kMatch")}
-                />
-                <span className="text-sm text-muted-foreground">(% Match)</span>
-              </div>
-              {/* Day counts sit beside their own checkbox and tick it on focus,
-                  the same way the 401K match does. */}
-              <div className="flex items-center gap-2">
-                {benefitToggle("sickTime")}
-                <Input
-                  aria-label="Sick days"
-                  inputMode="numeric"
-                  className="h-8 w-14"
-                  onFocus={() =>
-                    setValue("benefits.sickTime", true, { shouldDirty: true })
-                  }
-                  {...register("benefits.sickDays")}
-                />
-                <span className="text-sm text-muted-foreground">days</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {benefitToggle("vacation")}
-                <Input
-                  aria-label="Vacation days"
-                  inputMode="numeric"
-                  className="h-8 w-14"
-                  onFocus={() =>
-                    setValue("benefits.vacation", true, { shouldDirty: true })
-                  }
-                  {...register("benefits.vacationDays")}
-                />
-                <span className="text-sm text-muted-foreground">days</span>
-              </div>
-
-              <Controller
-                control={control}
-                name="benefits.educationReimbursement"
-                render={({ field }) => (
-                  <label className="flex items-center gap-2.5 text-sm text-foreground">
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(checked) =>
-                        field.onChange(checked === true)
-                      }
-                    />
-                    Education Reimbursement
-                  </label>
-                )}
-              />
-              {/* Last, and spanning the remaining columns: its free-text box
-                  needs the room the single-word checkboxes do not. */}
-              <div className="flex items-center gap-2.5 sm:col-span-2">
-                <Controller
-                  control={control}
-                  name="benefits.ancillary"
-                  render={({ field }) => (
-                    <label className="flex shrink-0 items-center gap-2.5 text-sm text-foreground">
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true)
-                        }
-                      />
-                      Other Benefits
-                    </label>
-                  )}
-                />
-                <Input
-                  aria-label="Other benefits"
-                  className="h-8"
-                  onFocus={() =>
-                    setValue("benefits.ancillary", true, { shouldDirty: true })
-                  }
-                  {...register("benefits.ancillaryDetails")}
-                />
-              </div>
-            </div>
-            {benefitsError && (
-              <p className="text-xs text-destructive">{benefitsError}</p>
-            )}
-
-            <Field
-              label="Benefits Summary"
-              htmlFor="benefitsSummary"
-              optional
-              error={errors.benefitsSummary?.message}
-            >
-              <Textarea
-                id="benefitsSummary"
-                rows={3}
-                placeholder="Anything worth calling out beyond the boxes above."
-                {...register("benefitsSummary")}
-              />
-            </Field>
-          </Block>
-
-          <Block title="Position Details">
+          <Block
+            title="Position Details"
+            intro="The overview of the position and what you want to see in your inbox. The more details the better - recruiters and candidates use this information to determine the right long-term fit."
+          >
             <Controller
               control={control}
               name="description"
@@ -1036,8 +1039,7 @@ export function JobForm({
                 />
               )}
             />
-            <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-              <span>Roles with 300+ words get 2x more recruiter interest.</span>
+            <div className="flex items-center justify-end text-xs text-muted-foreground">
               <span className="shrink-0 tabular-nums">
                 {wordCount} {wordCount === 1 ? "word" : "words"}
               </span>
