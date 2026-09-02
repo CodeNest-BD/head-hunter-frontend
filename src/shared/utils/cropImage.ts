@@ -1,6 +1,6 @@
 import type { Area } from "react-easy-crop";
 
-/** The square edge, in pixels, of the exported logo — plenty for any avatar. */
+/** The square edge, in pixels, of the exported image — plenty for any avatar. */
 const OUTPUT_SIZE = 512;
 
 const loadImage = (src: string): Promise<HTMLImageElement> =>

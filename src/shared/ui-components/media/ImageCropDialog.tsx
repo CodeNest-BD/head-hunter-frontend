@@ -8,12 +8,14 @@ import { RotateCw, X, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/shared/ui-components/controls/button";
-import { cropImageToBlob } from "../lib/cropImage";
+import { cropImageToBlob } from "@/shared/utils/cropImage";
 
-interface LogoEditorDialogProps {
+interface ImageCropDialogProps {
   /** Object URL of the picked file, or null when the editor is closed. */
   imageSrc: string | null;
   isSaving: boolean;
+  /** Noun used in the title/button/filename, e.g. "logo" or "photo". */
+  label: string;
   onCancel: () => void;
   /** Receives the cropped, rotated, re-encoded square image ready to upload. */
   onSave: (file: File) => void;
@@ -59,17 +61,19 @@ function ControlSlider({
 }
 
 /**
- * The logo editor: a square crop viewport with drag-to-reposition, a zoom
- * slider, and rotation, over the just-picked image. On save it exports the
- * visible crop to a 512×512 WebP file and hands it back — the upload itself
- * stays the caller's job, so this component owns only the editing.
+ * A square image editor: a crop viewport with drag-to-reposition, a zoom slider,
+ * and rotation, over the just-picked image. On save it exports the visible crop
+ * to a 512×512 WebP file and hands it back — the upload itself stays the caller's
+ * job, so this component owns only the editing. Shared by the company logo and
+ * recruiter photo uploaders so both behave identically.
  */
-export function LogoEditorDialog({
+export function ImageCropDialog({
   imageSrc,
   isSaving,
+  label,
   onCancel,
   onSave,
-}: LogoEditorDialogProps) {
+}: ImageCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [rotation, setRotation] = useState(0);
@@ -93,7 +97,7 @@ export function LogoEditorDialog({
     setExporting(true);
     try {
       const blob = await cropImageToBlob(imageSrc, croppedAreaPixels, rotation);
-      onSave(new File([blob], "logo.webp", { type: "image/webp" }));
+      onSave(new File([blob], `${label}.webp`, { type: "image/webp" }));
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Could not edit the image",
@@ -120,8 +124,8 @@ export function LogoEditorDialog({
           className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-x-hidden overflow-y-auto rounded-md border border-border bg-card shadow-card-lg focus:outline-none"
         >
           <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3">
-            <Dialog.Title className="text-sm font-bold text-navy">
-              Edit logo
+            <Dialog.Title className="text-sm font-bold capitalize text-navy">
+              Edit {label}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -200,8 +204,9 @@ export function LogoEditorDialog({
                 size="sm"
                 onClick={() => void handleSave()}
                 disabled={busy || !croppedAreaPixels}
+                className="capitalize"
               >
-                {busy ? "Saving…" : "Save logo"}
+                {busy ? "Saving…" : `Save ${label}`}
               </Button>
             </div>
           </div>
