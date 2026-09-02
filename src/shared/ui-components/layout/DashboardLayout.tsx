@@ -22,10 +22,7 @@ import {
   useRecruiterWallet,
   useWallet,
 } from "@/features/billing/hooks/useBilling";
-import {
-  useMessageUnreadCount,
-  useUnreadRealtime,
-} from "@/features/conversations";
+import { useUnreadRealtime } from "@/features/conversations";
 import {
   useMarkAllRead,
   useMarkRead,
