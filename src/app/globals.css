@@ -47,8 +47,9 @@
     --input: 221 26% 83%;
     --ring: 222 98% 47%;
 
-    /* 8px base radius; surfaces use `rounded-md` (6px) uniformly app-wide. */
-    --radius: 0.5rem;
+    /* 14px base radius to match the reference design's soft corners: surfaces
+       use `rounded-md` (12px) uniformly, containers `rounded-lg` (14px). */
+    --radius: 0.875rem;
 
     --chart-1: 222 98% 47%;
     --chart-2: 222 69% 48%;
