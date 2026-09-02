@@ -13,11 +13,15 @@ export function jobToJobView(job: Job): JobView {
     niceToHave: job.intake?.qualifications?.niceToHave ?? [],
     interviewProcess: job.intake?.interviewProcess ?? [],
     worksiteAddress: job.intake?.worksiteAddress,
+    workModel: job.intake?.workModel,
     daysAndHours: job.intake?.daysAndHours,
     reportsTo: job.intake?.reportsTo,
     benefits: job.intake?.benefits,
     interviewingAvailability: job.intake?.interviewingAvailability,
     postedOnlineElsewhere: job.intake?.postedOnlineElsewhere,
     otherSourcing: job.intake?.otherSourcing,
+    positionOpenReason: job.intake?.positionOpenReason,
+    selectionKeys: job.intake?.selectionKeys,
+    companyDetails: job.intake?.companyDetails,
   };
 }
