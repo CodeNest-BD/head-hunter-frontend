@@ -8,9 +8,11 @@
  */
 
 /**
- * The white card the table lives in. No `overflow-hidden` — that would clip
- * the page-level sticky header. `rounded-md` (6px) is the app-wide surface
- * radius; the header band carries its own solid fill so the corners read fine.
+ * The white card the table lives in. No `overflow-hidden` — that would clip the
+ * page-level sticky header — so instead of clipping to the card's `rounded-md`
+ * corners, the header row and the last body row round their own outer corners to
+ * match (see TABLE_HEAD_ROW / TABLE_BODY). Without that the gray header band's
+ * square corners poke past the rounded border.
  */
 export const TABLE_CARD =
   "rounded-md border border-brand-line bg-card shadow-card";
@@ -34,8 +36,10 @@ export const TABLE_EL = "w-full border-collapse text-sm";
  * (#616676) — distinct from both the white rows and the blue-tint canvas.
  */
 export const TABLE_HEAD = "text-left";
+// Round the outer top corners of the header band to match the card, since the
+// card can't clip with overflow-hidden (it would break the sticky header).
 export const TABLE_HEAD_ROW =
-  "text-[11px] font-semibold uppercase tracking-wider text-[#616676]";
+  "text-[11px] font-semibold uppercase tracking-wider text-[#616676] [&>th:first-child]:rounded-tl-md [&>th:last-child]:rounded-tr-md";
 /**
  * Each header cell is sticky (page scroll) below the fixed top bar, with a
  * solid gray fill so rows never bleed through while it's pinned.
@@ -43,7 +47,9 @@ export const TABLE_HEAD_ROW =
 export const TABLE_TH =
   "sticky top-16 z-20 border-b border-brand-line bg-[#F1F3F5] px-5 py-3";
 
-/** Body: white rows with hairline separators and a subtle hover. */
-export const TABLE_BODY = "divide-y divide-border bg-card";
+/** Body: white rows with hairline separators and a subtle hover. The last row
+ * rounds its outer bottom corners so a row hover never squares off the card. */
+export const TABLE_BODY =
+  "divide-y divide-border bg-card [&>tr:last-child>td:first-child]:rounded-bl-md [&>tr:last-child>td:last-child]:rounded-br-md";
 export const TABLE_ROW = "transition-colors hover:bg-secondary/60";
 export const TABLE_TD = "px-5 py-3.5 align-middle";
