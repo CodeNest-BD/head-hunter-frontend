@@ -13,7 +13,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
-  UserRound,
   X,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -43,6 +42,7 @@ import {
 } from "@/shared/ui-components/controls/popover";
 import { formatMinor } from "@/shared/utils/money";
 import { type Crumb } from "./Breadcrumb";
+import { CurrentUserAvatar } from "./CurrentUserAvatar";
 import { InboxBadge } from "./InboxBadge";
 import { navForRole, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
@@ -245,9 +245,6 @@ function UserMenu() {
   if (!user) return null;
 
   const items = navForRole(user.role, isApproved);
-  const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`
-    .toUpperCase()
-    .trim();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -256,9 +253,7 @@ function UserMenu() {
           type="button"
           className="flex h-9 shrink-0 items-center gap-2 rounded-md px-0.5 text-left transition-colors hover:bg-accent xl:pl-1 xl:pr-2"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-            {initials || <UserRound className="h-4 w-4" />}
-          </span>
+          <CurrentUserAvatar className="h-8 w-8 text-xs" />
           <span className="hidden min-w-0 flex-col leading-tight xl:flex">
             <span className="truncate text-sm font-semibold text-navy">
               {user.firstName} {user.lastName}
@@ -392,10 +387,6 @@ function SidebarContent({
       ? pathname === "/dashboard"
       : pathname === href || pathname.startsWith(`${href}/`);
 
-  const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`
-    .toUpperCase()
-    .trim();
-
   return (
     <div className="flex h-full flex-col">
       <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-navy px-3 py-4">
@@ -446,9 +437,7 @@ function SidebarContent({
          * it here would show the same name twice. */}
         {!collapsed && !isDrawer && (
           <div className="flex items-center gap-3 rounded-md px-2 py-2">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-              {initials || <UserRound className="h-4 w-4" />}
-            </span>
+            <CurrentUserAvatar className="h-9 w-9 text-xs" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-sidebar-accent-foreground">
                 {user.firstName} {user.lastName}
@@ -588,11 +577,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center justify-between gap-3 border-b border-sidebar-border px-4 py-3.5">
               {user ? (
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-                    {`${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`
-                      .toUpperCase()
-                      .trim() || <UserRound className="h-4 w-4" />}
-                  </span>
+                  <CurrentUserAvatar className="h-9 w-9 text-xs" />
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-bold text-sidebar-accent-foreground">
                       {user.firstName} {user.lastName}
