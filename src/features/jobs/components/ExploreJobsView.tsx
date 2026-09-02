@@ -1050,12 +1050,21 @@ function JobRow({ job }: { job: PublicJobCardData }) {
         {salary ?? <span className="font-normal text-brand-gray">—</span>}
       </div>
       <div className="whitespace-nowrap">
-        <span className="font-heading text-lg font-extrabold text-primary">
-          {job.recruiterFeeMinor === 0
-            ? "Free"
-            : formatMinor(job.recruiterFeeMinor)}
-        </span>{" "}
-        <span className="text-xs text-brand-gray">on hire</span>
+        <div>
+          <span className="font-heading text-lg font-extrabold text-primary">
+            {job.recruiterFeeMinor === 0
+              ? "Free"
+              : formatMinor(job.recruiterFeeMinor)}
+          </span>{" "}
+          <span className="text-xs text-brand-gray">on hire</span>
+        </div>
+        {/* Mirrors the cards view so a recruiter sees how contested a role is. */}
+        <p className="mt-0.5 text-xs text-brand-gray">
+          {job.submittedCandidates}{" "}
+          {job.submittedCandidates === 1
+            ? "submitted candidate"
+            : "submitted candidates"}
+        </p>
       </div>
       <div className="flex items-center justify-between gap-3 md:flex-col md:items-end md:gap-1">
         <span className="text-xs tabular-nums text-brand-gray-light">
