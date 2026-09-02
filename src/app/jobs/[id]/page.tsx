@@ -163,8 +163,8 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
  * reports approved for non-recruiters). */
 function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
   return (
-    <DashboardLayout wide="detail">
-      <div className="flex w-full flex-col gap-4">
+    <DashboardLayout wide="detail" hideSidebar>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
         <Link
           href="/explore-jobs"
           className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
