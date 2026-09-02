@@ -125,13 +125,15 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
     )
     .join(" → ");
 
-  // Ordered exactly as the client's spec pairs them across two columns. The
-  // four core facts always show; the intake-only ones appear when captured.
+  // Ordered exactly as the client's spec pairs them across two columns, and
+  // every one of them renders: hiding an uncaptured fact reflows the pairs
+  // through the row-major grid, so a job with no interview rounds put Posted
+  // Online in Interview Process's column.
   const facts = [
-    { label: "Worksite Address", value: worksite, always: true },
-    { label: "Work Model", value: workModel, always: true },
-    { label: "Posted", value: posted, always: true },
-    { label: "Employment Type", value: employmentType, always: true },
+    { label: "Worksite Address", value: worksite },
+    { label: "Work Model", value: workModel },
+    { label: "Posted", value: posted },
+    { label: "Employment Type", value: employmentType },
     {
       label: "Start Interviewing",
       value: job.interviewingAvailability
@@ -162,7 +164,7 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
         ? POSITION_OPEN_REASON_LABELS[job.positionOpenReason]
         : "",
     },
-  ].filter((fact) => fact.always || fact.value !== "");
+  ];
 
   return (
     <div
@@ -324,7 +326,7 @@ function availabilityLine(availability: InterviewingAvailability): string {
   return window.length === 2 ? window.join(" – ") : (window[0] ?? "");
 }
 
-/** One line summarising the hiring company, from the intake's company details. */
+/** The company's short facts. "What they do" is prose and renders separately. */
 function companyInfoItems(
   company: CompanyDetails,
 ): ReadonlyArray<{ label: string; value: string }> {
@@ -344,48 +346,66 @@ function companyInfoItems(
   ].filter((item) => item.value !== "");
 }
 
-/** The requirements a recruiter reads before deciding whether they can fill the
- * role: must/nice-to-haves, the company's top selection keys, and a snapshot of
- * the hiring company. (Interview process, benefits, sourcing and posting details
- * moved up into the facts/pay cards.) */
-function HiringProcessCard({ job }: { job: JobView }) {
+/** A card heading, matching the Job Duties card so every block reads as a peer. */
+function CardHeading({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="font-heading text-lg font-bold tracking-tight text-navy">
+      {children}
+    </h2>
+  );
+}
+
+/** What the role demands: must/nice-to-haves and the company's selection keys.
+ * (Interview process, benefits, sourcing and posting details live in the
+ * facts/pay cards above.) */
+function QualificationsCard({ job }: { job: JobView }) {
   const mustHave = job.mustHave ?? [];
   const niceToHave = job.niceToHave ?? [];
   const topKeys = job.selectionKeys ?? [];
-  const company = job.companyDetails
-    ? companyInfoItems(job.companyDetails)
-    : [];
 
   if (
     mustHave.length === 0 &&
     niceToHave.length === 0 &&
-    topKeys.length === 0 &&
-    company.length === 0
+    topKeys.length === 0
   ) {
     return null;
   }
 
   return (
     <section className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+      <CardHeading>Qualifications</CardHeading>
       <RequirementRow label="Must-Haves" entries={mustHave} />
       <RequirementRow label="Nice-to-Haves" entries={niceToHave} />
       <RequirementRow label="Top 3 Keys" entries={topKeys} />
-      {company.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-            Company Info
-          </p>
-          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-            {company.map((item) => (
-              <div key={item.label} className="min-w-0">
-                <dt className="text-xs text-muted-foreground">{item.label}</dt>
-                <dd className="mt-0.5 text-sm font-medium text-navy">
-                  {item.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+    </section>
+  );
+}
+
+/** Who a recruiter would be pitching: the company in its own words, plus the
+ * figures that tell a recruiter how big an employer this is. */
+function CompanyInfoCard({ job }: { job: JobView }) {
+  const items = job.companyDetails ? companyInfoItems(job.companyDetails) : [];
+  const whatTheyDo = job.companyDetails?.whatTheyDo?.trim() ?? "";
+
+  if (items.length === 0 && whatTheyDo === "") return null;
+
+  return (
+    <section className="flex flex-col gap-4 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
+      <CardHeading>Company Info</CardHeading>
+      {whatTheyDo !== "" && (
+        <p className="text-sm leading-relaxed text-navy">{whatTheyDo}</p>
+      )}
+      {items.length > 0 && (
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+          {items.map((item) => (
+            <div key={item.label} className="min-w-0">
+              <dt className="text-xs text-muted-foreground">{item.label}</dt>
+              <dd className="mt-0.5 text-sm font-medium text-navy">
+                {item.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
       )}
     </section>
   );
@@ -394,9 +414,9 @@ function HiringProcessCard({ job }: { job: JobView }) {
 function DescriptionCard({ description }: { description: string | null }) {
   return (
     <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <h2 className="mb-3 font-heading text-lg font-bold tracking-tight text-navy">
-        Job Duties
-      </h2>
+      <div className="mb-3">
+        <CardHeading>Job Duties</CardHeading>
+      </div>
       {description ? (
         <RichTextView value={description} />
       ) : (
@@ -446,7 +466,8 @@ export function JobDetailBody({
       ) : null}
       <FactsCard job={job} compact={compact} />
       <PayBenefitsBox job={job} />
-      <HiringProcessCard job={job} />
+      <QualificationsCard job={job} />
+      <CompanyInfoCard job={job} />
       {cta ? (
         <div
           className={

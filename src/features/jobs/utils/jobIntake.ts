@@ -66,30 +66,25 @@ const inputToNumber = (value: string): number | undefined =>
   value.trim() === "" ? undefined : Number(value);
 
 /**
- * The API requires all four company-detail fields once the object is sent at
- * all, so a half-filled block is withheld rather than rejected on save.
+ * Every company detail is optional, so the block carries whichever answers the
+ * company has and is withheld entirely when it has none — an empty object would
+ * overwrite a stored snapshot with nothing.
  */
 function toCompanyDetailsInput(
   values: FormOwnedIntake["companyDetails"],
 ): CompanyDetails | undefined {
+  const details: CompanyDetails = {};
   const industry = orUndefined(values.industry);
+  if (industry !== undefined) details.industry = industry;
   const employeeSize = orUndefined(values.employeeSize);
+  if (employeeSize !== undefined) details.employeeSize = employeeSize;
   const revenue = orUndefined(values.revenue);
-  const yearsInBusiness = orUndefined(values.yearsInBusiness);
-  if (
-    industry === undefined ||
-    employeeSize === undefined ||
-    revenue === undefined ||
-    yearsInBusiness === undefined
-  ) {
-    return undefined;
-  }
-  return {
-    industry,
-    employeeSize,
-    revenue,
-    yearsInBusiness: Number(yearsInBusiness),
-  };
+  if (revenue !== undefined) details.revenue = revenue;
+  const yearsInBusiness = inputToNumber(values.yearsInBusiness);
+  if (yearsInBusiness !== undefined) details.yearsInBusiness = yearsInBusiness;
+  const whatTheyDo = orUndefined(values.whatTheyDo);
+  if (whatTheyDo !== undefined) details.whatTheyDo = whatTheyDo;
+  return Object.keys(details).length === 0 ? undefined : details;
 }
 
 /** True when the company ticked or typed anything at all in the benefits block. */
@@ -150,10 +145,8 @@ export function intakeToFormValues(intake: JobIntake | null): FormOwnedIntake {
       industry: intake?.companyDetails?.industry ?? "",
       employeeSize: intake?.companyDetails?.employeeSize ?? "",
       revenue: intake?.companyDetails?.revenue ?? "",
-      yearsInBusiness:
-        intake?.companyDetails === undefined
-          ? ""
-          : String(intake.companyDetails.yearsInBusiness),
+      yearsInBusiness: numberToInput(intake?.companyDetails?.yearsInBusiness),
+      whatTheyDo: intake?.companyDetails?.whatTheyDo ?? "",
     },
     worksiteAddress: intake?.worksiteAddress ?? "",
     daysAndHours: intake?.daysAndHours ?? "",

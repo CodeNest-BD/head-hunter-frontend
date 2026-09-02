@@ -137,6 +137,12 @@ describe("jobFormSchema", () => {
     expect(errorPaths({ roleCategory: "wizardry" })).toContain("roleCategory");
   });
 
+  // Nothing is preselected, so the empty default has to fail validation rather
+  // than save whichever category sorts first.
+  it("rejects an unpicked role category", () => {
+    expect(errorPaths({ roleCategory: "" })).toContain("roleCategory");
+  });
+
   it("accepts a recruiter fee at the $1,000,000,000 ceiling", () => {
     expect(errorPaths({ recruiterFee: "1000000000" })).toEqual([]);
   });

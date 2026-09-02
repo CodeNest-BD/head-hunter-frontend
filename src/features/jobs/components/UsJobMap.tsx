@@ -162,7 +162,7 @@ function CityPopup({
           Open Roles
         </p>
         <p className="text-[13px] text-navy">
-          Available fees:{" "}
+          Available Fees:{" "}
           <span className="font-bold">{formatMinor(bubble.totalFeeMinor)}</span>
         </p>
         <button

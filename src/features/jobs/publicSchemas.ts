@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   interviewStageSchema,
   offerTimelineSchema,
+  positionOpenReasonSchema,
   salaryRatePeriodSchema,
 } from "./schemas";
 
@@ -30,9 +31,11 @@ export const publicJobCardSchema = z.object({
   salaryRatePeriod: salaryRatePeriodSchema.nullable().catch(null),
   recruiterFeeMinor: z.number().catch(0),
   publishedAt: z.coerce.date().nullable().catch(null),
-  // From the job's intake questionnaire: how soon they want to hire, how many
-  // interview stages they plan, and how much competition a recruiter faces.
+  // From the job's intake questionnaire: how soon they want to hire, why the
+  // seat is open, how many interview stages they plan, and how much
+  // competition a recruiter faces.
   offerTimeline: offerTimelineSchema.nullable().catch(null),
+  positionOpenReason: positionOpenReasonSchema.nullable().catch(null),
   interviewCount: z.number().catch(0),
   submittedCandidates: z.number().catch(0),
 });

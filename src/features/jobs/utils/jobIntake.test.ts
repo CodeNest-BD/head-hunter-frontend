@@ -142,9 +142,10 @@ describe("toIntakeInput", () => {
     });
   });
 
-  // The API requires all four company-detail fields once the object is sent,
-  // and rejects the whole save when one is missing.
-  it("writes company details only when all four fields are filled", () => {
+  // Prefilled from the company profile and editable per job, so a company that
+  // has answered only part of its profile still gets those answers onto the
+  // job. Only a wholly empty block is withheld.
+  it("writes whichever company details are filled", () => {
     const partial = toIntakeInput(
       {
         ...emptyForm,
@@ -153,11 +154,17 @@ describe("toIntakeInput", () => {
           employeeSize: "51-200",
           revenue: "",
           yearsInBusiness: "12",
+          whatTheyDo: "",
         },
       },
       null,
     );
-    expect(partial?.companyDetails).toBeUndefined();
+    expect(partial?.companyDetails).toEqual({
+      industry: "SaaS",
+      employeeSize: "51-200",
+      // A number for the API, though the input produces a string.
+      yearsInBusiness: 12,
+    });
 
     const complete = toIntakeInput(
       {
@@ -167,6 +174,7 @@ describe("toIntakeInput", () => {
           employeeSize: "51-200",
           revenue: "$50M",
           yearsInBusiness: "12",
+          whatTheyDo: "We fit out small showrooms.",
         },
       },
       null,
@@ -175,9 +183,14 @@ describe("toIntakeInput", () => {
       industry: "SaaS",
       employeeSize: "51-200",
       revenue: "$50M",
-      // A number for the API, though the input produces a string.
       yearsInBusiness: 12,
+      whatTheyDo: "We fit out small showrooms.",
     });
+  });
+
+  // An empty object would replace a stored snapshot with nothing.
+  it("withholds the company block when nothing in it is filled", () => {
+    expect(toIntakeInput(emptyForm, null)?.companyDetails).toBeUndefined();
   });
 
   it("writes only the work model for a job whose questionnaire is untouched", () => {
@@ -273,6 +286,7 @@ describe("intakeToFormValues", () => {
         employeeSize: "",
         revenue: "",
         yearsInBusiness: "",
+        whatTheyDo: "",
       },
       workModel: "on_site",
       onsiteDaysPerWeek: "",

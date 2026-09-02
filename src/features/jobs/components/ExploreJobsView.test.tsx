@@ -62,6 +62,7 @@ function samplePublicJob(
     recruiterFeeMinor: 500_000,
     publishedAt: new Date("2026-01-01"),
     offerTimeline: null,
+    positionOpenReason: null,
     interviewCount: 0,
     submittedCandidates: 0,
     ...overrides,
