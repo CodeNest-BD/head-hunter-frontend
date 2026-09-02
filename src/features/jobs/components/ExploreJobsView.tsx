@@ -268,7 +268,7 @@ export function ExploreJobsView() {
   return (
     <div className="w-full">
       {/* Hero band — light, centered */}
-      <header className="relative overflow-hidden bg-gradient-to-b from-white to-secondary px-4 py-8 text-center sm:px-5 sm:py-12 md:px-10 md:py-14">
+      <header className="relative overflow-hidden bg-gradient-to-b from-white to-secondary px-4 py-5 text-center sm:px-5 sm:py-6 md:px-10 md:py-8">
         <div className="relative mx-auto flex max-w-3xl flex-col items-center">
           <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-primary md:text-4xl">
             Explore Live Fee-Backed Openings.
