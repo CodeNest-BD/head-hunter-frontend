@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { Banknote } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
+import { MoneyBag } from "@/shared/ui-components/icons/MoneyBag";
 import { RichTextView } from "@/shared/ui-components/data/RichTextView";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
@@ -179,7 +179,7 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
         )}
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Banknote className="h-5 w-5" />
+          <MoneyBag className="h-6 w-6" />
         </span>
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
