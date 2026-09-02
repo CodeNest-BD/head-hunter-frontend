@@ -71,8 +71,19 @@ export const recruiterProfileSchema = z.object({
   ratingCount: z.number().catch(0),
   hasMarketplaceAccess: z.boolean(),
   references: z.array(recruiterReferenceSchema),
+  // True once a profile photo is uploaded; served from the id-based URL,
+  // mirroring a company's logo. Tolerant so a backend that predates the field
+  // reads as "no photo".
+  hasPhoto: z.boolean().catch(false),
 });
 export type RecruiterProfile = z.infer<typeof recruiterProfileSchema>;
+
+/** POST /v1/recruiter-profiles/me/photo/presign — a one-shot signed upload URL. */
+export const presignedUploadSchema = z.object({
+  s3Key: z.string(),
+  uploadUrl: z.string(),
+});
+export type PresignedUpload = z.infer<typeof presignedUploadSchema>;
 
 export const reapplyRecruiterVerificationResponseSchema = z.object({
   verificationStatus: verificationStatusSchema,

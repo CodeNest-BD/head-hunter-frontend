@@ -96,7 +96,7 @@ const ANY_CATEGORY = "all";
 
 type SortField = "publishedAt" | "recruiterFeeMinor";
 type ResultView = "rows" | "cards";
-type WorkMode = "" | "remote" | "onsite";
+type WorkMode = "" | "remote" | "onsite" | "hybrid";
 
 interface Filters {
   roleCategory: string;
@@ -163,12 +163,16 @@ export function ExploreJobsView() {
     filters.selection.kind === "none" ? undefined : filters.selection.state;
   const selectedCity =
     filters.selection.kind === "city" ? filters.selection.city : undefined;
+  // Remote/On-site map to the boolean the API has always taken. Hybrid can't be
+  // expressed as isRemote (hybrid jobs are stored isRemote=false), so it goes
+  // through a dedicated workModel param — see the backend contract note below.
   const isRemote =
     filters.workMode === "remote"
       ? true
       : filters.workMode === "onsite"
         ? false
         : undefined;
+  const workModel = filters.workMode === "hybrid" ? "hybrid" : undefined;
 
   const clientFilterActive = Boolean(selectedCity);
 
@@ -184,6 +188,7 @@ export function ExploreJobsView() {
       q: debouncedQ.trim() || undefined,
       locationState: selectedState,
       isRemote,
+      workModel,
       sortBy: filters.sort,
       limit: clientFilterActive ? CLIENT_FILTER_FETCH_LIMIT : limit,
     }),
@@ -195,6 +200,7 @@ export function ExploreJobsView() {
       debouncedQ,
       selectedState,
       isRemote,
+      workModel,
       limit,
       clientFilterActive,
     ],
@@ -627,6 +633,16 @@ function FiltersPanel({
               }
             >
               On-Site
+            </FilterPill>
+            <FilterPill
+              active={filters.workMode === "hybrid"}
+              onClick={() =>
+                onChange({
+                  workMode: filters.workMode === "hybrid" ? "" : "hybrid",
+                })
+              }
+            >
+              Hybrid
             </FilterPill>
           </div>
         </div>

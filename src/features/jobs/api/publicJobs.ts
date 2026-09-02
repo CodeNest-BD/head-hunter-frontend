@@ -17,6 +17,15 @@ export interface PublicJobFilterParams {
   employmentType?: string;
   locationState?: string;
   isRemote?: boolean;
+  /**
+   * Three-way work mode. BACKEND CONTRACT (not yet implemented): the public
+   * jobs endpoint currently exposes only `isRemote`, so hybrid roles (stored
+   * isRemote=false) are indistinguishable from on-site. To make the Hybrid
+   * filter functional the endpoint must accept `workModel=on_site|remote|hybrid`
+   * and the public job schema should surface it. Until then this param is sent
+   * but ignored server-side.
+   */
+  workModel?: string;
   feeMin?: number;
   feeMax?: number;
   q?: string;
