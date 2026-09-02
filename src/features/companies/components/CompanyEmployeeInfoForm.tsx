@@ -62,7 +62,7 @@ export function CompanyEmployeeInfoForm({
       <div className="rounded-md border border-border bg-card shadow-card">
         <CompanyFormSection
           title="Contact"
-          hint="Who we and our recruiters deal with."
+          hint="Head-Hunters.com user at your organization."
         >
           <div className="grid gap-4 sm:max-w-lg sm:grid-cols-2">
             <div className="flex flex-col gap-2">

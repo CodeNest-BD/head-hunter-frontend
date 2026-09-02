@@ -69,15 +69,16 @@ export function CompanyApprovalBanner() {
         <p className="font-bold">Approval pending</p>
         {note && <p className="mt-1">{note}</p>}
         <p className="mt-1">
-          An admin is reviewing your company. Posting jobs and reviewing
-          candidates unlock as soon as you&apos;re approved — completing your{" "}
+          An Admin is reviewing your company profile. Posting jobs and reviewing
+          candidates unlocks as soon as your account is approved – please be
+          sure your{" "}
           <Link
             href="/company/profile"
             className="font-semibold underline underline-offset-2"
           >
             company profile
           </Link>{" "}
-          helps them decide.
+          is completed for faster approval (within 24 hours).
         </p>
       </div>
     </div>

@@ -18,7 +18,7 @@ export const SIGNUP_ROLE_ORDER: ReadonlyArray<SignupRole> = [
 export const SIGNUP_ROLE_DETAILS: Record<SignupRole, SignupRoleDetail> = {
   company: {
     label: "Company",
-    hint: "Hire talent",
+    hint: "Hire Talent",
     blurb:
       "Post roles, review submissions, and hire through vetted recruiters.",
     icon: Building2,

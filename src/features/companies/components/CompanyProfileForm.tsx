@@ -112,14 +112,14 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
       <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
         <CompanyFormSection
           title="Identity"
-          hint="What recruiters see when they browse companies."
+          hint="Your brand within the website."
         >
           <div className="flex flex-col gap-2">
             <Label>Logo</Label>
             <CompanyLogoUploader profile={profile} />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="companyName">Company name</Label>
+            <Label htmlFor="companyName">Company Name</Label>
             <Input id="companyName" {...register("companyName")} />
             {errors.companyName && (
               <p className="text-xs text-destructive">
@@ -142,7 +142,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Company Description</Label>
               <span
                 className={cn(
                   "text-xs",
@@ -157,19 +157,20 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               id="description"
               rows={5}
               maxLength={MAX_DESCRIPTION}
-              placeholder="What your company does, and what makes it a good place to work."
+              placeholder="What your company does…in your own words."
               {...register("description")}
             />
             <p className="text-[13px] text-muted-foreground">
-              This is the whole first impression in the companies grid — a real
-              description and a published range are what draw recruiters in.
+              This is the company&apos;s first impression – a good description
+              and details about your organization help you stand out to your
+              next great hire!
             </p>
           </div>
         </CompanyFormSection>
 
         <CompanyFormSection
-          title="Business details"
-          hint="Shown on your profile so recruiters can size up the company."
+          title="Business Details"
+          hint="Shown on your profile so recruiters can make the closest match."
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
@@ -186,7 +187,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="yearFounded">Year founded</Label>
+              <Label htmlFor="yearFounded">Year Founded</Label>
               <Input
                 id="yearFounded"
                 inputMode="numeric"
@@ -200,7 +201,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="employeeSize">Number of employees</Label>
+              <Label htmlFor="employeeSize">Number of Employees</Label>
               <Input
                 id="employeeSize"
                 placeholder="51-200"
@@ -213,8 +214,33 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="revenue">Annual revenue</Label>
-              <Input id="revenue" placeholder="$50M" {...register("revenue")} />
+              <Label htmlFor="revenue">Annual Revenue</Label>
+              {/* The $ is a permanent prefix, not part of the value; a leading $
+                  is stripped so older "$50M" values don't render as "$$50M". */}
+              <Controller
+                control={control}
+                name="revenue"
+                render={({ field }) => (
+                  <div className="relative">
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                    >
+                      $
+                    </span>
+                    <Input
+                      id="revenue"
+                      className="pl-7"
+                      placeholder="50M"
+                      value={(field.value ?? "").replace(/^\$/, "")}
+                      onChange={(event) =>
+                        field.onChange(event.target.value.replace(/^\$/, ""))
+                      }
+                      onBlur={field.onBlur}
+                    />
+                  </div>
+                )}
+              />
               {errors.revenue && (
                 <p className="text-xs text-destructive">
                   {errors.revenue.message}
@@ -226,10 +252,10 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
 
         <CompanyFormSection
           title="Address"
-          hint="Not shown publicly — used for contracts and billing."
+          hint="Your corporate or main office address."
         >
           <div className="flex flex-col gap-2">
-            <Label htmlFor="addressLine">Street address</Label>
+            <Label htmlFor="addressLine">Street Address</Label>
             <Input
               id="addressLine"
               placeholder="123 Market St"
@@ -291,41 +317,13 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           </div>
         </CompanyFormSection>
 
-        <CompanyFormSection
-          title="Recruiter commission range"
-          hint="Shown on your public profile. The binding fee is still set per job."
-        >
-          <div className="grid grid-cols-1 gap-4 sm:max-w-md sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="commissionMin">Minimum ($)</Label>
-              <Input
-                id="commissionMin"
-                inputMode="decimal"
-                placeholder="3000"
-                {...register("commissionMin")}
-              />
-              {errors.commissionMin && (
-                <p className="text-xs text-destructive">
-                  {errors.commissionMin.message}
-                </p>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="commissionMax">Maximum ($)</Label>
-              <Input
-                id="commissionMax"
-                inputMode="decimal"
-                placeholder="20000"
-                {...register("commissionMax")}
-              />
-              {errors.commissionMax && (
-                <p className="text-xs text-destructive">
-                  {errors.commissionMax.message}
-                </p>
-              )}
-            </div>
-          </div>
-        </CompanyFormSection>
+        {/* Recruiter commission range was removed from the profile UI — the
+            binding fee is set per job at posting time, so a profile-level range
+            only risked contradicting live postings. The fields stay registered
+            (hidden) so any existing values round-trip untouched until the
+            backend drops the column. */}
+        <input type="hidden" {...register("commissionMin")} />
+        <input type="hidden" {...register("commissionMax")} />
       </div>
 
       <CompanyFormSaveBar

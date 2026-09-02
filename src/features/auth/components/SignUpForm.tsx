@@ -339,7 +339,9 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
           aria-invalid={errors.email ? true : undefined}
           {...register("email")}
           className={cn("h-11", errors.email && "border-destructive")}
-          placeholder="you@example.com"
+          placeholder={
+            role === "company" ? "you@companyemail.com" : "you@example.com"
+          }
         />
         <FieldError message={errors.email?.message} />
       </div>
