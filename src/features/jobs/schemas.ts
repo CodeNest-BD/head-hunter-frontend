@@ -186,6 +186,10 @@ export const benefitsSchema = z.object({
 });
 export type Benefits = z.infer<typeof benefitsSchema>;
 
+/** The client's own name for the retirement benefit, shared by the form, the
+ * live preview and the job card so the three can't drift apart. */
+export const RETIREMENT_BENEFIT_LABEL = "401K/403B";
+
 /** The benefit checkboxes, in the order the client listed them. */
 export const BENEFIT_CHECKBOXES: ReadonlyArray<{
   key: "medical" | "dental" | "vision" | "sickTime" | "vacation";

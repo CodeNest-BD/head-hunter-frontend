@@ -15,6 +15,7 @@ import {
   OFFER_TIMELINE_LABELS,
   OTHER_SOURCING_LABELS,
   POSITION_OPEN_REASON_LABELS,
+  RETIREMENT_BENEFIT_LABEL,
   SALARY_RATE_PERIOD_SUFFIX,
   WORK_MODEL_LABELS,
   type Benefits,
@@ -300,15 +301,36 @@ function RequirementRow({
   );
 }
 
-/** The benefits the company ticked, one label per entry (rendered as chips). */
+/**
+ * The benefits the company ticked, one label per entry (rendered as chips),
+ * carrying the day counts and match percentage it quantified — a company that
+ * typed "15 days" wants a recruiter to see the 15, not just "Vacation Time".
+ */
 function benefitsList(benefits: Benefits): string[] {
-  const named = BENEFIT_CHECKBOXES.filter(
-    (benefit) => benefits[benefit.key],
-  ).map((benefit) => benefit.label);
+  const named: string[] = [];
+  for (const benefit of BENEFIT_CHECKBOXES) {
+    if (!benefits[benefit.key]) continue;
+    const days =
+      benefit.key === "vacation"
+        ? benefits.vacationDays
+        : benefit.key === "sickTime"
+          ? benefits.sickDays
+          : undefined;
+    named.push(
+      days === undefined
+        ? benefit.label
+        : `${benefit.label} (${days} ${days === 1 ? "day" : "days"})`,
+    );
+  }
   if (benefits.retirement401k.offered) {
     const match = benefits.retirement401k.matchPercent;
-    named.push(match === undefined ? "401(k)" : `401(k) (${match}% match)`);
+    named.push(
+      match === undefined
+        ? RETIREMENT_BENEFIT_LABEL
+        : `${RETIREMENT_BENEFIT_LABEL} (${match}% match)`,
+    );
   }
+  if (benefits.educationReimbursement) named.push("Education Reimbursement");
   if (benefits.ancillary) {
     named.push(
       benefits.ancillaryDetails
