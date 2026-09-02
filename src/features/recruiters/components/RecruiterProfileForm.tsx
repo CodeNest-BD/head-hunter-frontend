@@ -200,10 +200,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
-        <Section
-          title="Location"
-          description="Where you're based. Used to surface nearby roles."
-        >
+        <Section title="Location" description="Where you're based.">
           <div className="flex flex-col gap-2">
             <Label htmlFor="addressLine">Address</Label>
             <Input id="addressLine" {...register("addressLine")} />
@@ -252,7 +249,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
 
         <Section
           title="Recruiting Experience"
-          description="The companies you have recruited for. Your total years and the sectors shown on your profile are added up from these."
+          description="The organizations you have recruited for. Your total years at each and your specialties!"
         >
           {firms.fields.length === 0 && (
             <p className="text-[13px] text-muted-foreground">
@@ -283,7 +280,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor={`experiences.${index}.firmName`}>
-                    Company name
+                    Company Name
                   </Label>
                   <Input
                     id={`experiences.${index}.firmName`}

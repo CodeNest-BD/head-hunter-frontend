@@ -45,11 +45,12 @@ function CompanyProfileContent() {
   return (
     <div className="flex flex-col gap-6">
       <PageBanner
-        title="Company profile"
+        title="Company Profile"
+        accentPeriod={false}
         subtitle="This is what recruiters see when they browse companies."
         actions={
           data ? (
-            <span className="inline-flex items-center gap-2 text-sm font-medium text-white/80">
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-navy/70">
               <span
                 className={`h-2 w-2 rounded-full ${APPROVAL_PILL[data.verificationStatus].dot}`}
               />
@@ -85,9 +86,9 @@ function CompanyProfileContent() {
       ) : (
         <Tabs defaultValue="info">
           <TabsList>
-            <TabsTrigger value="info">Company info</TabsTrigger>
-            <TabsTrigger value="employee">Employee Info</TabsTrigger>
-            <TabsTrigger value="password">Password change</TabsTrigger>
+            <TabsTrigger value="info">Company Info</TabsTrigger>
+            <TabsTrigger value="employee">User Info</TabsTrigger>
+            <TabsTrigger value="password">Password Change</TabsTrigger>
           </TabsList>
           <TabsContent value="info">
             <CompanyProfileForm profile={data} />
