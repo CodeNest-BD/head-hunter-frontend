@@ -361,11 +361,11 @@ export const ROLE_CATEGORY_LABELS: Record<RoleCategory, string> = {
   marketing: "Marketing",
   finance: "Finance",
   operations: "Operations",
-  human_resources: "Human resources",
+  human_resources: "Human Resources",
   legal: "Legal",
   healthcare: "Healthcare",
   education: "Education",
-  customer_success: "Customer success",
+  customer_success: "Customer Service",
   executive: "Executive",
   other: "Other",
 };

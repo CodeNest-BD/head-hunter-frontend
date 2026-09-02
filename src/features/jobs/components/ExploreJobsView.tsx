@@ -82,7 +82,7 @@ interface FeeBucket {
 // Fees start at a $500 floor, so the buckets span that range upward (values in
 // minor units: $500 = 50_000).
 const FEE_BUCKETS: readonly FeeBucket[] = [
-  { value: "any", label: "Any fee" },
+  { value: "any", label: "Any Fee" },
   { value: "500-1k", label: "$500 – $1,000", feeMin: 50_000, feeMax: 100_000 },
   {
     value: "1k-5k",
@@ -551,10 +551,10 @@ function FiltersPanel({
             onValueChange={(value) => onChange({ roleCategory: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="All categories" />
+              <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ANY_CATEGORY}>All categories</SelectItem>
+              <SelectItem value={ANY_CATEGORY}>All Categories</SelectItem>
               {ROLE_CATEGORIES.map((category) => (
                 <SelectItem key={category} value={category}>
                   {ROLE_CATEGORY_LABELS[category as RoleCategory]}
@@ -573,7 +573,7 @@ function FiltersPanel({
             onValueChange={(value) => onChange({ feeBucket: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Any fee" />
+              <SelectValue placeholder="Any Fee" />
             </SelectTrigger>
             <SelectContent>
               {FEE_BUCKETS.map((entry) => (
@@ -629,7 +629,7 @@ function FiltersPanel({
                 })
               }
             >
-              On-site
+              On-Site
             </FilterPill>
           </div>
         </div>
