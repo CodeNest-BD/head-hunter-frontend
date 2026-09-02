@@ -273,7 +273,7 @@ export function NotificationList() {
             type="button"
             disabled={markAllRead.isPending || unreadCount === 0}
             onClick={() => markAllRead.mutate()}
-            className="inline-flex items-center gap-2 rounded-md border border-white/30 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-md border border-input px-3.5 py-2 text-sm font-semibold text-navy transition-colors hover:border-primary hover:text-primary disabled:opacity-40"
           >
             <CheckCheck className="h-4 w-4" />
             Mark all read

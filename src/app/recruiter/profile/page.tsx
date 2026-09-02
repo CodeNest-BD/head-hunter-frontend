@@ -31,7 +31,7 @@ const VERIFICATION_PILL: Record<
 function VerificationPill({ status }: { status: VerificationStatus }) {
   const { dot, label } = VERIFICATION_PILL[status];
   return (
-    <span className="inline-flex items-center gap-2 text-sm font-medium text-white/80">
+    <span className="inline-flex items-center gap-2 text-sm font-medium text-navy/70">
       <span className={cn("h-2 w-2 rounded-full", dot)} />
       {label}
     </span>
