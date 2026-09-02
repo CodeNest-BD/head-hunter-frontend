@@ -10,6 +10,7 @@
     "analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "next lint",
+    "generate:world-dots": "node scripts/generate-world-dots.mjs",
     "vitest:common": "vitest --bail 1",
     "test": "npm run vitest:common -- --run",
     "vitest:watch": "npm run vitest:common -- --watch"
@@ -211,8 +212,10 @@
     "postcss": "^8.5.10",
     "prettier": "~3.3.3",
     "tailwindcss": "~3.4.1",
+    "topojson-client": "^3.1.0",
     "typescript": "~5",
-    "vitest": "^3.2.7"
+    "vitest": "^3.2.7",
+    "world-atlas": "^2.0.2"
   },
   "overrides": {
     "@next/eslint-plugin-next": {
