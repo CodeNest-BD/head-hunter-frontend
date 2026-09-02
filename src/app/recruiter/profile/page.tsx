@@ -23,9 +23,9 @@ const VERIFICATION_PILL: Record<
   VerificationStatus,
   { dot: string; label: string }
 > = {
-  verified: { dot: "bg-emerald-400", label: "Verified recruiter" },
-  pending: { dot: "bg-amber-400", label: "Pending verification" },
-  rejected: { dot: "bg-red-400", label: "Verification declined" },
+  verified: { dot: "bg-emerald-400", label: "Verified Recruiter" },
+  pending: { dot: "bg-amber-400", label: "Pending Verification" },
+  rejected: { dot: "bg-red-400", label: "Verification Declined" },
 };
 
 function VerificationPill({ status }: { status: VerificationStatus }) {

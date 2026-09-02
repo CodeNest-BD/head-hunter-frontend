@@ -34,9 +34,9 @@ const APPROVAL_PILL: Record<
   VerificationStatus,
   { dot: string; label: string }
 > = {
-  verified: { dot: "bg-emerald-400", label: "Visible to recruiters" },
-  pending: { dot: "bg-amber-400", label: "Awaiting approval" },
-  rejected: { dot: "bg-red-400", label: "Approval declined" },
+  verified: { dot: "bg-emerald-400", label: "Visible to Recruiters" },
+  pending: { dot: "bg-amber-400", label: "Awaiting Approval" },
+  rejected: { dot: "bg-red-400", label: "Approval Declined" },
 };
 
 function CompanyProfileContent() {
