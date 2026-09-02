@@ -35,11 +35,12 @@ interface PageBannerProps {
 }
 
 /**
- * The light banner that opens every dashboard/section page: an optional eyebrow,
- * a heavy blue headline with the brand's "." accent, a muted subtitle, and a
- * right slot holding either metric readouts or a primary action. One deep module
- * so no page reimplements the header chrome. (Formerly a dark navy card; the
- * whole app moved to the lighter scheme.)
+ * The header that opens every dashboard/section page: an optional eyebrow, a
+ * heavy blue headline with the brand's "." accent, a muted subtitle, and a right
+ * slot holding either metric readouts or a primary action. Boxless — it sits
+ * directly on the page background with no card, per the reference design. One
+ * deep module so no page reimplements the header chrome. (Formerly a dark navy
+ * card; the whole app moved to the lighter, boxless scheme.)
  */
 export function PageBanner({
   eyebrow,
@@ -54,7 +55,7 @@ export function PageBanner({
   return (
     <header
       className={cn(
-        "relative overflow-hidden rounded-md border border-brand-line bg-card px-6 py-5 shadow-card [animation:fadeUp_.4s_ease_both] sm:px-8 sm:py-6",
+        "relative [animation:fadeUp_.4s_ease_both]",
         className,
       )}
     >
