@@ -204,16 +204,15 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
 /** The narrow pay + benefits strip that sits between the facts card and the
  * requirements card, per the client's layout. */
 function PayBenefitsBox({ job }: { job: JobView }) {
-  const salary =
-    job.salaryMinMinor === null && job.salaryMaxMinor === null
-      ? ""
-      : `${formatMinor(job.salaryMinMinor)} – ${formatMinor(job.salaryMaxMinor)}${
-          job.salaryRatePeriod
-            ? ` ${SALARY_RATE_PERIOD_SUFFIX[job.salaryRatePeriod]}`
-            : ""
-        }`;
+  const hasSalary = job.salaryMinMinor !== null || job.salaryMaxMinor !== null;
+  const salaryRange = hasSalary
+    ? `${formatMinor(job.salaryMinMinor)} – ${formatMinor(job.salaryMaxMinor)}`
+    : "";
+  const salaryPeriod = job.salaryRatePeriod
+    ? SALARY_RATE_PERIOD_SUFFIX[job.salaryRatePeriod]
+    : "";
   const benefits = job.benefits ? benefitsList(job.benefits) : [];
-  if (salary === "" && benefits.length === 0) return null;
+  if (!hasSalary && benefits.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:flex-row sm:items-stretch sm:gap-6 sm:p-6">
@@ -225,9 +224,18 @@ function PayBenefitsBox({ job }: { job: JobView }) {
           <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
             Pay Range
           </p>
-          <p className="mt-1 font-heading text-lg font-bold tabular-nums text-navy">
-            {salary || "—"}
-          </p>
+          {hasSalary ? (
+            <p className="mt-1 font-heading text-base font-bold leading-snug text-navy">
+              <span className="tabular-nums">{salaryRange}</span>
+              {salaryPeriod && (
+                <span className="ml-1 whitespace-nowrap text-xs font-medium text-muted-foreground">
+                  {salaryPeriod}
+                </span>
+              )}
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-navy">—</p>
+          )}
         </div>
       </div>
 
