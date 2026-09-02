@@ -10,8 +10,8 @@ interface PageHeaderProps {
   children?: ReactNode;
   /**
    * "plain" (default): navy headline on the page canvas with a hairline.
-   * "banner": a dark navy (#0A1738) banner card — used by the admin
-   * management screens.
+   * "banner": a light card with a blue headline — used by the admin
+   * management screens (matches PageBanner's lighter scheme).
    */
   variant?: "plain" | "banner";
   className?: string;
@@ -36,18 +36,18 @@ export function PageHeader({
     return (
       <header
         className={cn(
-          "rounded-md bg-navy px-6 py-5 shadow-card [animation:fadeUp_.4s_ease_both] sm:px-7",
+          "rounded-md border border-brand-line bg-card px-6 py-5 shadow-card [animation:fadeUp_.4s_ease_both] sm:px-7",
           className,
         )}
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <h1 className="font-heading text-xl font-extrabold tracking-[-0.01em] text-white sm:text-[22px]">
+            <h1 className="font-heading text-xl font-extrabold tracking-[-0.01em] text-primary sm:text-[22px]">
               {title}
-              <span className="text-primary">.</span>
+              <span className="text-navy">.</span>
             </h1>
             {subtitle && (
-              <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-white/60">
+              <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
                 {subtitle}
               </p>
             )}

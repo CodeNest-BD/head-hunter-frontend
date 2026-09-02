@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { cn } from "@/shared/libs/shadCnConfig";
-import { BrandGlow } from "./BrandGlow";
 
 /** A label/value readout shown on the right of the banner (e.g. FOLLOWING 3). */
 export interface BannerMetric {
@@ -36,10 +35,11 @@ interface PageBannerProps {
 }
 
 /**
- * The navy banner that opens every recruiter page: an optional eyebrow, a heavy
- * white headline with the brand's blue "." accent, a muted subtitle, and a
+ * The light banner that opens every dashboard/section page: an optional eyebrow,
+ * a heavy blue headline with the brand's "." accent, a muted subtitle, and a
  * right slot holding either metric readouts or a primary action. One deep module
- * so no page reimplements the header chrome.
+ * so no page reimplements the header chrome. (Formerly a dark navy card; the
+ * whole app moved to the lighter scheme.)
  */
 export function PageBanner({
   eyebrow,
@@ -54,21 +54,20 @@ export function PageBanner({
   return (
     <header
       className={cn(
-        "relative overflow-hidden rounded-md bg-navy px-6 py-5 shadow-card [animation:fadeUp_.4s_ease_both] sm:px-8 sm:py-6",
+        "relative overflow-hidden rounded-md border border-brand-line bg-card px-6 py-5 shadow-card [animation:fadeUp_.4s_ease_both] sm:px-8 sm:py-6",
         className,
       )}
     >
-      <BrandGlow />
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           {eyebrow && (
-            <span className="inline-block text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">
+            <span className="inline-block text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/70">
               {eyebrow}
             </span>
           )}
           <h1
             className={cn(
-              "font-heading font-extrabold tracking-[-0.02em] text-white",
+              "font-heading font-extrabold tracking-[-0.02em] text-primary",
               eyebrow && "mt-2",
               size === "lg"
                 ? "text-3xl sm:text-4xl"
@@ -76,10 +75,10 @@ export function PageBanner({
             )}
           >
             {title}
-            {accentPeriod && <span className="text-primary">.</span>}
+            {accentPeriod && <span className="text-navy">.</span>}
           </h1>
           {subtitle && (
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/60">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               {subtitle}
             </p>
           )}
@@ -89,10 +88,10 @@ export function PageBanner({
           <div className="flex shrink-0 items-center gap-6 sm:gap-8">
             {metrics?.map((metric) => (
               <div key={metric.label} className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/55">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary/70">
                   {metric.label}
                 </p>
-                <p className="mt-1 text-2xl font-extrabold tabular-nums text-white">
+                <p className="mt-1 text-2xl font-extrabold tabular-nums text-navy">
                   {metric.value}
                 </p>
               </div>

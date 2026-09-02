@@ -529,7 +529,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Full-width top navbar: logo + global links on the left; role actions,
        * notifications and the account menu on the right. Spans the whole width,
        * with the sidebar sitting beneath it. */}
-      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center gap-1.5 border-b border-border/70 bg-secondary/80 px-3 backdrop-blur-md sm:gap-3 sm:px-6 lg:px-10">
+      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center gap-1.5 border-b border-border/70 bg-white/85 px-3 backdrop-blur-md sm:gap-3 sm:px-6 lg:px-10">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
