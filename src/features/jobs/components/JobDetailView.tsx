@@ -211,24 +211,35 @@ function PayBenefitsBox({ job }: { job: JobView }) {
             ? ` ${SALARY_RATE_PERIOD_SUFFIX[job.salaryRatePeriod]}`
             : ""
         }`;
-  const benefits = job.benefits ? benefitsLine(job.benefits) : "";
-  if (salary === "" && benefits === "") return null;
+  const benefits = job.benefits ? benefitsList(job.benefits) : [];
+  if (salary === "" && benefits.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 gap-4 rounded-md border border-border bg-card p-5 shadow-card sm:grid-cols-2 sm:p-6">
+    <div className="grid grid-cols-1 gap-x-8 gap-y-4 rounded-md border border-border bg-card p-5 shadow-card sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:p-6">
       <div className="min-w-0">
         <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
           Pay Range
         </p>
-        <p className="mt-0.5 font-medium text-navy">{salary || "—"}</p>
+        <p className="mt-1 font-semibold text-navy">{salary || "—"}</p>
       </div>
       <div className="min-w-0">
         <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
           Benefits
         </p>
-        <p className="mt-0.5 text-sm leading-relaxed text-navy">
-          {benefits || "—"}
-        </p>
+        {benefits.length > 0 ? (
+          <ul className="mt-1.5 flex flex-wrap gap-2">
+            {benefits.map((benefit) => (
+              <li
+                key={benefit}
+                className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+              >
+                {benefit}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-1 text-sm text-navy">—</p>
+        )}
       </div>
     </div>
   );
@@ -263,8 +274,8 @@ function RequirementRow({
   );
 }
 
-/** The benefits the company ticked, as one readable line. */
-function benefitsLine(benefits: Benefits): string {
+/** The benefits the company ticked, one label per entry (rendered as chips). */
+function benefitsList(benefits: Benefits): string[] {
   const named = BENEFIT_CHECKBOXES.filter(
     (benefit) => benefits[benefit.key],
   ).map((benefit) => benefit.label);
@@ -279,7 +290,7 @@ function benefitsLine(benefits: Benefits): string {
         : "Ancillary benefits",
     );
   }
-  return named.join(" · ");
+  return named;
 }
 
 /** How soon the company can start interviewing, ASAP or a window. */
