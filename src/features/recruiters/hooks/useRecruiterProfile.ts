@@ -14,10 +14,13 @@ import {
 } from "../api/recruiterProfiles";
 import { recruiterKeys } from "../keys";
 
-export function useMyRecruiterProfile() {
+export function useMyRecruiterProfile({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: recruiterKeys.myProfile,
     queryFn: fetchMyRecruiterProfile,
+    enabled,
   });
 }
 

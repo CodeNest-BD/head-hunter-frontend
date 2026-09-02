@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ChevronDown, LogOut, UserRound } from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { useAccountApproval } from "@/shared/hooks/useAccountApproval";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { CurrentUserAvatar } from "./CurrentUserAvatar";
 import { InboxBadge } from "./InboxBadge";
 import { navForRole } from "./dashboardNav";
 
@@ -20,10 +21,6 @@ export function UserMenu({ className }: { className?: string }) {
   const { isApproved } = useAccountApproval();
   if (!user) return null;
 
-  const initials =
-    `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`
-      .toUpperCase()
-      .trim() || null;
   const items = navForRole(user.role, isApproved);
 
   return (
@@ -36,9 +33,7 @@ export function UserMenu({ className }: { className?: string }) {
             className,
           )}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-primary">
-            {initials ?? <UserRound className="h-4 w-4" />}
-          </span>
+          <CurrentUserAvatar className="h-8 w-8 text-xs" />
           <span className="max-w-[9rem] truncate">
             {user.firstName} {user.lastName}
           </span>
@@ -54,9 +49,7 @@ export function UserMenu({ className }: { className?: string }) {
         >
           {/* Identity header */}
           <div className="flex items-center gap-3 px-3 py-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-primary">
-              {initials ?? <UserRound className="h-5 w-5" />}
-            </span>
+            <CurrentUserAvatar className="h-10 w-10 text-sm" />
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-navy">
                 {user.firstName} {user.lastName}
