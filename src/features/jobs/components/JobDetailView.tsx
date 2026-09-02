@@ -15,7 +15,6 @@ import {
   OFFER_TIMELINE_LABELS,
   OTHER_SOURCING_LABELS,
   POSITION_OPEN_REASON_LABELS,
-  ROLE_CATEGORY_LABELS,
   SALARY_RATE_PERIOD_SUFFIX,
   WORK_MODEL_LABELS,
   type Benefits,
@@ -27,7 +26,6 @@ import {
   type OfferTimeline,
   type OtherSourcing,
   type PositionOpenReason,
-  type RoleCategory,
   type SalaryRatePeriod,
   type WorkModel,
 } from "../schemas";

@@ -54,10 +54,7 @@ export function PageBanner({
 }: PageBannerProps) {
   return (
     <header
-      className={cn(
-        "relative [animation:fadeUp_.4s_ease_both]",
-        className,
-      )}
+      className={cn("relative [animation:fadeUp_.4s_ease_both]", className)}
     >
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
