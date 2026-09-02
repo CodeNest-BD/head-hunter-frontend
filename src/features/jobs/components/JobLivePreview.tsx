@@ -10,6 +10,7 @@ import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
 import { formatSalaryRange } from "../utils/formatSalaryRange";
 import {
   BENEFIT_CHECKBOXES,
+  RETIREMENT_BENEFIT_LABEL,
   EMPLOYMENT_TYPE_LABELS,
   INTERVIEW_TYPE_LABELS,
   OFFER_TIMELINE_LABELS,
@@ -87,8 +88,8 @@ function benefitsLine(benefits: JobFormValues["benefits"]): string {
   if (benefits.retirement401k) {
     named.push(
       benefits.retirement401kMatch === ""
-        ? "401K/403B"
-        : `401K/403B (${benefits.retirement401kMatch}% match)`,
+        ? RETIREMENT_BENEFIT_LABEL
+        : `${RETIREMENT_BENEFIT_LABEL} (${benefits.retirement401kMatch}% match)`,
     );
   }
   if (benefits.educationReimbursement) named.push("Education Reimbursement");
