@@ -6,6 +6,7 @@ import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, LogOut, Menu, UserRound, X } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { Logo } from "@/shared/ui-components/layout/Logo";
+import { TopBarActions } from "@/shared/ui-components/layout/TopBarActions";
 import { UserMenu } from "@/shared/ui-components/layout/UserMenu";
 import { NAV_BY_ROLE } from "@/shared/ui-components/layout/dashboardNav";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -144,7 +145,7 @@ function MobileGroup({
  * "My Dashboard" links go to the dashboard when signed in, or to Log in for a
  * guest. Collapses to a hamburger sheet below `lg`.
  */
-export function LandingNav({ fluid = false }: { fluid?: boolean }) {
+export function LandingNav() {
   const [open, setOpen] = useState(false);
   const { status, user, logout } = useAuth();
   const isAuthed = status === "authenticated" && user !== null;
@@ -170,12 +171,12 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-brand-line bg-white/95 backdrop-blur">
+        {/* Full-width with the same horizontal padding as the app header
+            (DashboardLayout), so the logo sits at the same position on every
+            page — marketing and signed-in alike. */}
         <nav
           aria-label="Primary"
-          className={cn(
-            "flex items-center gap-6 px-5 py-4 md:px-10",
-            fluid ? "w-full" : "mx-auto max-w-[1240px]",
-          )}
+          className="flex h-16 w-full items-center gap-6 px-3 sm:px-6 lg:px-10"
         >
           <Link href="/" aria-label="Head-Hunters home">
             <Logo />
@@ -206,8 +207,11 @@ export function LandingNav({ fluid = false }: { fluid?: boolean }) {
                 aria-hidden="true"
                 className="h-9 w-24 animate-pulse rounded-md bg-brand-line"
               />
-            ) : isAuthed ? (
-              <UserMenu />
+            ) : isAuthed && user ? (
+              <>
+                <TopBarActions role={user.role} />
+                <UserMenu />
+              </>
             ) : (
               <>
                 <Button

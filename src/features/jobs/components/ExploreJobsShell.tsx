@@ -62,7 +62,7 @@ export function ExploreJobsShell() {
   }
 
   return (
-    <PublicShell fluid>
+    <PublicShell>
       <ExploreJobsView />
     </PublicShell>
   );
