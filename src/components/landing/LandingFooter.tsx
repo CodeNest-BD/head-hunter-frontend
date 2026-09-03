@@ -89,20 +89,28 @@ export function LandingFooter() {
               {column.title}
             </h2>
             <ul className="mt-4 flex flex-col gap-3">
-              {column.links.map((link) => (
-                <li key={`${link.label}-${link.href}`}>
-                  {link.roleAware ? (
-                    <FooterPostJobLink
-                      label={link.label}
-                      guestHref={link.href}
-                    />
-                  ) : link.recruiterOnly ? (
-                    <FooterExploreLink label={link.label} href={link.href} />
-                  ) : (
-                    <FooterNavLink {...link} />
-                  )}
-                </li>
-              ))}
+              {column.links.map((link) =>
+                // FooterExploreLink owns its own <li> so a company drops the
+                // item entirely (no empty slot); the others are wrapped here.
+                link.recruiterOnly ? (
+                  <FooterExploreLink
+                    key={`${link.label}-${link.href}`}
+                    label={link.label}
+                    href={link.href}
+                  />
+                ) : (
+                  <li key={`${link.label}-${link.href}`}>
+                    {link.roleAware ? (
+                      <FooterPostJobLink
+                        label={link.label}
+                        guestHref={link.href}
+                      />
+                    ) : (
+                      <FooterNavLink {...link} />
+                    )}
+                  </li>
+                ),
+              )}
             </ul>
           </nav>
         ))}
