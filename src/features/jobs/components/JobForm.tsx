@@ -7,6 +7,7 @@ import { Info, PanelRightOpen, X } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import {
@@ -258,16 +259,16 @@ function Question({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** A money field with a leading "$" adornment. */
+/** A money field with a leading "$" adornment. Numeric-only (digits + one dot). */
 const MoneyInput = forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, ...props }, ref) => (
     <div className="relative">
       <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
         $
       </span>
-      <Input
+      <NumericInput
+        decimal
         ref={ref}
-        inputMode="decimal"
         className={cn(CONTROL_HEIGHT, "pl-7", className)}
         {...props}
       />
@@ -584,10 +585,9 @@ export function JobForm({
               optional
               error={errors.worksiteZip?.message}
             >
-              <Input
+              <NumericInput
                 id="worksiteZip"
                 className={CONTROL_HEIGHT}
-                inputMode="numeric"
                 placeholder="e.g., 94103"
                 {...register("worksiteZip")}
               />
@@ -622,9 +622,8 @@ export function JobForm({
                 {/* Only a hybrid role has on-site days to state. */}
                 {workModel === "hybrid" && (
                   <div className="flex items-center gap-2">
-                    <Input
+                    <NumericInput
                       aria-label="Days on site per week"
-                      inputMode="numeric"
                       className="h-9 w-14"
                       {...register("onsiteDaysPerWeek")}
                     />
@@ -782,9 +781,9 @@ export function JobForm({
                 />
                 {/* Typing a figure is itself the answer, so it ticks the box:
                     an unticked 401(k) drops the match on save. */}
-                <Input
+                <NumericInput
+                  decimal
                   aria-label="401K/403B match percent"
-                  inputMode="decimal"
                   className="h-8 w-14"
                   onFocus={() =>
                     setValue("benefits.retirement401k", true, {
@@ -799,9 +798,8 @@ export function JobForm({
                   the same way the 401K match does. */}
               <div className="flex items-center gap-2">
                 {benefitToggle("sickTime")}
-                <Input
+                <NumericInput
                   aria-label="Sick days"
-                  inputMode="numeric"
                   className="h-8 w-14"
                   onFocus={() =>
                     setValue("benefits.sickTime", true, { shouldDirty: true })
@@ -812,9 +810,8 @@ export function JobForm({
               </div>
               <div className="flex items-center gap-2">
                 {benefitToggle("vacation")}
-                <Input
+                <NumericInput
                   aria-label="Vacation days"
-                  inputMode="numeric"
                   className="h-8 w-14"
                   onFocus={() =>
                     setValue("benefits.vacation", true, { shouldDirty: true })
@@ -973,10 +970,10 @@ export function JobForm({
                 optional
                 error={errors.companyDetails?.employeeSize?.message}
               >
-                <Input
+                <NumericInput
                   id="companyEmployeeSize"
                   className={CONTROL_HEIGHT}
-                  placeholder="e.g., 51-200"
+                  placeholder="e.g., 200"
                   {...register("companyDetails.employeeSize")}
                 />
               </Field>
@@ -986,10 +983,11 @@ export function JobForm({
                 optional
                 error={errors.companyDetails?.revenue?.message}
               >
-                <Input
+                <NumericInput
+                  decimal
                   id="companyRevenue"
                   className={CONTROL_HEIGHT}
-                  placeholder="e.g., $50M"
+                  placeholder="e.g., 50000000"
                   {...register("companyDetails.revenue")}
                 />
               </Field>
@@ -999,9 +997,8 @@ export function JobForm({
                 optional
                 error={errors.companyDetails?.yearsInBusiness?.message}
               >
-                <Input
+                <NumericInput
                   id="companyYearsInBusiness"
-                  inputMode="numeric"
                   className={CONTROL_HEIGHT}
                   placeholder="e.g., 12"
                   {...register("companyDetails.yearsInBusiness")}

@@ -8,7 +8,7 @@ const validCompany: SignUpFormData = {
   email: "jane@acme.com",
   password: "S3cureP@ssw0rd",
   confirmPassword: "S3cureP@ssw0rd",
-  phone: "2025550100",
+  phone: "+12025550100",
   companyName: "Acme Inc.",
   linkedinUrl: "",
   experiences: [],
@@ -110,12 +110,16 @@ describe("signUpSchema", () => {
     expect(errorPaths({ zip: "" })).toContain("zip");
   });
 
-  it("requires ten phone digits for both roles", () => {
+  it("requires a valid E.164 phone for both roles", () => {
     for (const role of ["company", "recruiter"] as const) {
       expect(errorPaths({ role, phone: "" })).toContain("phone");
-      expect(errorPaths({ role, phone: "202555010" })).toContain("phone");
-      expect(errorPaths({ role, phone: "+1-202-555-0100" })).toContain("phone");
-      expect(errorPaths({ role, phone: "2025550100" })).toEqual([]);
+      // No country code — not E.164.
+      expect(errorPaths({ role, phone: "2025550100" })).toContain("phone");
+      // Too short for the US.
+      expect(errorPaths({ role, phone: "+1202555010" })).toContain("phone");
+      // Valid US and valid UK — any country works.
+      expect(errorPaths({ role, phone: "+12025550100" })).toEqual([]);
+      expect(errorPaths({ role, phone: "+442079460958" })).toEqual([]);
     }
   });
 
@@ -252,7 +256,7 @@ describe("toSignUpPayload", () => {
     expect(toSignUpPayload(validCompany)).not.toHaveProperty("username");
   });
 
-  it("uppercases the state and sends the phone with the US country code", () => {
+  it("uppercases the state and passes the E.164 phone through unchanged", () => {
     const payload = toSignUpPayload({ ...validCompany, state: "ca" });
     expect(payload).toMatchObject({
       state: "CA",

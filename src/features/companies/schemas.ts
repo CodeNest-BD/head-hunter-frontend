@@ -7,7 +7,7 @@ import {
   stateSchema,
   zipSchema,
 } from "@/shared/libs/usAddress";
-import { usPhoneDigitsSchema } from "@/shared/libs/usPhone";
+import { phoneSchema } from "@/shared/libs/phone";
 import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
 
 /** Admin approval states, shared with the recruiter side. */
@@ -164,7 +164,7 @@ export type CompanyProfileFormValues = z.infer<typeof companyProfileFormSchema>;
 export const companyEmployeeInfoFormSchema = z.object({
   firstName: personNameSchema("First name"),
   lastName: personNameSchema("Last name"),
-  phone: usPhoneDigitsSchema,
+  phone: phoneSchema,
 });
 export type CompanyEmployeeInfoFormValues = z.infer<
   typeof companyEmployeeInfoFormSchema

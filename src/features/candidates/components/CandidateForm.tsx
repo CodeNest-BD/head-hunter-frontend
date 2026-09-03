@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor, minorToMajorInput } from "@/shared/utils/money";
@@ -206,9 +207,8 @@ export function CandidateForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="flex flex-col gap-2">
           <Label htmlFor="yearsOfExperience">Years of experience</Label>
-          <Input
+          <NumericInput
             id="yearsOfExperience"
-            inputMode="numeric"
             {...register("yearsOfExperience")}
           />
           {errors.yearsOfExperience && (
@@ -219,9 +219,9 @@ export function CandidateForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="expectedSalary">Expected salary (USD/yr)</Label>
-          <Input
+          <NumericInput
+            decimal
             id="expectedSalary"
-            inputMode="decimal"
             {...register("expectedSalary")}
           />
           {errors.expectedSalary && (
@@ -232,9 +232,8 @@ export function CandidateForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="noticePeriodDays">Notice period (days)</Label>
-          <Input
+          <NumericInput
             id="noticePeriodDays"
-            inputMode="numeric"
             {...register("noticePeriodDays")}
           />
           {errors.noticePeriodDays && (

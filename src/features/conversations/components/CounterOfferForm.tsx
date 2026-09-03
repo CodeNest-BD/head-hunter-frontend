@@ -12,7 +12,7 @@ import {
 } from "@/features/offers/schemas";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
-import { Input } from "@/shared/ui-components/controls/input";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor } from "@/shared/utils/money";
@@ -79,9 +79,9 @@ export function CounterOfferForm({
     <form onSubmit={submit} className="flex flex-col gap-2.5">
       <div className="flex flex-col gap-1">
         <Label htmlFor="offer-counter-salary">New salary (USD/yr)</Label>
-        <Input
+        <NumericInput
+          decimal
           id="offer-counter-salary"
-          inputMode="decimal"
           {...register("salary")}
         />
         {errors.salary && (

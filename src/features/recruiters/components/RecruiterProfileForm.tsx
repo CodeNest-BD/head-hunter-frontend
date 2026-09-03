@@ -11,9 +11,9 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
+import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
-import { UsPhoneInput } from "@/shared/ui-components/controls/UsPhoneInput";
-import { toE164UsPhone, toUsPhoneDigits } from "@/shared/libs/usPhone";
 import { useUpdateMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 import { RecruiterPhotoUploader } from "./RecruiterPhotoUploader";
 import {
@@ -159,7 +159,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
       zip: profile.zip ?? "",
       linkedinUrl: profile.linkedinUrl ?? "",
       // Stored in E.164; the field holds bare national digits.
-      phone: toUsPhoneDigits(profile.phone ?? ""),
+      phone: profile.phone ?? "",
       experiences: profile.experiences.map((experience) => ({
         firmName: experience.firmName,
         years: String(experience.years),
@@ -185,7 +185,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
         state: values.state.toUpperCase(),
         zip: values.zip,
         linkedinUrl: values.linkedinUrl === "" ? null : values.linkedinUrl,
-        phone: toE164UsPhone(values.phone),
+        phone: values.phone,
         // Sent whole: the API replaces the list rather than merging it, which
         // is what makes removing a firm here actually remove it.
         experiences: values.experiences.map((firm) => ({
@@ -249,7 +249,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="zip">ZIP</Label>
-              <Input id="zip" {...register("zip")} />
+              <NumericInput id="zip" {...register("zip")} />
             </div>
           </div>
         </Section>
@@ -302,9 +302,8 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor={`experiences.${index}.years`}>Years</Label>
-                  <Input
+                  <NumericInput
                     id={`experiences.${index}.years`}
-                    inputMode="numeric"
                     placeholder="5"
                     {...register(`experiences.${index}.years`)}
                   />
@@ -375,7 +374,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
               control={control}
               name="phone"
               render={({ field }) => (
-                <UsPhoneInput
+                <PhoneInput
                   id="phone"
                   value={field.value}
                   onChange={field.onChange}
