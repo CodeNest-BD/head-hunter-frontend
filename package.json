@@ -10,6 +10,7 @@
     "analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "next lint",
+    "generate:cities": "node scripts/generate-cities-by-state.mjs",
     "vitest:common": "vitest --bail 1",
     "test": "npm run vitest:common -- --run",
     "vitest:watch": "npm run vitest:common -- --watch"

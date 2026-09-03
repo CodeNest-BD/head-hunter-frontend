@@ -4,7 +4,6 @@ import { ChevronRight, Wallet } from "lucide-react";
 import { US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
-import { RichTextView } from "@/shared/ui-components/data/RichTextView";
 import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
 
 import { formatSalaryRange } from "../utils/formatSalaryRange";
@@ -297,13 +296,6 @@ export function JobLivePreview({
 
         <PillRow label="Must-Haves" entries={values.mustHave} />
         <PillRow label="Nice-to-Haves" entries={values.niceToHave} />
-
-        {values.description.trim() !== "" && (
-          <div className="flex flex-col gap-2">
-            <BlockLabel>Position Details</BlockLabel>
-            <RichTextView value={values.description} />
-          </div>
-        )}
 
         {selectionKeys.length > 0 && (
           <div className="flex flex-col gap-2">

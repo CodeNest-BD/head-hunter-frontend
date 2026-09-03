@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Logo } from "@/shared/ui-components/layout/Logo";
 
+import { FooterExploreLink } from "./FooterExploreLink";
 import { FooterPostJobLink } from "./FooterPostJobLink";
 
 interface FooterLink {
@@ -9,6 +10,8 @@ interface FooterLink {
   readonly href: string;
   /** Resolve the destination by auth (a signed-in company deep-links in-app). */
   readonly roleAware?: boolean;
+  /** The live map is recruiter-only — hide this link from signed-in companies. */
+  readonly recruiterOnly?: boolean;
 }
 
 interface FooterColumn {
@@ -20,7 +23,7 @@ const COLUMNS: readonly FooterColumn[] = [
   {
     title: "Marketplace",
     links: [
-      { label: "Explore jobs", href: "/explore-jobs" },
+      { label: "Explore jobs", href: "/explore-jobs", recruiterOnly: true },
       { label: "How it works", href: "/#how" },
     ],
   },
@@ -93,6 +96,8 @@ export function LandingFooter() {
                       label={link.label}
                       guestHref={link.href}
                     />
+                  ) : link.recruiterOnly ? (
+                    <FooterExploreLink label={link.label} href={link.href} />
                   ) : (
                     <FooterNavLink {...link} />
                   )}
