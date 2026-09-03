@@ -45,9 +45,10 @@ import {
 } from "../schemas";
 import { formatSalaryRange } from "../utils/formatSalaryRange";
 import { DecorativeUsMap } from "@/components/landing/DecorativeUsMap";
-import { US_STATES, US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
+import { US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
 import { useStateCities } from "@/shared/hooks/useStateCities";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
+import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
 import { PublicJobCard } from "./PublicJobCard";
 import { UsJobMap, type MapSelection } from "./UsJobMap";
 
@@ -415,11 +416,6 @@ function FilterPill({
   );
 }
 
-/** State filter options (incl. DC), alphabetical by name; "all" clears it. */
-const STATE_OPTIONS = [...US_STATES]
-  .map((state) => ({ code: state.code, name: state.name }))
-  .sort((a, b) => a.name.localeCompare(b.name));
-
 function FiltersPanel({
   filters,
   onChange,
@@ -496,33 +492,21 @@ function FiltersPanel({
           <Label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
             State
           </Label>
-          <Select
+          <StateSelect
             value={
-              filters.selection.kind === "none"
-                ? "all"
-                : filters.selection.state
+              filters.selection.kind === "none" ? "" : filters.selection.state
             }
-            onValueChange={(value) =>
+            clearLabel="All states"
+            placeholder="All states"
+            onChange={(value) =>
               onChange({
                 selection:
-                  value === "all"
+                  value === ""
                     ? { kind: "none" }
                     : { kind: "state", state: value },
               })
             }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All states" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All states</SelectItem>
-              {STATE_OPTIONS.map((state) => (
-                <SelectItem key={state.code} value={state.code}>
-                  {state.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </div>
 
         <div>
