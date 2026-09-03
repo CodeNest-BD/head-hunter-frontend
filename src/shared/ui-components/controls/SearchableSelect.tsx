@@ -208,7 +208,9 @@ export function SearchableSelect({
       <PopoverContent
         align="start"
         className={cn(
-          "w-[var(--radix-popover-trigger-width)] p-0",
+          // Match the trigger, but never so narrow that options truncate — a
+          // state/city trigger sharing a row can be quite slim.
+          "w-[var(--radix-popover-trigger-width)] min-w-[13rem] p-0",
           contentClassName,
         )}
       >
