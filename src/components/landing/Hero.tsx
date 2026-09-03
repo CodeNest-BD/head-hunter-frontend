@@ -81,7 +81,7 @@ export function Hero() {
             src="/assets/brand/world-jobs-map.svg"
             alt="Open roles and recruiter fees on a world map"
             width={1774}
-            height={887}
+            height={1037}
             priority
             // The optimizer rejects SVG unless dangerouslyAllowSVG is set, and an
             // SVG is already resolution-independent — serve it untouched.
