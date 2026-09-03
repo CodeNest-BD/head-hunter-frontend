@@ -16,7 +16,7 @@ import type { CandidateNegotiationState } from "@/features/conversations/utils/c
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
-import { Input } from "@/shared/ui-components/controls/input";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor } from "@/shared/utils/money";
@@ -137,9 +137,9 @@ export function SendOfferForm({
         <p className="text-sm font-medium text-foreground">Send offer</p>
         <div className="flex flex-col gap-1">
           <Label htmlFor="send-offer-salary">Salary (USD/yr)</Label>
-          <Input
+          <NumericInput
+            decimal
             id="send-offer-salary"
-            inputMode="decimal"
             {...register("salary")}
           />
           {errors.salary && (

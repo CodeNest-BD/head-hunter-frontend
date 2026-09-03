@@ -5,7 +5,7 @@ import {
   stateSchema,
   zipSchema,
 } from "@/shared/libs/usAddress";
-import { usPhoneDigitsSchema } from "@/shared/libs/usPhone";
+import { phoneSchema } from "@/shared/libs/phone";
 import { specializationsSchema } from "@/shared/utils/specializations";
 
 export const SUBSCRIPTION_STATUSES = [
@@ -129,7 +129,7 @@ export const recruiterProfileFormSchema = z.object({
     .trim()
     .url("Enter a full URL, including https://")
     .or(z.literal("")),
-  phone: usPhoneDigitsSchema,
+  phone: phoneSchema,
   experiences: z
     .array(experienceFormSchema)
     .max(MAX_EXPERIENCES, `At most ${MAX_EXPERIENCES} firms`),

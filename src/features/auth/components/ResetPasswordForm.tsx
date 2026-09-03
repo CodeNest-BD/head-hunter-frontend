@@ -11,6 +11,7 @@ import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { PasswordInput } from "@/shared/ui-components/controls/password-input";
 
@@ -123,9 +124,8 @@ function ResetPasswordFormInner() {
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="otp">Reset code</Label>
-        <Input
+        <NumericInput
           id="otp"
-          inputMode="numeric"
           autoComplete="one-time-code"
           maxLength={6}
           aria-invalid={errors.otp ? true : undefined}

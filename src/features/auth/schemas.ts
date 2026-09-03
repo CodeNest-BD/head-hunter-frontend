@@ -6,7 +6,7 @@ import {
   stateSchema,
   zipSchema,
 } from "@/shared/libs/usAddress";
-import { toE164UsPhone, usPhoneDigitsSchema } from "@/shared/libs/usPhone";
+import { phoneSchema } from "@/shared/libs/phone";
 import { specializationsSchema } from "@/shared/utils/specializations";
 import { signupRoleSchema, type SignupRole } from "./types";
 
@@ -121,9 +121,8 @@ export const signUpSchema = z
         },
       ),
     confirmPassword: z.string(),
-    // Bare national digits; the locked +1 lives in the input's chrome and is
-    // re-attached by `toSignUpPayload`.
-    phone: usPhoneDigitsSchema,
+    // E.164 (any country) straight from the international phone input.
+    phone: phoneSchema,
     companyName: z.string().trim().max(160, "Keep it under 160 characters"),
     linkedinUrl: z
       .string()
@@ -229,7 +228,7 @@ export function toSignUpPayload(values: SignUpFormData): SignUpPayload {
     confirmPassword: values.confirmPassword,
     firstName: values.firstName,
     lastName: values.lastName,
-    phone: toE164UsPhone(values.phone),
+    phone: values.phone,
     addressLine: values.addressLine,
     city: values.city,
     state: values.state.toUpperCase(),

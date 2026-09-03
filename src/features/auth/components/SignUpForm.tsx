@@ -20,10 +20,11 @@ import { useStateCities } from "@/shared/hooks/useStateCities";
 import { Button } from "@/shared/ui-components/controls/button";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { PasswordInput } from "@/shared/ui-components/controls/password-input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
-import { UsPhoneInput } from "@/shared/ui-components/controls/UsPhoneInput";
+import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
 import {
   signUpSchema,
   toSignUpPayload,
@@ -380,7 +381,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
           control={control}
           name="phone"
           render={({ field }) => (
-            <UsPhoneInput
+            <PhoneInput
               id="phone"
               value={field.value}
               onChange={field.onChange}
@@ -468,9 +469,8 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor={`experiences.${index}.years`}>Years</Label>
-                    <Input
+                    <NumericInput
                       id={`experiences.${index}.years`}
-                      inputMode="numeric"
                       {...register(`experiences.${index}.years`)}
                       className="h-11"
                       placeholder="5"
@@ -570,8 +570,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
                     aria-label={`Reference ${index + 1} title`}
                   />
                 </div>
-                <Input
-                  type="tel"
+                <NumericInput
                   {...register(`references.${index}.phone`)}
                   className="h-11"
                   placeholder="Phone"
@@ -636,8 +635,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
               />
             )}
           />
-          <Input
-            type="text"
+          <NumericInput
             autoComplete="postal-code"
             {...register("zip")}
             className="h-11"

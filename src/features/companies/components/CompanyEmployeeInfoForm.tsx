@@ -3,10 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 
-import { toE164UsPhone, toUsPhoneDigits } from "@/shared/libs/usPhone";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
-import { UsPhoneInput } from "@/shared/ui-components/controls/UsPhoneInput";
+import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
 import {
   companyEmployeeInfoFormSchema,
   type CompanyEmployeeInfoFormValues,
@@ -35,8 +34,8 @@ export function CompanyEmployeeInfoForm({
     defaultValues: {
       firstName: profile.firstName,
       lastName: profile.lastName,
-      // Stored in E.164; the field holds bare national digits.
-      phone: toUsPhoneDigits(profile.phone ?? ""),
+      // E.164, as the international phone input produces and the API stores.
+      phone: profile.phone ?? "",
     },
   });
 
@@ -47,9 +46,9 @@ export function CompanyEmployeeInfoForm({
         // already refused an empty one.
         firstName: values.firstName,
         lastName: values.lastName,
-        // Required since sign-up, so it can be changed but never cleared; the
-        // API takes E.164 while the field holds bare digits.
-        phone: toE164UsPhone(values.phone),
+        // Required since sign-up, so it can be changed but never cleared. Already
+        // E.164 from the international phone input.
+        phone: values.phone,
       },
       // Re-baseline the form so the Save button disables again until the next
       // real edit, instead of staying enabled after a successful save.
@@ -90,7 +89,7 @@ export function CompanyEmployeeInfoForm({
               control={control}
               name="phone"
               render={({ field }) => (
-                <UsPhoneInput
+                <PhoneInput
                   id="phone"
                   value={field.value}
                   onChange={field.onChange}

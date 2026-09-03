@@ -7,6 +7,7 @@ import { useStateCities } from "@/shared/hooks/useStateCities";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
@@ -188,9 +189,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="yearFounded">Year Founded</Label>
-              <Input
+              <NumericInput
                 id="yearFounded"
-                inputMode="numeric"
+                maxLength={4}
                 placeholder="2014"
                 {...register("yearFounded")}
               />
@@ -202,9 +203,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="employeeSize">Number of Employees</Label>
-              <Input
+              <NumericInput
                 id="employeeSize"
-                placeholder="51-200"
+                placeholder="200"
                 {...register("employeeSize")}
               />
               {errors.employeeSize && (
@@ -215,8 +216,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="revenue">Annual Revenue</Label>
-              {/* The $ is a permanent prefix, not part of the value; a leading $
-                  is stripped so older "$50M" values don't render as "$$50M". */}
+              {/* The $ is a permanent prefix, not part of the value. The field is
+                  numeric-only, so legacy free-text values like "$50M" are cleaned
+                  to their digits on first edit. */}
               <Controller
                 control={control}
                 name="revenue"
@@ -228,14 +230,13 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                     >
                       $
                     </span>
-                    <Input
+                    <NumericInput
+                      decimal
                       id="revenue"
                       className="pl-7"
-                      placeholder="50M"
-                      value={(field.value ?? "").replace(/^\$/, "")}
-                      onChange={(event) =>
-                        field.onChange(event.target.value.replace(/^\$/, ""))
-                      }
+                      placeholder="50000000"
+                      value={(field.value ?? "").replace(/[^\d.]/g, "")}
+                      onChange={field.onChange}
                       onBlur={field.onBlur}
                     />
                   </div>
@@ -309,7 +310,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="zip">ZIP</Label>
-              <Input id="zip" placeholder="94103" {...register("zip")} />
+              <NumericInput id="zip" placeholder="94103" {...register("zip")} />
               {errors.zip && (
                 <p className="text-xs text-destructive">{errors.zip.message}</p>
               )}

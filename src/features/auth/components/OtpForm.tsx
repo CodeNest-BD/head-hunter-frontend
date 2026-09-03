@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Input } from "@/shared/ui-components/controls/input";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { otpSchema, type OtpFormData } from "../schemas";
 import { verifyOtp, resendOtp } from "../api/auth";
@@ -84,10 +84,8 @@ export function OtpForm({ email, autoResend = false }: OtpFormProps) {
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="otp">Verification code</Label>
-        <Input
+        <NumericInput
           id="otp"
-          type="text"
-          inputMode="numeric"
           maxLength={6}
           autoComplete="one-time-code"
           aria-invalid={errors.otp ? true : undefined}

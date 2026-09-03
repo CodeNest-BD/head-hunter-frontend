@@ -8,7 +8,7 @@ const valid = {
   state: "TX",
   zip: "78701",
   linkedinUrl: "",
-  phone: "2025550100",
+  phone: "+12025550100",
   experiences: [],
 };
 

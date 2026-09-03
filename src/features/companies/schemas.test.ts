@@ -127,7 +127,7 @@ describe("companyEmployeeInfoFormSchema", () => {
   const employee = {
     firstName: "Jane",
     lastName: "Doe",
-    phone: "2025550100",
+    phone: "+12025550100",
   };
   const employeeErrorPaths = (overrides: Record<string, unknown>): string[] => {
     const result = companyEmployeeInfoFormSchema.safeParse({
@@ -139,7 +139,7 @@ describe("companyEmployeeInfoFormSchema", () => {
       : result.error.issues.map((i) => i.path.join("."));
   };
 
-  it("accepts a contact with a ten-digit US phone", () => {
+  it("accepts a contact with a valid E.164 phone", () => {
     expect(companyEmployeeInfoFormSchema.safeParse(employee).success).toBe(
       true,
     );
@@ -153,11 +153,10 @@ describe("companyEmployeeInfoFormSchema", () => {
     expect(employeeErrorPaths({ lastName: "Doe2" })).toContain("lastName");
   });
 
-  // The field holds bare digits; the +1 is fixed chrome on the input and is
-  // re-attached at the submit boundary.
-  it("requires ten digits, rejecting a formatted or cleared number", () => {
-    expect(employeeErrorPaths({ phone: "+1-202-555-0100" })).toContain("phone");
+  // The field holds an E.164 number (any country) from the international input.
+  it("requires a valid E.164 number, rejecting a bare or cleared one", () => {
     expect(employeeErrorPaths({ phone: "" })).toContain("phone");
-    expect(employeeErrorPaths({ phone: "202555010" })).toContain("phone");
+    expect(employeeErrorPaths({ phone: "2025550100" })).toContain("phone");
+    expect(employeeErrorPaths({ phone: "+1202555010" })).toContain("phone");
   });
 });

@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
-import { Input } from "@/shared/ui-components/controls/input";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { useStartTopUp } from "../hooks/useBilling";
 
@@ -103,10 +103,10 @@ export function TopUpCard() {
               <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[15px] font-medium text-muted-foreground">
                 $
               </span>
-              <Input
+              <NumericInput
+                decimal
                 id="topup-amount"
-                inputMode="decimal"
-                placeholder="1,000"
+                placeholder="1000"
                 value={amount}
                 onChange={(event) => {
                   setAmount(event.target.value);

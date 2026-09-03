@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type ReactNode,
 } from "react";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 
@@ -49,6 +50,16 @@ interface SearchableSelectProps {
   readonly disabledPlaceholder?: string;
   readonly id?: string;
   readonly className?: string;
+  /**
+   * Custom trigger content for the selected value (e.g. a compact flag + dialling
+   * code on the phone country picker). Defaults to the selected option's label.
+   */
+  readonly renderValue?: (selected: SelectOption | undefined) => ReactNode;
+  /**
+   * Extra classes for the dropdown panel — e.g. a fixed width when the trigger is
+   * narrower than the options need (the phone country picker).
+   */
+  readonly contentClassName?: string;
 }
 
 /** A flat entry in the option list — the optional clear row carries a null value. */
@@ -81,6 +92,8 @@ export function SearchableSelect({
   disabledPlaceholder,
   id,
   className,
+  renderValue,
+  contentClassName,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -131,10 +144,10 @@ export function SearchableSelect({
       ?.scrollIntoView({ block: "nearest" });
   }, [active]);
 
+  const selectedOption =
+    value === null ? undefined : options.find((o) => o.value === value);
   const selectedLabel =
-    value === null
-      ? null
-      : (options.find((o) => o.value === value)?.label ?? value);
+    value === null ? null : (selectedOption?.label ?? value);
 
   const commit = (next: string | null): void => {
     onChange(next);
@@ -182,15 +195,24 @@ export function SearchableSelect({
           )}
         >
           <span className="line-clamp-1 text-left">
-            {selectedLabel ??
-              (disabled ? (disabledPlaceholder ?? placeholder) : placeholder)}
+            {renderValue
+              ? renderValue(selectedOption)
+              : (selectedLabel ??
+                (disabled
+                  ? (disabledPlaceholder ?? placeholder)
+                  : placeholder))}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </button>
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[var(--radix-popover-trigger-width)] p-0"
+        className={cn(
+          // Match the trigger, but never so narrow that options truncate — a
+          // state/city trigger sharing a row can be quite slim.
+          "w-[var(--radix-popover-trigger-width)] min-w-[13rem] p-0",
+          contentClassName,
+        )}
       >
         <div className="flex items-center border-b px-3">
           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
