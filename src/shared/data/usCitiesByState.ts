@@ -2275,9 +2275,7 @@ export const US_CITIES_BY_STATE: Readonly<Record<string, readonly string[]>> = {
     "Woodbury Center",
     "Woodmont",
   ],
-  DC: [
-    "Washington",
-  ],
+  DC: ["Washington"],
   DE: [
     "Arden",
     "Ardencroft",
