@@ -8,6 +8,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
+import { COMPANY_SIZE_OPTIONS } from "@/shared/data/companySize";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import {
@@ -970,11 +971,29 @@ export function JobForm({
                 optional
                 error={errors.companyDetails?.employeeSize?.message}
               >
-                <NumericInput
-                  id="companyEmployeeSize"
-                  className={CONTROL_HEIGHT}
-                  placeholder="e.g., 200"
-                  {...register("companyDetails.employeeSize")}
+                <Controller
+                  control={control}
+                  name="companyDetails.employeeSize"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id="companyEmployeeSize"
+                        className={CONTROL_HEIGHT}
+                      >
+                        <SelectValue placeholder="Select a range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COMPANY_SIZE_OPTIONS.map((size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
               </Field>
               <Field

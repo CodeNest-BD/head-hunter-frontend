@@ -15,6 +15,22 @@ export type { CountryCode };
 /** US-based marketplace, so the picker starts on the US; users can switch. */
 export const DEFAULT_COUNTRY: CountryCode = "US";
 
+const COUNTRY_SET: ReadonlySet<string> = new Set(getCountries());
+
+/** Type guard: true only for the ISO codes libphonenumber knows. */
+function isCountryCode(value: string): value is CountryCode {
+  return COUNTRY_SET.has(value);
+}
+
+/**
+ * Narrow an arbitrary string to a `CountryCode`, falling back to the default —
+ * so the picker's `string | null` value becomes a typed country without an
+ * unsafe cast.
+ */
+export function toCountryCode(value: string | null | undefined): CountryCode {
+  return value && isCountryCode(value) ? value : DEFAULT_COUNTRY;
+}
+
 // Resolved once. Wrapped in a factory because Intl.DisplayNames can be absent
 // in exotic runtimes; the fallback is the raw ISO code.
 const regionNames = (() => {

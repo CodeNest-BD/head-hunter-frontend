@@ -158,7 +158,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
       state: profile.state ?? "",
       zip: profile.zip ?? "",
       linkedinUrl: profile.linkedinUrl ?? "",
-      // Stored in E.164; the field holds bare national digits.
+      // E.164, as the international phone input produces and the API stores.
       phone: profile.phone ?? "",
       experiences: profile.experiences.map((experience) => ({
         firmName: experience.firmName,

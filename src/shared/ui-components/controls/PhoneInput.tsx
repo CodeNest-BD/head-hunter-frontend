@@ -5,11 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/shared/libs/shadCnConfig";
 import {
   COUNTRY_OPTIONS,
-  DEFAULT_COUNTRY,
   callingCode,
   countryFlag,
   formatNational,
   parseE164,
+  toCountryCode,
   toE164,
   type CountryCode,
 } from "@/shared/libs/phone";
@@ -64,7 +64,7 @@ export function PhoneInput({
   };
 
   const onCountryChange = (next: string | null): void => {
-    const nextCountry = (next ?? DEFAULT_COUNTRY) as CountryCode;
+    const nextCountry = toCountryCode(next);
     setCountry(nextCountry);
     emit(nextCountry, national);
   };
@@ -85,7 +85,7 @@ export function PhoneInput({
           searchPlaceholder="Search countries…"
           contentClassName="w-[20rem]"
           renderValue={(selected) => {
-            const code = (selected?.value ?? country) as CountryCode;
+            const code = selected ? toCountryCode(selected.value) : country;
             return (
               <span className="flex items-center gap-1.5">
                 <span className="text-base leading-none">

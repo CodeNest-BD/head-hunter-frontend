@@ -9,7 +9,15 @@ import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui-components/controls/select";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
+import { COMPANY_SIZE_OPTIONS } from "@/shared/data/companySize";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor, minorToMajorInput } from "@/shared/utils/money";
 import {
@@ -203,10 +211,26 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="employeeSize">Number of Employees</Label>
-              <NumericInput
-                id="employeeSize"
-                placeholder="200"
-                {...register("employeeSize")}
+              <Controller
+                control={control}
+                name="employeeSize"
+                render={({ field }) => (
+                  <Select
+                    value={field.value || undefined}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger id="employeeSize">
+                      <SelectValue placeholder="Select a range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMPANY_SIZE_OPTIONS.map((size) => (
+                        <SelectItem key={size} value={size}>
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               />
               {errors.employeeSize && (
                 <p className="text-xs text-destructive">

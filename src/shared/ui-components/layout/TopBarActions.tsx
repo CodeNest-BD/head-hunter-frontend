@@ -218,7 +218,11 @@ export function TopBarActions({ role }: { role: Role }) {
   if (role !== "company" && role !== "recruiter") return null;
   return (
     <>
-      {role === "company" ? <CompanyTopBarActions /> : <RecruiterTopBarActions />}
+      {role === "company" ? (
+        <CompanyTopBarActions />
+      ) : (
+        <RecruiterTopBarActions />
+      )}
       <NotificationBell />
     </>
   );
