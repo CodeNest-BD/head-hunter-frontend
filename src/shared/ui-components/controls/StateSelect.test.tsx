@@ -7,17 +7,17 @@ import { StateSelect } from "./StateSelect";
 describe("StateSelect", () => {
   it("shows the selected state's name on the trigger", () => {
     render(<StateSelect value="DE" onChange={vi.fn()} />);
-    expect(screen.getByRole("combobox")).toHaveTextContent("Delaware");
+    expect(screen.getByRole("button")).toHaveTextContent("Delaware");
   });
 
-  it("filters the list as you type and returns the chosen code", async () => {
+  it("filters the list as you type and returns the chosen code on click", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<StateSelect value="" onChange={onChange} />);
 
-    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByRole("button"));
     await user.type(
-      screen.getByRole("textbox", { name: /search states/i }),
+      screen.getByRole("combobox", { name: /search states/i }),
       "flor",
     );
 
@@ -30,6 +30,20 @@ describe("StateSelect", () => {
     expect(onChange).toHaveBeenCalledWith("FL");
   });
 
+  it("is keyboard-operable: type then Enter selects the top match", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<StateSelect value="" onChange={onChange} />);
+
+    await user.click(screen.getByRole("button"));
+    await user.type(
+      screen.getByRole("combobox", { name: /search states/i }),
+      "florida{Enter}",
+    );
+
+    expect(onChange).toHaveBeenCalledWith("FL");
+  });
+
   it("offers a clear option only when clearLabel is set", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -37,7 +51,7 @@ describe("StateSelect", () => {
       <StateSelect value="FL" onChange={onChange} clearLabel="All states" />,
     );
 
-    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByRole("button"));
     await user.click(
       within(screen.getByRole("listbox")).getByText("All states"),
     );
