@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { Button } from "@/shared/ui-components/controls/button";
-import { HeroWorldMap } from "./HeroWorldMap";
 import { LandingCta } from "./LandingCta";
 import { StatsStrip } from "./StatsStrip";
 
@@ -76,8 +76,18 @@ export function Hero() {
         </div>
 
         <div className="flex flex-col gap-6 [animation:fadeUp_600ms_120ms_ease_both]">
-          {/* Vector world map — stays crisp at any size, unlike the old PNG. */}
-          <HeroWorldMap />
+          {/* Provided SVG artwork — stays crisp at any size, unlike a raster. */}
+          <Image
+            src="/assets/brand/world-jobs-map.svg"
+            alt="Open roles and recruiter fees on a world map"
+            width={1774}
+            height={887}
+            priority
+            // The optimizer rejects SVG unless dangerouslyAllowSVG is set, and an
+            // SVG is already resolution-independent — serve it untouched.
+            unoptimized
+            className="h-auto w-full"
+          />
           {/* Live marketplace stats sit directly under the map (per the
               client reference), scoped to the map column. */}
           <StatsStrip />
