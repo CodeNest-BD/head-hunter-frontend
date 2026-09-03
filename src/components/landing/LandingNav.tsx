@@ -6,6 +6,7 @@ import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, LogOut, Menu, UserRound, X } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { Logo } from "@/shared/ui-components/layout/Logo";
+import { TopBarActions } from "@/shared/ui-components/layout/TopBarActions";
 import { UserMenu } from "@/shared/ui-components/layout/UserMenu";
 import { NAV_BY_ROLE } from "@/shared/ui-components/layout/dashboardNav";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -206,8 +207,11 @@ export function LandingNav() {
                 aria-hidden="true"
                 className="h-9 w-24 animate-pulse rounded-md bg-brand-line"
               />
-            ) : isAuthed ? (
-              <UserMenu />
+            ) : isAuthed && user ? (
+              <>
+                <TopBarActions role={user.role} />
+                <UserMenu />
+              </>
             ) : (
               <>
                 <Button
