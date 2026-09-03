@@ -201,7 +201,7 @@ export function CompaniesTable() {
                 allLabel: "All statuses",
                 options: [
                   { value: "active", label: "Active" },
-                  { value: "suspended", label: "Held" },
+                  { value: "suspended", label: "Suspended" },
                 ],
               }}
               extraFilter={{

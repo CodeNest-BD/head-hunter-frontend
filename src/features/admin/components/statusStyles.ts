@@ -12,7 +12,7 @@ export const ACCOUNT_STATUS_STYLES: Record<AccountStatus, string> = {
 
 export const ACCOUNT_STATUS_LABELS: Record<AccountStatus, string> = {
   active: "Active",
-  suspended: "Held",
+  suspended: "Suspended",
 };
 
 export const SUBSCRIPTION_STATUS_STYLES: Record<string, string> = {

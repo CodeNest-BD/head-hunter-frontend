@@ -56,7 +56,7 @@ function StatusBar({
       <div className="flex items-center justify-between text-sm">
         <span className="font-semibold text-navy">{label}</span>
         <span className="text-muted-foreground">
-          {active} active · {held} held
+          {active} active · {held} suspended
         </span>
       </div>
       <div className="mt-1.5 flex h-2.5 overflow-hidden rounded-full bg-muted">
@@ -204,12 +204,12 @@ export function AdminOverview({ firstName }: { firstName: string }) {
         <StatCard
           label="Recruiters"
           value={data.recruiters.total}
-          hint={`${data.recruiters.active} active · ${data.recruiters.held} held`}
+          hint={`${data.recruiters.active} active · ${data.recruiters.held} suspended`}
         />
         <StatCard
           label="Companies"
           value={data.companies.total}
-          hint={`${data.companies.active} active · ${data.companies.held} held`}
+          hint={`${data.companies.active} active · ${data.companies.held} suspended`}
         />
         <StatCard
           // Odd one out in the phone's two-up grid; spanning it keeps the row
@@ -296,8 +296,8 @@ export function AdminOverview({ firstName }: { firstName: string }) {
                 </h2>
                 <p className="mt-1 text-[13px] text-muted-foreground">
                   {heldAccounts} of{" "}
-                  {data.recruiters.total + data.companies.total} accounts are on
-                  hold.
+                  {data.recruiters.total + data.companies.total} accounts are
+                  suspended.
                 </p>
                 <div className="mt-5 flex flex-col gap-4">
                   <StatusBar
@@ -324,7 +324,7 @@ export function AdminOverview({ firstName }: { firstName: string }) {
                       className="h-2.5 w-2.5 rounded-full"
                       style={{ backgroundColor: HELD_COLOR }}
                     />
-                    Held
+                    Suspended
                   </span>
                 </div>
               </section>
