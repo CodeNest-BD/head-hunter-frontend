@@ -43,12 +43,15 @@ describe("JobLivePreview", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows the description as recruiters read it", () => {
+  it("omits the position details / description block from the preview", () => {
     render(<JobLivePreview values={values} onCollapse={noop} />);
 
+    // The preview deliberately excludes Position Details (the description); it
+    // lives on the posted job, not this at-a-glance preview.
     expect(
-      screen.getByText("Own the deployment pipeline."),
-    ).toBeInTheDocument();
+      screen.queryByText("Own the deployment pipeline."),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Position Details")).not.toBeInTheDocument();
   });
 
   // Blank money must not preview as NaN or $0 noise — the old form->view
