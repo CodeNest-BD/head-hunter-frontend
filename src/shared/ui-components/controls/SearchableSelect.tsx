@@ -84,7 +84,9 @@ export function SearchableSelect({
   }, [options, query, maxResults]);
 
   const selectedLabel =
-    value === null ? null : (options.find((o) => o.value === value)?.label ?? value);
+    value === null
+      ? null
+      : (options.find((o) => o.value === value)?.label ?? value);
 
   const commit = (next: string | null): void => {
     onChange(next);
@@ -140,7 +142,11 @@ export function SearchableSelect({
             className="h-9 w-full bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
-        <div id={listId} role="listbox" className="max-h-64 overflow-y-auto p-1">
+        <div
+          id={listId}
+          role="listbox"
+          className="max-h-64 overflow-y-auto p-1"
+        >
           {clearLabel !== undefined && (
             <Option
               label={clearLabel}
