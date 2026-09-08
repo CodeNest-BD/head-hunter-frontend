@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
+import { LandingCta } from "./LandingCta";
 import { PublicShell } from "./PublicShell";
 
 /** One of the two legacy hiring options, shown as a trade-off card. */
@@ -110,21 +111,32 @@ export function AboutPage() {
             want the freedom to recruit without the overhead, restrictions, and
             constant business development required at traditional agencies.
           </p>
+          {/* Both are sign-up CTAs, so a signed-in visitor is deep-linked
+              instead and the side that isn't theirs is disabled — following it
+              only bounced them off /signup into their own dashboard. */}
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="font-bold">
-              <Link href="/signup?role=company">
-                I&rsquo;m hiring
-                <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              asChild
+            <LandingCta
+              role="company"
+              authedHref="/company/jobs/new"
+              guestHref="/signup?role=company"
+              disabledTitle="Posting a job is for employers."
               size="lg"
+              className="font-bold"
+            >
+              I&rsquo;m hiring
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </LandingCta>
+            <LandingCta
+              role="recruiter"
+              authedHref="/dashboard"
+              guestHref="/signup?role=recruiter"
+              disabledTitle="You&rsquo;re signed in as an employer."
               variant="outline"
+              size="lg"
               className="font-semibold"
             >
-              <Link href="/signup?role=recruiter">I&rsquo;m a recruiter</Link>
-            </Button>
+              I&rsquo;m a recruiter
+            </LandingCta>
           </div>
         </div>
       </section>

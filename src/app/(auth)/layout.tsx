@@ -10,7 +10,7 @@ const BRAND_HIGHLIGHTS: ReadonlyArray<{
   {
     icon: Store,
     title: "A curated marketplace",
-    body: "Companies and specialist recruiters, matched on the placements that matter.",
+    body: "Companies and specialized recruiters, matched on the placements that matter.",
   },
   {
     icon: Zap,

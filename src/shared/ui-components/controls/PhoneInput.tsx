@@ -71,8 +71,16 @@ export function PhoneInput({
 
   const onNationalChange = (raw: string): void => {
     const digits = raw.replace(/\D/g, "");
-    setNational(digits);
-    emit(country, digits);
+    // Backspacing a formatting character the formatter owns — the ")" in
+    // "(618)" — removes no digit, so re-formatting reproduces the old value and
+    // the field looks stuck. A shorter raw value with the same digits is that
+    // case, and it means the user asked to delete the digit before it.
+    const deletedSeparatorOnly =
+      digits === national &&
+      raw.length < formatNational(country, national).length;
+    const next = deletedSeparatorOnly ? digits.slice(0, -1) : digits;
+    setNational(next);
+    emit(country, next);
   };
 
   return (

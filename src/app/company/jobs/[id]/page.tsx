@@ -114,13 +114,19 @@ function EditJobContent({ jobId }: { jobId: string }) {
 
       <JobForm
         job={job}
-        onSubmit={(input) =>
-          update.mutate(input, {
-            onSuccess: () => {
-              toast.success("Job updated");
-              router.push("/company/jobs");
+        onSubmit={(input, _intent, benefitsDocument) =>
+          update.mutate(
+            { input, benefitsDocument },
+            {
+              onSuccess: ({ benefitsDocumentFailed }) => {
+                // The hook has already said so; stay put so the company can
+                // re-attach instead of being sent away from the field.
+                if (benefitsDocumentFailed) return;
+                toast.success("Job updated");
+                router.push("/company/jobs");
+              },
             },
-          })
+          )
         }
         isSubmitting={update.isPending}
         submitLabel="Save changes"

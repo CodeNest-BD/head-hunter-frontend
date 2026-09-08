@@ -17,6 +17,7 @@ export function jobToJobView(job: Job): JobView {
     daysAndHours: job.intake?.daysAndHours,
     reportsTo: job.intake?.reportsTo,
     benefits: job.intake?.benefits,
+    benefitsAttachment: job.intake?.benefitsAttachment,
     interviewingAvailability: job.intake?.interviewingAvailability,
     postedOnlineElsewhere: job.intake?.postedOnlineElsewhere,
     otherSourcing: job.intake?.otherSourcing,

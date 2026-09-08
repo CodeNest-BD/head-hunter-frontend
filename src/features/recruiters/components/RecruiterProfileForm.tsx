@@ -211,6 +211,11 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
           <div className="flex flex-col gap-2">
             <Label htmlFor="addressLine">Address</Label>
             <Input id="addressLine" {...register("addressLine")} />
+            {errors.addressLine && (
+              <p className="text-xs text-destructive">
+                {errors.addressLine.message}
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="flex flex-col gap-2">
@@ -246,10 +251,18 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
                   />
                 )}
               />
+              {errors.city && (
+                <p className="text-xs text-destructive">
+                  {errors.city.message}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="zip">ZIP</Label>
-              <NumericInput id="zip" {...register("zip")} />
+              <NumericInput id="zip" placeholder="94103" {...register("zip")} />
+              {errors.zip && (
+                <p className="text-xs text-destructive">{errors.zip.message}</p>
+              )}
             </div>
           </div>
         </Section>

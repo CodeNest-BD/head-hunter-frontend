@@ -20,7 +20,7 @@ const TESTIMONIALS: readonly Quote[] = [
   },
   {
     quote:
-      "We filled two senior roles in a fortnight — and only paid on the hires that stuck.",
+      "We filled two senior roles for the price that would normally be one hire when using an agency.",
     name: "Priya N.",
     title: "Head of Talent",
   },

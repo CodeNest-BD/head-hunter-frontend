@@ -270,6 +270,74 @@ export const interviewStageSchema = z.object({
 });
 export type InterviewStage = z.infer<typeof interviewStageSchema>;
 
+/** Every day a role can run, in week order — which is also the pill order. */
+export const WEEK_DAYS = [
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+  "sun",
+] as const;
+export const weekDaySchema = z.enum(WEEK_DAYS);
+export type WeekDay = z.infer<typeof weekDaySchema>;
+
+export const WEEK_DAY_LABELS: Record<WeekDay, string> = {
+  mon: "Mon",
+  tue: "Tue",
+  wed: "Wed",
+  thu: "Thu",
+  fri: "Fri",
+  sat: "Sat",
+  sun: "Sun",
+};
+
+/** Every hour a shift can start or end on, as the schedule selects offer them. */
+export const HOURS_OF_DAY = Array.from({ length: 24 }, (_, hour) => hour);
+
+/** An hour of the day on a 12-hour clock, e.g. 0 reads as "12:00 AM". */
+export function formatHourOfDay(hour: number): string {
+  const onTwelveHourClock = hour % 12 === 0 ? 12 : hour % 12;
+  return `${onTwelveHourClock}:00 ${hour < 12 ? "AM" : "PM"}`;
+}
+
+/**
+ * The role's schedule: which days it runs, and one hour range covering all of
+ * them. Replaced a free-text "Hours (Weekly)" box whose values were not
+ * migrated, so a job saved before the change reads as having no schedule.
+ */
+export const daysAndHoursSchema = z.object({
+  days: z.array(weekDaySchema),
+  startHour: z.number(),
+  endHour: z.number(),
+});
+export type DaysAndHours = z.infer<typeof daysAndHoursSchema>;
+
+/**
+ * A benefits document the company attached. The file name and size ride along
+ * with the key so a card can label the download link without asking the API.
+ */
+export const benefitsAttachmentSchema = z.object({
+  s3Key: z.string(),
+  fileName: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.number().optional(),
+});
+export type BenefitsAttachment = z.infer<typeof benefitsAttachmentSchema>;
+
+/** e.g. "Mon, Tue, Wed · 9:00 AM – 5:00 PM". */
+export function formatDaysAndHours(schedule: DaysAndHours): string {
+  // Read through WEEK_DAYS so the days always print in week order, whatever
+  // order they arrived in.
+  const selected = new Set(schedule.days);
+  const days = WEEK_DAYS.filter((day) => selected.has(day))
+    .map((day) => WEEK_DAY_LABELS[day])
+    .join(", ");
+  const hours = `${formatHourOfDay(schedule.startHour)} – ${formatHourOfDay(schedule.endHour)}`;
+  return days === "" ? hours : `${days} · ${hours}`;
+}
+
 /**
  * The job intake questionnaire, as the company's own job returns it.
  *
@@ -286,10 +354,13 @@ export const jobIntakeSchema = z
     worksiteAddress: z.string().optional().catch(undefined),
     worksiteZip: z.string().optional().catch(undefined),
     benefitsSummary: z.string().optional().catch(undefined),
+    benefitsAttachment: benefitsAttachmentSchema.optional().catch(undefined),
     selectionKeys: z.array(z.string()).optional().catch(undefined),
     positionOpenReason: positionOpenReasonSchema.optional().catch(undefined),
     confidentialSearch: z.boolean().optional().catch(undefined),
-    daysAndHours: z.string().optional().catch(undefined),
+    // A job saved before the structured control holds a string here; the
+    // `.catch` is what turns that legacy value into "no schedule".
+    daysAndHours: daysAndHoursSchema.optional().catch(undefined),
     reportsTo: z.string().optional().catch(undefined),
     benefits: benefitsSchema.optional().catch(undefined),
     offerTimeline: offerTimelineSchema.optional().catch(undefined),
@@ -506,20 +577,36 @@ export const jobFormSchema = z
     // company from its owner and strips an intake `companyName` outright, so
     // this is never written. It backs the read-only field and the preview.
     companyName: z.string(),
+    // All five are required, prefill or not: recruiters pitch the company as
+    // much as the role. This applies retroactively to every edit of every
+    // existing job, admin edits included — see the plan's §7.
     companyDetails: z.object({
-      industry: z.string().trim().max(120, "Keep it under 120 characters"),
-      employeeSize: z.string().trim().max(60, "Keep it under 60 characters"),
-      revenue: z.string().trim().max(60, "Keep it under 60 characters"),
-      // A string because the input produces one; "" means "not said".
+      industry: z
+        .string()
+        .trim()
+        .min(1, "Name the industry")
+        .max(120, "Keep it under 120 characters"),
+      employeeSize: z
+        .string()
+        .trim()
+        .min(1, "Pick an employee size")
+        .max(60, "Keep it under 60 characters"),
+      revenue: z
+        .string()
+        .trim()
+        .min(1, "Enter the annual revenue")
+        .max(60, "Keep it under 60 characters"),
+      // A string because the input produces one.
       yearsInBusiness: z
         .string()
         .trim()
-        .refine((value) => value === "" || /^\d{1,3}$/.test(value), {
+        .refine((value) => /^\d{1,3}$/.test(value), {
           message: "Enter a whole number of years",
         }),
       whatTheyDo: z
         .string()
         .trim()
+        .min(1, "Say what the company does")
         .max(MAX_WHAT_THEY_DO_LENGTH, "Keep it under 600 characters"),
     }),
     worksiteAddress: z.string().trim().max(200, "Keep it under 200 characters"),
@@ -529,7 +616,12 @@ export const jobFormSchema = z
       .refine((value) => value === "" || /^\d{5}(-\d{4})?$/.test(value), {
         message: "Enter a 5-digit ZIP, or ZIP+4",
       }),
-    daysAndHours: z.string().trim().max(200, "Keep it under 200 characters"),
+    daysAndHours: z.object({
+      days: z.array(weekDaySchema).min(1, "Pick at least one day"),
+      // Strings because the selects produce them; "" is "not picked yet".
+      startHour: z.string().min(1, "Pick a start time"),
+      endHour: z.string().min(1, "Pick an end time"),
+    }),
     reportsTo: z.string().trim().max(120, "Keep it under 120 characters"),
     benefits: z.object({
       medical: z.boolean(),
@@ -608,6 +700,52 @@ export const jobFormSchema = z
         code: z.ZodIssueCode.custom,
         path: ["locationState"],
         message: "Pick a state, or set the work model to Remote",
+      });
+    }
+    // Somebody has to physically go there, so the worksite is only optional on
+    // a fully remote role.
+    if (values.workModel !== "remote") {
+      const worksiteFields = [
+        { path: "worksiteAddress", value: values.worksiteAddress },
+        { path: "worksiteZip", value: values.worksiteZip },
+        { path: "locationCity", value: values.locationCity },
+      ] as const;
+      for (const field of worksiteFields) {
+        if (field.value === "") {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [field.path],
+            message: "Required unless the work model is Remote",
+          });
+        }
+      }
+    }
+    if (values.salaryMin === "" || values.salaryMax === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [values.salaryMin === "" ? "salaryMin" : "salaryMax"],
+        message: "Enter a pay range",
+      });
+    }
+    if (values.reportsTo === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["reportsTo"],
+        message: "Say who this role reports to",
+      });
+    }
+    // One range covers every selected day, so the end has to come after the
+    // start. Overnight shifts are knowingly out of scope — see the plan.
+    const { startHour, endHour } = values.daysAndHours;
+    if (
+      startHour !== "" &&
+      endHour !== "" &&
+      Number(endHour) <= Number(startHour)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["daysAndHours", "endHour"],
+        message: "End the day after it starts",
       });
     }
     // Checked here rather than on the field because it spans two of them.

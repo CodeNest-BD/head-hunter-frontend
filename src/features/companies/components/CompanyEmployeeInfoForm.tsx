@@ -6,13 +6,14 @@ import { Controller, useForm } from "react-hook-form";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
+import { FormSection } from "@/shared/ui-components/layout/FormSection";
 import {
   companyEmployeeInfoFormSchema,
   type CompanyEmployeeInfoFormValues,
   type CompanyProfile,
 } from "../schemas";
 import { useUpdateMyCompanyProfile } from "../hooks/useCompanyProfile";
-import { CompanyFormSaveBar, CompanyFormSection } from "./CompanyFormLayout";
+import { CompanyFormSaveBar } from "./CompanyFormLayout";
 
 interface CompanyEmployeeInfoFormProps {
   profile: CompanyProfile;
@@ -59,7 +60,7 @@ export function CompanyEmployeeInfoForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="rounded-md border border-border bg-card shadow-card">
-        <CompanyFormSection
+        <FormSection
           title="Contact"
           hint="Head-Hunters.com user at your organization."
         >
@@ -102,7 +103,7 @@ export function CompanyEmployeeInfoForm({
               <p className="text-xs text-destructive">{errors.phone.message}</p>
             )}
           </div>
-        </CompanyFormSection>
+        </FormSection>
       </div>
 
       <CompanyFormSaveBar

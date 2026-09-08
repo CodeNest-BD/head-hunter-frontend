@@ -52,8 +52,8 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
 
   const subtitleParts = [
     companyName || "Your company",
-    `${publishedTotal} published job${publishedTotal === 1 ? "" : "s"}`,
-    `${newCandidates} new candidate${newCandidates === 1 ? "" : "s"}`,
+    `${publishedTotal} Published Job${publishedTotal === 1 ? "" : "s"}`,
+    `${newCandidates} New Candidate${newCandidates === 1 ? "" : "s"}`,
   ];
 
   const attention: AttentionItem[] = [];
@@ -121,6 +121,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           }
           icon={Briefcase}
           href="/company/jobs"
+          showArrow={false}
         />
         <StatCard
           label="New candidates"
@@ -132,6 +133,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           }
           icon={Users}
           href="/company/inbox"
+          showArrow={false}
         />
         <StatCard
           label="Available funds"
@@ -139,6 +141,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           hint="free funds to post jobs"
           icon={DollarSign}
           href="/company/wallet"
+          showArrow={false}
         />
         <StatCard
           label="Reserved funds"
@@ -146,6 +149,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           hint="held for live jobs"
           icon={Lock}
           href="/company/wallet"
+          showArrow={false}
         />
       </div>
 

@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { uploadToPresignedUrl } from "@/shared/libs/documentUpload";
 import { isApiError } from "@/shared/libs/errorHandler";
 import {
   createJob,
@@ -13,13 +14,81 @@ import {
   fetchJob,
   fetchJobMap,
   fetchJobs,
+  presignBenefitsAttachment,
   updateJob,
   type JobFilterParams,
   type JobListParams,
   type JobWriteInput,
 } from "../api/jobs";
 import { jobKeys } from "../keys";
-import type { JobStatus } from "../schemas";
+import type { Job, JobStatus } from "../schemas";
+
+/** Verbatim from the client feedback round — do not reword. */
+const BENEFITS_DOCUMENT_FAILED =
+  "Job saved, but the benefits document didn't upload — re-attach it below.";
+
+/** What the job form hands back: the write, plus a file picked for upload. */
+interface JobSubmission {
+  input: JobWriteInput;
+  /** Uploaded only after the job exists; null when nothing was picked. */
+  benefitsDocument: File | null;
+}
+
+interface SavedJob {
+  job: Job;
+  /** True when a document was picked and could not be attached. */
+  benefitsDocumentFailed: boolean;
+}
+
+/**
+ * Attaches the document to a job that already exists — its object key is
+ * scoped to the job id, so there is nothing to upload against before then.
+ * Returns the job as the attaching PATCH left it.
+ */
+async function attachBenefitsDocument(job: Job, file: File): Promise<Job> {
+  const staged = await presignBenefitsAttachment(job.id, file);
+  await uploadToPresignedUrl(staged.uploadUrl, file);
+  return updateJob(
+    job.id,
+    {
+      // The API replaces `intake` wholesale, so the rest of it has to ride
+      // along or this PATCH would erase everything the form just wrote.
+      intake: {
+        ...(job.intake ?? {}),
+        benefitsAttachment: {
+          s3Key: staged.s3Key,
+          fileName: file.name,
+          contentType: file.type,
+          sizeBytes: file.size,
+        },
+      },
+    },
+    { suppressGlobalErrorToast: true },
+  );
+}
+
+/**
+ * Saves nothing itself — takes a job that was just written and attaches the
+ * document to it.
+ *
+ * A failed upload deliberately keeps the job, unlike create-and-publish which
+ * rolls its draft back: the job is the valuable thing and the form is long, so
+ * the company is told and left able to re-attach rather than losing the lot.
+ */
+async function withBenefitsDocument(
+  job: Job,
+  file: File | null,
+): Promise<SavedJob> {
+  if (!file) return { job, benefitsDocumentFailed: false };
+  try {
+    return {
+      job: await attachBenefitsDocument(job, file),
+      benefitsDocumentFailed: false,
+    };
+  } catch {
+    return { job, benefitsDocumentFailed: true };
+  }
+}
 
 export function useJobs(params: JobListParams) {
   return useQuery({
@@ -64,9 +133,16 @@ export function useCreateJob() {
   const queryClient = useQueryClient();
   const router = useRouter();
   return useMutation({
-    mutationFn: (input: JobWriteInput) => createJob(input),
-    onSuccess: () => {
+    mutationFn: async ({ input, benefitsDocument }: JobSubmission) =>
+      withBenefitsDocument(await createJob(input), benefitsDocument),
+    onSuccess: ({ job, benefitsDocumentFailed }) => {
       void queryClient.invalidateQueries({ queryKey: jobKeys.all });
+      if (benefitsDocumentFailed) {
+        // The edit page is where re-attaching works, against the real job id.
+        toast.error(BENEFITS_DOCUMENT_FAILED);
+        router.push(`/company/jobs/${job.id}`);
+        return;
+      }
       toast.success("Draft saved");
       router.push("/company/jobs");
     },
@@ -84,10 +160,11 @@ export function useCreateAndPublishJob() {
   const queryClient = useQueryClient();
   const router = useRouter();
   return useMutation({
-    mutationFn: async (input: JobWriteInput) => {
+    mutationFn: async ({ input, benefitsDocument }: JobSubmission) => {
       const draft = await createJob(input, { suppressGlobalErrorToast: true });
+      let published: Job;
       try {
-        return await updateJob(
+        published = await updateJob(
           draft.id,
           { status: "published" },
           { suppressGlobalErrorToast: true },
@@ -97,9 +174,17 @@ export function useCreateAndPublishJob() {
         await deleteJob(draft.id).catch(() => undefined);
         throw error;
       }
+      // Attached only after the post has succeeded, so a failed upload — which
+      // is survivable by design — can never reach the rollback above.
+      return withBenefitsDocument(published, benefitsDocument);
     },
-    onSuccess: () => {
+    onSuccess: ({ job, benefitsDocumentFailed }) => {
       void queryClient.invalidateQueries({ queryKey: jobKeys.all });
+      if (benefitsDocumentFailed) {
+        toast.error(BENEFITS_DOCUMENT_FAILED);
+        router.push(`/company/jobs/${job.id}`);
+        return;
+      }
       toast.success("Job published. Recruiters can see it now.");
       router.push("/company/jobs");
     },
@@ -116,11 +201,17 @@ export function useCreateAndPublishJob() {
 export function useUpdateJob(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: Partial<JobWriteInput> & { status?: JobStatus }) =>
-      updateJob(id, input),
-    onSuccess: (job) => {
+    mutationFn: async ({
+      input,
+      benefitsDocument = null,
+    }: {
+      input: Partial<JobWriteInput> & { status?: JobStatus };
+      benefitsDocument?: File | null;
+    }) => withBenefitsDocument(await updateJob(id, input), benefitsDocument),
+    onSuccess: ({ job, benefitsDocumentFailed }) => {
       queryClient.setQueryData(jobKeys.detail(id), job);
       void queryClient.invalidateQueries({ queryKey: jobKeys.all });
+      if (benefitsDocumentFailed) toast.error(BENEFITS_DOCUMENT_FAILED);
     },
   });
 }
@@ -136,7 +227,7 @@ export function usePublishJob(id: string) {
   return {
     publish: () =>
       update.mutate(
-        { status: "published" },
+        { input: { status: "published" } },
         {
           onSuccess: () =>
             toast.success(

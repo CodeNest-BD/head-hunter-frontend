@@ -92,7 +92,8 @@ export type SignUpReferenceValues = z.infer<typeof signUpReferenceSchema>;
  * Sign-up form. Mirrors the backend SignUpDto: optional text fields stay
  * strings where "" means unset (converted at submit by `toSignUpPayload`).
  * Role-conditional presence the object schema can't express — a company must
- * name itself, a recruiter must supply at least one reference — lives in the
+ * name itself, a recruiter must supply at least one recruiting company and one
+ * reference — lives in the
  * superRefine, matching the backend service check. The address is required for
  * both roles.
  *
@@ -155,6 +156,13 @@ export const signUpSchema = z
         code: z.ZodIssueCode.custom,
         path: ["companyName"],
         message: "Company name is required",
+      });
+    }
+    if (values.role === "recruiter" && values.experiences.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["experiences"],
+        message: "At least one recruiting company is required",
       });
     }
     if (values.role === "recruiter" && values.references.length === 0) {

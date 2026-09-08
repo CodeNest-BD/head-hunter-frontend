@@ -52,6 +52,9 @@ function EditContent({ jobId }: { jobId: string }) {
       isSubmitting={update.isPending}
       submitLabel="Save changes"
       onCancel={() => router.push("/admin/jobs")}
+      // The admin endpoint cannot presign an upload against a company's job,
+      // so the benefits document is shown and removable but not replaceable.
+      canAttachBenefitsDocument={false}
       onSubmit={(input) =>
         update.mutate(
           { jobId, input: input as unknown as Record<string, unknown> },

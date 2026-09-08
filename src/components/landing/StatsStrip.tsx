@@ -51,7 +51,7 @@ export function StatsStrip() {
       // Rounded to whole dollars — an averaged figure reads cleaner on the
       // marketing strip without cents (e.g. "$1,826", not "$1,826.19").
       value: formatMinor(Math.round(data.averageFeeMinor / 100) * 100),
-      label: "Avg. fee",
+      label: "Avg. Fee",
     },
   ];
 

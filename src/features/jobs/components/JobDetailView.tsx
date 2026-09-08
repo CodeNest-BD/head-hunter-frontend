@@ -19,7 +19,9 @@ import {
   SALARY_RATE_PERIOD_SUFFIX,
   WORK_MODEL_LABELS,
   type Benefits,
+  type BenefitsAttachment,
   type CompanyDetails,
+  type DaysAndHours,
   type EmploymentType,
   type InterviewStage,
   type InterviewType,
@@ -30,6 +32,7 @@ import {
   type SalaryRatePeriod,
   type WorkModel,
 } from "../schemas";
+import { BenefitsDocumentLink } from "./BenefitsDocumentLink";
 
 /**
  * The fields the recruiter-facing job display reads. Both an API `Job` and a
@@ -38,6 +41,9 @@ import {
  * can never drift apart.
  */
 export interface JobView {
+  /** Absent on the create/edit preview draft, which is not a job yet — the
+   * surfaces that need to call the API for it check for the id first. */
+  id?: string;
   title: string;
   roleCategory: string;
   employmentType: string | null;
@@ -66,9 +72,10 @@ export interface JobView {
   // guest cannot read a company's worksite address or hiring intel.
   worksiteAddress?: string;
   workModel?: WorkModel;
-  daysAndHours?: string;
+  daysAndHours?: DaysAndHours;
   reportsTo?: string;
   benefits?: Benefits;
+  benefitsAttachment?: BenefitsAttachment;
   interviewingAvailability?: InterviewingAvailability;
   postedOnlineElsewhere?: boolean;
   otherSourcing?: OtherSourcing;
@@ -213,7 +220,12 @@ function PayBenefitsBox({ job }: { job: JobView }) {
     ? SALARY_RATE_PERIOD_SUFFIX[job.salaryRatePeriod]
     : "";
   const benefits = job.benefits ? benefitsList(job.benefits) : [];
-  if (!hasSalary && benefits.length === 0) return null;
+  const benefitsDocument = job.benefitsAttachment;
+  const downloadableDocument =
+    job.id !== undefined && benefitsDocument !== undefined
+      ? { jobId: job.id, attachment: benefitsDocument }
+      : null;
+  if (!hasSalary && benefits.length === 0 && !downloadableDocument) return null;
 
   return (
     <div className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:flex-row sm:items-stretch sm:gap-6 sm:p-6">
@@ -264,7 +276,15 @@ function PayBenefitsBox({ job }: { job: JobView }) {
               ))}
             </ul>
           ) : (
-            <p className="mt-1 text-sm text-navy">—</p>
+            !downloadableDocument && <p className="mt-1 text-sm text-navy">—</p>
+          )}
+          {downloadableDocument && (
+            <div className="mt-2">
+              <BenefitsDocumentLink
+                jobId={downloadableDocument.jobId}
+                attachment={downloadableDocument.attachment}
+              />
+            </div>
           )}
         </div>
       </div>

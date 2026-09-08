@@ -496,8 +496,8 @@ function FiltersPanel({
             value={
               filters.selection.kind === "none" ? "" : filters.selection.state
             }
-            clearLabel="All states"
-            placeholder="All states"
+            clearLabel="All States"
+            placeholder="All States"
             onChange={(value) =>
               onChange({
                 selection:
@@ -781,7 +781,7 @@ function LiveMapCard({
               Current Live Openings
             </span>{" "}
             <span className="text-sm text-brand-gray">
-              The live map is for verified recruiters
+              You are now accessing all fee-backed posted jobs
             </span>
           </div>
         }

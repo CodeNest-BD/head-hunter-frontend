@@ -22,14 +22,6 @@ export const CANDIDATE_STATUS_LABELS: Record<CandidateStatus, string> = {
   passed: "Passed",
 };
 
-export const CV_ACCEPT = ".pdf,.doc,.docx";
-export const CV_CONTENT_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-] as const;
-export const MAX_CV_BYTES = 10 * 1024 * 1024;
-
 export const candidateSchema = z.object({
   id: z.string(),
   jobId: z.string(),

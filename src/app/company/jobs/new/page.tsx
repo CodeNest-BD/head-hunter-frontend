@@ -22,18 +22,18 @@ export default function NewJobPage() {
               className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to jobs
+              Back to Jobs
             </Link>
             <PageHeader
-              title="Post a job"
-              subtitle="Save it as a draft, or publish it live right away — publishing reserves the fee and notifies recruiters."
+              title="Post a Job"
+              subtitle="Save it as a draft, or publish it live right away — publishing reserves the fee and notifies recruiters. The more details provided, the stronger match recruiters are able to make."
               className="mb-0"
             />
             <JobForm
-              onSubmit={(input, intent) =>
+              onSubmit={(input, intent, benefitsDocument) =>
                 intent === "publish"
-                  ? createAndPublish.mutate(input)
-                  : create.mutate(input)
+                  ? createAndPublish.mutate({ input, benefitsDocument })
+                  : create.mutate({ input, benefitsDocument })
               }
               isSubmitting={create.isPending || createAndPublish.isPending}
               submitLabel="Save draft"

@@ -2,8 +2,8 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
+import { MAX_DOCUMENT_BYTES } from "@/shared/libs/documentUpload";
 import type { Candidate } from "../schemas";
-import { MAX_CV_BYTES } from "../schemas";
 import { CandidateForm } from "./CandidateForm";
 
 const fetchCandidatesMock = vi.fn();
@@ -105,7 +105,7 @@ describe("CandidateForm", () => {
 
     const oversized = pdfFile();
     Object.defineProperty(oversized, "size", {
-      value: MAX_CV_BYTES + 1,
+      value: MAX_DOCUMENT_BYTES + 1,
       configurable: true,
     });
     await user.upload(screen.getByLabelText(/cv \/ resume/i), oversized);

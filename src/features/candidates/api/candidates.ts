@@ -1,5 +1,5 @@
-import axios from "axios";
 import { apiClient } from "@/shared/libs/apiClient";
+import type { StagedUpload } from "@/shared/libs/documentUpload";
 import {
   attachmentSchema,
   candidateSchema,
@@ -59,11 +59,6 @@ export interface CandidateInput {
   noticePeriodDays?: number | null;
 }
 
-export interface StagedUpload {
-  s3Key: string;
-  uploadUrl: string;
-}
-
 /**
  * POST /v1/jobs/:jobId/candidate-attachments/presign
  *
@@ -82,15 +77,11 @@ export async function presignCandidateUpload(
   return data;
 }
 
-/** Raw PUT to S3 — no auth header, so plain axios, not apiClient. */
-export async function uploadToPresignedUrl(
-  uploadUrl: string,
-  file: File,
-): Promise<void> {
-  await axios.put(uploadUrl, file, {
-    headers: { "Content-Type": file.type },
-  });
-}
+// Re-exported rather than re-implemented: the PUT leg is identical for every
+// document upload, and callers here (and their test mocks) address it through
+// this module.
+export { uploadToPresignedUrl } from "@/shared/libs/documentUpload";
+export type { StagedUpload } from "@/shared/libs/documentUpload";
 
 /** POST /v1/jobs/:jobId/candidates — max five per recruiter per job. */
 export async function createCandidate(

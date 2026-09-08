@@ -47,11 +47,11 @@ function CompanyTopBarActions() {
       </Link>
       <Link
         href="/company/jobs/new"
-        aria-label="Post a job"
+        aria-label="Post a Job"
         className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:px-3"
       >
         <Plus className="h-4 w-4" />
-        <span className="hidden sm:inline">Post a job</span>
+        <span className="hidden sm:inline">Post a Job</span>
       </Link>
     </div>
   );

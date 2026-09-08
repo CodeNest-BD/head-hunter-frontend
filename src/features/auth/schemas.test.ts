@@ -23,6 +23,9 @@ const validRecruiter: SignUpFormData = {
   ...validCompany,
   role: "recruiter",
   companyName: "",
+  experiences: [
+    { firmName: "Robert Half", years: "5", specializations: ["technology"] },
+  ],
   references: [{ name: "John Smith", company: "", title: "", phone: "" }],
 };
 
@@ -143,8 +146,10 @@ describe("signUpSchema", () => {
     }
   });
 
-  it("accepts a recruiter listing no staffing firms", () => {
-    expect(errorPaths({ role: "recruiter", experiences: [] })).toEqual([]);
+  it("requires a recruiter to list at least one staffing firm", () => {
+    expect(errorPaths({ role: "recruiter", experiences: [] })).toContain(
+      "experiences",
+    );
   });
 
   it("accepts up to five staffing firms", () => {
@@ -303,7 +308,7 @@ describe("toSignUpPayload", () => {
   });
 
   it("omits recruiter optionals that were left empty", () => {
-    const payload = toSignUpPayload(validRecruiter);
+    const payload = toSignUpPayload({ ...validRecruiter, experiences: [] });
     expect(payload).not.toHaveProperty("experiences");
     expect(payload).not.toHaveProperty("linkedinUrl");
   });

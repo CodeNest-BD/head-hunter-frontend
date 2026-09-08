@@ -17,6 +17,7 @@ import {
   POSITION_OPEN_REASON_LABELS,
   ROLE_CATEGORY_LABELS,
   WORK_MODEL_LABELS,
+  formatDaysAndHours,
   interviewDurationLabel,
   type JobFormValues,
   type JobStatus,
@@ -102,6 +103,22 @@ function benefitsLine(benefits: JobFormValues["benefits"]): string {
   return named.join(" · ");
 }
 
+/** The schedule, once it is whole — a half-picked one has nothing to show. */
+function scheduleLine(schedule: JobFormValues["daysAndHours"]): string {
+  if (
+    schedule.days.length === 0 ||
+    schedule.startHour === "" ||
+    schedule.endHour === ""
+  ) {
+    return "";
+  }
+  return formatDaysAndHours({
+    days: schedule.days,
+    startHour: Number(schedule.startHour),
+    endHour: Number(schedule.endHour),
+  });
+}
+
 /** How soon the company can start interviewing, ASAP or a window. */
 function availabilityLine(values: JobFormValues): string {
   if (values.interviewingAsap) return "ASAP";
@@ -157,7 +174,7 @@ export function JobLivePreview({
   const details: ReadonlyArray<{ label: string; value: string }> = [
     { label: "Worksite", value: values.worksiteAddress },
     { label: "ZIP", value: values.worksiteZip },
-    { label: "Hours", value: values.daysAndHours },
+    { label: "Days & Hours", value: scheduleLine(values.daysAndHours) },
     { label: "Reports to", value: values.reportsTo },
     { label: "Benefits", value: benefitsLine(values.benefits) },
     { label: "Interviewing from", value: availabilityLine(values) },

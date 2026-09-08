@@ -1,6 +1,8 @@
 import type {
   Benefits,
+  BenefitsAttachment,
   CompanyDetails,
+  DaysAndHours,
   JobFormValues,
   JobIntake,
 } from "../schemas";
@@ -40,6 +42,7 @@ const FORM_OWNED_KEYS = [
   "worksiteAddress",
   "worksiteZip",
   "benefitsSummary",
+  "benefitsAttachment",
   "selectionKeys",
   "positionOpenReason",
   "confidentialSearch",
@@ -85,6 +88,26 @@ function toCompanyDetailsInput(
   const whatTheyDo = orUndefined(values.whatTheyDo);
   if (whatTheyDo !== undefined) details.whatTheyDo = whatTheyDo;
   return Object.keys(details).length === 0 ? undefined : details;
+}
+
+/**
+ * The schedule, or nothing: a half-answered one (days but no hours) is not a
+ * schedule, and storing it would leave the job card printing a range it does
+ * not have.
+ */
+function toDaysAndHoursInput(
+  values: FormOwnedIntake["daysAndHours"],
+): DaysAndHours | undefined {
+  const startHour = inputToNumber(values.startHour);
+  const endHour = inputToNumber(values.endHour);
+  if (
+    values.days.length === 0 ||
+    startHour === undefined ||
+    endHour === undefined
+  ) {
+    return undefined;
+  }
+  return { days: values.days, startHour, endHour };
 }
 
 /** True when the company ticked or typed anything at all in the benefits block. */
@@ -149,7 +172,11 @@ export function intakeToFormValues(intake: JobIntake | null): FormOwnedIntake {
       whatTheyDo: intake?.companyDetails?.whatTheyDo ?? "",
     },
     worksiteAddress: intake?.worksiteAddress ?? "",
-    daysAndHours: intake?.daysAndHours ?? "",
+    daysAndHours: {
+      days: intake?.daysAndHours?.days ?? [],
+      startHour: numberToInput(intake?.daysAndHours?.startHour),
+      endHour: numberToInput(intake?.daysAndHours?.endHour),
+    },
     reportsTo: intake?.reportsTo ?? "",
     benefits: {
       medical: benefits?.medical ?? false,
@@ -203,6 +230,13 @@ export function intakeToFormValues(intake: JobIntake | null): FormOwnedIntake {
 export function toIntakeInput(
   values: FormOwnedIntake,
   existing: JobIntake | null,
+  /**
+   * The attachment to write, or nothing to drop it. It is not a form value:
+   * a newly picked file has no key until it is uploaded, which happens after
+   * the job is saved — so the caller passes the job's current attachment
+   * through here to hold the slot until the upload replaces it.
+   */
+  benefitsAttachment?: BenefitsAttachment,
 ): JobIntake | undefined {
   // A local copy: the keys below are re-derived from the form, and the rest of
   // `existing` passes through as-is.
@@ -228,6 +262,9 @@ export function toIntakeInput(
   if (worksiteZip !== undefined) merged.worksiteZip = worksiteZip;
   const benefitsSummary = orUndefined(values.benefitsSummary);
   if (benefitsSummary !== undefined) merged.benefitsSummary = benefitsSummary;
+  if (benefitsAttachment !== undefined) {
+    merged.benefitsAttachment = benefitsAttachment;
+  }
 
   const selectionKeys = values.selectionKeys.filter(
     (entry) => entry.trim() !== "",
@@ -241,7 +278,7 @@ export function toIntakeInput(
       merged.confidentialSearch = values.confidentialSearch;
     }
   }
-  const daysAndHours = orUndefined(values.daysAndHours);
+  const daysAndHours = toDaysAndHoursInput(values.daysAndHours);
   if (daysAndHours !== undefined) merged.daysAndHours = daysAndHours;
   const reportsTo = orUndefined(values.reportsTo);
   if (reportsTo !== undefined) merged.reportsTo = reportsTo;

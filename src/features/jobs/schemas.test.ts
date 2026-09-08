@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jobFormSchema } from "./schemas";
+import { formatDaysAndHours, jobFormSchema } from "./schemas";
 import { intakeToFormValues } from "./utils/jobIntake";
 
 const valid = {
@@ -8,15 +8,31 @@ const valid = {
   roleCategory: "engineering" as const,
   employmentType: "full_time" as const,
   locationState: "CA",
-  locationCity: "",
-  salaryMin: "",
-  salaryMax: "",
+  locationCity: "San Francisco",
+  salaryMin: "100000",
+  salaryMax: "150000",
   salaryRatePeriod: "per_year" as const,
   recruiterFee: "10000",
   // Mirrored from the company profile, not stored on the job.
   companyName: "Northwind Robotics",
-  // The intake half of the form, unanswered.
+  // The intake half of the form, unanswered apart from the parts that are
+  // required outright: the worksite, the schedule and the company details.
   ...intakeToFormValues(null),
+  worksiteAddress: "123 Market St",
+  worksiteZip: "94103",
+  reportsTo: "VP of Engineering",
+  daysAndHours: {
+    days: ["mon", "tue", "wed", "thu", "fri"] as const,
+    startHour: "9",
+    endHour: "17",
+  },
+  companyDetails: {
+    industry: "Industrial Robotics",
+    employeeSize: "51-200",
+    revenue: "50000000",
+    yearsInBusiness: "12",
+    whatTheyDo: "We build warehouse automation systems.",
+  },
 };
 
 const errorPaths = (overrides: Record<string, unknown>): string[] => {
@@ -50,8 +66,46 @@ describe("jobFormSchema", () => {
     expect(errorPaths({ locationState: "CAL" })).toContain("locationState");
   });
 
-  // The intake questionnaire is optional throughout, so the only rules worth
-  // a test are the two that can actually be got wrong.
+  // Required outright, so an edit of a job saved before this round has to fill
+  // them before it will save at all. Deliberate — see the plan's §7.
+  it("requires every Company Info field", () => {
+    expect(
+      errorPaths({ companyDetails: intakeToFormValues(null).companyDetails }),
+    ).toEqual([
+      "companyDetails.industry",
+      "companyDetails.employeeSize",
+      "companyDetails.revenue",
+      "companyDetails.yearsInBusiness",
+      "companyDetails.whatTheyDo",
+    ]);
+  });
+
+  it("requires at least one day and both hours on the schedule", () => {
+    expect(
+      errorPaths({ daysAndHours: { days: [], startHour: "9", endHour: "17" } }),
+    ).toContain("daysAndHours.days");
+    expect(
+      errorPaths({
+        daysAndHours: { days: ["mon"], startHour: "", endHour: "" },
+      }),
+    ).toEqual(["daysAndHours.startHour", "daysAndHours.endHour"]);
+  });
+
+  // Overnight shifts are knowingly out of scope: one range covers every
+  // selected day, so it has to run forwards.
+  it("rejects a schedule whose end hour is not after its start", () => {
+    expect(
+      errorPaths({
+        daysAndHours: { days: ["mon"], startHour: "22", endHour: "6" },
+      }),
+    ).toContain("daysAndHours.endHour");
+    expect(
+      errorPaths({
+        daysAndHours: { days: ["mon"], startHour: "9", endHour: "9" },
+      }),
+    ).toContain("daysAndHours.endHour");
+  });
+
   it("rejects an interviewing window that ends before it starts", () => {
     expect(
       errorPaths({
@@ -109,12 +163,23 @@ describe("jobFormSchema", () => {
     expect(errorPaths({ employmentType: "" })).toContain("employmentType");
   });
 
-  it("leaves the salary band optional", () => {
-    expect(errorPaths({ salaryMin: "", salaryMax: "" })).toEqual([]);
+  it("requires a pay range", () => {
+    expect(errorPaths({ salaryMin: "", salaryMax: "" })).toContain("salaryMin");
   });
 
-  it("leaves the city optional", () => {
-    expect(errorPaths({ locationCity: "" })).toEqual([]);
+  it("requires a city on a role with a worksite", () => {
+    expect(errorPaths({ locationCity: "" })).toContain("locationCity");
+  });
+
+  it("leaves the worksite and city optional on a remote role", () => {
+    expect(
+      errorPaths({
+        workModel: "remote",
+        locationCity: "",
+        worksiteAddress: "",
+        worksiteZip: "",
+      }),
+    ).toEqual([]);
   });
 
   it("rejects a salary maximum below the minimum", () => {
@@ -129,8 +194,10 @@ describe("jobFormSchema", () => {
     );
   });
 
-  it("accepts a salary range with only one bound set", () => {
-    expect(errorPaths({ salaryMin: "100000", salaryMax: "" })).toEqual([]);
+  it("requires both bounds of the pay range", () => {
+    expect(errorPaths({ salaryMin: "100000", salaryMax: "" })).toContain(
+      "salaryMax",
+    );
   });
 
   it("rejects a role category outside the enum", () => {
@@ -160,7 +227,9 @@ describe("jobFormSchema", () => {
   });
 
   it("accepts a salary minimum at the $1,000,000,000 ceiling", () => {
-    expect(errorPaths({ salaryMin: "1000000000", salaryMax: "" })).toEqual([]);
+    expect(
+      errorPaths({ salaryMin: "1000000000", salaryMax: "" }),
+    ).not.toContain("salaryMin");
   });
 
   it("rejects a salary minimum over the $1,000,000,000 ceiling", () => {
@@ -170,7 +239,9 @@ describe("jobFormSchema", () => {
   });
 
   it("accepts a salary maximum at the $1,000,000,000 ceiling", () => {
-    expect(errorPaths({ salaryMin: "", salaryMax: "1000000000" })).toEqual([]);
+    expect(
+      errorPaths({ salaryMin: "", salaryMax: "1000000000" }),
+    ).not.toContain("salaryMax");
   });
 
   it("rejects a salary maximum over the $1,000,000,000 ceiling", () => {
@@ -181,5 +252,17 @@ describe("jobFormSchema", () => {
 
   it("still rejects a negative salary minimum", () => {
     expect(errorPaths({ salaryMin: "-5" })).toContain("salaryMin");
+  });
+});
+
+describe("formatDaysAndHours", () => {
+  it("prints the days in week order, whatever order they arrived in", () => {
+    expect(
+      formatDaysAndHours({
+        days: ["fri", "mon", "wed"],
+        startHour: 0,
+        endHour: 13,
+      }),
+    ).toBe("Mon, Wed, Fri · 12:00 AM – 1:00 PM");
   });
 });

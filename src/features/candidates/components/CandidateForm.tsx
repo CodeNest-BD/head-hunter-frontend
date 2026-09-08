@@ -10,12 +10,15 @@ import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor, minorToMajorInput } from "@/shared/utils/money";
+import {
+  DOCUMENT_ACCEPT,
+  DOCUMENT_CONTENT_TYPES,
+  MAX_DOCUMENT_BYTES,
+  MAX_DOCUMENT_MB,
+} from "@/shared/libs/documentUpload";
 import type { CandidateInput } from "../api/candidates";
 import { useSubmitCandidate, useUpdateCandidate } from "../hooks/useCandidates";
 import {
-  CV_ACCEPT,
-  CV_CONTENT_TYPES,
-  MAX_CV_BYTES,
   candidateFormSchema,
   type Candidate,
   type CandidateFormValues,
@@ -33,11 +36,11 @@ interface CandidateFormProps {
 /** null when the file is acceptable; otherwise the reason to show the user. */
 function cvFileError(file: File | null): string | null {
   if (!file) return "A CV file is required";
-  if (!CV_CONTENT_TYPES.some((type) => type === file.type)) {
+  if (!DOCUMENT_CONTENT_TYPES.some((type) => type === file.type)) {
     return "CV must be a PDF or Word document (.pdf, .doc, .docx)";
   }
-  if (file.size > MAX_CV_BYTES) {
-    return `CV must be ${Math.floor(MAX_CV_BYTES / (1024 * 1024))}MB or smaller`;
+  if (file.size > MAX_DOCUMENT_BYTES) {
+    return `CV must be ${MAX_DOCUMENT_MB}MB or smaller`;
   }
   return null;
 }
@@ -250,7 +253,7 @@ export function CandidateForm({
           <input
             id="cvFile"
             type="file"
-            accept={CV_ACCEPT}
+            accept={DOCUMENT_ACCEPT}
             onChange={(event) => {
               setCvTouched(true);
               setCvFile(event.target.files?.[0] ?? null);
