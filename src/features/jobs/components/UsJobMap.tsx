@@ -41,11 +41,12 @@ import { formatMinor } from "@/shared/utils/money";
 import { titleCase } from "@/shared/utils/titleCase";
 
 import {
+  STATE_FRAME,
   bubbleRadius,
   feeRange,
   nextBubbleSelection,
   resolveCityBubbles,
-  type CityMapBubble,
+  resolveStateBubbles,
   type CityMapRow,
   type MapSelection,
 } from "../cityMapBubbles";
@@ -119,23 +120,37 @@ function stateFill(
 
 const ZOOM_STEP = 1.5;
 const MIN_ZOOM = 1;
-const MAX_ZOOM = 6;
+// Room for the deepest per-state auto-zoom (STATE_FRAME caps at 13) plus a
+// little manual headroom on top.
+const MAX_ZOOM = 14;
 
-/** The hover card for a city bubble — follows the reference exactly. */
-function CityPopup({
-  bubble,
+/** What a hovered bubble (state or city) shows in its card. */
+interface BubbleInfo {
+  readonly title: string;
+  readonly openRoles: number;
+  readonly totalFeeMinor: number;
+  /** What "View Jobs" (and a plain click) selects. */
+  readonly target: MapSelection;
+}
+
+/**
+ * The hover card shown above a bubble — used for both a state bubble (zoomed
+ * out) and a city bubble (zoomed into a state), so they read identically.
+ */
+function BubblePopup({
+  info,
   anchor,
   onEnter,
   onLeave,
   onViewJobs,
 }: {
-  bubble: CityMapBubble | null;
+  info: BubbleInfo | null;
   anchor: { x: number; top: number; bottom: number } | null;
   onEnter: () => void;
   onLeave: () => void;
-  onViewJobs: (bubble: CityMapBubble) => void;
+  onViewJobs: (info: BubbleInfo) => void;
 }) {
-  if (!bubble || !anchor) return null;
+  if (!info || !anchor) return null;
   // Flip below the bubble when there isn't room for the card above it.
   const placeBelow = anchor.top < 130;
   return (
@@ -155,19 +170,19 @@ function CityPopup({
         className="pointer-events-auto w-max min-w-[180px] max-w-[200px] rounded-lg border border-brand-line bg-white px-4 py-3 shadow-card-lg sm:max-w-none"
       >
         <p className="font-heading text-[15px] font-bold text-navy">
-          {titleCase(bubble.city)}
+          {info.title}
         </p>
         <p className="mt-1 text-[13px] text-navy">
-          <span className="font-bold">{bubble.openRoles.toLocaleString()}</span>{" "}
+          <span className="font-bold">{info.openRoles.toLocaleString()}</span>{" "}
           Open Roles
         </p>
         <p className="text-[13px] text-navy">
           Available Fees:{" "}
-          <span className="font-bold">{formatMinor(bubble.totalFeeMinor)}</span>
+          <span className="font-bold">{formatMinor(info.totalFeeMinor)}</span>
         </p>
         <button
           type="button"
-          onClick={() => onViewJobs(bubble)}
+          onClick={() => onViewJobs(info)}
           className="mt-1.5 inline-flex items-center gap-0.5 text-[13px] font-semibold text-primary hover:underline"
         >
           View Jobs <ArrowUpRight className="h-3.5 w-3.5" />
@@ -189,7 +204,7 @@ export function UsJobMap({
 }: UsJobMapProps) {
   const titleId = useId();
   const [hoveredState, setHoveredState] = useState<string | null>(null);
-  const [hoveredCity, setHoveredCity] = useState<CityMapBubble | null>(null);
+  const [hoveredBubble, setHoveredBubble] = useState<BubbleInfo | null>(null);
   const [comboOpen, setComboOpen] = useState(false);
   const [cityQuery, setCityQuery] = useState("");
   // A single scale drives an SVG-space transform; pan is centered on the
@@ -209,12 +224,12 @@ export function UsJobMap({
   const suppressClickRef = useRef(false);
   // Delays hiding the city popup so the cursor can travel from the bubble into
   // the (interactive) card without it vanishing mid-move.
-  const hideCityRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideBubbleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Where the city popup is anchored: the hovered bubble's center-x and its
   // top/bottom edges, in container pixels. Anchoring to the bubble (not the
   // roaming mouse) keeps the card still and reachable so "View Jobs" is
   // clickable; top/bottom let it flip below the bubble near the top edge.
-  const [cityAnchor, setCityAnchor] = useState<{
+  const [bubbleAnchor, setBubbleAnchor] = useState<{
     x: number;
     top: number;
     bottom: number;
@@ -224,10 +239,27 @@ export function UsJobMap({
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
+  const selectedState = selection.kind === "none" ? null : selection.state;
+  const selectedCity = selection.kind === "city" ? selection.city : null;
+
   // Returning to the un-zoomed view re-centers on the full map.
   useEffect(() => {
     if (zoom <= MIN_ZOOM) setPan({ x: 0, y: 0 });
   }, [zoom]);
+
+  // Auto-zoom: picking a state animates the camera to fit that state so its
+  // cities are spread out and clickable; clearing the selection returns to the
+  // whole-USA view. Keyed on the selected state only, so the user can still
+  // wheel/drag afterwards without it snapping back.
+  useEffect(() => {
+    if (!selectedState) {
+      setZoom(MIN_ZOOM);
+      setPan({ x: 0, y: 0 });
+      return;
+    }
+    setZoom(STATE_FRAME.get(selectedState)?.zoom ?? 4);
+    setPan({ x: 0, y: 0 });
+  }, [selectedState]);
 
   // Mouse-wheel zoom. Attached natively with { passive: false } so we can
   // preventDefault and stop the page from scrolling while zooming the map.
@@ -246,39 +278,54 @@ export function UsJobMap({
   // Clear the popup hide timer if we unmount mid-delay.
   useEffect(
     () => () => {
-      if (hideCityRef.current) clearTimeout(hideCityRef.current);
+      if (hideBubbleRef.current) clearTimeout(hideBubbleRef.current);
     },
     [],
   );
 
-  const selectedState = selection.kind === "none" ? null : selection.state;
-  const selectedCity = selection.kind === "city" ? selection.city : null;
-
   const { width, height } = US_VIEWBOX;
 
-  // Placeable per-city bubbles, recomputed only when the map data changes.
+  // Zoomed-out view: one bubble per state that has live roles, sized by the
+  // state's total available fees.
+  const stateBubbles = useMemo(() => resolveStateBubbles(stats), [stats]);
+  const stateFeeSpan = useMemo(() => feeRange(stateBubbles), [stateBubbles]);
+
+  // Zoomed-in view: the drilled-into state's city bubbles only, so neighbouring
+  // states never crowd the frame. Empty until a state is selected.
   const cityBubbles = useMemo(
     () => resolveCityBubbles(cityData ?? []),
     [cityData],
   );
-  // Bubbles are sized by available fee (summed recruiter fees), relative to the
-  // busiest/quietest city currently plotted.
-  const feeSpan = useMemo(() => feeRange(cityBubbles), [cityBubbles]);
-
-  // Draw largest first so smaller bubbles paint on top: in dense metros (San
-  // Jose beside San Francisco) a small bubble would otherwise sit under a big
-  // neighbour and be impossible to hover or click. Topmost = smallest = the
-  // one the pointer is actually over.
-  const orderedBubbles = useMemo(
-    () => [...cityBubbles].sort((a, b) => b.totalFeeMinor - a.totalFeeMinor),
-    [cityBubbles],
+  const stateCityBubbles = useMemo(
+    () =>
+      selectedState ? cityBubbles.filter((b) => b.state === selectedState) : [],
+    [cityBubbles, selectedState],
+  );
+  // Sized by available fee relative to the busiest/quietest city in this state.
+  const cityFeeSpan = useMemo(
+    () => feeRange(stateCityBubbles),
+    [stateCityBubbles],
   );
 
-  // Pan toward the selected state's centroid when zoomed in.
+  // Draw largest first so smaller bubbles paint on top: in a dense metro a small
+  // bubble would otherwise sit under a big neighbour and be unclickable.
+  // Topmost = smallest = the one the pointer is actually over.
+  const orderedCityBubbles = useMemo(
+    () =>
+      [...stateCityBubbles].sort((a, b) => b.totalFeeMinor - a.totalFeeMinor),
+    [stateCityBubbles],
+  );
+
+  // Zoomed out until a state is chosen; the state/city bubbles swap on that.
+  const zoomedIn = selectedState !== null;
+
+  // Centre on the selected state's fitted frame when zoomed in.
   const focus = useMemo(() => {
     if (!selectedState) return { cx: width / 2, cy: height / 2 };
-    const geo = US_STATES.find((s) => s.code === selectedState);
-    return geo ? { cx: geo.cx, cy: geo.cy } : { cx: width / 2, cy: height / 2 };
+    const frame = STATE_FRAME.get(selectedState);
+    return frame
+      ? { cx: frame.cx, cy: frame.cy }
+      : { cx: width / 2, cy: height / 2 };
   }, [selectedState, width, height]);
 
   const tx = width / 2 - focus.cx * zoom;
@@ -376,20 +423,20 @@ export function UsJobMap({
     );
   };
 
-  const cancelHideCity = (): void => {
-    if (hideCityRef.current) {
-      clearTimeout(hideCityRef.current);
-      hideCityRef.current = null;
+  const cancelHideBubble = (): void => {
+    if (hideBubbleRef.current) {
+      clearTimeout(hideBubbleRef.current);
+      hideBubbleRef.current = null;
     }
   };
-  const showCity = (bubble: CityMapBubble, el: SVGCircleElement): void => {
-    cancelHideCity();
+  const showBubble = (info: BubbleInfo, el: SVGCircleElement): void => {
+    cancelHideBubble();
     const wrap = wrapRef.current?.getBoundingClientRect();
     const dot = el.getBoundingClientRect();
     if (wrap) {
       // Keep the (center-anchored) card clear of the left/right edges.
       const half = 110;
-      setCityAnchor({
+      setBubbleAnchor({
         x: Math.min(
           Math.max(dot.left + dot.width / 2 - wrap.left, half),
           wrap.width - half,
@@ -398,12 +445,12 @@ export function UsJobMap({
         bottom: dot.bottom - wrap.top,
       });
     }
-    setHoveredCity(bubble);
+    setHoveredBubble(info);
     setHoveredState(null);
   };
-  const scheduleHideCity = (): void => {
-    cancelHideCity();
-    hideCityRef.current = setTimeout(() => setHoveredCity(null), 160);
+  const scheduleHideBubble = (): void => {
+    cancelHideBubble();
+    hideBubbleRef.current = setTimeout(() => setHoveredBubble(null), 160);
   };
 
   const selectionLabel =
@@ -548,7 +595,7 @@ export function UsJobMap({
 
         {/* State-name tooltip: follows the cursor while hovering a state, but
             yields to the richer city card when a bubble is hovered. */}
-        {hoveredState && !hoveredCity && pointer && (
+        {hoveredState && !hoveredBubble && pointer && (
           <div
             className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-brand-line bg-white px-2.5 py-1 text-[13px] font-semibold text-navy shadow-card-lg"
             style={{ left: pointer.x, top: pointer.y - 12 }}
@@ -557,22 +604,19 @@ export function UsJobMap({
           </div>
         )}
 
-        {/* City details card, anchored above (or below) the hovered bubble. */}
-        <CityPopup
-          bubble={hoveredCity}
-          anchor={cityAnchor}
-          onEnter={cancelHideCity}
-          onLeave={scheduleHideCity}
-          onViewJobs={(bubble) => {
-            cancelHideCity();
-            setHoveredCity(null);
-            // "View Jobs" always drills into the city (never a toggle-off) and,
-            // unlike a plain bubble click, asks the page to scroll to the list.
-            (onViewJobs ?? onSelect)({
-              kind: "city",
-              state: bubble.state,
-              city: bubble.city,
-            });
+        {/* Details card, anchored above (or below) the hovered bubble — the
+            same card for a state bubble and a city bubble. */}
+        <BubblePopup
+          info={hoveredBubble}
+          anchor={bubbleAnchor}
+          onEnter={cancelHideBubble}
+          onLeave={scheduleHideBubble}
+          onViewJobs={(info) => {
+            cancelHideBubble();
+            setHoveredBubble(null);
+            // "View Jobs" drills into the bubble's target (never a toggle-off)
+            // and, unlike a plain hover, asks the page to scroll to the list.
+            (onViewJobs ?? onSelect)(info.target);
           }}
         />
 
@@ -652,6 +696,9 @@ export function UsJobMap({
                     isActive ? "#034AEF" : isHovered ? "#034AEF" : "#FFFFFF"
                   }
                   strokeWidth={isActive ? 1.6 : isHovered ? 1.2 : 1}
+                  // Keep borders crisp at any zoom instead of ballooning with
+                  // the scale transform when drilled into a state.
+                  vectorEffect="non-scaling-stroke"
                   className="cursor-pointer outline-none transition-[fill,stroke] duration-150 focus-visible:stroke-[#034AEF]"
                   style={{
                     filter: isActive
@@ -662,73 +709,128 @@ export function UsJobMap({
               );
             })}
 
-            {/* Two-letter state code at each state's centroid. pointer-events
-                off so it never intercepts a click meant for the state. */}
-            {US_STATES.map((geo) => (
-              <text
-                key={`label-${geo.code}`}
-                x={geo.cx}
-                y={geo.cy}
-                textAnchor="middle"
-                dominantBaseline="central"
-                className="pointer-events-none select-none"
-                fontSize={11}
-                fontWeight={700}
-                fill={selectedState === geo.code ? "#034AEF" : "#5B6472"}
-              >
-                {geo.code}
-              </text>
-            ))}
-
-            {/* Per-city demand bubbles: one translucent bordered circle per
-                placeable city, sized by available fee. Hovering shows the city
-                popup; clicking selects (or clears) that specific city. */}
-            {orderedBubbles.map((bubble) => {
-              const isSelectedCity =
-                selectedCity === bubble.city && selectedState === bubble.state;
-              // The whole state is highlighted when selected; the exact city
-              // gets a stronger fill/stroke on top of that.
-              const inActiveState = selectedState === bubble.state;
-              const r = bubbleRadius(
-                bubble.totalFeeMinor,
-                feeSpan.min,
-                feeSpan.max,
-                MIN_BUBBLE_RADIUS,
-                MAX_BUBBLE_RADIUS,
-              );
-              const color = inActiveState ? "#034AEF" : "#4F80E6";
-              return (
-                <circle
-                  key={`bubble-${bubble.key}`}
-                  className="cursor-pointer outline-none"
-                  cx={bubble.x}
-                  cy={bubble.y}
-                  r={r}
-                  fill={color}
-                  fillOpacity={
-                    isSelectedCity ? 0.75 : inActiveState ? 0.6 : 0.45
-                  }
-                  stroke={
-                    isSelectedCity || inActiveState ? "#034AEF" : "#2658CF"
-                  }
-                  strokeWidth={isSelectedCity ? 2.5 : 1.5}
-                  strokeOpacity={0.9}
-                  onMouseEnter={(event) =>
-                    showCity(bubble, event.currentTarget)
-                  }
-                  onMouseLeave={scheduleHideCity}
-                  onClick={() => {
-                    // A pan that happens to end on a bubble isn't a selection.
-                    if (suppressClickRef.current) return;
-                    onSelect(nextBubbleSelection(selection, bubble));
-                  }}
+            {/* Two-letter state code at each state's centroid — only in the
+                whole-USA view. Zoomed into a state, the scale transform would
+                blow these up, so they're hidden in favour of the city bubbles.
+                pointer-events off so a label never eats a state click. */}
+            {!zoomedIn &&
+              US_STATES.map((geo) => (
+                <text
+                  key={`label-${geo.code}`}
+                  x={geo.cx}
+                  y={geo.cy}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  className="pointer-events-none select-none"
+                  fontSize={11}
+                  fontWeight={700}
+                  fill="#5B6472"
                 >
-                  <title>{`${titleCase(bubble.city)}, ${bubble.state} — ${bubble.openRoles} open ${
-                    bubble.openRoles === 1 ? "role" : "roles"
-                  }`}</title>
-                </circle>
-              );
-            })}
+                  {geo.code}
+                </text>
+              ))}
+
+            {/* Zoomed-out view: one demand bubble per state, sized by the
+                state's total available fees. Hovering shows the card; clicking
+                drills into that state (selects it → the auto-zoom effect frames
+                it and the city bubbles below take over). Radius is divided by
+                the zoom so a bubble stays a constant on-screen size. */}
+            {!zoomedIn &&
+              stateBubbles.map((bubble) => {
+                const info: BubbleInfo = {
+                  title: US_STATE_NAME_BY_CODE[bubble.state] ?? bubble.state,
+                  openRoles: bubble.openRoles,
+                  totalFeeMinor: bubble.totalFeeMinor,
+                  target: { kind: "state", state: bubble.state },
+                };
+                const r = bubbleRadius(
+                  bubble.totalFeeMinor,
+                  stateFeeSpan.min,
+                  stateFeeSpan.max,
+                  MIN_BUBBLE_RADIUS,
+                  MAX_BUBBLE_RADIUS,
+                );
+                return (
+                  <circle
+                    key={`state-bubble-${bubble.key}`}
+                    className="cursor-pointer outline-none"
+                    cx={bubble.x}
+                    cy={bubble.y}
+                    r={r / zoom}
+                    fill="#4F80E6"
+                    fillOpacity={0.55}
+                    stroke="#2658CF"
+                    strokeWidth={1.5 / zoom}
+                    strokeOpacity={0.9}
+                    onMouseEnter={(event) =>
+                      showBubble(info, event.currentTarget)
+                    }
+                    onMouseLeave={scheduleHideBubble}
+                    onClick={() => {
+                      if (suppressClickRef.current) return;
+                      onSelect({ kind: "state", state: bubble.state });
+                    }}
+                  >
+                    <title>{`${info.title} — ${bubble.openRoles} open ${
+                      bubble.openRoles === 1 ? "role" : "roles"
+                    }`}</title>
+                  </circle>
+                );
+              })}
+
+            {/* Zoomed-in view: the selected state's city bubbles, sized by
+                available fee relative to that state. Clicking selects (or
+                clears) that specific city. */}
+            {zoomedIn &&
+              orderedCityBubbles.map((bubble) => {
+                const isSelectedCity =
+                  selectedCity === bubble.city &&
+                  selectedState === bubble.state;
+                const info: BubbleInfo = {
+                  title: titleCase(bubble.city),
+                  openRoles: bubble.openRoles,
+                  totalFeeMinor: bubble.totalFeeMinor,
+                  target: {
+                    kind: "city",
+                    state: bubble.state,
+                    city: bubble.city,
+                  },
+                };
+                const r = bubbleRadius(
+                  bubble.totalFeeMinor,
+                  cityFeeSpan.min,
+                  cityFeeSpan.max,
+                  MIN_BUBBLE_RADIUS,
+                  MAX_BUBBLE_RADIUS,
+                );
+                return (
+                  <circle
+                    key={`city-bubble-${bubble.key}`}
+                    className="cursor-pointer outline-none"
+                    cx={bubble.x}
+                    cy={bubble.y}
+                    r={r / zoom}
+                    fill="#034AEF"
+                    fillOpacity={isSelectedCity ? 0.8 : 0.55}
+                    stroke="#034AEF"
+                    strokeWidth={(isSelectedCity ? 2.5 : 1.5) / zoom}
+                    strokeOpacity={0.9}
+                    onMouseEnter={(event) =>
+                      showBubble(info, event.currentTarget)
+                    }
+                    onMouseLeave={scheduleHideBubble}
+                    onClick={() => {
+                      // A pan that happens to end on a bubble isn't a selection.
+                      if (suppressClickRef.current) return;
+                      onSelect(nextBubbleSelection(selection, bubble));
+                    }}
+                  >
+                    <title>{`${titleCase(bubble.city)}, ${bubble.state} — ${bubble.openRoles} open ${
+                      bubble.openRoles === 1 ? "role" : "roles"
+                    }`}</title>
+                  </circle>
+                );
+              })}
           </g>
         </svg>
 

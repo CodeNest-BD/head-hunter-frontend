@@ -1,6 +1,6 @@
 import { projectAlbersUsa } from "@/shared/data/albersUsa";
 import { US_CITIES } from "@/shared/data/usCities";
-import { US_STATES } from "@/shared/data/usStatesGeo";
+import { US_STATES, US_VIEWBOX } from "@/shared/data/usStatesGeo";
 
 /**
  * The map's current selection. A city selection carries its state so the jobs
@@ -205,3 +205,108 @@ export function resolveCityBubbles(
     totalFeeMinor,
   }));
 }
+
+/** The per-state stat the map is handed (keyed by 2-letter code). */
+export interface StateStat {
+  readonly openRoles: number;
+  readonly totalFeeMinor: number;
+}
+
+/** One demand bubble per state, placed at the state's label centroid. */
+export interface StateMapBubble {
+  readonly key: string;
+  readonly x: number;
+  readonly y: number;
+  readonly state: string;
+  readonly openRoles: number;
+  /** Total recruiter fees available across the state — drives the size. */
+  readonly totalFeeMinor: number;
+}
+
+/**
+ * The zoomed-out view: one bubble per state that has live roles, sized by the
+ * state's total available fees. This is the fix for the jumbled east coast —
+ * small neighbouring states no longer stack a dozen city dots on top of each
+ * other; each state is a single, clickable bubble that drills into its cities.
+ */
+export function resolveStateBubbles(
+  stats: ReadonlyMap<string, StateStat>,
+): StateMapBubble[] {
+  const bubbles: StateMapBubble[] = [];
+  for (const state of US_STATES) {
+    const stat = stats.get(state.code);
+    if (!stat || stat.openRoles <= 0) continue;
+    bubbles.push({
+      key: state.code,
+      x: state.cx,
+      y: state.cy,
+      state: state.code,
+      openRoles: stat.openRoles,
+      totalFeeMinor: stat.totalFeeMinor,
+    });
+  }
+  return bubbles;
+}
+
+/**
+ * Bounding box of an SVG path built from absolute coordinate pairs (the
+ * albers-usa state outlines are M/L polygons), by scanning every number and
+ * pairing them as (x, y). Null when the path has no coordinates.
+ */
+export function pathBounds(
+  d: string,
+): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  const nums = d.match(/-?\d+(?:\.\d+)?/g);
+  if (!nums || nums.length < 4) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i + 1 < nums.length; i += 2) {
+    const x = Number(nums[i]);
+    const y = Number(nums[i + 1]);
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  return { minX, minY, maxX, maxY };
+}
+
+/** The camera frame that fits a state: where to centre, and how far to zoom. */
+export interface StateFrame {
+  readonly cx: number;
+  readonly cy: number;
+  readonly zoom: number;
+}
+
+// Padding leaves a margin of state around the fitted outline; the min/max keep
+// a big state (Texas) from barely zooming and a tiny one (Rhode Island) from
+// zooming so far its cities scatter off-screen.
+const FRAME_PADDING = 1.6;
+const MIN_STATE_ZOOM = 2.2;
+const MAX_STATE_ZOOM = 13;
+
+/**
+ * Precomputed camera frame per state: the outline's centre and the zoom that
+ * fits it in the map viewport. Clicking a state bubble animates to this frame,
+ * so every state — however small — fills the view before its cities appear.
+ */
+export const STATE_FRAME: ReadonlyMap<string, StateFrame> = new Map(
+  US_STATES.map((state) => {
+    const bounds = pathBounds(state.d);
+    if (!bounds) {
+      return [state.code, { cx: state.cx, cy: state.cy, zoom: 4 }] as const;
+    }
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const w = Math.max(bounds.maxX - bounds.minX, 1);
+    const h = Math.max(bounds.maxY - bounds.minY, 1);
+    const fit = Math.min(
+      US_VIEWBOX.width / (w * FRAME_PADDING),
+      US_VIEWBOX.height / (h * FRAME_PADDING),
+    );
+    const zoom = Math.min(MAX_STATE_ZOOM, Math.max(MIN_STATE_ZOOM, fit));
+    return [state.code, { cx, cy, zoom }] as const;
+  }),
+);

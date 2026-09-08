@@ -3,11 +3,15 @@ import { describe, expect, it } from "vitest";
 import { US_STATES } from "@/shared/data/usStatesGeo";
 
 import {
+  STATE_FRAME,
   bubbleRadius,
   feeRange,
   nextBubbleSelection,
+  pathBounds,
   resolveCityBubbles,
+  resolveStateBubbles,
   type MapSelection,
+  type StateStat,
 } from "./cityMapBubbles";
 
 describe("resolveCityBubbles", () => {
@@ -184,5 +188,60 @@ describe("bubbleRadius", () => {
 
   it("uses the mid radius when every value is equal", () => {
     expect(bubbleRadius(700, 700, 700, MIN, MAX)).toBe((MIN + MAX) / 2);
+  });
+});
+
+describe("resolveStateBubbles", () => {
+  const stats = new Map<string, StateStat>([
+    ["CA", { openRoles: 12, totalFeeMinor: 500000 }],
+    ["NY", { openRoles: 3, totalFeeMinor: 90000 }],
+    ["TX", { openRoles: 0, totalFeeMinor: 0 }], // no live roles → no bubble
+  ]);
+
+  it("emits one bubble per state that has live roles, at its centroid", () => {
+    const bubbles = resolveStateBubbles(stats);
+    expect(bubbles.map((b) => b.state).sort()).toEqual(["CA", "NY"]);
+    const ca = bubbles.find((b) => b.state === "CA")!;
+    const geo = US_STATES.find((s) => s.code === "CA")!;
+    expect([ca.x, ca.y]).toEqual([geo.cx, geo.cy]);
+    expect(ca.totalFeeMinor).toBe(500000);
+  });
+
+  it("drops states with no open roles", () => {
+    expect(resolveStateBubbles(stats).some((b) => b.state === "TX")).toBe(
+      false,
+    );
+  });
+});
+
+describe("pathBounds", () => {
+  it("returns the min/max of every coordinate pair", () => {
+    expect(pathBounds("M10 20 L30 5 L15 40 Z")).toEqual({
+      minX: 10,
+      minY: 5,
+      maxX: 30,
+      maxY: 40,
+    });
+  });
+
+  it("is null for a path with no coordinates", () => {
+    expect(pathBounds("")).toBeNull();
+  });
+});
+
+describe("STATE_FRAME", () => {
+  it("has a centre and a clamped zoom for every state", () => {
+    for (const state of US_STATES) {
+      const frame = STATE_FRAME.get(state.code);
+      expect(frame).toBeDefined();
+      expect(frame!.zoom).toBeGreaterThanOrEqual(2.2);
+      expect(frame!.zoom).toBeLessThanOrEqual(13);
+    }
+  });
+
+  it("zooms a tiny state (RI) in further than a large one (TX)", () => {
+    expect(STATE_FRAME.get("RI")!.zoom).toBeGreaterThan(
+      STATE_FRAME.get("TX")!.zoom,
+    );
   });
 });
