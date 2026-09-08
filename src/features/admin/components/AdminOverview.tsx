@@ -74,7 +74,7 @@ function StatusBar({
 }
 
 /** The admin dashboard: marketplace health, sign-ups, and the decision queue. */
-export function AdminOverview({ firstName }: { firstName: string }) {
+export function AdminOverview() {
   const stats = useAdminStats();
   const liveJobs = useAdminJobs({ page: 1, status: "published", limit: 1 });
   const pendingRecruiters = useAdminRecruiters({
@@ -93,10 +93,11 @@ export function AdminOverview({ firstName }: { firstName: string }) {
     <PageBanner
       size="lg"
       eyebrow="Marketplace overview"
-      title={`Hey ${firstName}`}
+      title="Admin Dashboard"
+      accentPeriod={false}
       subtitle={
         stats.data
-          ? `${stats.data.recruiters.total} recruiters · ${stats.data.companies.total} companies · ${liveJobs.data?.meta.total ?? 0} live jobs`
+          ? `${stats.data.recruiters.total} Recruiters · ${stats.data.companies.total} Companies · ${liveJobs.data?.meta.total ?? 0} Live Jobs`
           : "Marketplace health at a glance."
       }
     />
@@ -194,7 +195,7 @@ export function AdminOverview({ firstName }: { firstName: string }) {
     <div className="flex flex-col gap-6">
       {banner}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-5">
         <StatCard
           className="col-span-2 sm:col-span-1"
           label="Wallet total"
@@ -212,12 +213,17 @@ export function AdminOverview({ firstName }: { firstName: string }) {
           hint={`${data.companies.active} active · ${data.companies.held} suspended`}
         />
         <StatCard
-          // Odd one out in the phone's two-up grid; spanning it keeps the row
-          // from ending on an empty cell.
-          className="col-span-2 sm:col-span-1"
           label="Live jobs"
           value={liveJobsTotal}
           hint={`${data.conversations} submissions to date`}
+        />
+        <StatCard
+          // Odd one out in the phone's two-up grid; spanning it keeps the row
+          // from ending on an empty cell.
+          className="col-span-2 sm:col-span-1"
+          label="Average fee"
+          value={formatMinor(data.avgFeeMinor)}
+          hint="across all live jobs"
         />
       </div>
 
@@ -288,11 +294,11 @@ export function AdminOverview({ firstName }: { firstName: string }) {
           },
           {
             id: "status",
-            label: "Account status",
+            label: "Account Status",
             content: (
               <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
                 <h2 className="font-heading text-base font-bold text-navy">
-                  Account status
+                  Account Status
                 </h2>
                 <p className="mt-1 text-[13px] text-muted-foreground">
                   {heldAccounts} of{" "}

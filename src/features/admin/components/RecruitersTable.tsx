@@ -34,6 +34,7 @@ import {
 } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 import { TABLE_TOOLBAR } from "@/shared/ui-components/data/tableStyles";
+import { formatMinor } from "@/shared/utils/money";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -50,6 +51,8 @@ const COLUMNS: ColumnDef[] = [
   { key: "location", label: "Location" },
   { key: "joined", label: "Joined" },
   { key: "status", label: "Status" },
+  { key: "placements", label: "Placements" },
+  { key: "commissions", label: "Commissions" },
   { key: "actions", label: "Actions", required: true },
 ];
 
@@ -103,6 +106,8 @@ function RecruiterCard({ recruiter }: { recruiter: RecruiterListItem }) {
     },
     { label: "Location", value: recruiterLocation(recruiter) },
     { label: "Joined", value: formatDate(recruiter.joinedAt) },
+    { label: "Placements", value: recruiter.placementCount },
+    { label: "Commissions", value: formatMinor(recruiter.commissionMinor) },
   ];
 
   return (
@@ -156,11 +161,12 @@ export function RecruitersTable() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Recruiters"
-        subtitle="Every recruiter on the platform. Open a profile or hold an account."
+        accentPeriod={false}
+        subtitle="Every recruiter on the platform. Open a profile or suspend an account."
         metrics={[
           { label: "Pending", value: pendingTotal },
           { label: "Active", value: stats.data?.recruiters.active ?? 0 },
-          { label: "Held", value: stats.data?.recruiters.held ?? 0 },
+          { label: "Suspended", value: stats.data?.recruiters.held ?? 0 },
         ]}
       />
 
@@ -267,6 +273,22 @@ export function RecruitersTable() {
                           Status
                         </th>
                       )}
+                      {cols.isVisible("placements") && (
+                        <th
+                          scope="col"
+                          className="px-5 py-3 text-right font-semibold"
+                        >
+                          Placements
+                        </th>
+                      )}
+                      {cols.isVisible("commissions") && (
+                        <th
+                          scope="col"
+                          className="px-5 py-3 text-right font-semibold"
+                        >
+                          Commissions
+                        </th>
+                      )}
                       <th
                         scope="col"
                         className="px-5 py-3 text-right font-semibold"
@@ -323,6 +345,16 @@ export function RecruitersTable() {
                         {cols.isVisible("status") && (
                           <td className="px-5 py-3">
                             <RecruiterStatus recruiter={r} />
+                          </td>
+                        )}
+                        {cols.isVisible("placements") && (
+                          <td className="whitespace-nowrap px-5 py-3 text-right font-semibold tabular-nums text-navy">
+                            {r.placementCount}
+                          </td>
+                        )}
+                        {cols.isVisible("commissions") && (
+                          <td className="whitespace-nowrap px-5 py-3 text-right font-semibold tabular-nums text-navy">
+                            {formatMinor(r.commissionMinor)}
                           </td>
                         )}
                         <td className="px-5 py-3">

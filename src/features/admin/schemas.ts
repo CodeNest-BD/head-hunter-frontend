@@ -50,11 +50,22 @@ export const recruiterListItemSchema = z.object({
   city: z.string().nullable(),
   state: z.string().nullable(),
   joinedAt: z.string(),
+  // Successful placements (through the 30-day guarantee) and total commission
+  // earned. `.catch` so the row still renders if the API predates them.
+  placementCount: z.number().catch(0),
+  commissionMinor: z.number().catch(0),
 });
 export type RecruiterListItem = z.infer<typeof recruiterListItemSchema>;
 
 const recruiterReferenceSchema = z
-  .object({ id: z.string(), name: z.string() })
+  .object({
+    id: z.string(),
+    name: z.string(),
+    // The company the reference is from (matches one of the recruiting-history
+    // firms) and whether the reference has been verified.
+    company: z.string().nullable().catch(null),
+    verified: z.boolean().catch(false),
+  })
   .passthrough();
 
 export const recruiterExperienceSchema = z.object({
@@ -79,7 +90,9 @@ export const recruiterDetailSchema = recruiterListItemSchema.extend({
   lastLoginAt: z.string().nullable(),
   currentPeriodEnd: z.string().nullable(),
   candidateCount: z.number(),
+  placementCount: z.number().catch(0),
   releasedEarningsMinor: z.number(),
+  phoneVerified: z.boolean().catch(false),
   references: z.array(recruiterReferenceSchema),
 });
 export type RecruiterDetail = z.infer<typeof recruiterDetailSchema>;
@@ -95,6 +108,8 @@ export const companyListItemSchema = z.object({
   balanceMinor: z.number(),
   jobCount: z.number(),
   joinedAt: z.string(),
+  // Average recruiter fee across this company's posted jobs, null when none.
+  avgFeeMinor: z.number().nullable().catch(null),
 });
 export type CompanyListItem = z.infer<typeof companyListItemSchema>;
 
@@ -103,6 +118,7 @@ export const companyDetailSchema = companyListItemSchema.extend({
   // dash on the review screen rather than failing the whole page — the
   // failure mode that took the recruiter detail down.
   emailVerified: z.boolean().catch(false),
+  phoneVerified: z.boolean().catch(false),
   verifiedAt: z.string().nullable().catch(null),
   verificationNote: z.string().nullable().catch(null),
   // The contact person on the account, not a company profile column.
@@ -215,9 +231,16 @@ export const adminStatsSchema = z.object({
     total: z.number(),
     active: z.number(),
     held: z.number(),
+    // Approved (verified) companies. `.catch` so an older API degrades to 0.
+    approved: z.number().catch(0),
   }),
   conversations: z.number(),
   walletTotalMinor: z.number(),
+  // Average recruiter fee across all live jobs, and job counts by lifecycle
+  // stage for the Jobs banner. `.catch` for forward-tolerance.
+  avgFeeMinor: z.number().catch(0),
+  scheduledJobs: z.number().catch(0),
+  offerJobs: z.number().catch(0),
   signups: z.array(
     z.object({
       month: z.string(),

@@ -125,7 +125,7 @@ function JobCountField({
       {count > 0 ? (
         <Link
           href={href}
-          className="w-fit text-sm font-semibold text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+          className="w-fit text-sm font-semibold text-navy hover:underline focus-visible:underline focus-visible:outline-none"
         >
           {count}
         </Link>
@@ -145,6 +145,16 @@ function formatDate(iso: string | null): string {
   });
 }
 
+/** Prefix "$" and group a plain revenue figure ("3500000" → "$3,500,000"). A
+ * non-numeric legacy value is shown as-is behind the "$". */
+function formatRevenue(revenue: string): string {
+  const digits = revenue.replace(/[^\d.]/g, "");
+  const n = Number(digits);
+  return digits !== "" && Number.isFinite(n)
+    ? `$${n.toLocaleString("en-US")}`
+    : `$${revenue}`;
+}
+
 function WalletStat({
   label,
   minor,
@@ -161,8 +171,8 @@ function WalletStat({
       </p>
       <p
         className={
-          "mt-1.5 font-heading font-extrabold leading-none " +
-          (primary ? "text-3xl text-primary" : "text-2xl text-navy")
+          "mt-1.5 font-heading font-extrabold leading-none text-navy " +
+          (primary ? "text-3xl" : "text-2xl")
         }
       >
         {formatMinor(minor)}
@@ -189,16 +199,22 @@ export function CompanyDetail({ userId }: { userId: string }) {
     );
   }
 
-  const location = [data.city, data.state].filter(Boolean).join(", ") || "—";
+  const cityState = [data.city, data.state].filter(Boolean).join(", ");
+  const location = [cityState, data.zip].filter(Boolean).join(" ") || "—";
+  const revenue =
+    data.revenue === null || data.revenue.trim() === ""
+      ? null
+      : formatRevenue(data.revenue);
   const jobsHref = `/admin/jobs?${new URLSearchParams({
     companyProfileId: data.companyProfileId,
     companyName: data.companyName,
   }).toString()}`;
 
-  // Both ends, one end, or nothing published — the same three cases the
-  // recruiter-facing company card renders.
+  // Smallest to largest recruiter fee this company has posted. Both ends, one
+  // end, or nothing published — the same three cases the recruiter-facing
+  // company card renders.
   const { commissionRangeMinMinor: min, commissionRangeMaxMinor: max } = data;
-  const commissionRange =
+  const feeRange =
     min === null && max === null
       ? null
       : min !== null && max !== null
@@ -264,12 +280,16 @@ export function CompanyDetail({ userId }: { userId: string }) {
             <DetailField label="Last name" value={data.lastName} />
             <DetailField label="Phone" value={data.phone} />
             <DetailField
+              label="Phone confirmed"
+              value={data.phoneVerified ? "Yes" : "No"}
+            />
+            <DetailField label="Email" value={data.email} />
+            <DetailField
               label="Email confirmed"
               value={data.emailVerified ? "Yes" : "No"}
             />
-            <DetailField label="Location" value={location} />
             <DetailField label="Address" value={data.addressLine} />
-            <DetailField label="ZIP" value={data.zip} />
+            <DetailField label="Location" value={location} />
             <DetailField label="Website" value={data.website} />
             <DetailField label="Joined" value={formatDate(data.joinedAt)} />
             <div className="col-span-2">
@@ -283,7 +303,7 @@ export function CompanyDetail({ userId }: { userId: string }) {
             than being buried among the contact fields. */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Business profile</CardTitle>
+            <CardTitle className="text-base">Business Profile</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DetailField label="Industry" value={data.industry} />
@@ -294,9 +314,9 @@ export function CompanyDetail({ userId }: { userId: string }) {
               }
             />
             <DetailField label="Employees" value={data.employeeSize} />
-            <DetailField label="Revenue" value={data.revenue} />
+            <DetailField label="Revenue" value={revenue} />
             <div className="col-span-2">
-              <DetailField label="Commission range" value={commissionRange} />
+              <DetailField label="Fee range" value={feeRange} />
             </div>
           </CardContent>
         </Card>

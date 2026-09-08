@@ -51,6 +51,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "joined", label: "Joined" },
   { key: "approval", label: "Approval" },
   { key: "status", label: "Status" },
+  { key: "avgFee", label: "Avg fee" },
   { key: "actions", label: "Actions", required: true },
 ];
 
@@ -119,6 +120,11 @@ function CompanyCard({ company }: { company: CompanyListItem }) {
     { label: "Jobs", value: <CompanyJobCount company={company} /> },
     { label: "Joined", value: formatDate(company.joinedAt) },
     { label: "Approval", value: <CompanyApproval company={company} /> },
+    {
+      label: "Avg fee",
+      value:
+        company.avgFeeMinor === null ? "—" : formatMinor(company.avgFeeMinor),
+    },
   ];
 
   return (
@@ -179,12 +185,14 @@ export function CompaniesTable() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Companies"
+        accentPeriod={false}
         subtitle="Every company on the platform, their wallet, and account controls."
         metrics={[
-          { label: "Awaiting approval", value: pendingTotal },
+          { label: "Pending approval", value: pendingTotal },
+          { label: "Total", value: stats.data?.companies.approved ?? 0 },
           { label: "Funded wallets", value: fundedCount },
           { label: "Posted a job", value: postedCount },
-          { label: "Held", value: stats.data?.companies.held ?? 0 },
+          { label: "Suspended", value: stats.data?.companies.held ?? 0 },
         ]}
       />
 
@@ -297,6 +305,14 @@ export function CompaniesTable() {
                           Status
                         </th>
                       )}
+                      {cols.isVisible("avgFee") && (
+                        <th
+                          scope="col"
+                          className="px-5 py-3 text-right font-semibold"
+                        >
+                          Avg fee
+                        </th>
+                      )}
                       <th
                         scope="col"
                         className="px-5 py-3 text-right font-semibold"
@@ -360,6 +376,13 @@ export function CompaniesTable() {
                         {cols.isVisible("status") && (
                           <td className="px-5 py-3">
                             <CompanyStatus company={c} />
+                          </td>
+                        )}
+                        {cols.isVisible("avgFee") && (
+                          <td className="whitespace-nowrap px-5 py-3 text-right tabular-nums text-muted-foreground">
+                            {c.avgFeeMinor === null
+                              ? "—"
+                              : formatMinor(c.avgFeeMinor)}
                           </td>
                         )}
                         <td className="px-5 py-3">

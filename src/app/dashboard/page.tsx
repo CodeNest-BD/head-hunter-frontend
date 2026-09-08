@@ -48,7 +48,7 @@ function DashboardContent() {
       </RequireApprovedCompany>
     );
   }
-  return <AdminOverview firstName={user.firstName} />;
+  return <AdminOverview />;
 }
 
 export default function DashboardPage() {

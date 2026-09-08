@@ -206,7 +206,8 @@ export function RecruiterDetail({ userId }: { userId: string }) {
   }
 
   const name = `${data.firstName} ${data.lastName}`;
-  const location = [data.city, data.state].filter(Boolean).join(", ") || "—";
+  const cityState = [data.city, data.state].filter(Boolean).join(", ");
+  const location = [cityState, data.zip].filter(Boolean).join(" ") || "—";
 
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
@@ -226,7 +227,6 @@ export function RecruiterDetail({ userId }: { userId: string }) {
                   className={ACCOUNT_STATUS_STYLES[data.status]}
                 />
               </div>
-              <p className="text-sm text-muted-foreground">{data.email}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -249,10 +249,18 @@ export function RecruiterDetail({ userId }: { userId: string }) {
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <DetailField label="Phone" value={data.phone} />
-            <DetailField label="Location" value={location} />
+            <DetailField
+              label="Phone confirmed"
+              value={data.phoneVerified ? "Yes" : "No"}
+            />
+            <DetailField label="Email" value={data.email} />
+            <DetailField
+              label="Email confirmed"
+              value={data.emailVerified ? "Yes" : "No"}
+            />
             <DetailField label="Address" value={data.addressLine} />
-            <DetailField label="ZIP" value={data.zip} />
-            <div className="flex flex-col gap-1">
+            <DetailField label="Location" value={location} />
+            <div className="flex flex-col gap-1 sm:col-span-2">
               <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 LinkedIn
               </span>
@@ -269,10 +277,6 @@ export function RecruiterDetail({ userId }: { userId: string }) {
                 <span className="text-sm text-navy">—</span>
               )}
             </div>
-            <DetailField
-              label="Email confirmed"
-              value={data.emailVerified ? "Yes" : "No"}
-            />
           </CardContent>
         </Card>
 
@@ -301,8 +305,8 @@ export function RecruiterDetail({ userId }: { userId: string }) {
               value={formatDate(data.currentPeriodEnd)}
             />
             <DetailField
-              label="Candidates"
-              value={String(data.candidateCount)}
+              label="Placements"
+              value={String(data.placementCount)}
             />
             <DetailField
               label="Total earnings"
@@ -351,13 +355,13 @@ export function RecruiterDetail({ userId }: { userId: string }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Staffing history ({data.experiences.length})
+              Recruiting History ({data.experiences.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             {data.experiences.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No staffing firms listed.
+                No companies listed.
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
@@ -401,13 +405,21 @@ export function RecruiterDetail({ userId }: { userId: string }) {
                 No references on file.
               </p>
             ) : (
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-2.5">
                 {data.references.map((ref) => (
                   <li
                     key={ref.id}
-                    className="rounded-md border border-border px-3 py-2 text-sm text-navy"
+                    className="flex items-center gap-2 text-sm text-navy"
                   >
-                    {ref.name}
+                    {ref.verified ? (
+                      <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+                    ) : (
+                      <BadgeX className="h-4 w-4 shrink-0 text-destructive" />
+                    )}
+                    <span>
+                      {ref.name}
+                      {ref.company ? ` – ${ref.company}` : ""}
+                    </span>
                   </li>
                 ))}
               </ul>

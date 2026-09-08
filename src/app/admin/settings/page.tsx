@@ -29,6 +29,7 @@ export default function AdminSettingsPage() {
         <div className="flex flex-col gap-6">
           <PageBanner
             title="Settings"
+            accentPeriod={false}
             subtitle="Marketplace policy and admin accounts."
           />
           <Tabs defaultValue="policy">

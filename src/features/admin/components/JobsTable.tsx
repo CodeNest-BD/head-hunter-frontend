@@ -191,28 +191,17 @@ export function JobsTable({
     limit: 100,
   });
   const liveTotal = publishedJobs.data?.meta.total ?? 0;
-  const belowMinCount = (publishedJobs.data?.data ?? []).filter(
-    (j) => j.recruiterFeeMinor < minFeeMinor,
-  ).length;
 
   return (
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Jobs"
+        accentPeriod={false}
         subtitle="Every job posted on the platform. Filter by company, status or title."
         metrics={[
           { label: "Live jobs", value: liveTotal },
-          {
-            label: "Below minimum",
-            value: (
-              <span
-                className={belowMinCount > 0 ? "text-[#F3C24B]" : undefined}
-              >
-                {belowMinCount}
-              </span>
-            ),
-          },
-          { label: "Conversations", value: stats.data?.conversations ?? 0 },
+          { label: "Scheduled", value: stats.data?.scheduledJobs ?? 0 },
+          { label: "Offers", value: stats.data?.offerJobs ?? 0 },
         ]}
       />
 
@@ -409,14 +398,6 @@ export function JobsTable({
               />
             </CardContent>
           </Card>
-        )}
-
-        {belowMinCount > 0 && (
-          <p className="rounded-md border border-[#F0E2B8] bg-[#FBF3DF] px-4 py-3 text-sm text-[#7A5109]">
-            {belowMinCount} live job{belowMinCount === 1 ? "" : "s"} were
-            published below the current {formatMinor(minFeeMinor)} minimum.
-            Raising the minimum does not affect them.
-          </p>
         )}
       </div>
     </div>
