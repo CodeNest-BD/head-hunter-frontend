@@ -123,6 +123,9 @@ const MIN_ZOOM = 1;
 // Room for the deepest per-state auto-zoom (STATE_FRAME caps at 13) plus a
 // little manual headroom on top.
 const MAX_ZOOM = 14;
+// Cross this zoom and the map swaps state bubbles for city bubbles. Below the
+// smallest per-state auto-zoom (2.2), so clicking any state reveals its cities.
+const CITY_ZOOM = 2;
 
 /** What a hovered bubble (state or city) shows in its card. */
 interface BubbleInfo {
@@ -290,34 +293,29 @@ export function UsJobMap({
   const stateBubbles = useMemo(() => resolveStateBubbles(stats), [stats]);
   const stateFeeSpan = useMemo(() => feeRange(stateBubbles), [stateBubbles]);
 
-  // Zoomed-in view: the drilled-into state's city bubbles only, so neighbouring
-  // states never crowd the frame. Empty until a state is selected.
+  // Zoomed-in view: every placeable city, sized by available fee relative to
+  // the whole map so a big city reads big at any zoom. They only render past
+  // CITY_ZOOM, and the zoomed viewport clips to whichever state(s) fill it —
+  // so you naturally see just that state's cities without pre-filtering.
   const cityBubbles = useMemo(
     () => resolveCityBubbles(cityData ?? []),
     [cityData],
   );
-  const stateCityBubbles = useMemo(
-    () =>
-      selectedState ? cityBubbles.filter((b) => b.state === selectedState) : [],
-    [cityBubbles, selectedState],
-  );
-  // Sized by available fee relative to the busiest/quietest city in this state.
-  const cityFeeSpan = useMemo(
-    () => feeRange(stateCityBubbles),
-    [stateCityBubbles],
-  );
+  const cityFeeSpan = useMemo(() => feeRange(cityBubbles), [cityBubbles]);
 
   // Draw largest first so smaller bubbles paint on top: in a dense metro a small
   // bubble would otherwise sit under a big neighbour and be unclickable.
   // Topmost = smallest = the one the pointer is actually over.
   const orderedCityBubbles = useMemo(
-    () =>
-      [...stateCityBubbles].sort((a, b) => b.totalFeeMinor - a.totalFeeMinor),
-    [stateCityBubbles],
+    () => [...cityBubbles].sort((a, b) => b.totalFeeMinor - a.totalFeeMinor),
+    [cityBubbles],
   );
 
-  // Zoomed out until a state is chosen; the state/city bubbles swap on that.
-  const zoomedIn = selectedState !== null;
+  // The whole switch is zoom-driven, exactly as the client asked: zoomed out
+  // shows one bubble per state; once you cross CITY_ZOOM (by clicking a state,
+  // which auto-zooms in, or by wheeling/using the +/- controls) the state
+  // bubbles give way to the city bubbles, and zooming back out restores them.
+  const showCities = zoom >= CITY_ZOOM;
 
   // Centre on the selected state's fitted frame when zoomed in.
   const focus = useMemo(() => {
@@ -713,7 +711,7 @@ export function UsJobMap({
                 whole-USA view. Zoomed into a state, the scale transform would
                 blow these up, so they're hidden in favour of the city bubbles.
                 pointer-events off so a label never eats a state click. */}
-            {!zoomedIn &&
+            {!showCities &&
               US_STATES.map((geo) => (
                 <text
                   key={`label-${geo.code}`}
@@ -735,7 +733,7 @@ export function UsJobMap({
                 drills into that state (selects it → the auto-zoom effect frames
                 it and the city bubbles below take over). Radius is divided by
                 the zoom so a bubble stays a constant on-screen size. */}
-            {!zoomedIn &&
+            {!showCities &&
               stateBubbles.map((bubble) => {
                 const info: BubbleInfo = {
                   title: US_STATE_NAME_BY_CODE[bubble.state] ?? bubble.state,
@@ -781,7 +779,7 @@ export function UsJobMap({
             {/* Zoomed-in view: the selected state's city bubbles, sized by
                 available fee relative to that state. Clicking selects (or
                 clears) that specific city. */}
-            {zoomedIn &&
+            {showCities &&
               orderedCityBubbles.map((bubble) => {
                 const isSelectedCity =
                   selectedCity === bubble.city &&
