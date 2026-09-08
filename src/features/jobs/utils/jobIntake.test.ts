@@ -36,6 +36,45 @@ describe("toIntakeInput", () => {
     });
   });
 
+  it("writes the schedule only once days and both hours are answered", () => {
+    const half = toIntakeInput(
+      {
+        ...emptyForm,
+        daysAndHours: { days: ["mon", "tue"], startHour: "9", endHour: "" },
+      },
+      null,
+    );
+    expect(half).not.toHaveProperty("daysAndHours");
+
+    const whole = toIntakeInput(
+      {
+        ...emptyForm,
+        daysAndHours: { days: ["mon", "tue"], startHour: "9", endHour: "17" },
+      },
+      null,
+    );
+    expect(whole).toMatchObject({
+      daysAndHours: { days: ["mon", "tue"], startHour: 9, endHour: 17 },
+    });
+  });
+
+  it("holds the stored benefits attachment while a new file uploads", () => {
+    const stored = {
+      s3Key: "jobs/job-1/benefits/abc.pdf",
+      fileName: "benefits.pdf",
+      contentType: "application/pdf",
+    };
+
+    expect(toIntakeInput(emptyForm, null, stored)).toMatchObject({
+      benefitsAttachment: stored,
+    });
+    // Nothing passed is the company having removed it, so the key is dropped
+    // rather than surviving from the existing intake.
+    expect(
+      toIntakeInput(emptyForm, { benefitsAttachment: stored }),
+    ).not.toHaveProperty("benefitsAttachment");
+  });
+
   // The blob also carries the worksite address, benefits and company details,
   // which this form never renders. Replacing it wholesale would delete them.
   it("preserves intake keys the form does not collect", () => {
@@ -296,7 +335,7 @@ describe("intakeToFormValues", () => {
       positionOpenReason: "",
       confidentialSearch: false,
       worksiteAddress: "",
-      daysAndHours: "",
+      daysAndHours: { days: [], startHour: "", endHour: "" },
       reportsTo: "",
       benefits: {
         medical: false,

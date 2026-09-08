@@ -164,8 +164,15 @@ filled-in form.
    company-scoped and restricted to the job's owner.
 2. `intake.benefitsAttachment?: { s3Key, fileName, sizeBytes, contentType }` on
    `JobIntake` + `JobIntakeDto`. `benefitsSummary` stays.
-3. `GET /v1/jobs/:jobId/benefits-attachment` → 302 to a short-lived signed URL,
-   mirroring `recruiter-photo.controller.ts`.
+3. `GET /v1/jobs/:jobId/benefits-attachment` → `{ downloadUrl }`, a short-lived
+   signed link, behind the same gate as reading the job.
+
+   **Built as authed JSON, not the 302 this plan first specified.**
+   `recruiter-photo.controller.ts` is a public redirect only because an `<img>`
+   cannot send an Authorization header; a benefits document is the hiring
+   material this plan elsewhere insists stays authed-only, and the repo already
+   serves documents this way (`AttachmentResponseDto.downloadUrl`). A public
+   redirect would hand the document to anyone holding the job's UUID.
 
 **No migration** — `intake` is a JSON column. Nothing here adds a table, column,
 queue or service.
@@ -193,8 +200,14 @@ says "Ready to publish" while submit fails validation.
 const parsed = jobFormSchema.safeParse(values);
 const remaining = parsed.success
   ? 0
-  : new Set(parsed.error.issues.map((issue) => issue.path[0])).size;
+  : new Set(parsed.error.issues.map((issue) => issue.path.join("."))).size;
 ```
+
+Two departures from the sketch above, both shipped: the paths are joined rather
+than reduced to `path[0]` (which folds all five `companyDetails.*` fields into
+one, so five empty fields read as "1 field left"), and the fee floor is added
+in, since it lives outside the schema and the bar would otherwise say "Ready to
+publish" over a fee `emit` rejects.
 
 The form already re-renders on every keystroke (`watch()`), so the parse rides
 along. Days & Hours is then covered for free when it lands.

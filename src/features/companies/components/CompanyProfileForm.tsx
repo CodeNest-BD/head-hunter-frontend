@@ -26,7 +26,8 @@ import {
   type CompanyProfileFormValues,
 } from "../schemas";
 import { useUpdateMyCompanyProfile } from "../hooks/useCompanyProfile";
-import { CompanyFormSaveBar, CompanyFormSection } from "./CompanyFormLayout";
+import { FormSection } from "@/shared/ui-components/layout/FormSection";
+import { CompanyFormSaveBar } from "./CompanyFormLayout";
 import { CompanyLogoUploader } from "./CompanyLogoUploader";
 
 const MAX_DESCRIPTION = 400;
@@ -119,10 +120,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
-        <CompanyFormSection
-          title="Identity"
-          hint="Your brand within the website."
-        >
+        <FormSection title="Identity" hint="Your brand within the website.">
           <div className="flex flex-col gap-2">
             <Label>Logo</Label>
             <CompanyLogoUploader profile={profile} />
@@ -175,9 +173,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               next great hire!
             </p>
           </div>
-        </CompanyFormSection>
+        </FormSection>
 
-        <CompanyFormSection
+        <FormSection
           title="Business Details"
           hint="Shown on your profile so recruiters can make the closest match."
         >
@@ -273,9 +271,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               )}
             </div>
           </div>
-        </CompanyFormSection>
+        </FormSection>
 
-        <CompanyFormSection
+        <FormSection
           title="Address"
           hint="Your corporate or main office address."
         >
@@ -340,7 +338,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               )}
             </div>
           </div>
-        </CompanyFormSection>
+        </FormSection>
 
         {/* Recruiter commission range was removed from the profile UI — the
             binding fee is set per job at posting time, so a profile-level range

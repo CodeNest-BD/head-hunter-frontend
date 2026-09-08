@@ -1,4 +1,5 @@
 import { apiClient } from "@/shared/libs/apiClient";
+import type { StagedUpload } from "@/shared/libs/documentUpload";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   jobMapEntrySchema,
@@ -88,6 +89,34 @@ export async function updateJob(
 /** DELETE /v1/jobs/:id — soft-deletes a job the caller owns (204). */
 export async function deleteJob(id: string): Promise<void> {
   await apiClient.delete(`/jobs/${id}`);
+}
+
+/**
+ * POST /v1/jobs/:jobId/benefits-attachment/presign
+ *
+ * Anchored to the job because the key is scoped to it, so the job has to exist
+ * first — the form creates or saves it, then attaches on the way out.
+ */
+export async function presignBenefitsAttachment(
+  jobId: string,
+  file: File,
+): Promise<StagedUpload> {
+  const { data } = await apiClient.post<StagedUpload>(
+    `/jobs/${jobId}/benefits-attachment/presign`,
+    { fileName: file.name, contentType: file.type },
+    { suppressGlobalErrorToast: true },
+  );
+  return data;
+}
+
+/** GET /v1/jobs/:jobId/benefits-attachment — a short-lived signed download. */
+export async function fetchBenefitsAttachmentUrl(
+  jobId: string,
+): Promise<string> {
+  const { data } = await apiClient.get<{ downloadUrl: string }>(
+    `/jobs/${jobId}/benefits-attachment`,
+  );
+  return data.downloadUrl;
 }
 
 /** GET /v1/jobs/map — not paginated; at most one row per US state. */

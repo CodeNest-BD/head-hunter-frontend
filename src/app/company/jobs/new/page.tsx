@@ -30,10 +30,10 @@ export default function NewJobPage() {
               className="mb-0"
             />
             <JobForm
-              onSubmit={(input, intent) =>
+              onSubmit={(input, intent, benefitsDocument) =>
                 intent === "publish"
-                  ? createAndPublish.mutate(input)
-                  : create.mutate(input)
+                  ? createAndPublish.mutate({ input, benefitsDocument })
+                  : create.mutate({ input, benefitsDocument })
               }
               isSubmitting={create.isPending || createAndPublish.isPending}
               submitLabel="Save draft"

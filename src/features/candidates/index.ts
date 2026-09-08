@@ -16,12 +16,7 @@ export {
   useUpdateCandidateStatus,
 } from "./hooks/useCandidates";
 export { candidateKeys } from "./keys";
-export {
-  CANDIDATE_STATUS_LABELS,
-  CV_ACCEPT,
-  CV_CONTENT_TYPES,
-  MAX_CV_BYTES,
-} from "./schemas";
+export { CANDIDATE_STATUS_LABELS } from "./schemas";
 export type { Attachment, Candidate, CandidateStatus } from "./schemas";
 export {
   createCandidate,
