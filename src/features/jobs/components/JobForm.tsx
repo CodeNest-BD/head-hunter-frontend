@@ -335,13 +335,9 @@ export function JobForm({
 
   const { data: companyProfile } = useMyCompanyProfile();
   const profileName = companyProfile?.companyName ?? "";
-  const profileAddress = [
-    companyProfile?.addressLine,
-    companyProfile?.city,
-    companyProfile?.state,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  // Street only: the city and state ride in their own fields below, so folding
+  // them in here read as the same location entered twice.
+  const profileAddress = companyProfile?.addressLine ?? "";
   const profileZip = companyProfile?.zip ?? "";
   const profileIndustry = companyProfile?.industry ?? "";
   const profileEmployeeSize = companyProfile?.employeeSize ?? "";

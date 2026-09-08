@@ -29,12 +29,14 @@ function HourSelect({
   ariaLabel,
   placeholder,
   value,
+  hours,
   onChange,
 }: {
   id?: string;
   ariaLabel: string;
   placeholder: string;
   value: string;
+  hours: readonly number[];
   onChange: (next: string) => void;
 }) {
   return (
@@ -43,7 +45,7 @@ function HourSelect({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {HOURS_OF_DAY.map((hour) => (
+        {hours.map((hour) => (
           <SelectItem key={hour} value={String(hour)}>
             {formatHourOfDay(hour)}
           </SelectItem>
@@ -60,6 +62,12 @@ function HourSelect({
  */
 export function DaysAndHoursField({ value, onChange }: DaysAndHoursFieldProps) {
   const selected = new Set(value.days);
+  // The end can only come after the start, so the hours that would read
+  // backwards are never offered — overnight shifts belong in Position Details.
+  const endHours =
+    value.startHour === ""
+      ? HOURS_OF_DAY
+      : HOURS_OF_DAY.filter((hour) => hour > Number(value.startHour));
 
   const toggleDay = (day: (typeof WEEK_DAYS)[number]) =>
     onChange({
@@ -104,13 +112,27 @@ export function DaysAndHoursField({ value, onChange }: DaysAndHoursFieldProps) {
           ariaLabel="Start time"
           placeholder="Start"
           value={value.startHour}
-          onChange={(startHour) => onChange({ ...value, startHour })}
+          hours={HOURS_OF_DAY}
+          // A start at or past the current end would spell a backwards day, so
+          // the end is dropped rather than left as a pair nothing can save.
+          onChange={(startHour) =>
+            onChange({
+              ...value,
+              startHour,
+              endHour:
+                value.endHour !== "" &&
+                Number(value.endHour) <= Number(startHour)
+                  ? ""
+                  : value.endHour,
+            })
+          }
         />
         <span className="shrink-0 text-muted-foreground">–</span>
         <HourSelect
           ariaLabel="End time"
           placeholder="End"
           value={value.endHour}
+          hours={endHours}
           onChange={(endHour) => onChange({ ...value, endHour })}
         />
       </div>
