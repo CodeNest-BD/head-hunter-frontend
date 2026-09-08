@@ -411,7 +411,7 @@ export function UsJobMap({
       ? `${titleCase(selection.city)}, ${selection.state}`
       : selection.kind === "state"
         ? (US_STATE_NAME_BY_CODE[selection.state] ?? selection.state)
-        : "All states";
+        : "All States";
 
   // Clear drops the selection AND returns the map to the full, un-zoomed view —
   // otherwise a "clear" left you zoomed into a now-deselected state.

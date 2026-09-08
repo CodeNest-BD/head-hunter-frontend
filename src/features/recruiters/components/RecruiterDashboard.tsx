@@ -37,27 +37,15 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
     (sum, job) => sum + job.candidateCount,
     0,
   );
-  const awaitingReview = inboxJobs.reduce(
-    (sum, job) => sum + job.newCandidateCount,
-    0,
-  );
   const unreadMessages = inboxJobs.reduce(
     (sum, job) => sum + job.unreadMessages,
     0,
   );
 
   const latestRole = openRoles.data?.data[0] ?? null;
-  // "Jobs in process" = jobs you currently have a candidate submitted on, which
-  // is exactly one inbox row each; the total is the paginated count, not the
-  // fetched page's length.
-  const jobsInProcess = inbox.data?.meta.total ?? null;
-
-  const candidatesHint =
-    candidateCount === 0
-      ? "nothing in flight"
-      : awaitingReview > 0
-        ? `${awaitingReview} awaiting review`
-        : "all reviewed";
+  // Every role the marketplace would show this recruiter, not the fetched
+  // page's length — the query only pulls five rows for the attention feed.
+  const openRolesCount = openRoles.data?.meta.total ?? null;
 
   const subtitleParts = [
     "Recruiter",
@@ -67,7 +55,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
         ? "Verification declined"
         : "Pending verification",
     yearsExperience !== null
-      ? `${yearsExperience} year${yearsExperience === 1 ? "" : "s"} experience`
+      ? `${yearsExperience} Year${yearsExperience === 1 ? "" : "s"} Experience`
       : null,
   ].filter(Boolean);
 
@@ -134,38 +122,33 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard
-          label="Earned commission YTD"
-          value={formatMinor(wallet.data?.earnedYtdMinor ?? 0)}
-          hint="released to you this year"
-          icon={Wallet2}
-          href="/recruiter/wallet"
-        />
-        <StatCard
-          label="Commission pending"
-          value={formatMinor(wallet.data?.inEscrowMinor ?? 0)}
-          hint={
-            wallet.data && wallet.data.placementsCount > 0
-              ? `across ${wallet.data.placementsCount} placement${wallet.data.placementsCount === 1 ? "" : "s"}`
-              : "released 30 days after a start"
-          }
-          icon={Clock}
-          href="/recruiter/wallet"
-        />
-        <StatCard
-          label="Jobs in process"
-          value={inbox.isPending ? "—" : (jobsInProcess ?? "—")}
-          hint="with a candidate submitted"
+          label="Open roles"
+          value={openRoles.isPending ? "—" : (openRolesCount ?? "—")}
+          hint="open to you right now"
           icon={Briefcase}
-          href="/recruiter/inbox"
+          href="/explore-jobs"
         />
         <StatCard
           label="Candidates in process"
           value={inbox.isPending ? "—" : candidateCount}
-          // The hint has to describe the same set as the number, so it counts
-          // the same rows rather than a differently-scoped subset.
-          hint={candidatesHint}
+          hint="submitted, progressing, pending feedback"
           icon={Users}
           href="/recruiter/inbox"
+        />
+        <StatCard
+          label="Pending commission"
+          value={formatMinor(wallet.data?.inEscrowMinor ?? 0)}
+          hint="released 30 days after a start"
+          icon={Clock}
+          href="/recruiter/wallet"
+        />
+        <StatCard
+          label="Commissions YTD"
+          value={formatMinor(wallet.data?.earnedYtdMinor ?? 0)}
+          hint="what you've earned this year"
+          icon={Wallet2}
+          href="/recruiter/wallet"
+          showArrow={false}
         />
       </div>
 

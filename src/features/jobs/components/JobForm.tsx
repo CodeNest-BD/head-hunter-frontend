@@ -291,6 +291,7 @@ export function JobForm({
     control,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors },
     watch,
   } = useForm<JobFormValues>({
@@ -441,8 +442,19 @@ export function JobForm({
   });
 
   // Which action fired: the primary save (Enter or "Save") vs. "Publish".
+  // The fee floor is checked here rather than in the schema: it is an
+  // admin-tunable marketplace policy the API serves, so the figure must not be
+  // hardcoded into the form's validation.
   const emit = (intent: "draft" | "publish") =>
-    handleSubmit((formValues) => onSubmit(toInput(formValues), intent));
+    handleSubmit((formValues) => {
+      if (minFee != null && (feeMinor ?? 0) < minFee.amountMinor) {
+        setError("recruiterFee", {
+          message: `Recruiter fee must be at least ${formatMinor(minFee.amountMinor)}`,
+        });
+        return;
+      }
+      onSubmit(toInput(formValues), intent);
+    });
 
   const statusText = job
     ? "Changes are live as soon as you save."
@@ -570,7 +582,7 @@ export function JobForm({
             <Field
               label="Worksite Street Address"
               htmlFor="worksiteAddress"
-              optional
+              optional={workModel === "remote"}
               error={errors.worksiteAddress?.message}
             >
               <Input
@@ -583,7 +595,7 @@ export function JobForm({
             <Field
               label="Worksite ZIP"
               htmlFor="worksiteZip"
-              optional
+              optional={workModel === "remote"}
               error={errors.worksiteZip?.message}
             >
               <NumericInput
@@ -663,7 +675,11 @@ export function JobForm({
               {/* The same searchable, state-scoped city picker the explore map
                   uses, so the job's city matches the values recruiters filter
                   by. Disabled until a state is chosen. */}
-              <Field label="City" optional>
+              <Field
+                label="City"
+                optional={workModel === "remote"}
+                error={errors.locationCity?.message}
+              >
                 <Controller
                   control={control}
                   name="locationCity"
@@ -684,16 +700,24 @@ export function JobForm({
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
                 <Label className="text-[13px] font-semibold text-navy">
-                  Pay Range{" "}
-                  <span className="font-normal text-muted-foreground">
-                    Optional
-                  </span>
+                  Pay Range
                 </Label>
                 <Controller
                   control={control}
                   name="salaryRatePeriod"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={(period) => {
+                        field.onChange(period);
+                        // A yearly band and an hourly one live on scales 1000x
+                        // apart, so carrying the figures across reads as a
+                        // nonsense range. Clearing them returns the slider to
+                        // the new period's full span.
+                        setValue("salaryMin", "", { shouldDirty: true });
+                        setValue("salaryMax", "", { shouldDirty: true });
+                      }}
+                    >
                       <SelectTrigger
                         aria-label="Pay Type"
                         className="h-7 w-auto gap-1 border-none bg-secondary/60 px-2 text-xs shadow-none"
@@ -746,7 +770,6 @@ export function JobForm({
             <Field
               label="Reports To"
               htmlFor="reportsTo"
-              optional
               error={errors.reportsTo?.message}
             >
               <Input
@@ -949,13 +972,12 @@ export function JobForm({
 
           <Block
             title="Company Info"
-            intro="Prefilled from your company profile — edit it for this role if this job's team is different."
+            intro="Prefilled from your company profile — edit if this role falls under a different business segment."
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
                 label="Industry"
                 htmlFor="companyIndustry"
-                optional
                 error={errors.companyDetails?.industry?.message}
               >
                 <Input
@@ -966,9 +988,8 @@ export function JobForm({
                 />
               </Field>
               <Field
-                label="Company Size"
+                label="Employee Size"
                 htmlFor="companyEmployeeSize"
-                optional
                 error={errors.companyDetails?.employeeSize?.message}
               >
                 <Controller
@@ -999,7 +1020,6 @@ export function JobForm({
               <Field
                 label="Annual Revenue"
                 htmlFor="companyRevenue"
-                optional
                 error={errors.companyDetails?.revenue?.message}
               >
                 <NumericInput
@@ -1013,7 +1033,6 @@ export function JobForm({
               <Field
                 label="Years In Business"
                 htmlFor="companyYearsInBusiness"
-                optional
                 error={errors.companyDetails?.yearsInBusiness?.message}
               >
                 <NumericInput
@@ -1027,7 +1046,6 @@ export function JobForm({
             <Field
               label="What You Do"
               htmlFor="companyWhatTheyDo"
-              optional
               error={errors.companyDetails?.whatTheyDo?.message}
             >
               <Textarea
@@ -1051,7 +1069,7 @@ export function JobForm({
                   id="description"
                   value={field.value}
                   onChange={field.onChange}
-                  placeholder="e.g., list key responsibilities and tasks..."
+                  placeholder="Add Job Duties, Qualifications and Requirements info here."
                 />
               )}
             />
@@ -1078,7 +1096,7 @@ export function JobForm({
                       id="mustHave"
                       value={field.value}
                       onChange={field.onChange}
-                      placeholder="e.g., specific skills, education, years of experience..."
+                      placeholder="e.g., specific skills, industry, software, education..."
                       ariaLabel="Add a must-have"
                       max={MAX_QUALIFICATIONS}
                       maxLength={MAX_QUALIFICATION_LENGTH}
@@ -1095,7 +1113,7 @@ export function JobForm({
                       id="niceToHave"
                       value={field.value}
                       onChange={field.onChange}
-                      placeholder="e.g., AWS, startup experience..."
+                      placeholder="e.g., specific skills, industry, software, education..."
                       ariaLabel="Add a nice-to-have"
                       max={MAX_QUALIFICATIONS}
                       maxLength={MAX_QUALIFICATION_LENGTH}

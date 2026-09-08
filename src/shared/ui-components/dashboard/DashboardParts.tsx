@@ -102,6 +102,7 @@ export function StatCard({
   hint,
   icon: Icon,
   href,
+  showArrow = true,
   className: classNameProp,
 }: {
   label: string;
@@ -110,6 +111,8 @@ export function StatCard({
   /** Optional leading icon, shown in a soft blue circle. */
   icon?: LucideIcon;
   href?: string;
+  /** Drops the trailing arrow on a card that still links somewhere. */
+  showArrow?: boolean;
   /** Grid placement from the caller, e.g. a lead card spanning both columns. */
   className?: string;
 }) {
@@ -146,7 +149,7 @@ export function StatCard({
           )}
         </div>
       </div>
-      {href && (
+      {href && showArrow && (
         <ArrowRight
           aria-hidden="true"
           className="mt-0.5 h-4 w-4 shrink-0 text-primary/70 transition-transform group-hover:translate-x-0.5"

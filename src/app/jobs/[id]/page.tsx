@@ -170,7 +170,7 @@ function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
           className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to explore jobs
+          Back to Live Map
         </Link>
         <RequireApprovedRecruiter>
           <AuthedJobBody jobId={jobId} role={role} />
@@ -196,7 +196,7 @@ function GuestJobDetail() {
           className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to explore jobs
+          Back to Live Map
         </Link>
         <div className="rounded-md border border-border bg-card p-6 text-center sm:p-10">
           <p className="font-heading text-lg font-extrabold text-navy">

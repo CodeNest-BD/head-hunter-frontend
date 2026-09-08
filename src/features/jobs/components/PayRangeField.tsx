@@ -9,7 +9,7 @@ import { formatMinor } from "@/shared/utils/money";
  */
 const SLIDER_RANGE: Record<string, { max: number; step: number }> = {
   per_year: { max: 500_000, step: 5_000 },
-  per_hour: { max: 500, step: 5 },
+  per_hour: { max: 1_000, step: 5 },
 };
 
 const DEFAULT_RANGE = SLIDER_RANGE.per_year;

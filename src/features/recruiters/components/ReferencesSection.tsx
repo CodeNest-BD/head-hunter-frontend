@@ -75,8 +75,8 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
             References
           </h2>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Up to {MAX_REFERENCES} professional references from recruiting
-            roles.
+            Up to {MAX_REFERENCES} professional references from recruiting roles
+            (at least 1 required).
           </p>
         </div>
         <span className="shrink-0 text-sm font-semibold tabular-nums text-muted-foreground">

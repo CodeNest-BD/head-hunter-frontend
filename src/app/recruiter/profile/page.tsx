@@ -72,8 +72,8 @@ function RecruiterProfileContent() {
       ) : (
         <Tabs defaultValue="info">
           <TabsList>
-            <TabsTrigger value="info">Personal info</TabsTrigger>
-            <TabsTrigger value="password">Password change</TabsTrigger>
+            <TabsTrigger value="info">Personal Info</TabsTrigger>
+            <TabsTrigger value="password">Password Change</TabsTrigger>
           </TabsList>
           <TabsContent value="info">
             <div className="flex flex-col gap-6">

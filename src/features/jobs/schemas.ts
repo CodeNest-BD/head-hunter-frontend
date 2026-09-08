@@ -610,6 +610,38 @@ export const jobFormSchema = z
         message: "Pick a state, or set the work model to Remote",
       });
     }
+    // Somebody has to physically go there, so the worksite is only optional on
+    // a fully remote role.
+    if (values.workModel !== "remote") {
+      const worksiteFields = [
+        { path: "worksiteAddress", value: values.worksiteAddress },
+        { path: "worksiteZip", value: values.worksiteZip },
+        { path: "locationCity", value: values.locationCity },
+      ] as const;
+      for (const field of worksiteFields) {
+        if (field.value === "") {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [field.path],
+            message: "Required unless the work model is Remote",
+          });
+        }
+      }
+    }
+    if (values.salaryMin === "" || values.salaryMax === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [values.salaryMin === "" ? "salaryMin" : "salaryMax"],
+        message: "Enter a pay range",
+      });
+    }
+    if (values.reportsTo === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["reportsTo"],
+        message: "Say who this role reports to",
+      });
+    }
     // Checked here rather than on the field because it spans two of them.
     if (
       !values.interviewingAsap &&

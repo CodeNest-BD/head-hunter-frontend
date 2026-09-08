@@ -8,15 +8,19 @@ const valid = {
   roleCategory: "engineering" as const,
   employmentType: "full_time" as const,
   locationState: "CA",
-  locationCity: "",
-  salaryMin: "",
-  salaryMax: "",
+  locationCity: "San Francisco",
+  salaryMin: "100000",
+  salaryMax: "150000",
   salaryRatePeriod: "per_year" as const,
   recruiterFee: "10000",
   // Mirrored from the company profile, not stored on the job.
   companyName: "Northwind Robotics",
-  // The intake half of the form, unanswered.
+  // The intake half of the form, unanswered apart from the details a role
+  // with a worksite has to carry.
   ...intakeToFormValues(null),
+  worksiteAddress: "123 Market St",
+  worksiteZip: "94103",
+  reportsTo: "VP of Engineering",
 };
 
 const errorPaths = (overrides: Record<string, unknown>): string[] => {
@@ -109,12 +113,23 @@ describe("jobFormSchema", () => {
     expect(errorPaths({ employmentType: "" })).toContain("employmentType");
   });
 
-  it("leaves the salary band optional", () => {
-    expect(errorPaths({ salaryMin: "", salaryMax: "" })).toEqual([]);
+  it("requires a pay range", () => {
+    expect(errorPaths({ salaryMin: "", salaryMax: "" })).toContain("salaryMin");
   });
 
-  it("leaves the city optional", () => {
-    expect(errorPaths({ locationCity: "" })).toEqual([]);
+  it("requires a city on a role with a worksite", () => {
+    expect(errorPaths({ locationCity: "" })).toContain("locationCity");
+  });
+
+  it("leaves the worksite and city optional on a remote role", () => {
+    expect(
+      errorPaths({
+        workModel: "remote",
+        locationCity: "",
+        worksiteAddress: "",
+        worksiteZip: "",
+      }),
+    ).toEqual([]);
   });
 
   it("rejects a salary maximum below the minimum", () => {
@@ -129,8 +144,10 @@ describe("jobFormSchema", () => {
     );
   });
 
-  it("accepts a salary range with only one bound set", () => {
-    expect(errorPaths({ salaryMin: "100000", salaryMax: "" })).toEqual([]);
+  it("requires both bounds of the pay range", () => {
+    expect(errorPaths({ salaryMin: "100000", salaryMax: "" })).toContain(
+      "salaryMax",
+    );
   });
 
   it("rejects a role category outside the enum", () => {
@@ -160,7 +177,9 @@ describe("jobFormSchema", () => {
   });
 
   it("accepts a salary minimum at the $1,000,000,000 ceiling", () => {
-    expect(errorPaths({ salaryMin: "1000000000", salaryMax: "" })).toEqual([]);
+    expect(
+      errorPaths({ salaryMin: "1000000000", salaryMax: "" }),
+    ).not.toContain("salaryMin");
   });
 
   it("rejects a salary minimum over the $1,000,000,000 ceiling", () => {
@@ -170,7 +189,9 @@ describe("jobFormSchema", () => {
   });
 
   it("accepts a salary maximum at the $1,000,000,000 ceiling", () => {
-    expect(errorPaths({ salaryMin: "", salaryMax: "1000000000" })).toEqual([]);
+    expect(
+      errorPaths({ salaryMin: "", salaryMax: "1000000000" }),
+    ).not.toContain("salaryMax");
   });
 
   it("rejects a salary maximum over the $1,000,000,000 ceiling", () => {

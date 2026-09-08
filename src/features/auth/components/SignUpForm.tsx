@@ -183,6 +183,7 @@ function SpecializationsChips({
 }
 
 const EMPTY_REFERENCE = { name: "", company: "", title: "", phone: "" };
+const EMPTY_EXPERIENCE = { firmName: "", years: "", specializations: [] };
 
 const defaultValuesFor = (role: SignupRole): SignUpFormData => ({
   role,
@@ -194,8 +195,8 @@ const defaultValuesFor = (role: SignupRole): SignUpFormData => ({
   phone: "",
   companyName: "",
   linkedinUrl: "",
-  experiences: [],
-  // A recruiter must supply at least one, so the first row starts open.
+  // A recruiter must supply at least one of each, so the first row starts open.
+  experiences: role === "recruiter" ? [EMPTY_EXPERIENCE] : [],
   references: role === "recruiter" ? [EMPTY_REFERENCE] : [],
   addressLine: "",
   city: "",
@@ -394,6 +395,59 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
         <FieldError message={errors.phone?.message} />
       </div>
 
+      {/* Sits with the person's own contact details: after the recruiting
+          companies, "Address" read as one of those firms' addresses. */}
+      <div className="flex flex-col gap-3">
+        <span className="text-sm font-medium leading-none text-foreground">
+          Address
+        </span>
+        <Input
+          type="text"
+          autoComplete="street-address"
+          {...register("addressLine")}
+          className="h-11"
+          placeholder="Street address"
+          aria-label="Street address"
+        />
+        <FieldError message={errors.addressLine?.message} />
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[1fr_1.4fr_0.9fr]">
+          <Controller
+            control={control}
+            name="state"
+            render={({ field }) => (
+              <StateSelect
+                className="h-11"
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="city"
+            render={({ field }) => (
+              <CityCombobox
+                cities={cityOptions}
+                value={field.value === "" ? null : field.value}
+                onChange={(city) => field.onChange(city ?? "")}
+                disabled={stateValue === ""}
+                className="h-11"
+              />
+            )}
+          />
+          <NumericInput
+            autoComplete="postal-code"
+            {...register("zip")}
+            className="h-11"
+            placeholder="ZIP"
+            aria-label="ZIP code"
+          />
+        </div>
+        <FieldError message={errors.city?.message} />
+        <FieldError message={errors.state?.message} />
+        <FieldError message={errors.zip?.message} />
+      </div>
+
       {role === "company" && (
         <div className="flex flex-col gap-2">
           <Label htmlFor="companyName">Company Name</Label>
@@ -427,10 +481,7 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
 
           <div className="flex flex-col gap-3">
             <span className="text-sm font-medium leading-none text-foreground">
-              Recruiting Experience{" "}
-              <span className="font-normal text-muted-foreground">
-                (optional, up to {MAX_SIGNUP_EXPERIENCES} companies)
-              </span>
+              Recruiting Experience {atLeastOneHint}
             </span>
 
             {firms.fields.map((field, index) => (
@@ -442,14 +493,16 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
                   <span className="text-sm font-semibold text-foreground">
                     Company {index + 1}
                   </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => firms.remove(index)}
-                  >
-                    Remove
-                  </Button>
+                  {firms.fields.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => firms.remove(index)}
+                    >
+                      Remove
+                    </Button>
+                  )}
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem]">
@@ -503,18 +556,17 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    firms.append({
-                      firmName: "",
-                      years: "",
-                      specializations: [],
-                    })
-                  }
+                  onClick={() => firms.append(EMPTY_EXPERIENCE)}
                 >
                   + Add a company
                 </Button>
               </div>
             )}
+            <FieldError
+              message={
+                errors.experiences?.root?.message ?? errors.experiences?.message
+              }
+            />
           </div>
 
           <div className="flex flex-col gap-3">
@@ -596,57 +648,6 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
           </div>
         </>
       )}
-
-      <div className="flex flex-col gap-3">
-        <span className="text-sm font-medium leading-none text-foreground">
-          Address
-        </span>
-        <Input
-          type="text"
-          autoComplete="street-address"
-          {...register("addressLine")}
-          className="h-11"
-          placeholder="Street address"
-          aria-label="Street address"
-        />
-        <FieldError message={errors.addressLine?.message} />
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[1fr_1.4fr_0.9fr]">
-          <Controller
-            control={control}
-            name="state"
-            render={({ field }) => (
-              <StateSelect
-                className="h-11"
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="city"
-            render={({ field }) => (
-              <CityCombobox
-                cities={cityOptions}
-                value={field.value === "" ? null : field.value}
-                onChange={(city) => field.onChange(city ?? "")}
-                disabled={stateValue === ""}
-                className="h-11"
-              />
-            )}
-          />
-          <NumericInput
-            autoComplete="postal-code"
-            {...register("zip")}
-            className="h-11"
-            placeholder="ZIP"
-            aria-label="ZIP code"
-          />
-        </div>
-        <FieldError message={errors.city?.message} />
-        <FieldError message={errors.state?.message} />
-        <FieldError message={errors.zip?.message} />
-      </div>
 
       <Button type="submit" size="lg" disabled={isSubmitting} className="h-11">
         {isSubmitting ? "Creating account…" : "Create account"}
