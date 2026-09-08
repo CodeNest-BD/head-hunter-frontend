@@ -107,8 +107,8 @@ export function AdminOverview() {
     return (
       <div className="flex flex-col gap-6">
         {banner}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-5">
+          {[0, 1, 2, 3, 4].map((i) => (
             <div
               key={i}
               className="h-24 animate-pulse rounded-md border border-border bg-card"
@@ -218,9 +218,6 @@ export function AdminOverview() {
           hint={`${data.conversations} submissions to date`}
         />
         <StatCard
-          // Odd one out in the phone's two-up grid; spanning it keeps the row
-          // from ending on an empty cell.
-          className="col-span-2 sm:col-span-1"
           label="Average fee"
           value={formatMinor(data.avgFeeMinor)}
           hint="across all live jobs"
