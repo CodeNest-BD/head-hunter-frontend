@@ -131,7 +131,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
         <StatCard
           label="Candidates in process"
           value={inbox.isPending ? "—" : candidateCount}
-          hint="submitted, progressing, pending feedback"
+          hint="submitted, interviewing, pending, feedback"
           icon={Users}
           href="/recruiter/inbox"
         />

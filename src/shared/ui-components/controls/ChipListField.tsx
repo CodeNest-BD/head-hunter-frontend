@@ -105,27 +105,9 @@ export function ChipListField({
 
   return (
     <div className="flex flex-col gap-2.5">
-      {value.length > 0 && (
-        <ul className="flex flex-wrap gap-2">
-          {value.map((entry, index) => (
-            <li key={entry}>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 py-1 pl-3 pr-1.5 text-xs font-medium text-primary">
-                {entry}
-                <button
-                  type="button"
-                  onClick={() =>
-                    onChange(value.filter((_, position) => position !== index))
-                  }
-                  aria-label={`Remove ${entry}`}
-                  className="rounded-full p-0.5 text-primary/70 transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <X className="h-3 w-3" aria-hidden="true" />
-                </button>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Input first, chips beneath: side-by-side chip fields would otherwise
+          sit at different heights, since chips above the input push it down by
+          however many rows that column happens to have. */}
       {value.length < max && (
         <div className="flex items-center gap-2">
           <Input
@@ -148,12 +130,38 @@ export function ChipListField({
             placeholder={placeholder}
             className={cn("h-11", error !== null && "border-destructive")}
           />
-          <Button type="button" variant="outline" size="sm" onClick={commit}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={commit}
+            className="h-11 shrink-0"
+          >
             Add
           </Button>
         </div>
       )}
       {error !== null && <p className="text-xs text-destructive">{error}</p>}
+      {value.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {value.map((entry, index) => (
+            <li key={entry}>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 py-1 pl-3 pr-1.5 text-xs font-medium text-primary">
+                {entry}
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange(value.filter((_, position) => position !== index))
+                  }
+                  aria-label={`Remove ${entry}`}
+                  className="rounded-full p-0.5 text-primary/70 transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <X className="h-3 w-3" aria-hidden="true" />
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

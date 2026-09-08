@@ -86,6 +86,11 @@ const PREVIEW_OPEN_KEY = "hh-job-preview-open";
 /** Consistent control height across the form's dense single-card layout. */
 const CONTROL_HEIGHT = "h-10";
 
+/** Shared by the live message under the fee field and the submit-time error, so
+ * a company reads the same sentence either way. */
+const feeFloorMessage = (amountMinor: number): string =>
+  `Recruiter fee must be at least ${formatMinor(amountMinor)}`;
+
 type BenefitKey = (typeof BENEFIT_CHECKBOXES)[number]["key"];
 
 /** The benefit grid places its cells by hand to match the intake layout, so the
@@ -444,6 +449,14 @@ export function JobForm({
   const feeMinor = majorInputToMinor(values.recruiterFee);
   const feeMeetsMinimum =
     minFee != null && feeMinor != null && feeMinor >= minFee.amountMinor;
+  // The floor is checked on every keystroke, like the "meets the minimum" pill
+  // beside it, rather than only when a submit is blocked. An empty field is
+  // left to the schema, so the error is not there on arrival.
+  const feeError =
+    errors.recruiterFee?.message ??
+    (minFee != null && feeMinor != null && !feeMeetsMinimum
+      ? feeFloorMessage(minFee.amountMinor)
+      : null);
 
   // Required-for-publish completeness, surfaced in the sticky bar status. Read
   // off the schema rather than a hand-kept list, which drifted every time a
@@ -507,7 +520,7 @@ export function JobForm({
     handleSubmit((formValues) => {
       if (minFee != null && (feeMinor ?? 0) < minFee.amountMinor) {
         setError("recruiterFee", {
-          message: `Recruiter fee must be at least ${formatMinor(minFee.amountMinor)}`,
+          message: feeFloorMessage(minFee.amountMinor),
         });
         return;
       }
@@ -1162,33 +1175,38 @@ export function JobForm({
                   className="max-w-[12rem] bg-card"
                   {...register("recruiterFee")}
                 />
-                {feeMeetsMinimum && (
-                  <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                    Meets the publishing minimum
+                {/* One slot, two states: the fee either clears the floor or
+                    says by how much it misses, in the same pill shape. */}
+                {feeError !== null ? (
+                  <span
+                    role="alert"
+                    className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700"
+                  >
+                    {feeError}
                   </span>
+                ) : (
+                  feeMeetsMinimum && (
+                    <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                      Meets the publishing minimum
+                    </span>
+                  )
                 )}
               </div>
-              {errors.recruiterFee ? (
-                <p className="mt-2 text-xs text-destructive">
-                  {errors.recruiterFee.message}
-                </p>
-              ) : (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {minFee ? (
-                    <>
-                      A minimum recruiter fee of{" "}
-                      <span className="font-semibold text-navy">
-                        {formatMinor(minFee.amountMinor)}
-                      </span>{" "}
-                      is required to publish any role. The higher the fee, the
-                      more attention your job will get from recruiters &mdash;
-                      and faster candidates for you.
-                    </>
-                  ) : (
-                    "Paid only on a successful hire."
-                  )}
-                </p>
-              )}
+              <p className="mt-2 text-xs text-muted-foreground">
+                {minFee ? (
+                  <>
+                    A minimum recruiter fee of{" "}
+                    <span className="font-semibold text-navy">
+                      {formatMinor(minFee.amountMinor)}
+                    </span>{" "}
+                    is required to publish any role. The higher the fee, the
+                    more attention your job will get from recruiters &mdash; and
+                    faster candidates for you.
+                  </>
+                ) : (
+                  "Paid only on a successful hire."
+                )}
+              </p>
             </div>
           </FormSection>
 
