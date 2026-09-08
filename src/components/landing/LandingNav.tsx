@@ -19,9 +19,13 @@ interface NavItemLink {
   anchor?: boolean;
 }
 
-/** Resources are the same for everyone. */
+/**
+ * Resources are the same for everyone. Raising a dispute is no longer its own
+ * entry — it belongs to the support page, which is where /raise-a-dispute now
+ * lands.
+ */
 const RESOURCES: readonly NavItemLink[] = [
-  { href: "/raise-a-dispute", label: "Raise A Dispute" },
+  { href: "/faq", label: "Frequently Asked Questions" },
   { href: "/contact-support", label: "Contact Customer Support" },
 ];
 

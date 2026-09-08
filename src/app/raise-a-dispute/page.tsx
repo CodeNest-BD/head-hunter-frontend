@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { PlaceholderPage } from "@/components/landing/PlaceholderPage";
-
-export const metadata: Metadata = {
-  title: "Raise a Dispute — Head-Hunters",
-};
-
+/**
+ * Raising a dispute is part of the support page now, not a page of its own.
+ * The route is kept as a redirect rather than deleted: it was linked from the
+ * Resources menu, so a link already shared should land somewhere useful.
+ */
 export default function RaiseADisputePage() {
-  return <PlaceholderPage title="Raise a Dispute" />;
+  redirect("/contact-support");
 }

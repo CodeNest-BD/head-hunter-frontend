@@ -30,6 +30,9 @@ const PUBLIC_ROUTES = new Set([
   "/terms",
   "/privacy",
   "/about",
+  "/faq",
+  // Still public though it only redirects now — a guest following an old link
+  // has to be able to reach it to be sent on to support.
   "/raise-a-dispute",
   "/contact-support",
   ...AUTH_ROUTES,

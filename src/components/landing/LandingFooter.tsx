@@ -8,7 +8,7 @@ import { FooterPostJobLink } from "./FooterPostJobLink";
 interface FooterLink {
   readonly label: string;
   readonly href: string;
-  /** Resolve the destination by auth (a signed-in company deep-links in-app). */
+  /** Posting is employer-only — deep-link a company, hide from a recruiter. */
   readonly roleAware?: boolean;
   /** The live map is recruiter-only — hide this link from signed-in companies. */
   readonly recruiterOnly?: boolean;
@@ -24,15 +24,15 @@ const COLUMNS: readonly FooterColumn[] = [
     title: "Marketplace",
     links: [
       { label: "Explore jobs", href: "/explore-jobs", recruiterOnly: true },
-      { label: "How it works", href: "/#how" },
+      { label: "How it Works", href: "/#how" },
     ],
   },
   {
     title: "Get started",
     links: [
-      { label: "Post a job", href: "/signup", roleAware: true },
-      { label: "Become a recruiter", href: "/signup" },
-      { label: "Log in", href: "/login" },
+      { label: "Post a Job", href: "/signup", roleAware: true },
+      { label: "Become a Recruiter", href: "/signup" },
+      { label: "Log In", href: "/login" },
     ],
   },
   {
@@ -90,24 +90,24 @@ export function LandingFooter() {
             </h2>
             <ul className="mt-4 flex flex-col gap-3">
               {column.links.map((link) =>
-                // FooterExploreLink owns its own <li> so a company drops the
-                // item entirely (no empty slot); the others are wrapped here.
+                // The two role-aware links own their own <li> so the role they
+                // are not for drops the item entirely, rather than leaving an
+                // empty slot (and a stray gap). Plain links are wrapped here.
                 link.recruiterOnly ? (
                   <FooterExploreLink
                     key={`${link.label}-${link.href}`}
                     label={link.label}
                     href={link.href}
                   />
+                ) : link.roleAware ? (
+                  <FooterPostJobLink
+                    key={`${link.label}-${link.href}`}
+                    label={link.label}
+                    guestHref={link.href}
+                  />
                 ) : (
                   <li key={`${link.label}-${link.href}`}>
-                    {link.roleAware ? (
-                      <FooterPostJobLink
-                        label={link.label}
-                        guestHref={link.href}
-                      />
-                    ) : (
-                      <FooterNavLink {...link} />
-                    )}
+                    <FooterNavLink {...link} />
                   </li>
                 ),
               )}

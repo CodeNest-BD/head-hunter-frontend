@@ -17,9 +17,10 @@ import { StatsStrip } from "./StatsStrip";
  */
 export function Hero() {
   const { status, user } = useAuth();
-  // The live job map is a recruiter surface. A signed-in employer clicking
-  // "Explore Open Jobs" would land on a map that isn't for them, so the CTA is
-  // disabled for them (guests and recruiters still follow it).
+  // Each CTA belongs to one side of the marketplace, and a signed-in visitor
+  // from the other side sees it disabled rather than being sent somewhere that
+  // isn't for them. Posting a job is handled inside LandingCta; the live map is
+  // gated here because it is a plain link, not a role-resolved one.
   const isEmployer = status === "authenticated" && user?.role === "company";
 
   return (
@@ -45,6 +46,7 @@ export function Hero() {
             <LandingCta
               role="company"
               authedHref="/company/jobs/new"
+              disabledTitle="Posting a job is for employers."
               className="h-auto rounded-[10px] px-6 py-4 text-base font-bold"
             >
               Post a Job &amp; Set Your Price
