@@ -134,7 +134,7 @@ export function ConversationsTable() {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="hidden w-full sm:block">
+            <div className="hidden w-full overflow-x-auto sm:block">
               <table className={TABLE_CLASS}>
                 <thead>
                   <tr className={THEAD_ROW_CLASS}>
