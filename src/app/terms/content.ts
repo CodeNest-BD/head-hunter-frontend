@@ -3,7 +3,7 @@ import type { LegalSection } from "@/components/landing/LegalPage";
 export const TERMS_UPDATED = "September 7, 2026";
 
 export const TERMS_INTRO: readonly string[] = [
-  "Welcome to Head-Hunters.com (“Head-Hunters”, “Platform”, “we”, “us”, or “our”). These Terms of Service (“Terms”) govern your access to and use of the Head-Hunters.com website, marketplace, recruiting platform, services, and related features.",
+  "Welcome to **Head-Hunters.com** (“Head-Hunters”, “Platform”, “we”, “us”, or “our”). These Terms of Service (“Terms”) govern your access to and use of the Head-Hunters.com website, marketplace, recruiting platform, services, and related features.",
   "By creating an account, posting a job, accepting or working on a job, submitting or reviewing a candidate, communicating through the Platform, paying or receiving fees, or otherwise using Head-Hunters.com, you agree to be bound by these Terms.",
   "If you do not agree to these Terms, you may not use the Platform.",
 ];
@@ -16,7 +16,7 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     blocks: [
       "Head-Hunters.com operates a marketplace designed to connect companies seeking candidates (“Companies”, “Employers”, or “Clients”) with independent recruiters and recruiting professionals (“Recruiters”).",
       "Head-Hunters.com provides the technology and marketplace through which Companies and Recruiters may identify opportunities, exchange candidate information, communicate, and facilitate recruiting engagements.",
-      "Unless expressly stated otherwise, Head-Hunters.com is not the employer of any candidate, is not the employer or agent of any Recruiter, and does not guarantee the performance of any Company, Recruiter, candidate, or employee.",
+      "Unless expressly stated otherwise, **Head-Hunters.com is not the employer of any candidate, is not the employer or agent of any Recruiter, and does not guarantee the performance of any Company, Recruiter, candidate, or employee.**",
       "Recruiters using the Platform operate independently and are not employees, partners, joint venturers, representatives, or agents of Head-Hunters.com.",
     ],
   },
@@ -70,7 +70,10 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     number: "6",
     title: "Non-Circumvention and Candidate Theft",
     blocks: [
-      "Companies and Recruiters expressly agree not to circumvent Head-Hunters.com for the purpose of avoiding recruiting fees, Platform fees, payment obligations, or other charges associated with a transaction originating through the Platform.",
+      {
+        strong:
+          "Companies and Recruiters expressly agree not to circumvent Head-Hunters.com for the purpose of avoiding recruiting fees, Platform fees, payment obligations, or other charges associated with a transaction originating through the Platform.",
+      },
       "Prohibited circumvention includes, without limitation:",
       {
         list: [
@@ -84,7 +87,7 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
           "Assisting another person or entity in circumventing the Platform.",
         ],
       },
-      "Unauthorized use of a candidate introduction to intentionally avoid an applicable recruiting fee may be treated by Head-Hunters.com as candidate theft or fee circumvention for purposes of enforcement under these Terms.",
+      "Unauthorized use of a candidate introduction to intentionally avoid an applicable recruiting fee may be treated by Head-Hunters.com as **candidate theft or fee circumvention** for purposes of enforcement under these Terms.",
       "If Head-Hunters.com reasonably determines that circumvention has occurred, the responsible user remains liable for all fees that would otherwise have been payable through the Platform, together with any other remedies available under these Terms or applicable law.",
       "Head-Hunters.com may suspend or permanently terminate users who engage in attempted or completed circumvention.",
       "The obligations contained in this Section survive termination or closure of a user's account with respect to candidate introductions and transactions originating before termination.",
@@ -120,10 +123,13 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     number: "9",
     title: "30-Day Placement Guarantee",
     blocks: [
-      "Certain qualifying placements may be covered by a 30-day guarantee, subject to the specific conditions displayed by Head-Hunters.com for the applicable transaction.",
+      "Certain qualifying placements may be covered by a **30-day guarantee**, subject to the specific conditions displayed by Head-Hunters.com for the applicable transaction.",
       "Unless different terms are expressly provided for a particular placement, the guarantee period begins on the candidate's first day of employment and expires after thirty (30) calendar days.",
       "Any request under the guarantee must comply with the applicable guarantee requirements and must be submitted within the required period.",
-      "After expiration of the applicable 30-day guarantee period, the placement is considered final and Head-Hunters.com has no obligation to provide a refund, credit, replacement candidate, reimbursement, or other compensation because the candidate subsequently resigns, is terminated, fails to perform, does not meet expectations, or otherwise does not remain employed.",
+      {
+        strong:
+          "After expiration of the applicable 30-day guarantee period, the placement is considered final and Head-Hunters.com has no obligation to provide a refund, credit, replacement candidate, reimbursement, or other compensation because the candidate subsequently resigns, is terminated, fails to perform, does not meet expectations, or otherwise does not remain employed.",
+      },
       "Head-Hunters.com is not responsible for predicting or guaranteeing a candidate's future performance, conduct, attendance, productivity, compatibility, retention, honesty, or continued employment.",
     ],
   },
@@ -133,7 +139,10 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     title: "No Guarantee of Candidate Performance",
     blocks: [
       "Head-Hunters.com facilitates introductions between independent parties. We do not independently guarantee statements made by candidates, Recruiters, or Companies.",
-      "Head-Hunters.com makes no representation, warranty, or guarantee regarding the quality, suitability, qualifications, performance, behavior, reliability, productivity, background, retention, or future conduct of any candidate.",
+      {
+        strong:
+          "Head-Hunters.com makes no representation, warranty, or guarantee regarding the quality, suitability, qualifications, performance, behavior, reliability, productivity, background, retention, or future conduct of any candidate.",
+      },
       "Companies are solely responsible for deciding whether a candidate is suitable for employment.",
       "Except for any specific written guarantee expressly provided through the Platform, Companies assume the risks associated with their hiring decisions.",
       "To the fullest extent permitted by applicable law, Head-Hunters.com will not be responsible for losses, damages, costs, lost revenue, lost productivity, replacement costs, business interruption, or other consequences resulting from a candidate's actions, performance, resignation, termination, misconduct, failure to perform, or inability to satisfy the Company's expectations.",

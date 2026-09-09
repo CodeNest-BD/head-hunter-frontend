@@ -40,3 +40,19 @@ export function formatDateTime(value: Date | string): string {
 export function formatTime(value: Date | string): string {
   return toDate(value).toLocaleTimeString("en-US", TIME_OPTIONS);
 }
+
+// `en-CA` is the shortest way to a "yyyy-mm-dd" string in the *local* calendar
+// day; `toISOString()` would shift it a day for anyone west of UTC.
+const ISO_DATE_LOCALE = "en-CA";
+
+/** Today as "2026-08-09", for the `min`/`max` of an `<input type="date">`. */
+export function todayIsoDate(): string {
+  return new Date().toLocaleDateString(ISO_DATE_LOCALE);
+}
+
+/** "2026-08-09" -> "2026-08-10", for a range whose end must clear its start. */
+export function isoDateAfter(value: string): string {
+  const next = new Date(`${value}T00:00:00`);
+  next.setDate(next.getDate() + 1);
+  return next.toLocaleDateString(ISO_DATE_LOCALE);
+}

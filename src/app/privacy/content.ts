@@ -385,7 +385,9 @@ export const PRIVACY_SECTIONS: readonly LegalSection[] = [
     number: "15",
     title: "Privacy Requests",
     blocks: [
-      "To submit an applicable privacy request, contact Head-Hunters.com at info@head-hunters.com.",
+      "To submit an applicable privacy request, contact:",
+      { strong: "Head-Hunters.com" },
+      "Privacy Email: **info@head-hunters.com**",
       "We may need to verify your identity before processing certain requests.",
       "Authorized agents may submit requests on behalf of individuals where permitted by applicable law and where appropriate authorization can be verified.",
       "Head-Hunters.com will not unlawfully discriminate against individuals for exercising applicable privacy rights.",
@@ -468,7 +470,10 @@ export const PRIVACY_SECTIONS: readonly LegalSection[] = [
     number: "23",
     title: "Changes to This Privacy Policy",
     blocks: [
-      "Head-Hunters.com reserves the right to modify or update this Privacy Policy from time to time.",
+      {
+        strong:
+          "Head-Hunters.com reserves the right to modify or update this Privacy Policy from time to time.",
+      },
       "When changes are made, we may update the “Last Updated” date at the top of this Policy and provide additional notice where required by applicable law.",
       "Your continued use of Head-Hunters.com following an updated Privacy Policy acknowledges the updated practices described in the Policy, subject to any consent requirements or other rights provided by applicable law.",
       "If a change requires affirmative consent under applicable law, Head-Hunters.com will seek that consent before applying the change as required.",
@@ -479,7 +484,7 @@ export const PRIVACY_SECTIONS: readonly LegalSection[] = [
     number: "24",
     title: "Relationship to Terms of Service",
     blocks: [
-      "Use of Head-Hunters.com is also governed by our Terms of Service.",
+      "Use of Head-Hunters.com is also governed by our **Terms of Service**.",
       "The Terms of Service contain important provisions regarding user responsibilities, recruiting fees, candidate introductions, payment obligations, non-circumvention, placement guarantees, limitations of liability, and other Platform requirements.",
       "This Privacy Policy describes our privacy practices and should be read together with the Terms of Service.",
     ],
@@ -489,7 +494,9 @@ export const PRIVACY_SECTIONS: readonly LegalSection[] = [
     number: "25",
     title: "Contact Head-Hunters.com",
     blocks: [
-      "Questions, concerns, or requests regarding this Privacy Policy or our privacy practices may be directed to Head-Hunters.com at info@head-hunters.com.",
+      "Questions, concerns, or requests regarding this Privacy Policy or our privacy practices may be directed to:",
+      { strong: "Head-Hunters.com" },
+      "Support Email: **info@head-hunters.com**",
     ],
   },
 ];

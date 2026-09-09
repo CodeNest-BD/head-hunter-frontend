@@ -28,6 +28,7 @@ import {
 } from "@/shared/ui-components/controls/select";
 import { useMinRecruiterFee } from "@/features/billing";
 import { sanitizeRichText } from "@/shared/libs/richText";
+import { isoDateAfter, todayIsoDate } from "@/shared/utils/formatDate";
 import {
   formatMinor,
   majorInputToMinor,
@@ -445,6 +446,11 @@ export function JobForm({
       localStorage.setItem(PREVIEW_OPEN_KEY, String(next));
       return next;
     });
+
+  // Set after mount: the server renders its own timezone's date, and an
+  // interviewing window may not start in the viewer's past.
+  const [today, setToday] = useState("");
+  useEffect(() => setToday(todayIsoDate()), []);
 
   const feeMinor = majorInputToMinor(values.recruiterFee);
   const feeMeetsMinimum =
@@ -1374,6 +1380,7 @@ export function JobForm({
                             type="date"
                             aria-label="Interviewing from"
                             className="h-8 w-auto"
+                            min={today || undefined}
                             onFocus={() => field.onChange(false)}
                             {...register("interviewingFrom")}
                           />
@@ -1382,6 +1389,11 @@ export function JobForm({
                             type="date"
                             aria-label="Interviewing until"
                             className="h-8 w-auto"
+                            min={
+                              values.interviewingFrom === ""
+                                ? today || undefined
+                                : isoDateAfter(values.interviewingFrom)
+                            }
                             onFocus={() => field.onChange(false)}
                             {...register("interviewingTo")}
                           />

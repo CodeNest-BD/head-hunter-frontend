@@ -753,12 +753,12 @@ export const jobFormSchema = z
       !values.interviewingAsap &&
       values.interviewingFrom !== "" &&
       values.interviewingTo !== "" &&
-      values.interviewingTo < values.interviewingFrom
+      values.interviewingTo <= values.interviewingFrom
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["interviewingTo"],
-        message: "End the range on or after it starts",
+        message: "End the range after it starts",
       });
     }
   });

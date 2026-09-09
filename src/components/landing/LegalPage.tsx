@@ -55,9 +55,7 @@ function Block({ block }: { block: LegalBlock }) {
   }
   if ("sub" in block) {
     return (
-      <p className="mt-5 font-semibold uppercase text-navy first:mt-0">
-        {block.sub}
-      </p>
+      <p className="mt-5 font-semibold text-navy first:mt-0">{block.sub}</p>
     );
   }
   if ("strong" in block) {
@@ -149,7 +147,7 @@ export function LegalPage({
             <div className="text-[15px] leading-relaxed text-brand-slate">
               {intro.map((paragraph) => (
                 <p key={paragraph} className="mt-4 first:mt-0">
-                  {paragraph}
+                  {emphasise(paragraph)}
                 </p>
               ))}
             </div>
