@@ -157,3 +157,14 @@
 html body[data-scroll-locked] {
   margin-right: 0 !important;
 }
+
+/* Tiptap's Placeholder extension only marks the empty document
+   (`data-placeholder` + `.is-editor-empty`); rendering the text is left to the
+   host app. Without this the job-description box looks blank with no prompt. */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: hsl(var(--muted-foreground));
+}

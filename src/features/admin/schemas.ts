@@ -137,6 +137,10 @@ export const companyDetailSchema = companyListItemSchema.extend({
   revenue: z.string().nullable().catch(null),
   commissionRangeMinMinor: z.number().nullable().catch(null),
   commissionRangeMaxMinor: z.number().nullable().catch(null),
+  // Smallest and largest recruiter fee the company has actually posted — the
+  // advertised commission range above is self-reported and drifts from it.
+  minFeeMinor: z.number().nullable().catch(null),
+  maxFeeMinor: z.number().nullable().catch(null),
   reservedMinor: z.number(),
   availableMinor: z.number(),
   lastLoginAt: z.string().nullable(),

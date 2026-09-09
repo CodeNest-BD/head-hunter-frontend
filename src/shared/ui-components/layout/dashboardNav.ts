@@ -39,7 +39,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       badge: "inbox",
     },
     { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
-    { href: "/company/profile", label: "Profile", icon: UserRound },
+    { href: "/company/profile", label: "My Profile", icon: UserRound },
   ],
   recruiter: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -65,7 +65,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
           },
         ]),
     { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
-    { href: "/recruiter/profile", label: "Profile", icon: UserRound },
+    { href: "/recruiter/profile", label: "My Profile", icon: UserRound },
   ],
   admin: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -90,8 +90,8 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
 const UNAPPROVED_LABELS: Record<Role, readonly string[]> = {
   // The map stays reachable while unapproved — it renders its own locked
   // teaser, nudging the recruiter to finish verification.
-  recruiter: ["Live Map", "Profile"],
-  company: ["Profile"],
+  recruiter: ["Live Map", "My Profile"],
+  company: ["My Profile"],
   admin: [],
 };
 

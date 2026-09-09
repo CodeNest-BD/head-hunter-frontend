@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/shared/ui-components/controls/select";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
-import { COMPANY_SIZE_OPTIONS } from "@/shared/data/companySize";
+import { companySizeOptions } from "@/shared/data/companySize";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor, minorToMajorInput } from "@/shared/utils/money";
 import {
@@ -221,7 +221,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                       <SelectValue placeholder="Select a range" />
                     </SelectTrigger>
                     <SelectContent>
-                      {COMPANY_SIZE_OPTIONS.map((size) => (
+                      {companySizeOptions(field.value).map((size) => (
                         <SelectItem key={size} value={size}>
                           {size}
                         </SelectItem>

@@ -196,7 +196,6 @@ export function JobsTable({
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Jobs"
-        accentPeriod={false}
         subtitle="Every job posted on the platform. Filter by company, status or title."
         metrics={[
           { label: "Live jobs", value: liveTotal },

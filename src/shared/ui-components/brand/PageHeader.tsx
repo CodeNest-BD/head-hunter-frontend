@@ -44,7 +44,6 @@ export function PageHeader({
           <div className="min-w-0">
             <h1 className="font-heading text-xl font-extrabold tracking-[-0.01em] text-primary sm:text-[22px]">
               {title}
-              <span className="text-navy">.</span>
             </h1>
             {subtitle && (
               <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">

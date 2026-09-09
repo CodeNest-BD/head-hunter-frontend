@@ -185,7 +185,6 @@ export function CompaniesTable() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Companies"
-        accentPeriod={false}
         subtitle="Every company on the platform, their wallet, and account controls."
         metrics={[
           { label: "Pending approval", value: pendingTotal },

@@ -46,7 +46,6 @@ function CompanyProfileContent() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Company Profile"
-        accentPeriod={false}
         subtitle="This is what recruiters see when they browse companies."
         actions={
           data ? (

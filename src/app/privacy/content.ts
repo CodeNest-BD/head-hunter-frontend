@@ -3,7 +3,7 @@ import type { LegalSection } from "@/components/landing/LegalPage";
 export const PRIVACY_UPDATED = "September 7, 2026";
 
 export const PRIVACY_INTRO: readonly string[] = [
-  "Head-Hunters.com (“Head-Hunters,” “we,” “us,” or “our”) respects your privacy and is committed to protecting personal information collected through the Head-Hunters.com website, recruiting marketplace, applications, services, and related features (collectively, the “Platform”).",
+  "Head-Hunters.com (“Head-Hunters”, “we”, “us”, or “our”) respects your privacy and is committed to protecting personal information collected through the Head-Hunters.com website, recruiting marketplace, applications, services, and related features (collectively, the “Platform”).",
   "This Privacy Policy explains what information we collect, how we use and disclose it, how we protect it, and the choices and rights that may be available to you.",
   "By accessing or using Head-Hunters.com, you acknowledge the practices described in this Privacy Policy.",
 ];
@@ -293,7 +293,7 @@ export const PRIVACY_SECTIONS: readonly LegalSection[] = [
     title: "Sale and Sharing of Personal Information",
     blocks: [
       "Head-Hunters.com does not intend its ordinary disclosure of candidate information to Companies for recruiting and hiring purposes to constitute the sale of candidate information.",
-      "We may use third-party analytics, advertising, or marketing technologies. Certain privacy laws may define some transfers involving advertising or tracking technologies as a “sale,” “sharing,” or “targeted advertising” even when money is not exchanged.",
+      "We may use third-party analytics, advertising, or marketing technologies. Certain privacy laws may define some transfers involving advertising or tracking technologies as a “sale”, “sharing”, or “targeted advertising” even when money is not exchanged.",
       "Where applicable law provides rights regarding these activities, Head-Hunters.com will provide mechanisms required by that law.",
     ],
   },

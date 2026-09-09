@@ -94,7 +94,6 @@ export function AdminOverview() {
       size="lg"
       eyebrow="Marketplace overview"
       title="Admin Dashboard"
-      accentPeriod={false}
       subtitle={
         stats.data
           ? `${stats.data.recruiters.total} Recruiters · ${stats.data.companies.total} Companies · ${liveJobs.data?.meta.total ?? 0} Live Jobs`

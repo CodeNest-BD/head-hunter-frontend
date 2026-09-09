@@ -161,7 +161,6 @@ export function RecruitersTable() {
     <div className="flex flex-col gap-6">
       <PageBanner
         title="Recruiters"
-        accentPeriod={false}
         subtitle="Every recruiter on the platform. Open a profile or suspend an account."
         metrics={[
           { label: "Pending", value: pendingTotal },

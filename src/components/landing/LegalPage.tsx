@@ -1,13 +1,18 @@
+import type { ReactNode } from "react";
+
 import { PublicShell } from "./PublicShell";
 
 /**
  * A block within a legal section: a plain string is a paragraph, `{ sub }` a
- * bold sub-heading, and `{ list }` a bulleted list. Keeps the per-page content
- * files terse to author while the layout owns all the styling.
+ * bold sub-heading, `{ strong }` a paragraph the source document emphasises
+ * (the liability and warranty disclaimers), and `{ list }` a bulleted list.
+ * Keeps the per-page content files terse to author while the layout owns all
+ * the styling.
  */
 export type LegalBlock =
   | string
   | { readonly sub: string }
+  | { readonly strong: string }
   | { readonly list: readonly string[] };
 
 export interface LegalSection {
@@ -19,13 +24,45 @@ export interface LegalSection {
   readonly blocks: readonly LegalBlock[];
 }
 
+/**
+ * Renders the `**…**` spans the content files use for the phrases the source
+ * document bolds mid-sentence (`the laws of the **State of Florida**`). The
+ * content is plain `.ts` data, so it cannot carry JSX of its own, and a whole
+ * markdown dependency would be a lot of library for one delimiter.
+ */
+function emphasise(text: string): ReactNode {
+  const parts = text.split("**");
+  if (parts.length === 1) return text;
+  return parts.map((part, index) =>
+    // Odd indexes are what sat between a pair of delimiters.
+    index % 2 === 1 ? (
+      <strong key={index} className="font-bold text-navy">
+        {part}
+      </strong>
+    ) : (
+      part
+    ),
+  );
+}
+
 function Block({ block }: { block: LegalBlock }) {
   if (typeof block === "string") {
-    return <p className="mt-4 first:mt-0">{block}</p>;
+    // `whitespace-pre-line`: a paragraph may carry a hard line break where the
+    // source sets an address block on consecutive lines.
+    return (
+      <p className="mt-4 whitespace-pre-line first:mt-0">{emphasise(block)}</p>
+    );
   }
   if ("sub" in block) {
     return (
-      <p className="mt-5 font-semibold text-navy first:mt-0">{block.sub}</p>
+      <p className="mt-5 font-semibold uppercase text-navy first:mt-0">
+        {block.sub}
+      </p>
+    );
+  }
+  if ("strong" in block) {
+    return (
+      <p className="mt-4 font-bold text-navy first:mt-0">{block.strong}</p>
     );
   }
   return (
@@ -36,7 +73,7 @@ function Block({ block }: { block: LegalBlock }) {
             aria-hidden="true"
             className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/50"
           />
-          <span>{item}</span>
+          <span>{emphasise(item)}</span>
         </li>
       ))}
     </ul>
@@ -100,7 +137,7 @@ export function LegalPage({
                     <span className="w-4 shrink-0 text-right font-semibold tabular-nums text-brand-gray-light">
                       {section.number}
                     </span>
-                    <span>{section.title}</span>
+                    <span className="uppercase">{section.title}</span>
                   </a>
                 </li>
               ))}
@@ -124,7 +161,7 @@ export function LegalPage({
                   id={section.id}
                   className="scroll-mt-24 border-t border-brand-line pt-8"
                 >
-                  <h2 className="flex items-baseline gap-3 font-heading text-xl font-bold text-navy">
+                  <h2 className="flex items-baseline gap-3 font-heading text-xl font-bold uppercase text-navy">
                     <span className="text-base font-extrabold tabular-nums text-primary">
                       {section.number}
                     </span>

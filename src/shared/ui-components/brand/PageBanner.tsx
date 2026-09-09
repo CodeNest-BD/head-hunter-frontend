@@ -10,14 +10,7 @@ export interface BannerMetric {
 interface PageBannerProps {
   /** Small uppercase caption above the title (e.g. OVERVIEW). */
   eyebrow?: ReactNode;
-  /** Headline. A blue "." accent is appended automatically. */
   title: ReactNode;
-  /**
-   * Whether to append the brand's blue "." accent after the title. On for the
-   * standard "Hey Ben." greeting; off when the title is a possessive phrase
-   * ("Ben's Dashboard") where a trailing period reads as a typo.
-   */
-  accentPeriod?: boolean;
   subtitle?: ReactNode;
   /**
    * Right-side metric readouts. Rendered as a horizontal row of
@@ -36,16 +29,15 @@ interface PageBannerProps {
 
 /**
  * The header that opens every dashboard/section page: an optional eyebrow, a
- * heavy blue headline with the brand's "." accent, a muted subtitle, and a right
- * slot holding either metric readouts or a primary action. Boxless — it sits
- * directly on the page background with no card, per the reference design. One
- * deep module so no page reimplements the header chrome. (Formerly a dark navy
- * card; the whole app moved to the lighter, boxless scheme.)
+ * heavy blue headline, a muted subtitle, and a right slot holding either metric
+ * readouts or a primary action. Boxless — it sits directly on the page
+ * background with no card, per the reference design. One deep module so no page
+ * reimplements the header chrome. (Formerly a dark navy card; the whole app
+ * moved to the lighter, boxless scheme.)
  */
 export function PageBanner({
   eyebrow,
   title,
-  accentPeriod = true,
   subtitle,
   metrics,
   actions,
@@ -73,7 +65,6 @@ export function PageBanner({
             )}
           >
             {title}
-            {accentPeriod && <span className="text-navy">.</span>}
           </h1>
           {subtitle && (
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">

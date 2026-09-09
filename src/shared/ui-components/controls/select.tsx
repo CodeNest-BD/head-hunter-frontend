@@ -5,7 +5,35 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
 
-const Select = SelectPrimitive.Root;
+/**
+ * Radix's Select, with one guard on the way out.
+ *
+ * Radix mirrors the value into a hidden native `<select>` so the control
+ * submits with a form. A native select silently coerces a value whose
+ * `<option>` it does not have to "" and reports that as a change — and the
+ * options are registered by the items' own effects, so a value written
+ * programmatically (a form prefilling itself from an API response) is applied
+ * a beat before the option exists and comes straight back as "cleared".
+ *
+ * A user's choice can never produce "": Radix rejects an item whose value is an
+ * empty string. So an empty value here is only ever that coercion, and dropping
+ * it costs nothing while keeping every asynchronously-filled select from
+ * silently emptying itself.
+ */
+function Select({
+  onValueChange,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Root>) {
+  return (
+    <SelectPrimitive.Root
+      {...props}
+      onValueChange={(value) => {
+        if (value !== "") onValueChange?.(value);
+      }}
+    />
+  );
+}
+
 const SelectValue = SelectPrimitive.Value;
 
 const SelectTrigger = React.forwardRef<

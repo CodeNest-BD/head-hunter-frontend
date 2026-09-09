@@ -3,7 +3,7 @@ import type { LegalSection } from "@/components/landing/LegalPage";
 export const TERMS_UPDATED = "September 7, 2026";
 
 export const TERMS_INTRO: readonly string[] = [
-  "Welcome to Head-Hunters.com (“Head-Hunters,” “Platform,” “we,” “us,” or “our”). These Terms of Service (“Terms”) govern your access to and use of the Head-Hunters.com website, marketplace, recruiting platform, services, and related features.",
+  "Welcome to Head-Hunters.com (“Head-Hunters”, “Platform”, “we”, “us”, or “our”). These Terms of Service (“Terms”) govern your access to and use of the Head-Hunters.com website, marketplace, recruiting platform, services, and related features.",
   "By creating an account, posting a job, accepting or working on a job, submitting or reviewing a candidate, communicating through the Platform, paying or receiving fees, or otherwise using Head-Hunters.com, you agree to be bound by these Terms.",
   "If you do not agree to these Terms, you may not use the Platform.",
 ];
@@ -14,7 +14,7 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     number: "1",
     title: "The Head-Hunters.com Platform",
     blocks: [
-      "Head-Hunters.com operates a marketplace designed to connect companies seeking candidates (“Companies,” “Employers,” or “Clients”) with independent recruiters and recruiting professionals (“Recruiters”).",
+      "Head-Hunters.com operates a marketplace designed to connect companies seeking candidates (“Companies”, “Employers”, or “Clients”) with independent recruiters and recruiting professionals (“Recruiters”).",
       "Head-Hunters.com provides the technology and marketplace through which Companies and Recruiters may identify opportunities, exchange candidate information, communicate, and facilitate recruiting engagements.",
       "Unless expressly stated otherwise, Head-Hunters.com is not the employer of any candidate, is not the employer or agent of any Recruiter, and does not guarantee the performance of any Company, Recruiter, candidate, or employee.",
       "Recruiters using the Platform operate independently and are not employees, partners, joint venturers, representatives, or agents of Head-Hunters.com.",
@@ -233,9 +233,15 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     number: "19",
     title: "Limitation of Liability",
     blocks: [
-      "TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, HEAD-HUNTERS.COM AND ITS OWNERS, OFFICERS, DIRECTORS, EMPLOYEES, AFFILIATES, CONTRACTORS, AND AGENTS WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES ARISING FROM OR RELATED TO USE OF THE PLATFORM, A RECRUITING TRANSACTION, A CANDIDATE, A COMPANY, OR A RECRUITER.",
+      {
+        strong:
+          "TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, HEAD-HUNTERS.COM AND ITS OWNERS, OFFICERS, DIRECTORS, EMPLOYEES, AFFILIATES, CONTRACTORS, AND AGENTS WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES ARISING FROM OR RELATED TO USE OF THE PLATFORM, A RECRUITING TRANSACTION, A CANDIDATE, A COMPANY, OR A RECRUITER.",
+      },
       "This includes, without limitation, losses arising from candidate performance or misconduct, employee turnover, hiring decisions, inaccurate user information, lost profits, lost business opportunities, lost productivity, reputational harm, or interactions between Platform users.",
-      "TO THE MAXIMUM EXTENT PERMITTED BY LAW, HEAD-HUNTERS.COM'S AGGREGATE LIABILITY ARISING FROM OR RELATING TO THE PLATFORM OR THESE TERMS WILL NOT EXCEED THE GREATER OF (A) THE AMOUNT OF PLATFORM FEES PAID DIRECTLY TO HEAD-HUNTERS.COM BY THE USER DURING THE SIX MONTHS PRECEDING THE EVENT GIVING RISE TO THE CLAIM OR (B) $100.",
+      {
+        strong:
+          "TO THE MAXIMUM EXTENT PERMITTED BY LAW, HEAD-HUNTERS.COM'S AGGREGATE LIABILITY ARISING FROM OR RELATING TO THE PLATFORM OR THESE TERMS WILL NOT EXCEED THE GREATER OF (A) THE AMOUNT OF PLATFORM FEES PAID DIRECTLY TO HEAD-HUNTERS.COM BY THE USER DURING THE SIX MONTHS PRECEDING THE EVENT GIVING RISE TO THE CLAIM OR (B) $100.",
+      },
       "Some jurisdictions do not permit certain exclusions or limitations of liability, so portions of this Section may not apply where prohibited by law.",
     ],
   },
@@ -244,7 +250,7 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     number: "20",
     title: "Disclaimer of Warranties",
     blocks: [
-      "THE PLATFORM IS PROVIDED ON AN “AS IS” AND “AS AVAILABLE” BASIS TO THE MAXIMUM EXTENT PERMITTED BY LAW.",
+      "THE PLATFORM IS PROVIDED ON AN **“AS IS” AND “AS AVAILABLE”** BASIS TO THE MAXIMUM EXTENT PERMITTED BY LAW.",
       "Head-Hunters.com disclaims warranties, express or implied, including warranties of merchantability, fitness for a particular purpose, non-infringement, accuracy, reliability, and suitability.",
       "Head-Hunters.com does not warrant that information supplied by Companies, Recruiters, or candidates is accurate, complete, or current.",
       "Nothing in these Terms excludes warranties or rights that cannot legally be excluded.",
@@ -284,9 +290,15 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     number: "23",
     title: "Changes to These Terms",
     blocks: [
-      "Head-Hunters.com reserves the right to modify, amend, replace, or update these Terms at any time.",
+      {
+        strong:
+          "Head-Hunters.com reserves the right to modify, amend, replace, or update these Terms at any time.",
+      },
       "When changes are made, we may update the “Last Updated” date and, when required by applicable law, provide additional notice.",
-      "Your continued access to or use of Head-Hunters.com after revised Terms become effective constitutes your acceptance of the revised Terms, to the extent permitted by applicable law.",
+      {
+        strong:
+          "Your continued access to or use of Head-Hunters.com after revised Terms become effective constitutes your acceptance of the revised Terms, to the extent permitted by applicable law.",
+      },
       "If you do not agree with updated Terms, you must discontinue use of the Platform.",
       "Material changes will apply prospectively to the extent required by applicable law.",
     ],
@@ -297,7 +309,7 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     title: "Electronic Communications and Agreement",
     blocks: [
       "By using Head-Hunters.com, you consent to receive agreements, disclosures, notices, transaction information, and other communications electronically where permitted by law.",
-      "Clicking buttons such as “I Agree,” “Accept,” “Post Job,” “Submit Candidate,” “Accept Job,” “Confirm Hire,” “Pay,” or similar affirmative actions may constitute your electronic acceptance of the applicable terms, fees, or transaction.",
+      "Clicking buttons such as “I Agree”, “Accept”, “Post Job”, “Submit Candidate”, “Accept Job”, “Confirm Hire”, “Pay”, or similar affirmative actions may constitute your electronic acceptance of the applicable terms, fees, or transaction.",
       "Electronic records maintained by Head-Hunters.com may be used as evidence of Platform activity and transactions to the extent permitted by applicable law.",
     ],
   },
@@ -306,7 +318,11 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     number: "25",
     title: "Governing Law",
     blocks: [
-      "These Terms and disputes arising from them will be governed by the laws of the State of Florida, without regard to its conflict-of-law principles, except where applicable law requires otherwise.",
+      "These Terms and disputes arising from them will be governed by the laws of the **State of Florida**, without regard to its conflict-of-law principles, except where applicable law requires otherwise.",
+      {
+        strong:
+          "[Attorney Review: Insert appropriate venue, jurisdiction, arbitration, class-action waiver, and dispute-resolution provisions before publication.]",
+      },
     ],
   },
   {
@@ -339,8 +355,14 @@ export const TERMS_SECTIONS: readonly LegalSection[] = [
     number: "29",
     title: "Contact",
     blocks: [
-      "Questions regarding these Terms of Service may be directed to Head-Hunters.com at info@head-hunters.com.",
-      "By creating an account or using Head-Hunters.com, you acknowledge that you have read, understood, and agreed to these Terms of Service.",
+      "Questions regarding these Terms of Service may be directed to:",
+      // One block, two lines: the source reads this as an address, not as two
+      // paragraphs a blank line apart.
+      "**Head-Hunters.com**\nEmail: info@head-hunters.com",
+      {
+        strong:
+          "BY CREATING AN ACCOUNT OR USING HEAD-HUNTERS.COM, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND AGREED TO THESE TERMS OF SERVICE.",
+      },
     ],
   },
 ];

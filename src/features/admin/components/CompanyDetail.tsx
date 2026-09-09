@@ -210,16 +210,17 @@ export function CompanyDetail({ userId }: { userId: string }) {
     companyName: data.companyName,
   }).toString()}`;
 
-  // Smallest to largest recruiter fee this company has posted. Both ends, one
-  // end, or nothing published — the same three cases the recruiter-facing
-  // company card renders.
-  const { commissionRangeMinMinor: min, commissionRangeMaxMinor: max } = data;
+  // Smallest to largest recruiter fee this company has actually posted, not the
+  // range it advertises on its profile — a company that posted $500 and $2,000
+  // reads "$500 – $2,000" here however it filled its profile in. Collapses to a
+  // single figure when every job carries the same fee.
+  const { minFeeMinor: min, maxFeeMinor: max } = data;
   const feeRange =
-    min === null && max === null
+    min === null || max === null
       ? null
-      : min !== null && max !== null
-        ? `${formatMinor(min)} – ${formatMinor(max)}`
-        : formatMinor(min ?? max ?? 0);
+      : min === max
+        ? formatMinor(min)
+        : `${formatMinor(min)} – ${formatMinor(max)}`;
 
   return (
     <div className="flex w-full max-w-5xl flex-col gap-6">
@@ -290,8 +291,14 @@ export function CompanyDetail({ userId }: { userId: string }) {
             />
             <DetailField label="Address" value={data.addressLine} />
             <DetailField label="Location" value={location} />
-            <DetailField label="Website" value={data.website} />
-            <DetailField label="Joined" value={formatDate(data.joinedAt)} />
+            {/* Full width, so the website reads directly under the address it
+                belongs with rather than sharing a row with the joined date. */}
+            <div className="col-span-2">
+              <DetailField label="Website" value={data.website} />
+            </div>
+            <div className="col-span-2">
+              <DetailField label="Joined" value={formatDate(data.joinedAt)} />
+            </div>
             <div className="col-span-2">
               <DetailField label="Description" value={data.description} />
             </div>

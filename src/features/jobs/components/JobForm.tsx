@@ -8,7 +8,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
-import { COMPANY_SIZE_OPTIONS } from "@/shared/data/companySize";
+import { companySizeOptions } from "@/shared/data/companySize";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import {
@@ -285,22 +285,26 @@ function Question({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** A money field with a leading "$" adornment. Numeric-only (digits + one dot). */
-const MoneyInput = forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, ...props }, ref) => (
-    <div className="relative">
-      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-        $
-      </span>
-      <NumericInput
-        decimal
-        ref={ref}
-        className={cn(CONTROL_HEIGHT, "pl-7", className)}
-        {...props}
-      />
-    </div>
-  ),
-);
+/**
+ * A money field with a leading "$" adornment. Numeric-only: digits and one dot,
+ * or digits alone under `decimal={false}` for a figure that must be whole.
+ */
+const MoneyInput = forwardRef<
+  HTMLInputElement,
+  React.ComponentProps<typeof NumericInput>
+>(({ className, decimal = true, ...props }, ref) => (
+  <div className="relative">
+    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+      $
+    </span>
+    <NumericInput
+      decimal={decimal}
+      ref={ref}
+      className={cn(CONTROL_HEIGHT, "pl-7", className)}
+      {...props}
+    />
+  </div>
+));
 MoneyInput.displayName = "MoneyInput";
 
 export function JobForm({
@@ -733,7 +737,12 @@ export function JobForm({
                         <SelectValue placeholder="Select a range" />
                       </SelectTrigger>
                       <SelectContent>
-                        {COMPANY_SIZE_OPTIONS.map((size) => (
+                        {/* The profile's bucket is offered before the prefill
+                            effect writes it, or the picker would clear it. */}
+                        {companySizeOptions(
+                          field.value,
+                          profileEmployeeSize,
+                        ).map((size) => (
                           <SelectItem key={size} value={size}>
                             {size}
                           </SelectItem>
@@ -990,12 +999,15 @@ export function JobForm({
             </div>
 
             <Block title="Benefits Provided">
-              <div className="grid gap-x-4 gap-y-3 sm:grid-cols-3">
+              {/* Two columns, not three: a row carrying a label, a number and
+                  its unit ("Personal/Sick Time __ days") does not fit a third
+                  of this pane at any width, and overflowed into its neighbour. */}
+              <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
                 {benefitToggle("medical")}
                 {benefitToggle("dental")}
                 {benefitToggle("vision")}
 
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                   <Controller
                     control={control}
                     name="benefits.retirement401k"
@@ -1016,7 +1028,7 @@ export function JobForm({
                   <NumericInput
                     decimal
                     aria-label="401K/403B match percent"
-                    className="h-8 w-14"
+                    className="h-8 w-14 shrink-0"
                     onFocus={() =>
                       setValue("benefits.retirement401k", true, {
                         shouldDirty: true,
@@ -1030,11 +1042,11 @@ export function JobForm({
                 </div>
                 {/* Day counts sit beside their own checkbox and tick it on focus,
                   the same way the 401K match does. */}
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                   {benefitToggle("sickTime")}
                   <NumericInput
                     aria-label="Sick days"
-                    className="h-8 w-14"
+                    className="h-8 w-14 shrink-0"
                     onFocus={() =>
                       setValue("benefits.sickTime", true, { shouldDirty: true })
                     }
@@ -1042,11 +1054,11 @@ export function JobForm({
                   />
                   <span className="text-sm text-muted-foreground">days</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                   {benefitToggle("vacation")}
                   <NumericInput
                     aria-label="Vacation days"
-                    className="h-8 w-14"
+                    className="h-8 w-14 shrink-0"
                     onFocus={() =>
                       setValue("benefits.vacation", true, { shouldDirty: true })
                     }
@@ -1070,9 +1082,8 @@ export function JobForm({
                     </label>
                   )}
                 />
-                {/* Last, and spanning the remaining columns: its free-text box
-                  needs the room the single-word checkboxes do not. */}
-                <div className="flex items-center gap-2.5 sm:col-span-2">
+                {/* Last: its free-text box takes whatever the label leaves. */}
+                <div className="flex items-center gap-2.5">
                   <Controller
                     control={control}
                     name="benefits.ancillary"
@@ -1166,6 +1177,9 @@ export function JobForm({
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <MoneyInput
+                  // Whole dollars: cents were rounded to the nearest dollar on
+                  // save, so a typed 499.999 read back as $500.
+                  decimal={false}
                   id="recruiterFee"
                   placeholder="10000"
                   className="max-w-[12rem] bg-card"

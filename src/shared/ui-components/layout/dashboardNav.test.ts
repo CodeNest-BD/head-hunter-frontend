@@ -9,7 +9,7 @@ describe("recruiter navigation", () => {
   it("shows an approved recruiter their phase-1 workspace", () => {
     const labels = navForRole("recruiter", true).map((item) => item.label);
 
-    expect(labels).toEqual(["Dashboard", "Live Map", "Profile"]);
+    expect(labels).toEqual(["Dashboard", "Live Map", "My Profile"]);
     expect(labels).not.toContain("Companies");
     expect(labels).not.toContain("Inbox");
     expect(labels).not.toContain("Wallet");
@@ -21,7 +21,7 @@ describe("recruiter navigation", () => {
     // it renders its own locked teaser nudging the recruiter to verify.
     const labels = navForRole("recruiter", false).map((item) => item.label);
 
-    expect(labels).toEqual(["Live Map", "Profile"]);
+    expect(labels).toEqual(["Live Map", "My Profile"]);
   });
 
   it("keeps notifications out of the sidebar (bell dropdown only)", () => {
@@ -37,7 +37,7 @@ describe("recruiter navigation", () => {
     // rather than the sidebar.
     const labels = navForRole("company", false).map((item) => item.label);
 
-    expect(labels).toEqual(["Profile"]);
+    expect(labels).toEqual(["My Profile"]);
   });
 
   // Phase-1 delivery hides Inbox from companies (HIDE_PHASE2_FEATURES). Restore
@@ -46,7 +46,7 @@ describe("recruiter navigation", () => {
     const labels = navForRole("company", true).map((item) => item.label);
 
     expect(labels).toEqual(
-      expect.arrayContaining(["Dashboard", "Jobs", "Wallet", "Profile"]),
+      expect.arrayContaining(["Dashboard", "Jobs", "Wallet", "My Profile"]),
     );
     expect(labels).not.toContain("Inbox");
   });

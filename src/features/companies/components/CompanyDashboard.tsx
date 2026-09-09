@@ -104,7 +104,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
     <div className="flex flex-col gap-6">
       <PageBanner
         title={`${firstName}'s Dashboard`}
-        accentPeriod={false}
         subtitle={subtitleParts.join(" · ")}
       />
 
