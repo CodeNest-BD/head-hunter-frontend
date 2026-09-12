@@ -984,13 +984,17 @@ export function JobForm({
                 }}
               >
                 <div className="flex items-center gap-2">
+                  {/* Whole dollars, like the recruiter fee: a band is quoted in
+                      dollars and cents only ever arrived by mistyping. */}
                   <MoneyInput
+                    decimal={false}
                     aria-label="Pay minimum"
                     placeholder="Min"
                     {...register("salaryMin")}
                   />
                   <span className="text-muted-foreground">–</span>
                   <MoneyInput
+                    decimal={false}
                     aria-label="Pay maximum"
                     placeholder="Max"
                     {...register("salaryMax")}

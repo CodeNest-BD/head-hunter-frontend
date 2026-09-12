@@ -139,7 +139,9 @@ export function StatCard({
             hint collides with a large figure once the card is narrow (e.g. the
             3-up wallet grid). Stacking keeps it clean at every width. */}
         <div className="mt-1.5 flex flex-col gap-0.5 sm:mt-2">
-          <span className="text-2xl font-extrabold tracking-[-0.02em] tabular-nums text-navy sm:text-3xl">
+          {/* A money figure carries no spaces, so without an explicit break it
+              runs straight out of the card on a narrow track. */}
+          <span className="break-words text-2xl font-extrabold tracking-[-0.02em] tabular-nums text-navy sm:text-3xl">
             {value}
           </span>
           {hint && (
