@@ -19,9 +19,9 @@ describe("resolveCityBubbles", () => {
   const distanceFromHiCentroid = (b: { x: number; y: number }): number =>
     Math.hypot(b.x - hi.cx, b.y - hi.cy);
 
-  it("places a city missing from the curated list at its state centroid", () => {
+  it("places a city missing from the coordinate list at its state centroid", () => {
     // Kaunakakai is a real Census place the job form can pick, but it is not in
-    // the hand-geocoded US_CITIES set — it must still get a bubble, not vanish.
+    // US_CITY_COORDS — it must still get a bubble, not vanish.
     const bubbles = resolveCityBubbles([
       {
         locationState: "HI",
@@ -85,6 +85,32 @@ describe("resolveCityBubbles", () => {
         },
       ]),
     ).toEqual([]);
+  });
+
+  // The client's exact complaint: bubbles must sit on the real city location.
+  // In the albers frame y grows southward, so a city south of Atlanta must have
+  // a larger y, and one beside Atlanta must be close to it.
+  it("places Georgia cities at their true geographic positions", () => {
+    const at = (city: string) =>
+      resolveCityBubbles([
+        {
+          locationState: "GA",
+          locationCity: city,
+          openRoles: 1,
+          totalFeeMinor: 1000,
+        },
+      ])[0];
+
+    const atlanta = at("Atlanta");
+    const abbeville = at("Abbeville"); // ~31.96°N — far south of Atlanta
+    const candler = at("Candler-McAfee"); // a CDP just east of Atlanta
+
+    // Abbeville sits well south of Atlanta (much larger y), not east of it.
+    expect(abbeville.y - atlanta.y).toBeGreaterThan(25);
+    // Candler-McAfee hugs Atlanta, not the state centre.
+    expect(
+      Math.hypot(candler.x - atlanta.x, candler.y - atlanta.y),
+    ).toBeLessThan(15);
   });
 });
 

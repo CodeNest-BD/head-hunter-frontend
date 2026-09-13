@@ -1,5 +1,5 @@
 import { projectAlbersUsa } from "@/shared/data/albersUsa";
-import { US_CITIES } from "@/shared/data/usCities";
+import { US_CITY_COORDS } from "@/shared/data/usCityCoords";
 import { US_STATES, US_VIEWBOX } from "@/shared/data/usStatesGeo";
 
 /**
@@ -106,22 +106,22 @@ interface CityPoint {
   readonly state: string;
 }
 
-// Two lookups so a row still places when its (free-text) state is wrong or
-// missing: prefer an exact name+state match, then the first city of that name.
+// Real per-city coordinates for the whole picker list (US_CITY_COORDS), keyed
+// by "normCity|STATE" and projected once into the 960×600 frame. This is the
+// fix for bubbles landing in the wrong place: every selectable city has an
+// accurate point (exact coordinate or its county centroid), so a bubble sits on
+// the actual city — not fanned around the state centre.
 const CITY_BY_NAME_STATE = new Map<string, CityPoint>();
-const CITY_BY_NAME = new Map<string, CityPoint>();
-for (const city of US_CITIES) {
-  const point = projectAlbersUsa(city.lng, city.lat);
-  if (!point) continue;
-  const record: CityPoint = {
-    x: point.x,
-    y: point.y,
-    name: city.name,
-    state: city.state,
-  };
-  CITY_BY_NAME_STATE.set(`${normalizeCity(city.name)}|${city.state}`, record);
-  if (!CITY_BY_NAME.has(normalizeCity(city.name))) {
-    CITY_BY_NAME.set(normalizeCity(city.name), record);
+for (const [state, cities] of Object.entries(US_CITY_COORDS)) {
+  for (const [name, [lat, lng]] of Object.entries(cities)) {
+    const point = projectAlbersUsa(lng, lat);
+    if (!point) continue;
+    CITY_BY_NAME_STATE.set(`${normalizeCity(name)}|${state}`, {
+      x: point.x,
+      y: point.y,
+      name,
+      state,
+    });
   }
 }
 
@@ -183,10 +183,12 @@ export function resolveCityBubbles(
   for (const row of rows) {
     if (!row.locationCity || row.openRoles <= 0) continue;
     const norm = normalizeCity(row.locationCity);
+    const state = row.locationState.toUpperCase();
+    // Accurate city coordinate first; only a city we have no point for at all
+    // (or whose state is unknown) falls back to the state centroid.
     const point =
-      CITY_BY_NAME_STATE.get(`${norm}|${row.locationState}`) ??
-      CITY_BY_NAME.get(norm) ??
-      stateCentroidPoint(row.locationCity, row.locationState);
+      CITY_BY_NAME_STATE.get(`${norm}|${state}`) ??
+      stateCentroidPoint(row.locationCity, state);
     if (!point) continue;
     const key = `${point.name}|${point.state}`;
     const prev = byPoint.get(key) ?? { point, openRoles: 0, totalFeeMinor: 0 };
