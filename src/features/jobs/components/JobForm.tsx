@@ -575,7 +575,7 @@ export function JobForm({
         <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
           <FormSection
             title="Basics"
-            hint="The role itself — what it is called, how it is employed, and why the seat is open."
+            hint="What the role is and basic details."
           >
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Read-only: the name recruiters see is the account's, not a
@@ -798,10 +798,7 @@ export function JobForm({
             </Field>
           </FormSection>
 
-          <FormSection
-            title="Location"
-            hint="Where the work happens, and the schedule it runs on."
-          >
+          <FormSection title="Location" hint="Where and when the work happens.">
             <Field label="Work Model">
               <div className="flex flex-wrap items-center gap-3">
                 <Controller
@@ -932,7 +929,7 @@ export function JobForm({
 
           <FormSection
             title="Compensation & Benefits"
-            hint="What the role pays, what comes with it, and the fee you are offering recruiters."
+            hint="What you are offering to attract the right talent."
           >
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
@@ -1092,52 +1089,41 @@ export function JobForm({
                     </label>
                   )}
                 />
-                {/* Last: its free-text box takes whatever the label leaves. */}
-                <div className="flex items-center gap-2.5">
-                  <Controller
-                    control={control}
-                    name="benefits.ancillary"
-                    render={({ field }) => (
-                      <label className="flex shrink-0 items-center gap-2.5 text-sm text-foreground">
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={(checked) =>
-                            field.onChange(checked === true)
-                          }
-                        />
-                        Other Benefits
-                      </label>
-                    )}
-                  />
-                  <Input
-                    aria-label="Other benefits"
-                    className="h-8"
-                    onFocus={() =>
-                      setValue("benefits.ancillary", true, {
-                        shouldDirty: true,
-                      })
-                    }
-                    {...register("benefits.ancillaryDetails")}
-                  />
-                </div>
+                <Controller
+                  control={control}
+                  name="benefits.ancillary"
+                  render={({ field }) => (
+                    <label className="flex items-center gap-2.5 text-sm text-foreground">
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                      Other Benefits
+                    </label>
+                  )}
+                />
               </div>
               {benefitsError && (
                 <p className="text-xs text-destructive">{benefitsError}</p>
               )}
 
-              <Field
-                label="Benefits Summary"
-                htmlFor="benefitsSummary"
-                optional
-                error={errors.benefitsSummary?.message}
-              >
-                <Textarea
-                  id="benefitsSummary"
-                  rows={3}
-                  placeholder="Anything worth calling out beyond the boxes above."
-                  {...register("benefitsSummary")}
-                />
-              </Field>
+              {values.benefits.ancillary && (
+                <div className="flex flex-col gap-1.5">
+                  <Textarea
+                    aria-label="Other benefits"
+                    rows={3}
+                    placeholder="Anything worth calling out beyond the boxes above."
+                    {...register("benefits.ancillaryDetails")}
+                  />
+                  {errors.benefits?.ancillaryDetails && (
+                    <p className="text-xs text-destructive">
+                      {errors.benefits.ancillaryDetails.message}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Nothing to show on a surface that can neither attach nor
                   display one, which would leave a bare label behind. */}
@@ -1232,7 +1218,7 @@ export function JobForm({
 
           <FormSection
             title="Position Details"
-            hint="The overview of the position and what you want to see in your inbox. The more details the better - recruiters and candidates use this information to determine the right long-term fit."
+            hint="The overview of the position and what you want to see in your inbox."
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
@@ -1347,7 +1333,7 @@ export function JobForm({
 
           <FormSection
             title="Timeline & Strategy"
-            hint="How quickly you want to hire, the interview process you run, and how else this role is being sourced."
+            hint="Your realistic expectation for making a hire and how we get there."
           >
             <div className="flex flex-col gap-3">
               <Question label="Availability for Interviewing?">
