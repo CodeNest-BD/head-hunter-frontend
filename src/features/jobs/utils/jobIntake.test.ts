@@ -149,6 +149,23 @@ describe("toIntakeInput", () => {
     });
   });
 
+  it("drops other-benefits text the company left behind after unticking", () => {
+    const intake = toIntakeInput(
+      {
+        ...emptyForm,
+        benefits: {
+          ...emptyForm.benefits,
+          medical: true,
+          ancillary: false,
+          ancillaryDetails: "Commuter benefit",
+        },
+      },
+      null,
+    );
+
+    expect(intake?.benefits?.ancillaryDetails).toBeUndefined();
+  });
+
   // ASAP and a date range are alternatives; an ASAP answer must not smuggle a
   // stale range back to the API.
   it("sends no dates alongside an ASAP availability", () => {

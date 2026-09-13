@@ -727,6 +727,15 @@ export const jobFormSchema = z
         message: "Enter a pay range",
       });
     }
+    // The box only appears once the checkbox is ticked, so an empty one means
+    // a benefit was claimed and never named.
+    if (values.benefits.ancillary && values.benefits.ancillaryDetails === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["benefits", "ancillaryDetails"],
+        message: "Say what the other benefits are",
+      });
+    }
     if (values.reportsTo === "") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

@@ -543,11 +543,9 @@ export function JobForm({
       ? "Ready to publish. Recruiters are notified immediately."
       : `${remaining} field${remaining === 1 ? "" : "s"} left before you can publish.`;
 
-  // The two free-text benefit inputs sit inline in the grid, with no room for a
-  // message each; whichever is wrong reports under the block.
-  const benefitsError =
-    errors.benefits?.retirement401kMatch?.message ??
-    errors.benefits?.ancillaryDetails?.message;
+  // The 401K match input sits inline in the grid with no room for a message of
+  // its own, so it reports under the block.
+  const benefitsError = errors.benefits?.retirement401kMatch?.message;
 
   const benefitToggle = (key: BenefitKey) => (
     <Controller

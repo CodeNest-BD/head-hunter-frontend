@@ -120,7 +120,6 @@ function hasBenefits(values: FormOwnedIntake["benefits"]): boolean {
     values.vacation ||
     values.retirement401k ||
     values.ancillary ||
-    values.ancillaryDetails.trim() !== "" ||
     values.educationReimbursement ||
     values.vacationDays.trim() !== "" ||
     values.sickDays.trim() !== ""
@@ -135,7 +134,11 @@ function toBenefitsInput(values: FormOwnedIntake["benefits"]): Benefits {
     sickTime: values.sickTime,
     vacation: values.vacation,
     ancillary: values.ancillary,
-    ancillaryDetails: orUndefined(values.ancillaryDetails),
+    // Only meaningful alongside the tick: text left behind by an untick is
+    // dropped rather than saved against a benefit the company withdrew.
+    ancillaryDetails: values.ancillary
+      ? orUndefined(values.ancillaryDetails)
+      : undefined,
     educationReimbursement: values.educationReimbursement,
     vacationDays: inputToNumber(values.vacationDays),
     sickDays: inputToNumber(values.sickDays),

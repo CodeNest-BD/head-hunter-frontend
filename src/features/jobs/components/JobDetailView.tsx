@@ -354,8 +354,8 @@ function benefitsList(benefits: Benefits): string[] {
   if (benefits.ancillary) {
     named.push(
       benefits.ancillaryDetails
-        ? `Ancillary: ${benefits.ancillaryDetails}`
-        : "Ancillary benefits",
+        ? `Other: ${benefits.ancillaryDetails}`
+        : "Other Benefits",
     );
   }
   return named;
