@@ -15,4 +15,4 @@ export const PHASE1_FREE = true;
  *  - Company nav (sidebar + top dropdown): Inbox
  *  - The "Candidates" column on the company AND admin Jobs tables
  */
-export const HIDE_PHASE2_FEATURES = true;
+export const HIDE_PHASE2_FEATURES = false;
