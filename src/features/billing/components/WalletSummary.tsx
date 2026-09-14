@@ -6,7 +6,8 @@ import { useWallet } from "../hooks/useBilling";
 
 /**
  * Balance at a glance. "Available" leads in navy because it is the number that
- * governs what the company can publish; balance and reserved explain it.
+ * governs what the company can post and offer against; balance and the held
+ * escrow explain it.
  */
 export function WalletSummary() {
   const { data } = useWallet();
@@ -17,7 +18,7 @@ export function WalletSummary() {
         className="col-span-2 sm:col-span-1"
         label="Available to spend"
         value={formatMinor(data?.availableMinor)}
-        hint="Spendable on new job posts"
+        hint="Spendable on new offers"
       />
       <StatCard
         label="Balance"
@@ -25,9 +26,9 @@ export function WalletSummary() {
         hint="Everything loaded into your wallet"
       />
       <StatCard
-        label="Reserved"
+        label="Held in escrow"
         value={formatMinor(data?.reservedMinor)}
-        hint="Held for your published jobs"
+        hint="Fees held for active offers and hires"
       />
     </div>
   );

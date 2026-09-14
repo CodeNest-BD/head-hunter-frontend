@@ -151,10 +151,11 @@ export function useCreateJob() {
 
 /**
  * Create a job and publish it in one action (the "Publish" button on the new-job
- * form). Publishing reserves the fee, so it can fail on insufficient funds.
- * Posting is all-or-nothing: if publishing fails we delete the just-created
- * draft so no half-finished post lingers in the list, surface the error, and
- * stay on the form. Only a successful publish redirects to the list.
+ * form). Publishing holds no money, but it does check the wallet can cover the
+ * fee, so it can fail on insufficient funds. Posting is all-or-nothing: if
+ * publishing fails we delete the just-created draft so no half-finished post
+ * lingers in the list, surface the error, and stay on the form. Only a
+ * successful publish redirects to the list.
  */
 export function useCreateAndPublishJob() {
   const queryClient = useQueryClient();

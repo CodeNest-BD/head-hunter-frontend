@@ -8,4 +8,6 @@ export const billingKeys = {
   recruiterWallet: ["billing", "recruiter-wallet"] as const,
   recruiterPlacements: (page: number) =>
     ["billing", "recruiter-placements", page] as const,
+  companyPlacements: (page: number) =>
+    ["billing", "company-placements", page] as const,
 };
