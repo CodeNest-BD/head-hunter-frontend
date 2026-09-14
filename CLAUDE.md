@@ -70,6 +70,8 @@ React Hook Form for form state; **Zod** for schema validation (shared with parsi
 
 Tailwind CSS for styling; compose class names with `tailwind-merge` / `cn`. Build on the Radix UI primitives and the shared `ui-components/` and `components/` rather than adding new one-off component libraries. Register any new remote image host in `next.config.js` (`images.domains`). Keep bundle impact minimal — prefer an existing dependency over a new one, and rely on `optimizePackageImports` for barrel-heavy libraries.
 
+**Header capitalization**: every header/heading text is capitalized — page titles, section headings, card titles, table column headers, stat/metric labels, tabs, and the like. Use Title Case for multi-word headers (e.g. "Account Status", "Recruiting History", "Available Fees"). This is a copy rule, not CSS — write the label capitalized rather than relying on `uppercase`/`capitalize` utilities to fake it.
+
 ## Testing
 
 Vitest (`vitest.config.ts`), with render helpers under `src/test/utils/`. Test observable behaviour, not implementation details. Prefer testing custom hooks and pure logic directly; for components, assert what the user sees and can do. Keep test data deterministic.
