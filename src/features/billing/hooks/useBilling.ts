@@ -1,9 +1,15 @@
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import {
   createSubscriptionCheckout,
   createSubscriptionPortal,
   createTopUpCheckout,
+  fetchCompanyPlacements,
   fetchLedger,
   fetchMinRecruiterFee,
   fetchRecruiterPlacements,
@@ -11,6 +17,7 @@ import {
   fetchRecruiterWallet,
   fetchSubscription,
   fetchWallet,
+  rejectPlacement,
 } from "../api/billing";
 import { billingKeys } from "../keys";
 
@@ -54,6 +61,31 @@ export function useRecruiterPlacements(page: number) {
     queryKey: billingKeys.recruiterPlacements(page),
     queryFn: () => fetchRecruiterPlacements(page),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useCompanyPlacements(page: number) {
+  return useQuery({
+    queryKey: billingKeys.companyPlacements(page),
+    queryFn: () => fetchCompanyPlacements(page),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Rejecting a placement within its guarantee refunds the held fee and reopens
+ * the job, so the wallet balance, the placements list and the job lists all move
+ * — invalidate the whole billing tree plus jobs. The caller surfaces the error
+ * inline (the API call suppresses the global toast).
+ */
+export function useRejectPlacement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (placementId: string) => rejectPlacement(placementId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: billingKeys.all });
+      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    },
   });
 }
 

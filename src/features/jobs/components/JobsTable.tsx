@@ -338,7 +338,7 @@ export function JobsTable() {
             ),
           },
           {
-            label: "Fees reserved",
+            label: "Held in escrow",
             value: formatMinor(wallet.data?.reservedMinor),
           },
         ]}

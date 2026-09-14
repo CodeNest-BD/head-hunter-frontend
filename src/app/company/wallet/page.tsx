@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import {
   CheckoutResultBanner,
+  CompanyPlacementsPanel,
   LedgerTable,
   TopUpCard,
   WalletSummary,
@@ -23,16 +24,17 @@ const REFRESH_INTERVAL_MS = 2500;
 
 const RESERVE_STEPS: readonly { title: string; detail: string }[] = [
   {
-    title: "You publish a job",
-    detail: "Its recruiter fee moves from available to reserved.",
+    title: "You make an offer",
+    detail: "Its recruiter fee is held in escrow, out of your available funds.",
   },
   {
-    title: "Recruiters submit candidates",
-    detail: "The reserve stays untouched while you review.",
+    title: "The candidate joins",
+    detail: "The fee stays held through a 30-day guarantee window.",
   },
   {
-    title: "Filled or closed",
-    detail: "Paid to the recruiter on a hire, or returned to available.",
+    title: "Released or refunded",
+    detail:
+      "Paid to the recruiter after 30 days — or refunded to you if you reject the hire first.",
   },
 ];
 
@@ -40,7 +42,7 @@ function HowReservedFeesWork() {
   return (
     <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
       <h2 className="font-heading text-base font-bold text-navy">
-        How reserved fees work
+        How Held Fees Work
       </h2>
       <ol className="mt-4 flex flex-col gap-4">
         {RESERVE_STEPS.map((step, index) => (
@@ -88,7 +90,7 @@ function WalletContent() {
     <div className="flex w-full flex-col gap-6">
       <PageBanner
         title="Wallet"
-        subtitle="Load funds once, then publish jobs against your balance. Fees stay reserved until a role is filled or closed."
+        subtitle="Load funds once, then post jobs and make offers against your balance. A recruiter fee is held in escrow only when you make an offer."
         actions={
           <Link
             href="#load-funds"
@@ -109,6 +111,7 @@ function WalletContent() {
         <TopUpCard />
         <HowReservedFeesWork />
       </div>
+      <CompanyPlacementsPanel />
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-lg font-bold text-navy">History</h2>
         <LedgerTable />

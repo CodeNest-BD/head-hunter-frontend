@@ -2,6 +2,7 @@ import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   checkoutUrlSchema,
+  companyPlacementSchema,
   minRecruiterFeeResponseSchema,
   ledgerEntrySchema,
   recruiterPlacementSchema,
@@ -9,6 +10,7 @@ import {
   recruiterWalletSummarySchema,
   subscriptionStatusSchema,
   walletSummarySchema,
+  type CompanyPlacement,
   type LedgerEntry,
   type RecruiterPlacement,
   type RecruiterPrice,
@@ -72,6 +74,29 @@ export async function fetchRecruiterPlacements(
     },
   );
   return paginatedSchema(recruiterPlacementSchema).parse(data);
+}
+
+/** GET /v1/company/placements — the company's escrow view. */
+export async function fetchCompanyPlacements(
+  page: number,
+): Promise<Paginated<CompanyPlacement>> {
+  const { data } = await apiClient.get<unknown>("/company/placements", {
+    params: { page, limit: 20 },
+  });
+  return paginatedSchema(companyPlacementSchema).parse(data);
+}
+
+/**
+ * POST /v1/company/placements/:id/reject — reject a hire within the 30-day
+ * guarantee. Refunds the held fee and reopens the job. Returns nothing (204).
+ * The inline confirmation surfaces the error, so the global toast is suppressed.
+ */
+export async function rejectPlacement(placementId: string): Promise<void> {
+  await apiClient.post<unknown>(
+    `/company/placements/${placementId}/reject`,
+    undefined,
+    { suppressGlobalErrorToast: true },
+  );
 }
 
 /** POST /v1/billing/subscription/checkout — returns the Stripe Checkout URL. */

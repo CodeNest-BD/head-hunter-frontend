@@ -89,6 +89,22 @@ export const recruiterPlacementSchema = z.object({
 });
 export type RecruiterPlacement = z.infer<typeof recruiterPlacementSchema>;
 
+/** The company's side of a placement — the escrow it is funding. */
+export const companyPlacementSchema = z.object({
+  placementId: z.string(),
+  candidateId: z.string(),
+  jobTitle: z.string(),
+  candidateName: z.string(),
+  recruiterName: z.string(),
+  amountMinor: z.number(),
+  status: placementStatusSchema,
+  joiningDate: z.string(),
+  holdExpiresAt: z.string(),
+  releasedAt: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type CompanyPlacement = z.infer<typeof companyPlacementSchema>;
+
 export const LEDGER_TYPE_LABELS: Record<LedgerEntry["entryType"], string> = {
   credit: "Funds added",
   debit: "Funds spent",
