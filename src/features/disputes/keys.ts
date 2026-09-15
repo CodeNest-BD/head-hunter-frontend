@@ -5,4 +5,6 @@ export const disputeKeys = {
   adminList: (page: number, status?: string) =>
     ["disputes", "admin", "list", page, status ?? "all"] as const,
   adminDetail: (id: string) => ["disputes", "admin", "detail", id] as const,
+  eligiblePlacements: (role: string) =>
+    ["disputes", "eligible-placements", role] as const,
 };

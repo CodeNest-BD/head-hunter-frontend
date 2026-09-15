@@ -1,7 +1,7 @@
 "use client";
 
 import { RequireRole } from "@/features/auth";
-import { MyDisputesList } from "@/features/disputes";
+import { MyDisputesList, RaiseDisputePanel } from "@/features/disputes";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
@@ -19,6 +19,7 @@ export default function DisputesPage() {
             title="Disputes"
             subtitle="Open a dispute on a placement held in escrow, and message support privately about it."
           />
+          <RaiseDisputePanel />
           <MyDisputesList />
         </div>
       </DashboardLayout>
