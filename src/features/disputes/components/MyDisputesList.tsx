@@ -53,8 +53,8 @@ export function MyDisputesList() {
           </span>
           <p className="text-sm font-semibold text-navy">No disputes</p>
           <p className="text-[13px] text-muted-foreground">
-            You can open a dispute on a placement held in escrow from your
-            wallet.
+            Use “Raise a Dispute” above to open one on a placement held in
+            escrow.
           </p>
         </CardContent>
       </Card>

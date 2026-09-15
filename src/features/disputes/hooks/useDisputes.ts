@@ -5,9 +5,12 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import type { Role } from "@/features/auth";
+
 import {
   fetchAdminDispute,
   fetchAdminDisputes,
+  fetchEligiblePlacements,
   fetchMyDispute,
   fetchMyDisputes,
   postAdminDisputeMessage,
@@ -32,6 +35,15 @@ export function useMyDispute(id: string) {
   return useQuery({
     queryKey: disputeKeys.detail(id),
     queryFn: () => fetchMyDispute(id),
+  });
+}
+
+/** Held placements the caller can open a dispute on. */
+export function useEligiblePlacements(role: Role | null) {
+  return useQuery({
+    queryKey: disputeKeys.eligiblePlacements(role ?? "none"),
+    queryFn: () => (role ? fetchEligiblePlacements(role) : Promise.resolve([])),
+    enabled: role === "company" || role === "recruiter",
   });
 }
 

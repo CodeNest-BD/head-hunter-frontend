@@ -1,3 +1,6 @@
+import { z } from "zod";
+
+import type { Role } from "@/features/auth";
 import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 
@@ -58,6 +61,70 @@ export async function postDisputeMessage(
     { suppressGlobalErrorToast: true },
   );
   return disputeMessageSchema.parse(data);
+}
+
+// ---- Eligible placements (for the raise picker) -----------------------
+
+/** A held placement the caller can open a dispute on. */
+export interface EligiblePlacement {
+  placementId: string;
+  label: string;
+  amountMinor: number;
+}
+
+const companyPlacementRow = z.object({
+  placementId: z.string(),
+  status: z.string(),
+  jobTitle: z.string(),
+  candidateName: z.string(),
+  amountMinor: z.number(),
+});
+
+const recruiterPlacementRow = z.object({
+  placementId: z.string(),
+  status: z.string(),
+  jobTitle: z.string(),
+  companyName: z.string(),
+  amountMinor: z.number(),
+});
+
+/**
+ * The caller's placements still held in escrow — the only ones a dispute can be
+ * opened on. Reads the company or recruiter placements endpoint (not the billing
+ * feature, to keep disputes free of a billing import) and keeps just the held
+ * rows. A generous page size covers all but the largest books in one call.
+ */
+export async function fetchEligiblePlacements(
+  role: Role,
+): Promise<EligiblePlacement[]> {
+  if (role === "company") {
+    const { data } = await apiClient.get<unknown>("/company/placements", {
+      params: { page: 1, limit: 100 },
+    });
+    return paginatedSchema(companyPlacementRow)
+      .parse(data)
+      .data.filter((p) => p.status === "held")
+      .map((p) => ({
+        placementId: p.placementId,
+        label: `${p.candidateName} · ${p.jobTitle}`,
+        amountMinor: p.amountMinor,
+      }));
+  }
+  if (role === "recruiter") {
+    const { data } = await apiClient.get<unknown>(
+      "/recruiter/wallet/placements",
+      { params: { page: 1, limit: 100 } },
+    );
+    return paginatedSchema(recruiterPlacementRow)
+      .parse(data)
+      .data.filter((p) => p.status === "held")
+      .map((p) => ({
+        placementId: p.placementId,
+        label: `${p.jobTitle} · ${p.companyName}`,
+        amountMinor: p.amountMinor,
+      }));
+  }
+  return [];
 }
 
 // ---- Admin ------------------------------------------------------------

@@ -6,6 +6,7 @@ export { AdminDisputeView } from "./components/AdminDisputeView";
 export { MyDisputesList } from "./components/MyDisputesList";
 export { ParticipantDisputeView } from "./components/ParticipantDisputeView";
 export { RaiseDisputeForm } from "./components/RaiseDisputeForm";
+export { RaiseDisputePanel } from "./components/RaiseDisputePanel";
 export { disputeKeys } from "./keys";
 export type {
   AdminDisputeDetail,
