@@ -28,7 +28,7 @@ export function WalletSummary() {
       <StatCard
         label="Held in escrow"
         value={formatMinor(data?.reservedMinor)}
-        hint="Fees held for active offers and hires"
+        hint="Fees held for your accepted hires"
       />
     </div>
   );

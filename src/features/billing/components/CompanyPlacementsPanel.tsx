@@ -85,9 +85,9 @@ function PlacementsEmpty() {
         <div>
           <p className="text-sm font-semibold text-navy">No placements yet</p>
           <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-            When you make an offer, its recruiter fee is held in escrow and
-            appears here. It releases to the recruiter 30 days after the
-            candidate joins, unless you reject the hire first.
+            When a candidate accepts your offer, its recruiter fee is held in
+            escrow and appears here. It releases to the recruiter 30 days after
+            the candidate joins, unless you reject the hire first.
           </p>
         </div>
       </div>
