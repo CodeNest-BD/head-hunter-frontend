@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
+import { RaiseDisputeForm } from "@/features/disputes";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -48,6 +50,11 @@ function isRejectable(placement: CompanyPlacement): boolean {
     placement.status === "held" &&
     new Date(placement.holdExpiresAt).getTime() > Date.now()
   );
+}
+
+/** A dispute can be opened on any held placement (the escalation path). */
+function isDisputable(placement: CompanyPlacement): boolean {
+  return placement.status === "held";
 }
 
 function rejectErrorMessage(error: unknown): string {
@@ -101,8 +108,10 @@ function PlacementsEmpty() {
  * returns the held fee to the wallet and reopens the job.
  */
 export function CompanyPlacementsPanel() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [disputingId, setDisputingId] = useState<string | null>(null);
   const { data, isPending, isError, refetch } = useCompanyPlacements(page);
   const reject = useRejectPlacement();
 
@@ -125,6 +134,9 @@ export function CompanyPlacementsPanel() {
 
   const confirming = confirmingId
     ? data.data.find((p) => p.placementId === confirmingId)
+    : undefined;
+  const disputing = disputingId
+    ? data.data.find((p) => p.placementId === disputingId)
     : undefined;
 
   const onReject = (placementId: string): void => {
@@ -161,6 +173,19 @@ export function CompanyPlacementsPanel() {
               busy={reject.isPending}
               onConfirm={() => onReject(confirming.placementId)}
               onCancel={() => setConfirmingId(null)}
+            />
+          </div>
+        ) : null}
+
+        {disputing ? (
+          <div className="border-b border-border p-4">
+            <RaiseDisputeForm
+              placementId={disputing.placementId}
+              onCancel={() => setDisputingId(null)}
+              onRaised={(id) => {
+                setDisputingId(null);
+                router.push(`/disputes/${id}`);
+              }}
             />
           </div>
         ) : null}
@@ -215,20 +240,41 @@ export function CompanyPlacementsPanel() {
                   <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
                     {settleLabel(p)}
                   </td>
-                  <td className="px-5 py-3 text-right">
-                    {isRejectable(p) ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={reject.isPending}
-                        onClick={() => setConfirmingId(p.placementId)}
-                      >
-                        Reject
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
+                  <td className="px-5 py-3">
+                    <div className="flex justify-end gap-2">
+                      {isRejectable(p) ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={reject.isPending}
+                          onClick={() => {
+                            setDisputingId(null);
+                            setConfirmingId(p.placementId);
+                          }}
+                        >
+                          Reject
+                        </Button>
+                      ) : null}
+                      {isDisputable(p) ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setConfirmingId(null);
+                            setDisputingId(p.placementId);
+                          }}
+                        >
+                          Dispute
+                        </Button>
+                      ) : null}
+                      {!isRejectable(p) && !isDisputable(p) ? (
+                        <span className="text-xs text-muted-foreground">
+                          {p.status === "disputed" ? "In dispute" : "—"}
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -248,17 +294,38 @@ export function CompanyPlacementsPanel() {
                 { label: "Released / hold ends", value: settleLabel(p) },
               ]}
               actions={
-                isRejectable(p) ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    disabled={reject.isPending}
-                    onClick={() => setConfirmingId(p.placementId)}
-                  >
-                    Reject &amp; refund
-                  </Button>
+                isRejectable(p) || isDisputable(p) ? (
+                  <div className="flex w-full gap-2">
+                    {isRejectable(p) ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        disabled={reject.isPending}
+                        onClick={() => {
+                          setDisputingId(null);
+                          setConfirmingId(p.placementId);
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    ) : null}
+                    {isDisputable(p) ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          setConfirmingId(null);
+                          setDisputingId(p.placementId);
+                        }}
+                      >
+                        Dispute
+                      </Button>
+                    ) : null}
+                  </div>
                 ) : undefined
               }
             />

@@ -12,6 +12,7 @@ describe("recruiter navigation", () => {
       "Companies",
       "Inbox",
       "Wallet",
+      "Disputes",
       "My Profile",
     ]);
   });
