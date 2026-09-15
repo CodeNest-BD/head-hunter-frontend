@@ -24,12 +24,12 @@ const REFRESH_INTERVAL_MS = 2500;
 
 const RESERVE_STEPS: readonly { title: string; detail: string }[] = [
   {
-    title: "You make an offer",
+    title: "A candidate accepts your offer",
     detail: "Its recruiter fee is held in escrow, out of your available funds.",
   },
   {
     title: "The candidate joins",
-    detail: "The fee stays held through a 30-day guarantee window.",
+    detail: "The fee stays held through a 30-day guarantee from the joining date.",
   },
   {
     title: "Released or refunded",
@@ -90,7 +90,7 @@ function WalletContent() {
     <div className="flex w-full flex-col gap-6">
       <PageBanner
         title="Wallet"
-        subtitle="Load funds once, then post jobs and make offers against your balance. A recruiter fee is held in escrow only when you make an offer."
+        subtitle="Load funds once, then post jobs and make offers against your balance. A recruiter fee is held in escrow only when a candidate accepts your offer."
         actions={
           <Link
             href="#load-funds"
