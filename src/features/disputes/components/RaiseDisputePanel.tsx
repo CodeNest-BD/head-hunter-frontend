@@ -79,12 +79,14 @@ export function RaiseDisputePanel() {
         </div>
 
         {isPending ? (
-          <p className="text-sm text-muted-foreground">Loading your placements…</p>
+          <p className="text-sm text-muted-foreground">
+            Loading your placements…
+          </p>
         ) : options.length === 0 ? (
           <p className="rounded-md border border-dashed border-input bg-secondary/40 p-4 text-[13px] text-muted-foreground">
             You have no placements held in escrow right now, so there is nothing
-            to dispute. A placement appears once an offer is accepted and its fee
-            is held.
+            to dispute. A placement appears once an offer is accepted and its
+            fee is held.
           </p>
         ) : (
           <div className="flex flex-col gap-4">
