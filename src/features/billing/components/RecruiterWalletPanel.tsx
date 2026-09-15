@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AlertCircle, Wallet2 } from "lucide-react";
 
+import { RaiseDisputeForm } from "@/features/disputes";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -203,8 +205,14 @@ function PlacementsTable({
   page: number;
   onPage: (page: number) => void;
 }) {
+  const router = useRouter();
+  const [disputingId, setDisputingId] = useState<string | null>(null);
   const { data } = useRecruiterPlacements(page);
   if (!data) return null;
+
+  const disputing = disputingId
+    ? data.data.find((p) => p.placementId === disputingId)
+    : undefined;
 
   return (
     <Card>
@@ -214,6 +222,18 @@ function PlacementsTable({
             Placements
           </h2>
         </div>
+        {disputing ? (
+          <div className="border-b border-border p-4">
+            <RaiseDisputeForm
+              placementId={disputing.placementId}
+              onCancel={() => setDisputingId(null)}
+              onRaised={(id) => {
+                setDisputingId(null);
+                router.push(`/disputes/${id}`);
+              }}
+            />
+          </div>
+        ) : null}
         <div className="hidden overflow-x-auto sm:block">
           <table className="w-full border-collapse text-sm">
             <thead>
@@ -236,6 +256,7 @@ function PlacementsTable({
                 <th scope="col" className={TH}>
                   Released / hold ends
                 </th>
+                <th scope="col" className={TH} />
               </tr>
             </thead>
             <tbody>
@@ -261,6 +282,24 @@ function PlacementsTable({
                   <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
                     {releaseLabel(p)}
                   </td>
+                  <td className="px-5 py-3 text-right">
+                    {p.status === "held" ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDisputingId(p.placementId)}
+                      >
+                        Dispute
+                      </Button>
+                    ) : p.status === "disputed" ? (
+                      <span className="text-xs text-muted-foreground">
+                        In dispute
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -277,6 +316,19 @@ function PlacementsTable({
                 { label: "Commission", value: formatMinor(p.amountMinor) },
                 { label: "Released / hold ends", value: releaseLabel(p) },
               ]}
+              actions={
+                p.status === "held" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setDisputingId(p.placementId)}
+                  >
+                    Open a dispute
+                  </Button>
+                ) : undefined
+              }
             />
           ))}
         </MobileRecordList>

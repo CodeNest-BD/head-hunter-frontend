@@ -2,10 +2,12 @@ import {
   BadgeCheck,
   Briefcase,
   Building2,
+  Gavel,
   Inbox,
   LayoutDashboard,
   type LucideIcon,
   Map,
+  Scale,
   Send,
   Settings,
   Users,
@@ -39,6 +41,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       badge: "inbox",
     },
     { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
+    { href: "/disputes", label: "Disputes", icon: Scale },
     { href: "/company/profile", label: "My Profile", icon: UserRound },
   ],
   recruiter: [
@@ -65,6 +68,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
           },
         ]),
     { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
+    { href: "/disputes", label: "Disputes", icon: Scale },
     { href: "/recruiter/profile", label: "My Profile", icon: UserRound },
   ],
   admin: [
@@ -74,6 +78,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
     // Conversations are consolidated under Jobs: a job's candidate count
     // links into the conversations view, so no separate nav item.
+    { href: "/admin/disputes", label: "Disputes", icon: Gavel },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ],
 };

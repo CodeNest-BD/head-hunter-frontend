@@ -15,13 +15,18 @@ const CANDIDATE_TYPES = new Set([
   "hire_confirmation_requested",
 ]);
 
-/** Money and dispute events. There is no recruiter equivalent of /company/wallet. */
+/** Money events. There is no recruiter equivalent of /company/wallet. */
 const WALLET_TYPES = new Set([
   "placement_created",
   "placement_released",
+  "payout_sent",
+]);
+
+/** Dispute events route to the ticket — the admin's or the participant's view. */
+const DISPUTE_TYPES = new Set([
   "dispute_opened",
   "dispute_resolved",
-  "payout_sent",
+  "dispute_message",
 ]);
 
 const readId = (
@@ -70,6 +75,18 @@ export function notificationHref(
   // for them. That is a real product gap, not an oversight of this map.
   if (WALLET_TYPES.has(type)) {
     return role === "company" ? "/company/wallet" : null;
+  }
+
+  if (DISPUTE_TYPES.has(type)) {
+    const disputeId = readId(data, "disputeId");
+    if (role === "admin") {
+      return disputeId ? `/admin/disputes/${disputeId}` : "/admin/disputes";
+    }
+    // Company and recruiter share the participant view.
+    if (role === "company" || role === "recruiter") {
+      return disputeId ? `/disputes/${disputeId}` : "/disputes";
+    }
+    return null;
   }
 
   return null;

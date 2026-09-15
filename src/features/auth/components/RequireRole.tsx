@@ -6,7 +6,8 @@ import { useAuth } from "../hooks/useAuth";
 import type { Role } from "../types";
 
 interface RequireRoleProps {
-  role: Role;
+  /** A single role, or several when a screen is shared (e.g. disputes). */
+  role: Role | Role[];
   children: React.ReactNode;
 }
 
@@ -20,8 +21,11 @@ interface RequireRoleProps {
 export function RequireRole({ role, children }: RequireRoleProps) {
   const { user, status } = useAuth();
   const router = useRouter();
+  const allowed = Array.isArray(role) ? role : [role];
   const mismatched =
-    status === "authenticated" && user !== null && user.role !== role;
+    status === "authenticated" &&
+    user !== null &&
+    !allowed.includes(user.role);
 
   useEffect(() => {
     if (mismatched) router.replace("/dashboard");
