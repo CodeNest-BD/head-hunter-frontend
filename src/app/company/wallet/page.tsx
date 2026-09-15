@@ -29,7 +29,8 @@ const RESERVE_STEPS: readonly { title: string; detail: string }[] = [
   },
   {
     title: "The candidate joins",
-    detail: "The fee stays held through a 30-day guarantee from the joining date.",
+    detail:
+      "The fee stays held through a 30-day guarantee from the joining date.",
   },
   {
     title: "Released or refunded",

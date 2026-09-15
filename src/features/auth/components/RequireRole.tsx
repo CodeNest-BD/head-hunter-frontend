@@ -23,9 +23,7 @@ export function RequireRole({ role, children }: RequireRoleProps) {
   const router = useRouter();
   const allowed = Array.isArray(role) ? role : [role];
   const mismatched =
-    status === "authenticated" &&
-    user !== null &&
-    !allowed.includes(user.role);
+    status === "authenticated" && user !== null && !allowed.includes(user.role);
 
   useEffect(() => {
     if (mismatched) router.replace("/dashboard");

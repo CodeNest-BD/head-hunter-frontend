@@ -19,10 +19,7 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
-import {
-  useCompanyPlacements,
-  useRejectPlacement,
-} from "../hooks/useBilling";
+import { useCompanyPlacements, useRejectPlacement } from "../hooks/useBilling";
 import {
   PLACEMENT_STATUS_LABELS,
   type CompanyPlacement,
@@ -142,7 +139,9 @@ export function CompanyPlacementsPanel() {
   const onReject = (placementId: string): void => {
     reject.mutate(placementId, {
       onSuccess: () => {
-        toast.success("Hire rejected — the held fee was refunded to your wallet.");
+        toast.success(
+          "Hire rejected — the held fee was refunded to your wallet.",
+        );
         setConfirmingId(null);
       },
       onError: (error) => toast.error(rejectErrorMessage(error)),
