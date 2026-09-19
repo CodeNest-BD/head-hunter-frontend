@@ -8,7 +8,7 @@ import { useAuth } from "@/features/auth";
 import { useAccountApproval } from "@/shared/hooks/useAccountApproval";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { CurrentUserAvatar } from "./CurrentUserAvatar";
-import { InboxBadge } from "./InboxBadge";
+import { NavBadge } from "./NavBadge";
 import { navForRole } from "./dashboardNav";
 
 /**
@@ -72,7 +72,7 @@ export function UserMenu({ className }: { className?: string }) {
                 >
                   <Icon className="h-[18px] w-[18px] text-muted-foreground" />
                   <span className="truncate">{item.label}</span>
-                  {item.badge === "inbox" && <InboxBadge />}
+                  <NavBadge badge={item.badge} />
                 </Link>
               </DropdownMenu.Item>
             );

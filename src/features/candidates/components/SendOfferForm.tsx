@@ -13,6 +13,7 @@ import {
   type OfferTermsFormValues,
 } from "@/features/offers";
 import type { CandidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
+import { firstStartDayAfterInterview } from "@/features/interviews/utils/slotTiming";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
@@ -108,6 +109,9 @@ export function SendOfferForm({
   });
 
   const startDate = watch("startDate");
+  const earliestStartDay = firstStartDayAfterInterview(
+    negotiationState?.interviewRecord ?? null,
+  );
 
   const closeForm = (): void => {
     setIsOpen(false);
@@ -137,11 +141,7 @@ export function SendOfferForm({
         <p className="text-sm font-medium text-foreground">Send offer</p>
         <div className="flex flex-col gap-1">
           <Label htmlFor="send-offer-salary">Salary (USD/yr)</Label>
-          <NumericInput
-            decimal
-            id="send-offer-salary"
-            {...register("salary")}
-          />
+          <NumericInput id="send-offer-salary" {...register("salary")} />
           {errors.salary && (
             <p className="text-xs text-destructive">{errors.salary.message}</p>
           )}
@@ -156,6 +156,7 @@ export function SendOfferForm({
             }
             placeholder="Pick a start date"
             ariaLabel="Start date"
+            minDay={earliestStartDay}
           />
           {errors.startDate && (
             <p className="text-xs text-destructive">
@@ -164,7 +165,12 @@ export function SendOfferForm({
           )}
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="send-offer-notes">Notes</Label>
+          <Label htmlFor="send-offer-notes">
+            Notes
+            <span className="ml-1 font-normal text-muted-foreground">
+              Optional
+            </span>
+          </Label>
           <Textarea id="send-offer-notes" {...register("notes")} />
         </div>
         <div className="flex flex-wrap items-center gap-2">

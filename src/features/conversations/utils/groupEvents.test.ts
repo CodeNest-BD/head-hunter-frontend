@@ -53,6 +53,7 @@ function offerEvent(at: string): ConversationEvent {
       kind: "offer",
       offerId: "offer-1",
       offerStatus: "sent",
+      companyCanCoverFee: null,
       amountMinor: 500000,
       salaryMinor: 13000000,
       jobTitle: "Staff Engineer",

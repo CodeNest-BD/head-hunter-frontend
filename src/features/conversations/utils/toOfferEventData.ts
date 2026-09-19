@@ -18,5 +18,6 @@ export function toOfferEventData(offer: Offer): OfferEventData {
     startDate: offer.placementDetails?.startDate ?? null,
     previousOfferId: offer.previousOfferId,
     createdBy: offer.createdBy,
+    companyCanCoverFee: offer.companyCanCoverFee,
   };
 }

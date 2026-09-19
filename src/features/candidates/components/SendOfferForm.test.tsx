@@ -29,6 +29,7 @@ function offer(overrides: Partial<Offer> = {}): Offer {
     status: "sent",
     placementDetails: null,
     createdAt: "2026-08-01T00:00:00.000Z",
+    companyCanCoverFee: null,
     ...overrides,
   };
 }

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
 import {
   INTERVIEW_TYPE_LABELS,
+  INTERVIEW_TYPE_OPTIONS,
   INTERVIEW_TYPES,
   interviewTypeSchema,
   type Interview,
@@ -26,6 +27,7 @@ const useCreateInterviewMock = vi.fn();
 // its own behaviour is covered by its own test.
 vi.mock("@/features/interviews", () => ({
   INTERVIEW_TYPE_LABELS,
+  INTERVIEW_TYPE_OPTIONS,
   INTERVIEW_TYPES,
   interviewTypeSchema,
   createInterviewErrorMessage,

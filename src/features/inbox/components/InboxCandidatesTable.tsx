@@ -10,6 +10,7 @@ import {
   CANDIDATE_STATUS_LABELS,
   type CandidateStatus,
 } from "@/features/candidates/schemas";
+import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
 import { Button } from "@/shared/ui-components/controls/button";
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -49,15 +50,6 @@ import {
   type InboxCandidateSort,
 } from "../schemas";
 
-const STATUS_STYLES: Record<CandidateStatus, string> = {
-  submitted: "bg-primary/15 text-primary",
-  reviewing: "text-[#92610C] bg-[#FBF3DF]",
-  interviewing: "text-[#92610C] bg-[#FBF3DF]",
-  offered: "text-[#17734E] bg-[#E7F4EC]",
-  hired: "text-[#17734E] bg-[#E7F4EC]",
-  passed: "bg-[#FBEAEA] text-[#9B3535]",
-};
-
 const STATUS_FILTER_OPTIONS = CANDIDATE_STATUSES.map((status) => ({
   value: status,
   label: CANDIDATE_STATUS_LABELS[status],
@@ -88,7 +80,7 @@ function CandidateStatusBadge({ status }: { status: CandidateStatus }) {
   return (
     <StatusBadge
       label={CANDIDATE_STATUS_LABELS[status]}
-      className={STATUS_STYLES[status]}
+      className={CANDIDATE_STATUS_STYLES[status]}
     />
   );
 }

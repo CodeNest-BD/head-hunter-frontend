@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { SLOT_TIME_STEP_MINUTES } from "../schemas";
 import {
+  SLOT_TIME_STEP_MINUTES,
+  type Interview,
+  type InterviewSlot,
+} from "../schemas";
+import {
+  firstStartDayAfterInterview,
   formatSlotWindow,
   selectableTimeOptions,
   SLOT_TIME_OPTIONS,
@@ -125,5 +130,65 @@ describe("selectableTimeOptions", () => {
     expect(
       selectableTimeOptions("", new Date("2026-08-22T14:30:00")),
     ).toHaveLength(SLOT_TIME_OPTIONS.length);
+  });
+});
+
+describe("firstStartDayAfterInterview", () => {
+  const interview = (overrides: Partial<Interview>): Interview => ({
+    id: "interview-1",
+    jobId: "job-1",
+    candidateId: "candidate-1",
+    interviewType: "video",
+    status: "proposed",
+    round: 1,
+    confirmedSlotStart: null,
+    confirmedSlotEnd: null,
+    meetingJoinUrl: null,
+    outcome: null,
+    passFeedback: null,
+    createdAt: "2026-09-10T09:00:00.000Z",
+    liveProposal: null,
+    ...overrides,
+  });
+
+  const slot = (id: string, startAt: string, endAt: string): InterviewSlot => ({
+    id,
+    startAt,
+    endAt,
+  });
+
+  it("has no floor of its own when the interview carries no time yet", () => {
+    expect(firstStartDayAfterInterview(interview({}))).toBe("");
+    expect(firstStartDayAfterInterview(null)).toBe("");
+  });
+
+  it("clears the day a scheduled interview ends on", () => {
+    expect(
+      firstStartDayAfterInterview(
+        interview({
+          status: "scheduled",
+          confirmedSlotStart: "2026-09-19T08:15:00",
+          confirmedSlotEnd: "2026-09-19T08:45:00",
+        }),
+      ),
+    ).toBe("2026-09-20");
+  });
+
+  it("clears the latest proposed time, not the earliest", () => {
+    expect(
+      firstStartDayAfterInterview(
+        interview({
+          liveProposal: {
+            id: "proposal-1",
+            status: "proposed",
+            slots: [
+              slot("slot-1", "2026-09-19T08:15:00", "2026-09-19T08:45:00"),
+              slot("slot-2", "2026-09-23T08:15:00", "2026-09-23T08:45:00"),
+              slot("slot-3", "2026-09-21T08:15:00", "2026-09-21T08:45:00"),
+            ],
+          },
+        }),
+      ),
+    ).toBe("2026-09-24");
   });
 });

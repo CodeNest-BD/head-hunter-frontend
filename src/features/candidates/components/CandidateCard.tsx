@@ -10,17 +10,13 @@ import {
 } from "@/shared/ui-components/controls/card";
 import { NegotiationActionCards } from "@/shared/ui-components/data/NegotiationActionCards";
 import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { CandidateAttachments } from "./CandidateAttachments";
 import { CandidateFields } from "./CandidateFields";
 import { ScheduleInterviewAction } from "./ScheduleInterviewAction";
 import { SendOfferForm } from "./SendOfferForm";
-import { useUpdateCandidateStatus } from "../hooks/useCandidates";
-import {
-  CANDIDATE_STATUSES,
-  CANDIDATE_STATUS_LABELS,
-  type Candidate,
-  type CandidateStatus,
-} from "../schemas";
+import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
+import { CANDIDATE_STATUS_LABELS, type Candidate } from "../schemas";
 
 interface CandidateCardProps {
   candidate: Candidate;
@@ -34,11 +30,9 @@ export function CandidateCard({
   candidate,
   negotiationState,
 }: CandidateCardProps) {
-  const updateStatus = useUpdateCandidateStatus(candidate.jobId);
-
   return (
     <Card className="border-border/70 transition-colors hover:border-border">
-      {/* Only the status select sits beside the name. The interview and offer
+      {/* Only the status badge sits beside the name. The interview and offer
           actions moved into the body: both expand into full-width panels, so
           stacking them here made a tall right column next to a two-line left
           one — the empty band this card used to carry. */}
@@ -57,26 +51,13 @@ export function CandidateCard({
             {candidate.phone ? ` · ${candidate.phone}` : ""}
           </CardDescription>
         </div>
+        {/* Read-only: the status follows the interview and offer events on
+            this candidate, so there is nothing here to set by hand. */}
         <div className="shrink-0">
-          <select
-            id={`candidate-status-${candidate.id}`}
-            aria-label={`Status for ${candidate.fullName}`}
-            value={candidate.status}
-            disabled={updateStatus.isPending}
-            onChange={(event) =>
-              updateStatus.mutate({
-                id: candidate.id,
-                status: event.target.value as CandidateStatus,
-              })
-            }
-            className="h-9 shrink-0 rounded-md border border-input bg-card px-3 text-sm text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {CANDIDATE_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {CANDIDATE_STATUS_LABELS[status]}
-              </option>
-            ))}
-          </select>
+          <StatusBadge
+            label={CANDIDATE_STATUS_LABELS[candidate.status]}
+            className={CANDIDATE_STATUS_STYLES[candidate.status]}
+          />
         </div>
       </CardHeader>
 
@@ -89,6 +70,7 @@ export function CandidateCard({
         <NegotiationActionCards
           negotiationState={negotiationState}
           viewerParty="company"
+          candidateId={candidate.id}
         />
 
         <ScheduleInterviewAction

@@ -98,6 +98,11 @@ export const conversationEventSchema = z.object({
         jobTitle: z.string().nullable(),
         startDate: z.string().nullable(),
         previousOfferId: z.string().nullable(),
+        // Null on every status but `sent`: nobody is being asked to accept, so
+        // there is no hold to check the company's balance against. Tolerant
+        // like the enums above — a backend that predates this field must not
+        // knock the whole payload out of the union and take the card with it.
+        companyCanCoverFee: z.boolean().nullable().catch(null),
         createdBy: z.enum(["company", "recruiter"]),
       }),
     ])

@@ -1,11 +1,15 @@
-import { addMinutes, isSameDay } from "date-fns";
+import { addDays, addMinutes, format, isSameDay, max } from "date-fns";
 
 import {
   formatDate,
   formatDateTime,
   formatTime,
 } from "@/shared/utils/formatDate";
-import { SLOT_TIME_STEP_MINUTES, type ProposeSlotFormValues } from "../schemas";
+import {
+  SLOT_TIME_STEP_MINUTES,
+  type Interview,
+  type ProposeSlotFormValues,
+} from "../schemas";
 
 export interface SlotTimeOption {
   /** `HH:mm`, the form value. */
@@ -103,4 +107,37 @@ export function formatSlotWindow(slot: ProposeSlotFormValues): string {
   return start.toDateString() === end.toDateString()
     ? `${formatDate(start)} · ${formatTime(start)} – ${formatTime(end)}`
     : `${formatDateTime(start)} – ${formatDateTime(end)}`;
+}
+
+/**
+ * The earliest day an offer's start date may fall on for this interview: the
+ * day after the last time the interview could still take place. `""` when the
+ * interview carries no time at all — nothing to clear, so the picker keeps
+ * only its usual "not in the past" floor.
+ *
+ * A proposed batch counts by its *latest* slot, not its first: any one of
+ * those times can still be the one confirmed, so a floor built on the earliest
+ * would let a company promise a start date that falls before the interview it
+ * is still waiting on. That is the case in the report this exists for — times
+ * proposed for the 19th, a start date picked for the 18th.
+ */
+export function firstStartDayAfterInterview(
+  interview: Interview | null,
+): string {
+  const lastPossible = lastInterviewInstant(interview);
+  return lastPossible ? format(addDays(lastPossible, 1), "yyyy-MM-dd") : "";
+}
+
+function lastInterviewInstant(interview: Interview | null): Date | null {
+  if (!interview) return null;
+  // A canceled or completed interview is history: its times must not hold the
+  // start date back, and a canceled one may still carry a future slot.
+  if (interview.status !== "proposed" && interview.status !== "scheduled") {
+    return null;
+  }
+  if (interview.confirmedSlotEnd) return new Date(interview.confirmedSlotEnd);
+  const slotEnds = (interview.liveProposal?.slots ?? []).map(
+    (slot) => new Date(slot.endAt),
+  );
+  return slotEnds.length > 0 ? max(slotEnds) : null;
 }

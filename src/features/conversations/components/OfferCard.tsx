@@ -4,6 +4,7 @@ import { useState } from "react";
 import { HttpStatusCode } from "axios";
 import { AlertCircle } from "lucide-react";
 
+import { useSendMessage } from "../hooks/useConversation";
 import {
   useAcceptOffer,
   useCounterOffer,
@@ -27,7 +28,20 @@ export type OfferEventData = Extract<
 export interface OfferCardProps {
   data: OfferEventData;
   viewerParty: "company" | "recruiter";
+  /** The thread this offer belongs to — what "Notify Company" writes into. */
+  candidateId: string;
+  /**
+   * False in the conversation thread, where this card is the record of the
+   * offer. The same offer is mounted beside the thread on the candidate card,
+   * which is the one place it is acted on.
+   */
+  actionable?: boolean;
 }
+
+/** Sent verbatim by "Notify Company", so the company reads why the offer is
+ * sitting there rather than guessing at silence. */
+const UNFUNDED_NOTICE =
+  "I cannot accept your offer due to your lack of balance.";
 
 const OFFER_EVENT_STATUS_LABELS: Record<OfferEventData["offerStatus"], string> =
   {
@@ -69,7 +83,12 @@ function negotiationErrorMessage(error: unknown): string {
  * this accepted" flag, so a mutation that fails leaves the card exactly
  * where the server says the offer actually is once the thread refetches.
  */
-export function OfferCard({ data, viewerParty }: OfferCardProps) {
+export function OfferCard({
+  data,
+  viewerParty,
+  candidateId,
+  actionable = true,
+}: OfferCardProps) {
   const {
     offerId,
     offerStatus,
@@ -79,32 +98,47 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
     startDate,
     previousOfferId,
     createdBy,
+    companyCanCoverFee,
   } = data;
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
 
+  const notifyCompany = useSendMessage(candidateId);
   const acceptOffer = useAcceptOffer(offerId);
   const declineOffer = useDeclineOffer(offerId);
   const counterOffer = useCounterOffer(offerId);
   const withdrawOffer = useWithdrawOffer(offerId);
 
-  const isSent = offerStatus === "sent";
+  const isSent = actionable && offerStatus === "sent";
   const isCreator = viewerParty === createdBy;
   // The party who did not create the current offer is the one who gets to
   // respond to it — the creator already said their number.
   const counterpartyCanRespond = isSent && !isCreator;
   const creatorCanWithdraw = isSent && isCreator;
+  // Accepting is what holds the fee in escrow, so an underfunded company means
+  // the accept would be refused server-side. `null` is "not reported" — only a
+  // definite false blocks the button. Recruiter-only: on a recruiter-created
+  // offer the company is the counterparty, and neither this notice nor a
+  // "Notify Company" button makes sense addressed to the company itself.
+  const companyCannotFund =
+    viewerParty === "recruiter" &&
+    counterpartyCanRespond &&
+    companyCanCoverFee === false;
 
   const mutationError =
     acceptOffer.error ??
     declineOffer.error ??
     counterOffer.error ??
-    withdrawOffer.error;
+    withdrawOffer.error ??
+    notifyCompany.error;
   const mutationIsError =
     acceptOffer.isError ||
     declineOffer.isError ||
     counterOffer.isError ||
-    withdrawOffer.isError;
+    withdrawOffer.isError ||
+    // `sendMessage` suppresses the global toast, so without this a failed
+    // notify would leave the recruiter believing the company was told.
+    notifyCompany.isError;
 
   const submitCounter = (terms: CounterOfferTerms): void => {
     counterOffer.mutate(terms, {
@@ -145,11 +179,13 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
 
       {/* A hire (accepted offer) is what unlocks the company's review of the
           recruiter — one per hire, editable afterwards. */}
-      {offerStatus === "accepted" && viewerParty === "company" && (
-        <div className="border-t border-border/60 pt-3">
-          <ReviewCta offerId={offerId} />
-        </div>
-      )}
+      {actionable &&
+        offerStatus === "accepted" &&
+        viewerParty === "company" && (
+          <div className="border-t border-border/60 pt-3">
+            <ReviewCta offerId={offerId} />
+          </div>
+        )}
 
       {/* The commission is fixed by the job's advertised fee and read-only —
           shown as plain text, never an input, and kept visually apart from
@@ -162,13 +198,34 @@ export function OfferCard({ data, viewerParty }: OfferCardProps) {
         </span>
       </div>
 
+      {companyCannotFund && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-2">
+          <p className="text-xs text-muted-foreground">
+            The company has not enough balance to proceed.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={notifyCompany.isPending || notifyCompany.isSuccess}
+            onClick={() => notifyCompany.mutate({ body: UNFUNDED_NOTICE })}
+          >
+            {notifyCompany.isPending
+              ? "Notifying…"
+              : notifyCompany.isSuccess
+                ? "Company Notified"
+                : "Notify Company"}
+          </Button>
+        </div>
+      )}
+
       {counterpartyCanRespond && !showCounterForm && (
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             size="sm"
             className="w-full sm:w-auto"
-            disabled={acceptOffer.isPending}
+            disabled={acceptOffer.isPending || companyCannotFund}
             onClick={() => acceptOffer.mutate()}
           >
             {acceptOffer.isPending ? "Accepting…" : "Accept"}

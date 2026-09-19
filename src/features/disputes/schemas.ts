@@ -33,6 +33,20 @@ export const disputeMessageSchema = z.object({
 });
 export type DisputeMessage = z.infer<typeof disputeMessageSchema>;
 
+/** A piece of proof filed with a dispute. Links are short-lived, signed, and
+ * re-minted on every read of the dispute. */
+export const disputeAttachmentSchema = z.object({
+  id: z.string(),
+  fileName: z.string(),
+  contentType: z.string().nullable(),
+  sizeBytes: z.number().nullable(),
+  uploadedBy: disputeChannelSchema,
+  previewUrl: z.string(),
+  downloadUrl: z.string(),
+  createdAt: z.string(),
+});
+export type DisputeAttachment = z.infer<typeof disputeAttachmentSchema>;
+
 /** A dispute as a participant (company or recruiter) sees it. */
 export const participantDisputeSchema = z.object({
   id: z.string(),
@@ -52,6 +66,9 @@ export type ParticipantDispute = z.infer<typeof participantDisputeSchema>;
 
 export const participantDisputeDetailSchema = participantDisputeSchema.extend({
   messages: z.array(disputeMessageSchema),
+  // Tolerant like `companyCanCoverFee`: a backend that predates proof must not
+  // turn a dispute detail — or the response to raising one — into an error.
+  attachments: z.array(disputeAttachmentSchema).catch([]),
 });
 export type ParticipantDisputeDetail = z.infer<
   typeof participantDisputeDetailSchema
@@ -83,8 +100,9 @@ export const adminDisputeDetailSchema = adminDisputeListItemSchema.extend({
   resolutionNote: z.string().nullable(),
   companyMessages: z.array(disputeMessageSchema),
   recruiterMessages: z.array(disputeMessageSchema),
+  attachments: z.array(disputeAttachmentSchema).catch([]),
 });
 export type AdminDisputeDetail = z.infer<typeof adminDisputeDetailSchema>;
 
-/** Admin resolution: refund the company or pay the recruiter. */
-export type DisputeResolution = "refund" | "release";
+/** The Disputes nav badge's payload. */
+export const disputeAttentionCountSchema = z.object({ count: z.number() });

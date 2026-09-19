@@ -10,13 +10,11 @@ import {
   fetchMyCandidatesForJob,
   presignCandidateUpload,
   updateCandidate,
-  updateCandidateStatus,
   uploadToPresignedUrl,
   type CandidateInput,
 } from "../api/candidates";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { candidateKeys } from "../keys";
-import type { CandidateStatus } from "../schemas";
 
 /** The calling recruiter's own candidates on one job — at most five. */
 export function useMyCandidatesForJob(jobId: string) {
@@ -51,20 +49,6 @@ export function useAttachments(candidateId: string, enabled: boolean) {
     queryKey: candidateKeys.attachments(candidateId),
     queryFn: () => fetchAttachments(candidateId),
     enabled,
-  });
-}
-
-export function useUpdateCandidateStatus(jobId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: CandidateStatus }) =>
-      updateCandidateStatus(id, status),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: candidateKeys.forJob(jobId),
-      });
-      toast.success("Candidate updated");
-    },
   });
 }
 

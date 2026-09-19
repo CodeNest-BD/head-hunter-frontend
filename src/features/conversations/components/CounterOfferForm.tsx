@@ -79,11 +79,7 @@ export function CounterOfferForm({
     <form onSubmit={submit} className="flex flex-col gap-2.5">
       <div className="flex flex-col gap-1">
         <Label htmlFor="offer-counter-salary">New salary (USD/yr)</Label>
-        <NumericInput
-          decimal
-          id="offer-counter-salary"
-          {...register("salary")}
-        />
+        <NumericInput id="offer-counter-salary" {...register("salary")} />
         {errors.salary && (
           <p className="text-xs text-destructive">{errors.salary.message}</p>
         )}
@@ -104,7 +100,12 @@ export function CounterOfferForm({
         )}
       </div>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="offer-counter-notes">Notes</Label>
+        <Label htmlFor="offer-counter-notes">
+          Notes
+          <span className="ml-1 font-normal text-muted-foreground">
+            Optional
+          </span>
+        </Label>
         <Textarea id="offer-counter-notes" {...register("notes")} />
       </div>
       <div className="flex flex-wrap items-center gap-2">

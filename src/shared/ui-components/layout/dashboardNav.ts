@@ -25,8 +25,9 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Show the waiting-candidates badge on this item (either side's Inbox). */
-  badge?: "inbox";
+  /** Which count pill this item carries, if any: waiting candidates on either
+   * side's Inbox, or undecided disputes on Disputes. */
+  badge?: "inbox" | "disputes";
 }
 
 /** Role-based primary navigation, shared by the sidebar and the user menu. */
@@ -41,7 +42,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       badge: "inbox",
     },
     { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
-    { href: "/disputes", label: "Disputes", icon: Scale },
+    { href: "/disputes", label: "Disputes", icon: Scale, badge: "disputes" },
     { href: "/company/profile", label: "My Profile", icon: UserRound },
   ],
   recruiter: [
@@ -68,7 +69,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
           },
         ]),
     { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
-    { href: "/disputes", label: "Disputes", icon: Scale },
+    { href: "/disputes", label: "Disputes", icon: Scale, badge: "disputes" },
     { href: "/recruiter/profile", label: "My Profile", icon: UserRound },
   ],
   admin: [

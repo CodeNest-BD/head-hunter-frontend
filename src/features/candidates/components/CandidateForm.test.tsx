@@ -8,7 +8,6 @@ import { CandidateForm } from "./CandidateForm";
 
 const fetchCandidatesMock = vi.fn();
 const fetchAttachmentsMock = vi.fn();
-const updateCandidateStatusMock = vi.fn();
 const presignCandidateUploadMock = vi.fn();
 const uploadToPresignedUrlMock = vi.fn();
 const createCandidateMock = vi.fn();
@@ -19,8 +18,6 @@ vi.mock("../api/candidates", () => ({
   fetchMyCandidatesForJob: (...args: unknown[]) => fetchCandidatesMock(...args),
   fetchCandidate: (...args: unknown[]) => fetchCandidatesMock(...args),
   fetchAttachments: (...args: unknown[]) => fetchAttachmentsMock(...args),
-  updateCandidateStatus: (...args: unknown[]) =>
-    updateCandidateStatusMock(...args),
   presignCandidateUpload: (...args: unknown[]) =>
     presignCandidateUploadMock(...args),
   uploadToPresignedUrl: (...args: unknown[]) =>
@@ -61,7 +58,6 @@ describe("CandidateForm", () => {
   beforeEach(() => {
     fetchCandidatesMock.mockReset();
     fetchAttachmentsMock.mockReset();
-    updateCandidateStatusMock.mockReset();
     presignCandidateUploadMock.mockReset();
     uploadToPresignedUrlMock.mockReset();
     createCandidateMock.mockReset();

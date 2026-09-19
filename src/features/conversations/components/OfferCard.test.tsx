@@ -13,6 +13,11 @@ const useAcceptOfferMock = vi.fn();
 const useDeclineOfferMock = vi.fn();
 const useCounterOfferMock = vi.fn();
 const useWithdrawOfferMock = vi.fn();
+const useSendMessageMock = vi.fn();
+
+vi.mock("../hooks/useConversation", () => ({
+  useSendMessage: (...args: unknown[]) => useSendMessageMock(...args),
+}));
 
 vi.mock("@/features/offers", () => ({
   useAcceptOffer: (...args: unknown[]) => useAcceptOfferMock(...args),
@@ -36,6 +41,7 @@ function offerData(overrides: Partial<OfferEventData> = {}): OfferEventData {
     startDate: "2026-09-01",
     previousOfferId: null,
     createdBy: "company",
+    companyCanCoverFee: null,
     ...overrides,
   };
 }
@@ -50,11 +56,17 @@ describe("OfferCard", () => {
     useDeclineOfferMock.mockReturnValue(mutationStub());
     useCounterOfferMock.mockReturnValue(mutationStub());
     useWithdrawOfferMock.mockReturnValue(mutationStub());
+    useSendMessageMock.mockReset();
+    useSendMessageMock.mockReturnValue(mutationStub());
   });
 
   it("renders the negotiated salary formatted", () => {
     renderWithProviders(
-      <OfferCard data={offerData()} viewerParty="recruiter" />,
+      <OfferCard
+        data={offerData()}
+        viewerParty="recruiter"
+        candidateId="candidate-1"
+      />,
     );
 
     expect(screen.getByText(formatMinor(13000000))).toBeInTheDocument();
@@ -62,7 +74,11 @@ describe("OfferCard", () => {
 
   it("labels the commission as the recruiter's fee, distinct from the salary and never as an input", () => {
     renderWithProviders(
-      <OfferCard data={offerData()} viewerParty="recruiter" />,
+      <OfferCard
+        data={offerData()}
+        viewerParty="recruiter"
+        candidateId="candidate-1"
+      />,
     );
 
     expect(screen.getByText(/recruiter's fee/i)).toBeInTheDocument();
@@ -76,6 +92,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ createdBy: "company", offerStatus: "sent" })}
         viewerParty="recruiter"
+        candidateId="candidate-1"
       />,
     );
 
@@ -98,6 +115,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ createdBy: "company", offerStatus: "sent" })}
         viewerParty="company"
+        candidateId="candidate-1"
       />,
     );
 
@@ -128,6 +146,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ createdBy: "company", offerStatus: "sent" })}
         viewerParty="company"
+        candidateId="candidate-1"
       />,
     );
 
@@ -152,6 +171,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ createdBy: "company", offerStatus: "sent" })}
         viewerParty="company"
+        candidateId="candidate-1"
       />,
     );
 
@@ -178,6 +198,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ createdBy: "company", offerStatus: "sent" })}
         viewerParty="company"
+        candidateId="candidate-1"
       />,
     );
 
@@ -199,6 +220,7 @@ describe("OfferCard", () => {
         <OfferCard
           data={offerData({ offerStatus, createdBy: "company" })}
           viewerParty="recruiter"
+          candidateId="candidate-1"
         />,
       );
 
@@ -211,6 +233,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ offerStatus: "accepted", createdBy: "company" })}
         viewerParty="company"
+        candidateId="candidate-1"
       />,
     );
 
@@ -222,6 +245,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ previousOfferId: "offer-0" })}
         viewerParty="recruiter"
+        candidateId="candidate-1"
       />,
     );
 
@@ -233,6 +257,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ previousOfferId: null })}
         viewerParty="recruiter"
+        candidateId="candidate-1"
       />,
     );
 
@@ -254,6 +279,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ createdBy: "company" })}
         viewerParty="recruiter"
+        candidateId="candidate-1"
       />,
     );
 
@@ -287,6 +313,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ createdBy: "company" })}
         viewerParty="recruiter"
+        candidateId="candidate-1"
       />,
     );
 
@@ -315,6 +342,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ createdBy: "company" })}
         viewerParty="recruiter"
+        candidateId="candidate-1"
       />,
     );
 
@@ -332,6 +360,7 @@ describe("OfferCard", () => {
       <OfferCard
         data={offerData({ createdBy: "company" })}
         viewerParty="recruiter"
+        candidateId="candidate-1"
       />,
     );
 
@@ -350,5 +379,61 @@ describe("OfferCard", () => {
     expect(today).toBeEnabled();
 
     vi.useRealTimers();
+  });
+
+  // Accepting is what holds the fee in escrow, so an offer the company can no
+  // longer fund would be refused server-side — the recruiter is told before
+  // the click instead of by a 409 after it.
+  describe("when the company can no longer cover the fee", () => {
+    const unfunded = () => offerData({ companyCanCoverFee: false });
+
+    it("blocks Accept and says why", () => {
+      renderWithProviders(
+        <OfferCard
+          data={unfunded()}
+          viewerParty="recruiter"
+          candidateId="candidate-1"
+        />,
+      );
+
+      expect(screen.getByRole("button", { name: "Accept" })).toBeDisabled();
+      expect(
+        screen.getByText("The company has not enough balance to proceed."),
+      ).toBeInTheDocument();
+    });
+
+    it("sends the company a message saying so", () => {
+      const mutate = vi.fn();
+      useSendMessageMock.mockReturnValue({ ...mutationStub(), mutate });
+
+      renderWithProviders(
+        <OfferCard
+          data={unfunded()}
+          viewerParty="recruiter"
+          candidateId="candidate-1"
+        />,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Notify Company" }));
+
+      expect(useSendMessageMock).toHaveBeenCalledWith("candidate-1");
+      expect(mutate).toHaveBeenCalledWith({
+        body: "I cannot accept your offer due to your lack of balance.",
+      });
+    });
+
+    it("leaves Accept alone when funding was not reported", () => {
+      renderWithProviders(
+        <OfferCard
+          data={offerData({ companyCanCoverFee: null })}
+          viewerParty="recruiter"
+          candidateId="candidate-1"
+        />,
+      );
+
+      expect(screen.getByRole("button", { name: "Accept" })).toBeEnabled();
+      expect(
+        screen.queryByRole("button", { name: "Notify Company" }),
+      ).not.toBeInTheDocument();
+    });
   });
 });

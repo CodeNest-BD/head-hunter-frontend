@@ -13,6 +13,8 @@ export interface NegotiationActionCardsProps {
    * the candidate has neither an interview nor an offer yet. */
   negotiationState: CandidateNegotiationState | null;
   viewerParty: "company" | "recruiter";
+  /** The candidate these cards act on — `OfferCard` writes into their thread. */
+  candidateId: string;
 }
 
 /**
@@ -28,6 +30,7 @@ export interface NegotiationActionCardsProps {
 export function NegotiationActionCards({
   negotiationState,
   viewerParty,
+  candidateId,
 }: NegotiationActionCardsProps) {
   const proposalData = negotiationState?.interviewRecord
     ? toProposalEventData(negotiationState.interviewRecord)
@@ -55,7 +58,13 @@ export function NegotiationActionCards({
           viewerParty={viewerParty}
         />
       )}
-      {offerData && <OfferCard data={offerData} viewerParty={viewerParty} />}
+      {offerData && (
+        <OfferCard
+          data={offerData}
+          viewerParty={viewerParty}
+          candidateId={candidateId}
+        />
+      )}
     </>
   );
 }

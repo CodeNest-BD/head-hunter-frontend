@@ -28,7 +28,7 @@ import {
 } from "@/shared/ui-components/controls/select";
 import { useMinRecruiterFee } from "@/features/billing";
 import { sanitizeRichText } from "@/shared/libs/richText";
-import { isoDateAfter, todayIsoDate } from "@/shared/utils/formatDate";
+import { isoDateAfter } from "@/shared/utils/formatDate";
 import {
   formatMinor,
   majorInputToMinor,
@@ -77,6 +77,7 @@ import { useMyCompanyProfile } from "@/features/companies";
 import type { JobWriteInput } from "../api/jobs";
 import { useStateCities } from "@/shared/hooks/useStateCities";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
+import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
 import { toUsStateCode } from "@/shared/data/usStatesGeo";
 import { JobLivePreview } from "./JobLivePreview";
@@ -446,11 +447,6 @@ export function JobForm({
       localStorage.setItem(PREVIEW_OPEN_KEY, String(next));
       return next;
     });
-
-  // Set after mount: the server renders its own timezone's date, and an
-  // interviewing window may not start in the viewer's past.
-  const [today, setToday] = useState("");
-  useEffect(() => setToday(todayIsoDate()), []);
 
   const feeMinor = majorInputToMinor(values.recruiterFee);
   const feeMeetsMinimum =
@@ -1355,7 +1351,10 @@ export function JobForm({
                             label: reaching for one is how you choose a range,
                             and a disabled input swallows the click that would
                             otherwise select it. */}
-                        <div className="flex items-center gap-1.5">
+                        <div
+                          className="flex items-center gap-1.5"
+                          onFocusCapture={() => field.onChange(false)}
+                        >
                           <input
                             type="radio"
                             name="interviewingAsap"
@@ -1364,26 +1363,35 @@ export function JobForm({
                             onChange={() => field.onChange(false)}
                             className="h-4 w-4 accent-primary"
                           />
-                          <Input
-                            type="date"
-                            aria-label="Interviewing from"
+                          <DayPickerField
+                            id="interviewing-from"
+                            value={values.interviewingFrom}
+                            onChange={(day) =>
+                              setValue("interviewingFrom", day, {
+                                shouldValidate: true,
+                              })
+                            }
+                            placeholder="Pick a start day"
+                            ariaLabel="Interviewing from"
                             className="h-8 w-auto"
-                            min={today || undefined}
-                            onFocus={() => field.onChange(false)}
-                            {...register("interviewingFrom")}
                           />
                           <span className="text-muted-foreground">–</span>
-                          <Input
-                            type="date"
-                            aria-label="Interviewing until"
-                            className="h-8 w-auto"
-                            min={
+                          <DayPickerField
+                            id="interviewing-until"
+                            value={values.interviewingTo}
+                            onChange={(day) =>
+                              setValue("interviewingTo", day, {
+                                shouldValidate: true,
+                              })
+                            }
+                            placeholder="Pick an end day"
+                            ariaLabel="Interviewing until"
+                            minDay={
                               values.interviewingFrom === ""
-                                ? today || undefined
+                                ? ""
                                 : isoDateAfter(values.interviewingFrom)
                             }
-                            onFocus={() => field.onChange(false)}
-                            {...register("interviewingTo")}
+                            className="h-8 w-auto"
                           />
                         </div>
                       </>

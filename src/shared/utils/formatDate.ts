@@ -45,11 +45,6 @@ export function formatTime(value: Date | string): string {
 // day; `toISOString()` would shift it a day for anyone west of UTC.
 const ISO_DATE_LOCALE = "en-CA";
 
-/** Today as "2026-08-09", for the `min`/`max` of an `<input type="date">`. */
-export function todayIsoDate(): string {
-  return new Date().toLocaleDateString(ISO_DATE_LOCALE);
-}
-
 /** "2026-08-09" -> "2026-08-10", for a range whose end must clear its start. */
 export function isoDateAfter(value: string): string {
   const next = new Date(`${value}T00:00:00`);
