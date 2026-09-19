@@ -10,6 +10,11 @@ import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/ui-components/controls/tabs";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   MobileRecordCard,
@@ -17,6 +22,7 @@ import {
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 
 import { useAdminDisputes } from "../hooks/useDisputes";
+import type { DisputeChannel } from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
 const TH = "px-5 py-3 font-semibold";
@@ -32,15 +38,34 @@ const FILTERS: { label: string; value: string }[] = [
   { label: "Resolved — Paid Recruiter", value: "resolved_release" },
 ];
 
+/** Whose side opened the dispute — "any" is the unfiltered tab. */
+type RaisedByTab = DisputeChannel | "any";
+
+const RAISED_BY_TABS: { label: string; value: RaisedByTab }[] = [
+  { label: "All", value: "any" },
+  { label: "Raised by Company", value: "company" },
+  { label: "Raised by Recruiter", value: "recruiter" },
+];
+
+/** Narrows the tab bar's plain string back to a tab this table understands —
+ * same shape as `isCandidateSort` in the inbox table. */
+const isRaisedByTab = (value: string): value is RaisedByTab =>
+  RAISED_BY_TABS.some((tab) => tab.value === value);
+
 /** The admin dispute inbox. */
 export function AdminDisputesTable() {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("open_active");
+  const [raisedByTab, setRaisedByTab] = useState<RaisedByTab>("any");
   // "open_active" is a convenience view: the backend filters by a single status,
   // so "open" is the actionable subset admins live in; "all" clears it.
   const status =
     filter === "all" || filter === "open_active" ? undefined : filter;
-  const { data, isPending, isError, refetch } = useAdminDisputes(page, status);
+  const { data, isPending, isError, refetch } = useAdminDisputes(
+    page,
+    status,
+    raisedByTab === "any" ? undefined : raisedByTab,
+  );
 
   const rows =
     filter === "open_active" && data
@@ -52,7 +77,7 @@ export function AdminDisputesTable() {
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+        <div className="flex items-center justify-between gap-3 px-5 py-3">
           <h2 className="font-heading text-base font-bold text-navy">
             Disputes
           </h2>
@@ -71,6 +96,26 @@ export function AdminDisputesTable() {
             ))}
           </NativeSelect>
         </div>
+
+        {/* Same underline tab bar as the admin Settings page, so the two admin
+            screens filter the same way. The list below is the only panel, so
+            the triggers drive the query rather than swapping TabsContent. */}
+        <Tabs
+          value={raisedByTab}
+          onValueChange={(value) => {
+            if (!isRaisedByTab(value)) return;
+            setRaisedByTab(value);
+            setPage(1);
+          }}
+        >
+          <TabsList className="px-5">
+            {RAISED_BY_TABS.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
         {isError ? (
           <div className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">

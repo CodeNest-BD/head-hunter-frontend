@@ -95,6 +95,16 @@ export const INTERVIEW_TYPE_LABELS: Record<InterviewType, string> = {
   in_person: "In person",
 };
 
+/** What a company can schedule. Narrower than the parse enum above, which
+ * keeps `video_panel` so interviews created before it was dropped still parse
+ * and still render their label — the same split `features/jobs` already makes
+ * between its round types and its pickable options. */
+export const INTERVIEW_TYPE_OPTIONS: ReadonlyArray<InterviewType> = [
+  "phone",
+  "video",
+  "in_person",
+];
+
 /**
  * A batch is a shortlist for a human to pick from, not an open calendar — the
  * same 1-5 cap the backend's `ProposeSlotsDto` enforces.

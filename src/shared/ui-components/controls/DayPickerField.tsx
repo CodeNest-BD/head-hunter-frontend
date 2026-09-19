@@ -1,7 +1,7 @@
 "use client";
 
 import * as Popover from "@radix-ui/react-popover";
-import { format, startOfToday } from "date-fns";
+import { format, max, startOfToday } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -25,9 +25,14 @@ export interface DayPickerFieldProps {
   onChange: (day: string) => void;
   /** Shown in place of a date until one is picked. */
   placeholder: string;
-  /** The field's accessible name: the trigger is a button tied to a
-   * `<label for>`, so without this its name would be the label text. */
+  /** The field's accessible name, on both the trigger and the calendar. The
+   * trigger is a button showing a placeholder until a day is picked, so
+   * without this a caller with no `<label for>` would announce it as "Pick a
+   * start day". */
   ariaLabel: string;
+  /** `yyyy-MM-dd` floor above today's, for a day that also has to clear
+   * another one — a range's end against its start. Never lowers the floor. */
+  minDay?: string;
   className?: string;
 }
 
@@ -47,10 +52,14 @@ export function DayPickerField({
   onChange,
   placeholder,
   ariaLabel,
+  minDay = "",
   className,
 }: DayPickerFieldProps) {
   const selectedDate = toSelectedDate(value);
-  const firstSelectableDay = startOfToday();
+  const minDate = toSelectedDate(minDay);
+  const firstSelectableDay = minDate
+    ? max([minDate, startOfToday()])
+    : startOfToday();
 
   return (
     <Popover.Root>
@@ -58,6 +67,7 @@ export function DayPickerField({
         <button
           type="button"
           id={id}
+          aria-label={ariaLabel}
           className={cn(
             "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
             className,

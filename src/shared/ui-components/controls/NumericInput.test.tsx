@@ -32,4 +32,18 @@ describe("NumericInput", () => {
     await user.type(field, "20.24");
     expect(field.value).toBe("2024");
   });
+
+  // Pasting is where the dot is dangerous: stripping it outright turned
+  // "130000.50" into 13000050 — a hundredfold error on a money field, and
+  // invisible to whoever pasted it.
+  it("truncates a pasted fraction in integer mode instead of concatenating it", async () => {
+    const user = userEvent.setup();
+    render(<NumericInput aria-label="salary" />);
+    const field = screen.getByLabelText<HTMLInputElement>("salary");
+
+    await user.click(field);
+    await user.paste("130000.50");
+
+    expect(field.value).toBe("130000");
+  });
 });

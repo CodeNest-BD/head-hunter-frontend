@@ -13,6 +13,7 @@ import {
   useCandidate,
   useDeleteCandidate,
   CANDIDATE_STATUS_LABELS,
+  CANDIDATE_STATUS_STYLES,
 } from "@/features/candidates";
 import { Thread, useMessageUnreadCounts } from "@/features/conversations";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
@@ -26,17 +27,6 @@ import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationS
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDetailLayout";
-import type { CandidateStatus } from "@/features/candidates";
-
-const CANDIDATE_STATUS_STYLES: Record<CandidateStatus, string> = {
-  submitted: "bg-primary/15 text-primary",
-  reviewing: "text-[#92610C] bg-[#FBF3DF]",
-  interviewing: "text-[#92610C] bg-[#FBF3DF]",
-  offered: "text-[#17734E] bg-[#E7F4EC]",
-  hired: "text-[#17734E] bg-[#E7F4EC]",
-  passed: "bg-muted text-muted-foreground",
-};
-
 function ErrorCallout({
   message,
   onRetry,
@@ -145,6 +135,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
       <NegotiationActionCards
         negotiationState={negotiationState}
         viewerParty="recruiter"
+        candidateId={candidate.id}
       />
 
       <CandidateFields candidate={candidate} />

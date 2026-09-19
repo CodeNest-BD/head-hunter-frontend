@@ -64,6 +64,7 @@ function offer(overrides: Partial<Offer> & { id: string }): Offer {
     createdBy: "company",
     amountMinor: 500000,
     status: "sent",
+    companyCanCoverFee: null,
     placementDetails: null,
     createdAt: "2026-08-10T09:00:00.000Z",
     ...overrides,
@@ -85,7 +86,11 @@ function state(
 describe("NegotiationActionCards", () => {
   it("renders nothing when there is no negotiation state", () => {
     const { container } = renderWithProviders(
-      <NegotiationActionCards negotiationState={null} viewerParty="company" />,
+      <NegotiationActionCards
+        negotiationState={null}
+        viewerParty="company"
+        candidateId="cand-1"
+      />,
     );
 
     expect(container).toBeEmptyDOMElement();
@@ -96,6 +101,7 @@ describe("NegotiationActionCards", () => {
       <NegotiationActionCards
         negotiationState={state()}
         viewerParty="company"
+        candidateId="cand-1"
       />,
     );
 
@@ -112,6 +118,7 @@ describe("NegotiationActionCards", () => {
           }),
         })}
         viewerParty="company"
+        candidateId="cand-1"
       />,
     );
 
@@ -133,6 +140,7 @@ describe("NegotiationActionCards", () => {
           }),
         })}
         viewerParty="recruiter"
+        candidateId="cand-1"
       />,
     );
 
@@ -154,6 +162,7 @@ describe("NegotiationActionCards", () => {
           }),
         })}
         viewerParty="company"
+        candidateId="cand-1"
       />,
     );
 
@@ -170,6 +179,7 @@ describe("NegotiationActionCards", () => {
           offerRecord: offer({ id: "offer-2" }),
         })}
         viewerParty="recruiter"
+        candidateId="cand-1"
       />,
     );
 
@@ -189,6 +199,7 @@ describe("NegotiationActionCards", () => {
           }),
         })}
         viewerParty="company"
+        candidateId="cand-1"
       />,
     );
 

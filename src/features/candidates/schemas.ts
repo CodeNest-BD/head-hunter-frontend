@@ -61,14 +61,19 @@ export const candidateFormSchema = z.object({
     .trim()
     .url("Enter a full URL, including https://")
     .or(z.literal("")),
+  // Half-years count: "2.5 years" is a real claim, so one decimal place is
+  // allowed — matching the backend column's numeric(4,1).
   yearsOfExperience: z
     .string()
     .trim()
     .refine(
       (v) =>
         v === "" ||
-        (Number.isInteger(Number(v)) && Number(v) >= 0 && Number(v) <= 60),
-      { message: "Enter a whole number of years between 0 and 60" },
+        (Number.isFinite(Number(v)) &&
+          Number(v) >= 0 &&
+          Number(v) <= 60 &&
+          Number.isInteger(Number(v) * 10)),
+      { message: "Enter years between 0 and 60, to at most one decimal" },
     ),
   currentCompany: z.string().trim(),
   expectedSalary: z

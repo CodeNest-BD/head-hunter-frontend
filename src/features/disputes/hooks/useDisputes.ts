@@ -11,15 +11,18 @@ import {
   fetchAdminDispute,
   fetchAdminDisputes,
   fetchEligiblePlacements,
+  fetchDisputeAttentionCount,
   fetchMyDispute,
   fetchMyDisputes,
   postAdminDisputeMessage,
   postDisputeMessage,
+  presignDisputeProof,
   raiseDispute,
-  resolveDispute,
 } from "../api/disputes";
+import { uploadToPresignedUrl } from "@/shared/libs/documentUpload";
+import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { disputeKeys } from "../keys";
-import type { DisputeChannel, DisputeResolution } from "../schemas";
+import type { DisputeChannel } from "../schemas";
 
 // ---- Participant ------------------------------------------------------
 
@@ -28,6 +31,22 @@ export function useMyDisputes(page: number) {
     queryKey: disputeKeys.list(page),
     queryFn: () => fetchMyDisputes(page),
     placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * The Disputes nav badge. Polls on the notifications' interval and refetches on
+ * focus, overriding the app-wide `refetchOnWindowFocus: false`: the count moves
+ * when the admin decides a dispute, which produces no event this client waits
+ * on — the same reasoning `useInboxAttentionCount` documents.
+ */
+export function useDisputeAttentionCount(enabled: boolean) {
+  return useQuery({
+    queryKey: disputeKeys.attentionCount,
+    queryFn: fetchDisputeAttentionCount,
+    enabled,
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -47,12 +66,39 @@ export function useEligiblePlacements(role: Role | null) {
   });
 }
 
-/** Opening a dispute freezes the placement, so the wallet view changes too. */
+/**
+ * Opening a dispute freezes the placement, so the wallet view changes too.
+ *
+ * Proof uploads first and the dispute carries the keys, mirroring
+ * `useSubmitCandidate`: the objects are staged against the placement, and the
+ * storage lifecycle expires whatever a never-submitted form leaves behind.
+ */
 export function useRaiseDispute() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { placementId: string; reason: string }) =>
-      raiseDispute(input),
+    mutationFn: async (input: {
+      placementId: string;
+      reason: string;
+      proof?: File[];
+    }) => {
+      const attachments = await Promise.all(
+        (input.proof ?? []).map(async (file) => {
+          const staged = await presignDisputeProof(input.placementId, file);
+          await uploadToPresignedUrl(staged.uploadUrl, file);
+          return {
+            s3Key: staged.s3Key,
+            fileName: file.name,
+            contentType: file.type,
+            sizeBytes: file.size,
+          };
+        }),
+      );
+      return raiseDispute({
+        placementId: input.placementId,
+        reason: input.reason,
+        attachments,
+      });
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: disputeKeys.all });
       void queryClient.invalidateQueries({ queryKey: ["billing"] });
@@ -72,10 +118,14 @@ export function usePostDisputeMessage(id: string) {
 
 // ---- Admin ------------------------------------------------------------
 
-export function useAdminDisputes(page: number, status?: string) {
+export function useAdminDisputes(
+  page: number,
+  status?: string,
+  raisedBy?: DisputeChannel,
+) {
   return useQuery({
-    queryKey: disputeKeys.adminList(page, status),
-    queryFn: () => fetchAdminDisputes(page, status),
+    queryKey: disputeKeys.adminList(page, status, raisedBy),
+    queryFn: () => fetchAdminDisputes(page, status, raisedBy),
     placeholderData: keepPreviousData,
   });
 }
@@ -96,20 +146,6 @@ export function usePostAdminDisputeMessage(id: string) {
       void queryClient.invalidateQueries({
         queryKey: disputeKeys.adminDetail(id),
       });
-    },
-  });
-}
-
-/** Resolving moves escrow money, so wallet and dispute views both change. */
-export function useResolveDispute(id: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (input: { outcome: DisputeResolution; note?: string }) =>
-      resolveDispute(id, input.outcome, input.note),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: disputeKeys.all });
-      void queryClient.invalidateQueries({ queryKey: ["billing"] });
-      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
   });
 }

@@ -23,7 +23,7 @@ import {
 } from "@/shared/ui-components/controls/popover";
 import { type Crumb } from "./Breadcrumb";
 import { CurrentUserAvatar } from "./CurrentUserAvatar";
-import { InboxBadge } from "./InboxBadge";
+import { NavBadge } from "./NavBadge";
 import { TopBarActions } from "./TopBarActions";
 import { navForRole, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
@@ -87,7 +87,7 @@ function UserMenu() {
               >
                 <Icon className="h-4 w-4 text-muted-foreground" />
                 <span className="flex-1 truncate">{item.label}</span>
-                {item.badge === "inbox" && <InboxBadge />}
+                <NavBadge badge={item.badge} />
               </Link>
             );
           })}
@@ -151,7 +151,7 @@ function NavLink({
         )}
       />
       {!collapsed && <span className="truncate">{item.label}</span>}
-      {!collapsed && item.badge === "inbox" && <InboxBadge />}
+      {!collapsed && <NavBadge badge={item.badge} />}
     </Link>
   );
 }

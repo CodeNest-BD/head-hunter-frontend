@@ -6,7 +6,7 @@ import { AlertCircle } from "lucide-react";
 import {
   createInterviewErrorMessage,
   INTERVIEW_TYPE_LABELS,
-  INTERVIEW_TYPES,
+  INTERVIEW_TYPE_OPTIONS,
   interviewTypeSchema,
   OpenInterviewActions,
   useCreateInterview,
@@ -110,7 +110,7 @@ export function ScheduleInterviewAction({
             if (parsed.success) setInterviewType(parsed.data);
           }}
         >
-          {INTERVIEW_TYPES.map((type) => (
+          {INTERVIEW_TYPE_OPTIONS.map((type) => (
             <option key={type} value={type}>
               {INTERVIEW_TYPE_LABELS[type]}
             </option>

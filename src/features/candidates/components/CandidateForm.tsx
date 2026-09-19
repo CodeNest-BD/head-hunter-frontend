@@ -51,6 +51,8 @@ function toNullableText(value: string): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+/** Blank means "not stated"; anything else is the number as typed — years now
+ * carry a half, so this must not round. */
 function toNullableInt(value: string): number | null {
   const trimmed = value.trim();
   return trimmed === "" ? null : Number(trimmed);
@@ -211,6 +213,7 @@ export function CandidateForm({
         <div className="flex flex-col gap-2">
           <Label htmlFor="yearsOfExperience">Years of experience</Label>
           <NumericInput
+            decimal
             id="yearsOfExperience"
             {...register("yearsOfExperience")}
           />

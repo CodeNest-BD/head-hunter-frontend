@@ -7,7 +7,7 @@ import type { Offer } from "@/features/offers";
 import type { Candidate } from "../schemas";
 import { CandidateCard } from "./CandidateCard";
 
-// This card's own status dropdown/actions are exercised by
+// This card's own actions are exercised by
 // ScheduleInterviewAction.test.tsx and SendOfferForm.test.tsx; stubbed here so
 // this file only has to prove the negotiation badges are wired in without
 // also standing up their own network mocks.
@@ -18,10 +18,6 @@ vi.mock("./SendOfferForm", () => ({
   SendOfferForm: () => <div>Send offer form</div>,
 }));
 vi.mock("../hooks/useCandidates", () => ({
-  useUpdateCandidateStatus: () => ({
-    mutate: vi.fn(),
-    isPending: false,
-  }),
   useAttachments: () => ({ data: undefined, isPending: false, isError: false }),
 }));
 // `NegotiationActionCards` (shared with `CandidateItem` on the recruiter
@@ -75,6 +71,7 @@ function offer(overrides: Partial<Offer> & { id: string }): Offer {
     status: "sent",
     placementDetails: null,
     createdAt: "2026-08-10T09:00:00.000Z",
+    companyCanCoverFee: null,
     ...overrides,
   };
 }
@@ -112,7 +109,7 @@ describe("CandidateCard", () => {
     expect(screen.getByText(/Offer:/)).toHaveTextContent("Offer: none yet");
   });
 
-  it("shows the interview and offer state without touching the status dropdown", () => {
+  it("shows the interview and offer state alongside the read-only status", () => {
     renderWithProviders(
       <CandidateCard
         candidate={candidate()}
@@ -131,9 +128,8 @@ describe("CandidateCard", () => {
     expect(screen.getByText(/Offer:/)).toHaveTextContent(
       "Offer: offer sent · $130,000",
     );
-    expect(
-      screen.getByRole("combobox", { name: /status for dana lee/i }),
-    ).toHaveValue("submitted");
+    expect(screen.getByText("Submitted")).toBeInTheDocument();
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
 
   it("mounts NegotiationActionCards for the company with this candidate's negotiation records", () => {

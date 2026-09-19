@@ -5,7 +5,6 @@ import {
   candidateSchema,
   type Attachment,
   type Candidate,
-  type CandidateStatus,
 } from "../schemas";
 
 /** GET /v1/jobs/:jobId/candidates/mine — your own, bounded at five, not paginated. */
@@ -21,17 +20,6 @@ export async function fetchMyCandidatesForJob(
 /** GET /v1/candidates/:id */
 export async function fetchCandidate(id: string): Promise<Candidate> {
   const { data } = await apiClient.get<unknown>(`/candidates/${id}`);
-  return candidateSchema.parse(data);
-}
-
-/** PATCH /v1/candidates/:id */
-export async function updateCandidateStatus(
-  id: string,
-  status: CandidateStatus,
-): Promise<Candidate> {
-  const { data } = await apiClient.patch<unknown>(`/candidates/${id}`, {
-    status,
-  });
   return candidateSchema.parse(data);
 }
 

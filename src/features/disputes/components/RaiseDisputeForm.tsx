@@ -7,6 +7,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 
 import { useRaiseDispute } from "../hooks/useDisputes";
+import { DisputeProofField, proofFileError } from "./DisputeProofField";
 
 const MIN_REASON = 10;
 
@@ -25,11 +26,16 @@ export function RaiseDisputeForm({
   onRaised: (disputeId: string) => void;
 }) {
   const [reason, setReason] = useState("");
+  const [proof, setProof] = useState<File[]>([]);
   const raise = useRaiseDispute();
+
+  // The first unacceptable file speaks for the set — listing every rejection
+  // at once would bury the one the user has to act on.
+  const proofError = proof.map(proofFileError).find(Boolean) ?? null;
 
   const submit = (): void => {
     raise.mutate(
-      { placementId, reason: reason.trim() },
+      { placementId, reason: reason.trim(), proof },
       { onSuccess: (dispute) => onRaised(dispute.id) },
     );
   };
@@ -52,6 +58,12 @@ export function RaiseDisputeForm({
         rows={4}
         maxLength={4000}
       />
+      <DisputeProofField
+        files={proof}
+        onChange={setProof}
+        error={proofError}
+        disabled={raise.isPending}
+      />
       {raise.isError ? (
         <p className="text-xs text-destructive">
           {isApiError(raise.error)
@@ -72,10 +84,14 @@ export function RaiseDisputeForm({
         <Button
           type="button"
           size="sm"
-          disabled={raise.isPending || tooShort}
+          disabled={raise.isPending || tooShort || proofError !== null}
           onClick={submit}
         >
-          {raise.isPending ? "Opening…" : "Open Dispute"}
+          {raise.isPending
+            ? proof.length > 0
+              ? "Uploading…"
+              : "Opening…"
+            : "Open Dispute"}
         </Button>
       </div>
     </div>

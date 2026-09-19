@@ -13,6 +13,7 @@ function offer(overrides: Partial<Offer> & { id: string }): Offer {
     status: "sent",
     placementDetails: null,
     createdAt: "2026-08-10T09:00:00.000Z",
+    companyCanCoverFee: null,
     ...overrides,
   };
 }
@@ -35,6 +36,7 @@ describe("toOfferEventData", () => {
     );
 
     expect(mapped).toEqual({
+      companyCanCoverFee: null,
       kind: "offer",
       offerId: "offer-1",
       offerStatus: "countered",

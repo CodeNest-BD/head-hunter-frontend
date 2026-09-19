@@ -36,6 +36,13 @@ export interface ProposalCardProps {
   note: string | null;
   data: ProposalEventData;
   viewerParty: "company" | "recruiter";
+  /**
+   * False in the conversation thread, where this card is the record of what
+   * happened. The same negotiation is mounted beside the thread on the
+   * candidate card, which is the one place it is acted on — two live copies
+   * of the same buttons was the duplication this turns off.
+   */
+  actionable?: boolean;
 }
 
 /**
@@ -208,6 +215,7 @@ export function ProposalCard({
   note,
   data,
   viewerParty,
+  actionable = true,
 }: ProposalCardProps) {
   const {
     interviewId,
@@ -231,11 +239,9 @@ export function ProposalCard({
 
   const isCounterRequested = proposalStatus === "counter_requested";
   const isConfirmed = proposalStatus === "confirmed";
-  const actions = availableActions(
-    viewerParty,
-    proposalStatus,
-    interviewStatus,
-  );
+  const actions = actionable
+    ? availableActions(viewerParty, proposalStatus, interviewStatus)
+    : "none";
   const recruiterCanRespond = actions === "recruiter-respond";
   // Only the company can create an interview, so the company is always the
   // proposer: replacing these times and withdrawing are the two ways out of

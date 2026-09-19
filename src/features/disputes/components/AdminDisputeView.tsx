@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowLeft, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -10,25 +9,21 @@ import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
-import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
-import { Textarea } from "@/shared/ui-components/controls/textarea";
 
 import {
   useAdminDispute,
   usePostAdminDisputeMessage,
-  useResolveDispute,
 } from "../hooks/useDisputes";
-import { isDisputeOpen, type DisputeResolution } from "../schemas";
+import { isDisputeOpen } from "../schemas";
 import { DisputeChannelThread } from "./DisputeChannelThread";
+import { DisputeProofList } from "./DisputeProofList";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
-/** Full admin adjudication view: context, both channels, and resolution. */
+/** Full admin adjudication view: context and both channels. Settling the
+ * escrow is not done from here — an admin moves that money by hand. */
 export function AdminDisputeView({ id }: { id: string }) {
   const { data, isPending, isError, refetch } = useAdminDispute(id);
   const post = usePostAdminDisputeMessage(id);
-  const resolve = useResolveDispute(id);
-  const [note, setNote] = useState("");
-  const [confirming, setConfirming] = useState<DisputeResolution | null>(null);
 
   if (isError) {
     return (
@@ -51,6 +46,12 @@ export function AdminDisputeView({ id }: { id: string }) {
 
   const open = isDisputeOpen(data.status);
 
+  // Both channels post through one mutation, so `isPending` alone would put
+  // the other channel's composer into "Sending…" too. The in-flight variables
+  // say which one is actually busy.
+  const sendingTo = (channel: "company" | "recruiter"): boolean =>
+    post.isPending && post.variables?.channel === channel;
+
   const sendTo = (channel: "company" | "recruiter") => (body: string) => {
     post.mutate(
       { channel, body },
@@ -58,28 +59,6 @@ export function AdminDisputeView({ id }: { id: string }) {
         onError: (error) =>
           toast.error(
             isApiError(error) ? allMessages(error) : "Could not send message.",
-          ),
-      },
-    );
-  };
-
-  const doResolve = (outcome: DisputeResolution): void => {
-    resolve.mutate(
-      { outcome, note: note.trim() || undefined },
-      {
-        onSuccess: () => {
-          toast.success(
-            outcome === "refund"
-              ? "Refunded the company."
-              : "Released the fee to the recruiter.",
-          );
-          setConfirming(null);
-        },
-        onError: (error) =>
-          toast.error(
-            isApiError(error)
-              ? allMessages(error)
-              : "Could not resolve the dispute.",
           ),
       },
     );
@@ -121,8 +100,18 @@ export function AdminDisputeView({ id }: { id: string }) {
             </div>
           ) : null}
           <div className="sm:col-span-3">
+            <DisputeProofList attachments={data.attachments} />
+          </div>
+          <div className="sm:col-span-3">
+            {/* Opens in its own tab: the admin reads the parties' own thread
+                alongside this adjudication, not instead of it — which is what
+                the external-link affordance already promised. */}
             <Button asChild variant="outline" size="sm">
-              <Link href={`/admin/conversations/${data.candidateId}`}>
+              <Link
+                href={`/admin/conversations/${data.candidateId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Open Company ↔ Recruiter Thread
                 <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
               </Link>
@@ -140,7 +129,7 @@ export function AdminDisputeView({ id }: { id: string }) {
             <DisputeChannelThread
               messages={data.companyMessages}
               onSend={open ? sendTo("company") : undefined}
-              sending={post.isPending}
+              sending={sendingTo("company")}
               placeholder="Message the company…"
               emptyLabel="No messages with the company yet."
             />
@@ -154,65 +143,13 @@ export function AdminDisputeView({ id }: { id: string }) {
             <DisputeChannelThread
               messages={data.recruiterMessages}
               onSend={open ? sendTo("recruiter") : undefined}
-              sending={post.isPending}
+              sending={sendingTo("recruiter")}
               placeholder="Message the recruiter…"
               emptyLabel="No messages with the recruiter yet."
             />
           </CardContent>
         </Card>
       </div>
-
-      {open ? (
-        <Card>
-          <CardContent className="flex flex-col gap-4 p-5">
-            <div>
-              <h2 className="font-heading text-base font-bold text-navy">
-                Resolve
-              </h2>
-              <p className="mt-0.5 text-[13px] text-muted-foreground">
-                Settle the {formatMinor(data.amountMinor)} held in escrow. This
-                moves money and cannot be undone.
-              </p>
-            </div>
-            <Textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Resolution note (recorded on the dispute)…"
-              rows={2}
-              maxLength={4000}
-            />
-            {confirming ? (
-              <ConfirmAction
-                message={
-                  confirming === "refund"
-                    ? `Refund ${formatMinor(data.amountMinor)} to ${data.companyName} and reopen the job?`
-                    : `Release ${formatMinor(data.amountMinor)} to ${data.recruiterName}?`
-                }
-                confirmLabel={
-                  confirming === "refund" ? "Refund company" : "Pay recruiter"
-                }
-                busyLabel="Settling…"
-                busy={resolve.isPending}
-                onConfirm={() => doResolve(confirming)}
-                onCancel={() => setConfirming(null)}
-              />
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setConfirming("refund")}
-                >
-                  Refund Company
-                </Button>
-                <Button type="button" onClick={() => setConfirming("release")}>
-                  Pay Recruiter
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : null}
     </div>
   );
 }

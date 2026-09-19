@@ -67,7 +67,15 @@ describe("offerTermsFormSchema", () => {
 
   it("still rejects a salary of 0 or below", () => {
     expect(sendOfferErrorMessages({ salary: "0" })).toContain(
-      "Enter a salary greater than 0",
+      "Enter a whole salary greater than 0",
+    );
+  });
+
+  // An offer is a round number a company commits to; the field no longer
+  // accepts a decimal point either.
+  it("rejects a salary with cents", () => {
+    expect(sendOfferErrorMessages({ salary: "55.20" })).toContain(
+      "Enter a whole salary greater than 0",
     );
   });
 

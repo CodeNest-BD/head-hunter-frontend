@@ -22,7 +22,10 @@ export const NumericInput = React.forwardRef<
   NumericInputProps
 >(({ decimal = false, onChange, inputMode, ...props }, ref) => {
   const sanitize = (raw: string): string => {
-    if (!decimal) return raw.replace(/\D/g, "");
+    // Integer mode truncates at the first dot rather than deleting it: simply
+    // stripping non-digits turned a pasted "130000.50" into "13000050", which
+    // on a money field is a hundredfold error the user cannot see happening.
+    if (!decimal) return raw.split(".")[0].replace(/\D/g, "");
     // Digits and at most one dot.
     const cleaned = raw.replace(/[^\d.]/g, "");
     const dot = cleaned.indexOf(".");

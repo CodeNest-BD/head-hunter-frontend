@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useMyDispute, usePostDisputeMessage } from "../hooks/useDisputes";
 import { isDisputeOpen } from "../schemas";
 import { DisputeChannelThread } from "./DisputeChannelThread";
+import { DisputeProofList } from "./DisputeProofList";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
 /** A participant's view of one dispute: the facts, and their private channel. */
@@ -81,6 +82,9 @@ export function ParticipantDisputeView({ id }: { id: string }) {
               <Fact label="Resolution" value={data.resolutionNote} />
             </div>
           ) : null}
+          <div className="sm:col-span-3">
+            <DisputeProofList attachments={data.attachments} />
+          </div>
         </CardContent>
       </Card>
 

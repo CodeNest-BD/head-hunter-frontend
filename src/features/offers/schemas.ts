@@ -61,6 +61,11 @@ export const offerSchema = z.object({
   status: offerStatusSchema,
   placementDetails: placementDetailsSchema.nullable(),
   createdAt: z.string(),
+  /** Whether the company can still fund this fee — `sent` offers only; null
+   * elsewhere, where nothing is waiting to be accepted. Tolerant of absence so
+   * a backend that predates it degrades to "not reported" rather than failing
+   * the whole offer parse. */
+  companyCanCoverFee: z.boolean().nullable().catch(null),
 });
 export type Offer = z.infer<typeof offerSchema>;
 
@@ -77,12 +82,14 @@ export type Offer = z.infer<typeof offerSchema>;
  * mirror `CreateOfferInput`/`CounterOfferInput`'s optional fields.
  */
 export const offerTermsFormSchema = z.object({
+  // Whole dollars only: an offer is a round number a company commits to, and
+  // the picker no longer accepts a decimal point either.
   salary: z
     .string()
     .trim()
     .min(1, "Salary is required")
-    .refine((value) => Number.isFinite(Number(value)) && Number(value) > 0, {
-      message: "Enter a salary greater than 0",
+    .refine((value) => Number.isInteger(Number(value)) && Number(value) > 0, {
+      message: "Enter a whole salary greater than 0",
     })
     .refine((value) => Number(value) <= MAX_MONEY_MAJOR, {
       message: `Salary must be under ${MAX_MONEY_MAJOR_LABEL}`,

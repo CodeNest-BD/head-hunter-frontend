@@ -16,7 +16,19 @@ import {
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 
 import { useMyDisputes } from "../hooks/useDisputes";
+import { isDisputeOpen } from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
+
+/** Same pill as the inbox's "New": a row still waiting on somebody. An open
+ * dispute is an admin decision outstanding, which the status badge alone does
+ * not read as at a glance. */
+function PendingPill() {
+  return (
+    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+      Pending
+    </span>
+  );
+}
 
 const TH = "px-5 py-3 font-semibold";
 const HEAD_ROW =
@@ -90,7 +102,10 @@ export function MyDisputesList() {
               {data.data.map((d) => (
                 <tr key={d.id} className={BODY_ROW}>
                   <td className="px-5 py-3 font-medium text-navy">
-                    {d.jobTitle}
+                    <span className="flex items-center gap-2">
+                      {d.jobTitle}
+                      {isDisputeOpen(d.status) && <PendingPill />}
+                    </span>
                   </td>
                   <td className="px-5 py-3 text-muted-foreground">
                     {d.counterpartyName}
@@ -121,7 +136,12 @@ export function MyDisputesList() {
               key={d.id}
               title={d.jobTitle}
               subtitle={d.counterpartyName}
-              trailing={<DisputeStatusBadge status={d.status} />}
+              trailing={
+                <span className="flex items-center gap-1.5">
+                  {isDisputeOpen(d.status) && <PendingPill />}
+                  <DisputeStatusBadge status={d.status} />
+                </span>
+              }
               href={`/disputes/${d.id}`}
               fields={[
                 { label: "Fee", value: formatMinor(d.amountMinor) },

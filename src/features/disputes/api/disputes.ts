@@ -2,11 +2,13 @@ import { z } from "zod";
 
 import type { Role } from "@/features/auth";
 import { apiClient } from "@/shared/libs/apiClient";
+import type { StagedUpload } from "@/shared/libs/documentUpload";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 
 import {
   adminDisputeDetailSchema,
   adminDisputeListItemSchema,
+  disputeAttentionCountSchema,
   disputeMessageSchema,
   participantDisputeDetailSchema,
   participantDisputeSchema,
@@ -14,22 +16,54 @@ import {
   type AdminDisputeListItem,
   type DisputeChannel,
   type DisputeMessage,
-  type DisputeResolution,
   type ParticipantDispute,
   type ParticipantDisputeDetail,
 } from "../schemas";
 
 // ---- Participant (company / recruiter) --------------------------------
 
+/** A file already uploaded, named on the dispute that promotes it. */
+export interface StagedProof {
+  s3Key: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes?: number;
+}
+
 /** POST /v1/disputes — open a dispute on a held placement. */
 export async function raiseDispute(input: {
   placementId: string;
   reason: string;
+  attachments?: StagedProof[];
 }): Promise<ParticipantDisputeDetail> {
   const { data } = await apiClient.post<unknown>("/disputes", input, {
     suppressGlobalErrorToast: true,
   });
   return participantDisputeDetailSchema.parse(data);
+}
+
+/**
+ * POST /v1/disputes/attachments/presign — stage one piece of proof.
+ *
+ * Anchored to the placement because the dispute does not exist yet, the same
+ * way a CV is staged against a job before its candidate exists.
+ */
+export async function presignDisputeProof(
+  placementId: string,
+  file: File,
+): Promise<StagedUpload> {
+  const { data } = await apiClient.post<StagedUpload>(
+    "/disputes/attachments/presign",
+    { placementId, fileName: file.name, contentType: file.type },
+    { suppressGlobalErrorToast: true },
+  );
+  return data;
+}
+
+/** GET /v1/disputes/attention-count — the number behind the nav badge. */
+export async function fetchDisputeAttentionCount(): Promise<number> {
+  const { data } = await apiClient.get<unknown>("/disputes/attention-count");
+  return disputeAttentionCountSchema.parse(data).count;
 }
 
 /** GET /v1/disputes — my disputes. */
@@ -77,6 +111,7 @@ const companyPlacementRow = z.object({
   status: z.string(),
   jobTitle: z.string(),
   candidateName: z.string(),
+  recruiterName: z.string(),
   amountMinor: z.number(),
 });
 
@@ -106,7 +141,10 @@ export async function fetchEligiblePlacements(
       .data.filter((p) => p.status === "held")
       .map((p) => ({
         placementId: p.placementId,
-        label: `${p.candidateName} · ${p.jobTitle}`,
+        // Ends with the counterparty, mirroring the recruiter's own picker
+        // below: a company disputes a recruiter, so their name belongs in the
+        // choice rather than only on the row it produces.
+        label: `${p.candidateName} · ${p.jobTitle} · ${p.recruiterName}`,
         amountMinor: p.amountMinor,
       }));
   }
@@ -133,9 +171,15 @@ export async function fetchEligiblePlacements(
 export async function fetchAdminDisputes(
   page: number,
   status?: string,
+  raisedBy?: DisputeChannel,
 ): Promise<Paginated<AdminDisputeListItem>> {
   const { data } = await apiClient.get<unknown>("/admin/disputes", {
-    params: { page, limit: 25, ...(status ? { status } : {}) },
+    params: {
+      page,
+      limit: 25,
+      ...(status ? { status } : {}),
+      ...(raisedBy ? { raisedBy } : {}),
+    },
   });
   return paginatedSchema(adminDisputeListItemSchema).parse(data);
 }
@@ -160,18 +204,4 @@ export async function postAdminDisputeMessage(
     { suppressGlobalErrorToast: true },
   );
   return disputeMessageSchema.parse(data);
-}
-
-/** POST /v1/admin/disputes/:id/resolve — settle the escrowed fee. */
-export async function resolveDispute(
-  id: string,
-  outcome: DisputeResolution,
-  note?: string,
-): Promise<AdminDisputeDetail> {
-  const { data } = await apiClient.post<unknown>(
-    `/admin/disputes/${id}/resolve`,
-    { outcome, ...(note ? { note } : {}) },
-    { suppressGlobalErrorToast: true },
-  );
-  return adminDisputeDetailSchema.parse(data);
 }

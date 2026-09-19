@@ -191,6 +191,7 @@ const offerEvent = {
     startDate: "2026-09-01",
     previousOfferId: null,
     createdBy: "company" as const,
+    companyCanCoverFee: null,
   },
 };
 
@@ -280,9 +281,10 @@ describe("Thread", () => {
     expect(screen.getByText("Candidates submitted")).toBeInTheDocument();
   });
 
-  it("renders an offer event as an OfferCard rather than plain text", async () => {
-    // The offer was created by the company, so only the recruiter — the
-    // party who did not create it — sees Accept/Decline/Counter.
+  it("renders an offer event as a read-only OfferCard rather than plain text", async () => {
+    // The thread is the record of the negotiation; the same offer is mounted
+    // beside it on the candidate card, which is where it is acted on. Two live
+    // copies of Accept/Decline/Counter is the duplication this guards against.
     useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
     fetchConversationThreadMock.mockResolvedValue(
       threadResponse([systemEvent, offerEvent]),
@@ -291,13 +293,12 @@ describe("Thread", () => {
     renderWithProviders(<Thread candidateId="submission-1" />);
 
     await screen.findByText("Candidates submitted");
-    // OfferCard renders the negotiated salary and a Counter action for the
-    // recruiter — neither of which the raw event title (which names the
-    // commission, not the salary) would ever produce.
+    // OfferCard renders the negotiated salary, which the raw event title
+    // (naming the commission, not the salary) would never produce.
     expect(screen.getByText("$130,000")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^counter$/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /^counter$/i }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText("Offer sent — $5,000 for J. Rivera"),
     ).not.toBeInTheDocument();

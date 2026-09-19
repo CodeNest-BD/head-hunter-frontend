@@ -20,6 +20,7 @@ export {
 export { interviewKeys } from "./keys";
 export {
   INTERVIEW_TYPE_LABELS,
+  INTERVIEW_TYPE_OPTIONS,
   INTERVIEW_TYPES,
   interviewTypeSchema,
   MAX_PROPOSAL_SLOTS,
