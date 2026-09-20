@@ -9,10 +9,12 @@
  * "@/features/inbox" only; api/, hooks/ and components/ are internal.
  */
 export { InboxCandidatesTable } from "./components/InboxCandidatesTable";
+export { InboxConversationList } from "./components/InboxConversationList";
 export { InboxJobsTable } from "./components/InboxJobsTable";
 export {
   useInboxAttentionCount,
   useInboxCandidates,
+  useInboxConversations,
   useInboxJobs,
 } from "./hooks/useInbox";
 export { inboxKeys } from "./keys";
@@ -20,6 +22,7 @@ export type { InboxSide } from "./api/inbox";
 export {
   recruiterDisplayName,
   type InboxCandidateRow,
+  type InboxConversationRow,
   type InboxJobRow,
   type RecruiterSummary,
 } from "./schemas";

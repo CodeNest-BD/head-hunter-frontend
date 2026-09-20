@@ -60,6 +60,26 @@ export const inboxCandidateRowSchema = z.object({
 });
 export type InboxCandidateRow = z.infer<typeof inboxCandidateRowSchema>;
 
+/**
+ * The flat conversation inbox: one row per thread, most-recent first. Carries
+ * everything the list renders — who it's with, what it's about, the last
+ * message preview, and unread state — so opening it needs no extra fetch.
+ */
+export const inboxConversationRowSchema = z.object({
+  candidateId: z.string(),
+  candidateName: z.string(),
+  status: candidateStatusSchema,
+  jobId: z.string(),
+  jobTitle: z.string(),
+  counterpartyName: z.string(),
+  recruiter: recruiterSummarySchema.nullable().optional(),
+  unreadMessages: z.number(),
+  lastMessagePreview: z.string().nullable(),
+  lastMessageSender: z.enum(["company", "recruiter"]).nullable().optional(),
+  lastActivityAt: z.coerce.date(),
+});
+export type InboxConversationRow = z.infer<typeof inboxConversationRowSchema>;
+
 /** What a candidate list can be ordered by; direction is the shared sortOrder. */
 export const INBOX_CANDIDATE_SORTS = [
   "submittedAt",

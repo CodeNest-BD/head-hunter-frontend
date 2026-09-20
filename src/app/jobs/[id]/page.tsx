@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft, Send, SquarePen } from "lucide-react";
 
 import { RequireApprovedRecruiter, useAuth } from "@/features/auth";
@@ -162,16 +162,29 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
  * `RequireApprovedRecruiter` is a no-op for company/admin callers (it always
  * reports approved for non-recruiters). */
 function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
+  const router = useRouter();
+  // A generic "Back" that returns wherever the viewer came from — the inbox,
+  // the map, a search — rather than always the map. Falls back to the map when
+  // there is no in-app history (a direct link or a hard refresh).
+  const goBack = (): void => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/explore-jobs");
+    }
+  };
+
   return (
     <DashboardLayout wide="detail" hideSidebar>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
-        <Link
-          href="/explore-jobs"
+        <button
+          type="button"
+          onClick={goBack}
           className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Live Map
-        </Link>
+          Back
+        </button>
         <RequireApprovedRecruiter>
           <AuthedJobBody jobId={jobId} role={role} />
         </RequireApprovedRecruiter>
