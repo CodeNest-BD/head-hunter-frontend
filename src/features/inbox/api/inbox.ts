@@ -28,14 +28,17 @@ export async function fetchInboxConversations(
   side: InboxSide,
   params: InboxConversationsParams,
 ): Promise<Paginated<InboxConversationRow>> {
-  const { data } = await apiClient.get<unknown>(`/${side}/inbox/conversations`, {
-    params: {
-      page: params.page ?? 1,
-      limit: params.limit ?? 25,
-      q: params.q || undefined,
-      unreadOnly: params.unreadOnly ? true : undefined,
+  const { data } = await apiClient.get<unknown>(
+    `/${side}/inbox/conversations`,
+    {
+      params: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 25,
+        q: params.q || undefined,
+        unreadOnly: params.unreadOnly ? true : undefined,
+      },
     },
-  });
+  );
   return paginatedSchema(inboxConversationRowSchema).parse(data);
 }
 
