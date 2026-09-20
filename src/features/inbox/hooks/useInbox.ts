@@ -5,12 +5,28 @@ import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import {
   fetchInboxAttentionCount,
   fetchInboxCandidates,
+  fetchInboxConversations,
   fetchInboxJobs,
   type InboxCandidatesParams,
+  type InboxConversationsParams,
   type InboxJobsParams,
   type InboxSide,
 } from "../api/inbox";
 import { inboxKeys } from "../keys";
+
+/** The flat inbox list: threads most-recent first, refreshed like the badge. */
+export function useInboxConversations(
+  side: InboxSide,
+  params: InboxConversationsParams,
+) {
+  return useQuery({
+    queryKey: inboxKeys.conversations(side, params),
+    queryFn: () => fetchInboxConversations(side, params),
+    placeholderData: keepPreviousData,
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
+  });
+}
 
 export function useInboxJobs(side: InboxSide, params: InboxJobsParams) {
   return useQuery({

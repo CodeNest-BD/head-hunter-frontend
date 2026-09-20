@@ -3,14 +3,41 @@ import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   inboxAttentionCountSchema,
   inboxCandidateRowSchema,
+  inboxConversationRowSchema,
   inboxJobRowSchema,
   type InboxCandidateRow,
   type InboxCandidateSort,
+  type InboxConversationRow,
   type InboxJobRow,
 } from "../schemas";
 
-/** Which side is asking. The two inboxes are the same drill-down, mirrored. */
+/** Which side is asking. The two inboxes are the same list, mirrored. */
 export type InboxSide = "company" | "recruiter";
+
+export interface InboxConversationsParams {
+  page?: number;
+  limit?: number;
+  /** Case-insensitive match on candidate, job or counterparty name. */
+  q?: string;
+  /** When true, only threads with unread messages. */
+  unreadOnly?: boolean;
+}
+
+/** GET /v1/{side}/inbox/conversations — the flat inbox, most-recent first. */
+export async function fetchInboxConversations(
+  side: InboxSide,
+  params: InboxConversationsParams,
+): Promise<Paginated<InboxConversationRow>> {
+  const { data } = await apiClient.get<unknown>(`/${side}/inbox/conversations`, {
+    params: {
+      page: params.page ?? 1,
+      limit: params.limit ?? 25,
+      q: params.q || undefined,
+      unreadOnly: params.unreadOnly ? true : undefined,
+    },
+  });
+  return paginatedSchema(inboxConversationRowSchema).parse(data);
+}
 
 export interface InboxJobsParams {
   page?: number;

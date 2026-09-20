@@ -1,19 +1,19 @@
 "use client";
 
 import { RequireApprovedRecruiter, RequireRole } from "@/features/auth";
-import { InboxJobsTable } from "@/features/inbox";
+import { InboxConversationList } from "@/features/inbox";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 /**
- * The recruiter's inbox, level 1: every job you have sent someone to. Click a
- * job for your candidates on it, then a candidate for their conversation.
+ * The recruiter's inbox: a flat list of your conversations with companies,
+ * most-recent first. Click a row to open the conversation directly.
  */
 export default function RecruiterInboxPage() {
   return (
     <RequireRole role="recruiter">
       <DashboardLayout wide>
         <RequireApprovedRecruiter>
-          <InboxJobsTable side="recruiter" />
+          <InboxConversationList side="recruiter" />
         </RequireApprovedRecruiter>
       </DashboardLayout>
     </RequireRole>
