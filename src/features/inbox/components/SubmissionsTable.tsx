@@ -34,9 +34,10 @@ import {
 import { useInboxConversations } from "../hooks/useInbox";
 import type { InboxConversationRow } from "../schemas";
 
-// One request covers a recruiter's submissions in practice; the note below
-// surfaces the rare case where more exist than we fetched.
-const FETCH_LIMIT = 200;
+// The inbox-conversations endpoint caps `limit` at 100; one request covers a
+// recruiter's submissions in practice, and the note below surfaces the rare
+// case where more exist than we fetched.
+const FETCH_LIMIT = 100;
 
 /** Distinct, alphabetically-sorted values of one field across the rows. */
 function distinct(
