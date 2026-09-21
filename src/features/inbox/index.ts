@@ -13,6 +13,7 @@ export { InboxConversationList } from "./components/InboxConversationList";
 export { InboxConversationPane } from "./components/InboxConversationPane";
 export { InboxMessageWorkspace } from "./components/InboxMessageWorkspace";
 export { InboxJobsTable } from "./components/InboxJobsTable";
+export { SubmissionsTable } from "./components/SubmissionsTable";
 export {
   useInboxAttentionCount,
   useInboxCandidates,
