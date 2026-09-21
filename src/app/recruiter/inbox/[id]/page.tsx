@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Pencil, Trash2 } from "lucide-react";
 
 import { RequireApprovedRecruiter, RequireRole } from "@/features/auth";
 import {
@@ -102,12 +102,12 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
 
   return (
     <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-5 shadow-sm lg:h-full lg:overflow-y-auto">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
           <p className="font-heading text-base font-semibold text-foreground">
             {candidate.fullName}
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="truncate text-sm text-muted-foreground">
             <a
               href={`mailto:${candidate.email}`}
               className="text-primary underline-offset-2 hover:underline"
@@ -117,11 +117,54 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
             {candidate.phone ? ` · ${candidate.phone}` : ""}
           </p>
         </div>
-        <StatusBadge
-          label={CANDIDATE_STATUS_LABELS[candidate.status]}
-          className={CANDIDATE_STATUS_STYLES[candidate.status]}
-        />
+        {/* Record actions live in the header, next to the status — not
+            stranded in a footer. Remove is destructive (red on hover) and
+            still goes through the confirm below. */}
+        <div className="flex shrink-0 items-center gap-1">
+          <StatusBadge
+            label={CANDIDATE_STATUS_LABELS[candidate.status]}
+            className={CANDIDATE_STATUS_STYLES[candidate.status]}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            aria-label="Edit candidate"
+            onClick={() => setMode("edit")}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            aria-label="Remove candidate"
+            aria-pressed={mode === "confirm-remove"}
+            onClick={() =>
+              setMode((current) =>
+                current === "confirm-remove" ? "view" : "confirm-remove",
+              )
+            }
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
+
+      {mode === "confirm-remove" && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+          <ConfirmAction
+            message="Remove this candidate? This cannot be undone."
+            confirmLabel="Confirm remove"
+            busyLabel="Removing…"
+            busy={deleteCandidate.isPending}
+            onCancel={() => setMode("view")}
+            onConfirm={() => deleteCandidate.mutate(candidate.id)}
+          />
+        </div>
+      )}
 
       {/* Read-only status. The recruiter accepts, declines or counters a
           live offer — and confirms or counters interview times — on the
@@ -134,38 +177,6 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
       <CandidateFields candidate={candidate} />
 
       <CandidateAttachments candidateId={candidate.id} />
-
-      <div className="border-t border-border/60 pt-3">
-        {mode === "confirm-remove" ? (
-          <ConfirmAction
-            message="Remove this candidate? This cannot be undone."
-            confirmLabel="Confirm remove"
-            busyLabel="Removing…"
-            busy={deleteCandidate.isPending}
-            onCancel={() => setMode("view")}
-            onConfirm={() => deleteCandidate.mutate(candidate.id)}
-          />
-        ) : (
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setMode("edit")}
-            >
-              Edit
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setMode("confirm-remove")}
-            >
-              Remove
-            </Button>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
