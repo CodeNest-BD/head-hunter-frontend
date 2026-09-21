@@ -38,7 +38,9 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       <span className="text-[10.5px] font-semibold text-muted-foreground">
         {label}
       </span>
-      <span className="truncate text-[13px] text-foreground">{children}</span>
+      <span className="break-words text-[13px] leading-5 text-foreground">
+        {children}
+      </span>
     </div>
   );
 }
@@ -118,7 +120,7 @@ export function CandidateDetailPanel({
     candidate.noticePeriodDays !== null;
 
   return (
-    <div className="flex flex-col gap-3.5 rounded-md border border-border/70 bg-card p-4 shadow-sm lg:h-full lg:overflow-y-auto">
+    <div className="space-y-3.5 rounded-md border border-border/70 bg-card p-4 shadow-sm lg:h-full lg:overflow-y-auto">
       {/* Header: who this is, their stage, and the record actions. */}
       <div className="flex items-start gap-3">
         <span

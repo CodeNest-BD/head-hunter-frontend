@@ -1,8 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { FileText, Paperclip, Target, User } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -101,7 +103,38 @@ function defaultValuesFor(candidate?: Candidate): CandidateFormValues {
  * (not oversized) height and soft-but-crisp corners, instead of the short
  * transparent default. */
 const FIELD_CLASS = "h-10 rounded-md bg-card";
-const LABEL_CLASS = "text-[13px] font-semibold text-navy";
+const LABEL_CLASS = "text-[10.5px] font-semibold text-muted-foreground";
+
+/** A titled sub-card grouping related fields — the editable mirror of the
+ * candidate rail's Contact / Profile / Expectations sections. */
+function FormSection({
+  icon,
+  iconTint,
+  title,
+  children,
+}: {
+  icon: ReactNode;
+  iconTint: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="flex items-center gap-2 border-b border-border/70 bg-secondary/40 px-3.5 py-2.5">
+        <span
+          className={cn(
+            "flex h-6 w-6 shrink-0 items-center justify-center rounded-md",
+            iconTint,
+          )}
+        >
+          {icon}
+        </span>
+        <span className="text-[13px] font-semibold text-navy">{title}</span>
+      </div>
+      <div className="flex flex-col gap-3.5 p-3.5">{children}</div>
+    </div>
+  );
+}
 
 export function CandidateForm({
   jobId,
@@ -179,146 +212,168 @@ export function CandidateForm({
     ? updateCandidate.isPending || !isDirty
     : submitCandidate.isPending || Boolean(cvError);
 
+  const twoCol = cn("grid gap-3.5", dense ? "grid-cols-1" : "grid-cols-2");
+
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="fullName" className={LABEL_CLASS}>
-          Full name
-        </Label>
-        <Input
-          id="fullName"
-          className={FIELD_CLASS}
-          {...register("fullName")}
-        />
-        {errors.fullName && (
-          <p className="text-xs text-destructive">{errors.fullName.message}</p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email" className={LABEL_CLASS}>
-          Email
-        </Label>
-        <Input
-          id="email"
-          type="email"
-          className={FIELD_CLASS}
-          {...register("email")}
-        />
-        {errors.email && (
-          <p className="text-xs text-destructive">{errors.email.message}</p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="phone" className={LABEL_CLASS}>
-          Phone
-        </Label>
-        <Input id="phone" className={FIELD_CLASS} {...register("phone")} />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="overview" className={LABEL_CLASS}>
-          Overview
-        </Label>
-        <Textarea
-          id="overview"
-          rows={4}
-          className="min-h-[110px] rounded-md bg-card"
-          {...register("overview")}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="linkedinUrl" className={LABEL_CLASS}>
-          LinkedIn URL
-        </Label>
-        <Input
-          id="linkedinUrl"
-          className={FIELD_CLASS}
-          {...register("linkedinUrl")}
-        />
-        {errors.linkedinUrl && (
-          <p className="text-xs text-destructive">
-            {errors.linkedinUrl.message}
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="currentCompany" className={LABEL_CLASS}>
-          Current company
-        </Label>
-        <Input
-          id="currentCompany"
-          className={FIELD_CLASS}
-          {...register("currentCompany")}
-        />
-      </div>
-
-      <div
-        className={cn(
-          "grid gap-4",
-          dense ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3",
-        )}
+    <form onSubmit={onSubmit} className="space-y-3.5">
+      <FormSection
+        icon={<User className="h-3.5 w-3.5" />}
+        iconTint="bg-primary/10 text-primary"
+        title="Contact"
       >
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="yearsOfExperience" className={LABEL_CLASS}>
-            Years of experience
+          <Label htmlFor="fullName" className={LABEL_CLASS}>
+            Full name
           </Label>
-          <NumericInput
-            decimal
-            id="yearsOfExperience"
+          <Input
+            id="fullName"
             className={FIELD_CLASS}
-            {...register("yearsOfExperience")}
+            {...register("fullName")}
           />
-          {errors.yearsOfExperience && (
+          {errors.fullName && (
             <p className="text-xs text-destructive">
-              {errors.yearsOfExperience.message}
+              {errors.fullName.message}
             </p>
           )}
         </div>
+
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="expectedSalary" className={LABEL_CLASS}>
-            Expected salary (USD/yr)
+          <Label htmlFor="email" className={LABEL_CLASS}>
+            Email
           </Label>
-          <NumericInput
-            decimal
-            id="expectedSalary"
+          <Input
+            id="email"
+            type="email"
             className={FIELD_CLASS}
-            {...register("expectedSalary")}
+            {...register("email")}
           />
-          {errors.expectedSalary && (
-            <p className="text-xs text-destructive">
-              {errors.expectedSalary.message}
-            </p>
+          {errors.email && (
+            <p className="text-xs text-destructive">{errors.email.message}</p>
           )}
         </div>
+
+        <div className={twoCol}>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="phone" className={LABEL_CLASS}>
+              Phone
+            </Label>
+            <Input id="phone" className={FIELD_CLASS} {...register("phone")} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="linkedinUrl" className={LABEL_CLASS}>
+              LinkedIn URL
+            </Label>
+            <Input
+              id="linkedinUrl"
+              className={FIELD_CLASS}
+              {...register("linkedinUrl")}
+            />
+            {errors.linkedinUrl && (
+              <p className="text-xs text-destructive">
+                {errors.linkedinUrl.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection
+        icon={<FileText className="h-3.5 w-3.5" />}
+        iconTint="bg-[#FBF1DC] text-[#8A6D3B]"
+        title="Profile"
+      >
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="noticePeriodDays" className={LABEL_CLASS}>
-            Notice period (days)
+          <Label htmlFor="overview" className={LABEL_CLASS}>
+            Overview
           </Label>
-          <NumericInput
-            id="noticePeriodDays"
-            className={FIELD_CLASS}
-            {...register("noticePeriodDays")}
+          <Textarea
+            id="overview"
+            rows={4}
+            className="min-h-[104px] rounded-md bg-card"
+            {...register("overview")}
           />
-          {errors.noticePeriodDays && (
-            <p className="text-xs text-destructive">
-              {errors.noticePeriodDays.message}
-            </p>
-          )}
         </div>
-      </div>
+
+        <div className={twoCol}>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="currentCompany" className={LABEL_CLASS}>
+              Current company
+            </Label>
+            <Input
+              id="currentCompany"
+              className={FIELD_CLASS}
+              {...register("currentCompany")}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="yearsOfExperience" className={LABEL_CLASS}>
+              Years of experience
+            </Label>
+            <NumericInput
+              decimal
+              id="yearsOfExperience"
+              className={FIELD_CLASS}
+              {...register("yearsOfExperience")}
+            />
+            {errors.yearsOfExperience && (
+              <p className="text-xs text-destructive">
+                {errors.yearsOfExperience.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection
+        icon={<Target className="h-3.5 w-3.5" />}
+        iconTint="bg-[#E7F4EC] text-[#17734E]"
+        title="Expectations"
+      >
+        <div className={twoCol}>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="expectedSalary" className={LABEL_CLASS}>
+              Expected salary (USD/yr)
+            </Label>
+            <NumericInput
+              decimal
+              id="expectedSalary"
+              className={FIELD_CLASS}
+              {...register("expectedSalary")}
+            />
+            {errors.expectedSalary && (
+              <p className="text-xs text-destructive">
+                {errors.expectedSalary.message}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="noticePeriodDays" className={LABEL_CLASS}>
+              Notice period (days)
+            </Label>
+            <NumericInput
+              id="noticePeriodDays"
+              className={FIELD_CLASS}
+              {...register("noticePeriodDays")}
+            />
+            {errors.noticePeriodDays && (
+              <p className="text-xs text-destructive">
+                {errors.noticePeriodDays.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </FormSection>
 
       {!candidate && (
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="cvFile" className={LABEL_CLASS}>
-            CV / Resume
-          </Label>
+        <FormSection
+          icon={<Paperclip className="h-3.5 w-3.5" />}
+          iconTint="bg-[#F2E9F3] text-[#7A4F86]"
+          title="CV / Resume"
+        >
           <input
             id="cvFile"
             type="file"
+            aria-label="CV / Resume"
             accept={DOCUMENT_ACCEPT}
             onChange={(event) => {
               setCvTouched(true);
@@ -327,12 +382,12 @@ export function CandidateForm({
             className="rounded-md border border-input bg-card px-3 py-2.5 text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
           />
           {cvTouched && cvError && (
-            <p className="text-xs text-destructive">{cvError}</p>
+            <p className="mt-1.5 text-xs text-destructive">{cvError}</p>
           )}
-        </div>
+        </FormSection>
       )}
 
-      <div className="flex items-center justify-end gap-2 border-t border-border/60 pt-4">
+      <div className="flex items-center justify-end gap-2 pt-1">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel

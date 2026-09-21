@@ -72,7 +72,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
 
   if (mode === "edit") {
     return (
-      <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm lg:h-full lg:overflow-y-auto">
+      <div className="rounded-md border border-border/70 bg-card p-4 shadow-sm lg:h-full lg:overflow-y-auto">
         <CandidateForm
           jobId={candidate.jobId}
           candidate={candidate}
