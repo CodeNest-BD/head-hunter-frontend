@@ -6,13 +6,11 @@ import { AlertCircle } from "lucide-react";
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import { CandidateCard, useCandidate } from "@/features/candidates";
 import { Thread, useMessageUnreadCounts } from "@/features/conversations";
-import { InboxConversationPane } from "@/features/inbox";
+import { InboxConversationPane, InboxMessageWorkspace } from "@/features/inbox";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
-import { PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
-import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDetailLayout";
 
 /**
  * Matches the shape of the loaded left column so the page doesn't reflow when
@@ -20,7 +18,7 @@ import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDe
  */
 function LeftColumnSkeleton() {
   return (
-    <div className="h-96 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
+    <div className="h-96 w-full animate-pulse rounded-md border border-border/70 bg-muted lg:h-full" />
   );
 }
 
@@ -97,6 +95,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
     <CandidateCard
       candidate={candidateQuery.data}
       negotiationState={negotiationState.get(candidateId) ?? null}
+      className="lg:h-full lg:overflow-y-auto"
     />
   );
 }
@@ -109,26 +108,15 @@ export default function CandidateReviewPage() {
     <RequireRole role="company">
       <RequireApprovedCompany>
         <DashboardLayout wide="detail">
-          <div className="flex gap-4">
-            {/* The design's left pane — the conversation list beside the open
-             * thread. Hidden below xl. */}
-            <aside className="hidden w-[320px] shrink-0 xl:block">
+          <InboxMessageWorkspace
+            backHref="/company/inbox"
+            list={
               <InboxConversationPane side="company" selectedId={params.id} />
-            </aside>
-            <div className="min-w-0 flex-1">
-              <TwoColumnDetailLayout
-                header={
-                  <PageHeader
-                    title="Review candidate"
-                    subtitle="Everything about this candidate, and the conversation about them."
-                  />
-                }
-                left={<CandidateDetailColumn candidateId={params.id} />}
-                right={<Thread candidateId={params.id} />}
-                rightUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
-              />
-            </div>
-          </div>
+            }
+            conversation={<Thread candidateId={params.id} />}
+            candidate={<CandidateDetailColumn candidateId={params.id} />}
+            candidateUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
+          />
         </DashboardLayout>
       </RequireApprovedCompany>
     </RequireRole>

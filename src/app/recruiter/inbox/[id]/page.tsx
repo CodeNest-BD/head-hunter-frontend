@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 import { RequireApprovedRecruiter, RequireRole } from "@/features/auth";
 import {
@@ -16,18 +15,16 @@ import {
   CANDIDATE_STATUS_STYLES,
 } from "@/features/candidates";
 import { Thread, useMessageUnreadCounts } from "@/features/conversations";
-import { InboxConversationPane } from "@/features/inbox";
+import { InboxConversationPane, InboxMessageWorkspace } from "@/features/inbox";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
-import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { NegotiationActionCards } from "@/shared/ui-components/data/NegotiationActionCards";
 import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
-import { TwoColumnDetailLayout } from "@/shared/ui-components/layout/TwoColumnDetailLayout";
 function ErrorCallout({
   message,
   onRetry,
@@ -73,7 +70,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
     offersQuery.isPending
   ) {
     return (
-      <div className="h-96 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
+      <div className="h-96 w-full animate-pulse rounded-md border border-border/70 bg-muted lg:h-full" />
     );
   }
   if (candidateQuery.isError) {
@@ -94,7 +91,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
 
   if (mode === "edit") {
     return (
-      <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm">
+      <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm lg:h-full lg:overflow-y-auto">
         <CandidateForm
           jobId={candidate.jobId}
           candidate={candidate}
@@ -106,7 +103,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-5 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-5 shadow-sm lg:h-full lg:overflow-y-auto">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <p className="font-heading text-base font-semibold text-foreground">
@@ -190,36 +187,15 @@ export default function RecruiterCandidatePage() {
          * `left`/`right` below, which `RequireApprovedRecruiter` swaps out
          * entirely rather than rendering hidden. */}
         <RequireApprovedRecruiter>
-          <div className="flex gap-4">
-            {/* The design's left pane — the conversation list beside the open
-             * thread. Hidden below xl, where the back link returns to the full
-             * inbox instead. */}
-            <aside className="hidden w-[320px] shrink-0 xl:block">
+          <InboxMessageWorkspace
+            backHref="/recruiter/inbox"
+            list={
               <InboxConversationPane side="recruiter" selectedId={params.id} />
-            </aside>
-            <div className="min-w-0 flex-1">
-              <TwoColumnDetailLayout
-                header={
-                  <div className="flex flex-col gap-6">
-                    <Link
-                      href="/recruiter/inbox"
-                      className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground xl:hidden"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      Back to inbox
-                    </Link>
-                    <PageHeader
-                      title="Candidate"
-                      subtitle="Your candidate, and the conversation with the company about them."
-                    />
-                  </div>
-                }
-                left={<CandidateDetailColumn candidateId={params.id} />}
-                right={<Thread candidateId={params.id} />}
-                rightUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
-              />
-            </div>
-          </div>
+            }
+            conversation={<Thread candidateId={params.id} />}
+            candidate={<CandidateDetailColumn candidateId={params.id} />}
+            candidateUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
+          />
         </RequireApprovedRecruiter>
       </DashboardLayout>
     </RequireRole>

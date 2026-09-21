@@ -1,6 +1,7 @@
 "use client";
 
 import type { CandidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
+import { cn } from "@/shared/libs/shadCnConfig";
 import {
   Card,
   CardContent,
@@ -24,14 +25,22 @@ interface CandidateCardProps {
    * the candidate has neither an interview nor an offer yet — the caller
    * derives the map once per page, never per card. */
   negotiationState: CandidateNegotiationState | null;
+  /** Extra classes for the card root, e.g. to fill an inbox rail's height. */
+  className?: string;
 }
 
 export function CandidateCard({
   candidate,
   negotiationState,
+  className,
 }: CandidateCardProps) {
   return (
-    <Card className="border-border/70 transition-colors hover:border-border">
+    <Card
+      className={cn(
+        "border-border/70 transition-colors hover:border-border",
+        className,
+      )}
+    >
       {/* Only the status badge sits beside the name. The interview and offer
           actions moved into the body: both expand into full-width panels, so
           stacking them here made a tall right column next to a two-line left

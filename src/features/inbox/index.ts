@@ -11,6 +11,7 @@
 export { InboxCandidatesTable } from "./components/InboxCandidatesTable";
 export { InboxConversationList } from "./components/InboxConversationList";
 export { InboxConversationPane } from "./components/InboxConversationPane";
+export { InboxMessageWorkspace } from "./components/InboxMessageWorkspace";
 export { InboxJobsTable } from "./components/InboxJobsTable";
 export {
   useInboxAttentionCount,
