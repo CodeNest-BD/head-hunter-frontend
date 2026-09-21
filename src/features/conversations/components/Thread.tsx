@@ -5,10 +5,6 @@ import Link from "next/link";
 import { AlertCircle, Briefcase } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
-import {
-  CANDIDATE_STATUS_LABELS,
-  type CandidateStatus,
-} from "@/features/candidates/schemas";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
@@ -32,16 +28,6 @@ import { SystemEvent } from "./SystemEvent";
 export interface ThreadProps {
   candidateId: string;
 }
-
-/** Pipeline-stage chip colours, shared with the inbox list's rows. */
-const STATUS_STYLES: Record<CandidateStatus, string> = {
-  submitted: "bg-[#EEF1F6] text-[#5B6B7C]",
-  reviewing: "bg-[#FBF3DF] text-[#7A5109]",
-  interviewing: "bg-[#E8EEFB] text-[#3B5BA9]",
-  offered: "bg-[#EFE9FB] text-[#6B4FA8]",
-  hired: "bg-[#E7F4EC] text-[#17734E]",
-  passed: "bg-[#F1EFEF] text-[#8A7F7F]",
-};
 
 const AVATAR_PALETTE = [
   "bg-[#E8EDFB] text-[#3F5BA9]",
@@ -302,8 +288,12 @@ export function Thread({ candidateId }: ThreadProps) {
 
   return (
     <div className={THREAD_PANEL_CLASSNAME}>
+      {/* Identifies who the viewer is talking to and about which role. The
+       * candidate's name and pipeline status are deliberately absent — they
+       * own the candidate rail beside this thread, so repeating them here was
+       * the duplication this header now avoids. */}
       {threadHeader && (
-        <div className="flex items-start gap-3 border-b border-border pb-3">
+        <div className="flex items-center gap-3 border-b border-border pb-3">
           <span
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
@@ -313,30 +303,16 @@ export function Thread({ candidateId }: ThreadProps) {
             {initials(counterpartyHeading)}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-heading text-base font-bold text-navy">
-                {counterpartyHeading}
-              </h2>
-              <span
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide",
-                  STATUS_STYLES[threadHeader.candidate.status],
-                )}
-              >
-                {CANDIDATE_STATUS_LABELS[threadHeader.candidate.status]}
-              </span>
-            </div>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
-              <span>{threadHeader.candidate.fullName}</span>
-              <span aria-hidden="true">·</span>
-              <Link
-                href={jobHref}
-                className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[12px] font-medium text-primary transition-colors hover:bg-primary/5"
-              >
-                <Briefcase className="h-3 w-3 shrink-0" />
-                <span className="truncate">{threadHeader.job.title}</span>
-              </Link>
-            </div>
+            <h2 className="truncate font-heading text-base font-bold text-navy">
+              {counterpartyHeading}
+            </h2>
+            <Link
+              href={jobHref}
+              className="mt-1 inline-flex max-w-full items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[12px] font-medium text-primary transition-colors hover:bg-primary/5"
+            >
+              <Briefcase className="h-3 w-3 shrink-0" />
+              <span className="truncate">{threadHeader.job.title}</span>
+            </Link>
           </div>
         </div>
       )}
