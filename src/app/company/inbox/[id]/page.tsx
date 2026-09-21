@@ -4,23 +4,17 @@ import { useParams } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
-import { CandidateCard, useCandidate } from "@/features/candidates";
+import {
+  CandidateCard,
+  CandidateRailSkeleton,
+  useCandidate,
+} from "@/features/candidates";
 import { Thread, useMessageUnreadCounts } from "@/features/conversations";
 import { InboxConversationPane, InboxMessageWorkspace } from "@/features/inbox";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
-
-/**
- * Matches the shape of the loaded left column so the page doesn't reflow when
- * the candidate and negotiation queries resolve.
- */
-function LeftColumnSkeleton() {
-  return (
-    <div className="h-96 w-full animate-pulse rounded-md border border-border/70 bg-muted lg:h-full" />
-  );
-}
 
 function ErrorCallout({
   message,
@@ -75,7 +69,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
     interviewsQuery.isPending ||
     offersQuery.isPending
   ) {
-    return <LeftColumnSkeleton />;
+    return <CandidateRailSkeleton />;
   }
   if (candidateQuery.isError) {
     return (
