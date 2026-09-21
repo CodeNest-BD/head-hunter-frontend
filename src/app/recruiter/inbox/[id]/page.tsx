@@ -93,6 +93,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
         <CandidateForm
           jobId={candidate.jobId}
           candidate={candidate}
+          dense
           onDone={() => setMode("view")}
           onCancel={() => setMode("view")}
         />

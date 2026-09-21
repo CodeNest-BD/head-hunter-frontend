@@ -4,6 +4,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
@@ -31,6 +32,11 @@ interface CandidateFormProps {
   /** Renders a Cancel beside the submit when provided, so the two actions share
    * a row instead of the caller stacking its own button underneath. */
   onCancel?: () => void;
+  /** True when the form sits in a narrow column (the inbox edit rail): the
+   * numeric fields stack instead of squeezing three long-labelled columns
+   * into ~360px. Viewport breakpoints can't tell that panel apart from a full
+   * page, so the caller states it. */
+  dense?: boolean;
 }
 
 /** null when the file is acceptable; otherwise the reason to show the user. */
@@ -91,10 +97,10 @@ function defaultValuesFor(candidate?: Candidate): CandidateFormValues {
   };
 }
 
-/** One outlined-field look across the whole form: white fill, taller touch
- * target, softer corners — the same field treatment the inbox search and
- * scheduling cards use, instead of the short transparent default. */
-const FIELD_CLASS = "h-11 rounded-lg bg-card";
+/** One outlined-field look across the whole form: white fill, a comfortable
+ * (not oversized) height and soft-but-crisp corners, instead of the short
+ * transparent default. */
+const FIELD_CLASS = "h-10 rounded-md bg-card";
 const LABEL_CLASS = "text-[13px] font-semibold text-navy";
 
 export function CandidateForm({
@@ -102,6 +108,7 @@ export function CandidateForm({
   candidate,
   onDone,
   onCancel,
+  dense = false,
 }: CandidateFormProps) {
   const submitCandidate = useSubmitCandidate(jobId);
   const updateCandidate = useUpdateCandidate(jobId);
@@ -217,7 +224,7 @@ export function CandidateForm({
         <Textarea
           id="overview"
           rows={4}
-          className="min-h-[110px] rounded-lg bg-card"
+          className="min-h-[110px] rounded-md bg-card"
           {...register("overview")}
         />
       </div>
@@ -249,7 +256,12 @@ export function CandidateForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div
+        className={cn(
+          "grid gap-4",
+          dense ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3",
+        )}
+      >
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="yearsOfExperience" className={LABEL_CLASS}>
             Years of experience
@@ -312,7 +324,7 @@ export function CandidateForm({
               setCvTouched(true);
               setCvFile(event.target.files?.[0] ?? null);
             }}
-            className="rounded-lg border border-input bg-card px-3 py-2.5 text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+            className="rounded-md border border-input bg-card px-3 py-2.5 text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
           />
           {cvTouched && cvError && (
             <p className="text-xs text-destructive">{cvError}</p>
