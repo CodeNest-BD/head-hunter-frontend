@@ -354,7 +354,7 @@ function ConversationRow({
             <Link
               href={jobHref}
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex max-w-full items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[12px] font-medium text-primary transition-colors hover:bg-primary/5"
+              className="inline-flex max-w-full items-center gap-1 rounded-[5px] border border-[#D7E0EF] bg-[#F1F5FC] px-1.5 py-0.5 text-[12px] font-medium text-[#24457A] transition-colors hover:bg-[#E7EEFA]"
             >
               <Briefcase className="h-3 w-3 shrink-0" />
               <span className="truncate">{row.jobTitle}</span>
