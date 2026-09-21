@@ -2,7 +2,12 @@
 
 import { useId, useState } from "react";
 import { HttpStatusCode } from "axios";
-import { AlertCircle, CalendarClock } from "lucide-react";
+import {
+  AlertCircle,
+  CalendarCheck,
+  CalendarClock,
+  CalendarX2,
+} from "lucide-react";
 
 import {
   ProposeSlotsForm,
@@ -25,6 +30,26 @@ export type ProposalEventData = Extract<
   NonNullable<ConversationEvent["data"]>,
   { kind: "proposal" }
 >;
+
+/**
+ * The icon tile that leads the card, tinted to the proposal's stage: a live
+ * ask reads as neutral/primary, a confirmed time as settled green, a
+ * superseded batch as muted history. Keeps the wording (server-computed
+ * `title`) and the colour in one glance without a second status pill.
+ */
+const PROPOSAL_TONES: Record<
+  ProposalEventData["proposalStatus"],
+  { tile: string; Icon: typeof CalendarClock }
+> = {
+  proposed: { tile: "bg-primary/10 text-primary", Icon: CalendarClock },
+  counter_requested: {
+    tile: "bg-[#FBF3DF] text-[#7A5109]",
+    Icon: CalendarClock,
+  },
+  confirmed: { tile: "bg-[#E7F4EC] text-[#17734E]", Icon: CalendarCheck },
+  expired: { tile: "bg-secondary text-muted-foreground", Icon: CalendarX2 },
+  unknown: { tile: "bg-secondary text-muted-foreground", Icon: CalendarClock },
+};
 
 export interface ProposalCardProps {
   /** Server-computed heading for this entry, e.g. "Availability proposed" —
@@ -129,24 +154,26 @@ function availableActions(
  * a second request. */
 function ConfirmedTime({ start, end }: { start: string; end: string }) {
   return (
-    <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-      <CalendarClock
-        className="h-4 w-4 shrink-0 text-primary"
-        aria-hidden="true"
-      />
-      {formatDateTime(start)} – {formatDateTime(end)}
+    <p className="flex items-center gap-2 rounded-lg bg-[#E7F4EC] px-3 py-2 text-sm font-semibold text-[#17734E]">
+      <CalendarCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+      <span>
+        {formatDateTime(start)} – {formatDateTime(end)}
+      </span>
     </p>
   );
 }
 
+/** Times from a batch that is no longer actionable — a superseded or
+ * decided proposal kept for the record. The dashed, muted rows read as
+ * "these were on the table" rather than an active choice. */
 function ReadOnlySlots({ slots }: { slots: SlotOption[] }) {
   if (slots.length === 0) return null;
   return (
-    <ul className="flex flex-col gap-1">
+    <ul className="flex flex-col gap-1.5">
       {slots.map((slot) => (
         <li
           key={slot.id}
-          className="rounded-md border border-input px-3 py-1.5 text-sm text-muted-foreground"
+          className="rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-2 text-sm text-muted-foreground"
         >
           {formatDateTime(slot.startAt)} – {formatDateTime(slot.endAt)}
         </li>
@@ -172,8 +199,8 @@ function SlotRadioGroup({
 }: SlotRadioGroupProps) {
   const groupName = useId();
   return (
-    <fieldset className="flex flex-col gap-1">
-      <legend className="text-xs font-medium text-muted-foreground">
+    <fieldset className="flex flex-col gap-1.5">
+      <legend className="mb-0.5 text-xs font-medium text-muted-foreground">
         Choose a time
       </legend>
       {slots.map((slot) => {
@@ -182,8 +209,10 @@ function SlotRadioGroup({
           <label
             key={slot.id}
             className={cn(
-              "flex cursor-pointer items-center gap-2 rounded-md border border-input px-3 py-1.5 text-sm text-foreground transition-colors hover:border-primary/50",
-              selectedSlotId === slot.id && "border-primary bg-primary/10",
+              "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition-all",
+              selectedSlotId === slot.id
+                ? "border-primary bg-primary/5 font-medium text-navy ring-1 ring-primary/25"
+                : "border-input text-foreground hover:border-primary/40 hover:bg-secondary/40",
             )}
           >
             <input
@@ -249,12 +278,18 @@ export function ProposalCard({
   // superseded or the interview stops awaiting a time.
   const companyCanManage = actions === "company-manage";
 
+  const tone = PROPOSAL_TONES[proposalStatus];
+  const ToneIcon = tone.Icon;
+
   if (showProposeForm) {
     return (
-      <div className="flex flex-col gap-2.5 rounded-md border border-border/70 bg-card p-3">
-        <p className="text-sm font-semibold text-foreground">
-          Propose new times
-        </p>
+      <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <CalendarClock className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <p className="text-sm font-semibold text-navy">Propose new times</p>
+        </div>
         <ProposeSlotsForm
           interviewId={interviewId}
           onDone={() => setShowProposeForm(false)}
@@ -265,10 +300,24 @@ export function ProposalCard({
   }
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-md border border-border/70 bg-card p-3">
-      <div className="flex flex-col gap-0.5">
-        <p className="text-sm font-semibold text-foreground">{title}</p>
-        {note && <p className="text-sm text-muted-foreground">{note}</p>}
+    <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-sm">
+      <div className="flex items-start gap-2.5">
+        <span
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+            tone.tile,
+          )}
+        >
+          <ToneIcon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <p className="text-sm font-semibold text-navy">{title}</p>
+          {note && (
+            <p className="text-[13px] leading-snug text-muted-foreground">
+              {note}
+            </p>
+          )}
+        </div>
       </div>
 
       {isConfirmed ? (
