@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Briefcase, Search } from "lucide-react";
 
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -63,16 +63,16 @@ export function InboxConversationPane({
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <h2 className="font-heading text-base font-bold text-navy">Inbox</h2>
-        <div className="inline-flex items-center rounded-lg bg-secondary p-0.5 text-xs">
+        <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 text-xs">
           {(["all", "unread"] as const).map((key) => (
             <button
               key={key}
               type="button"
               onClick={() => setFilter(key)}
               className={cn(
-                "rounded-md px-2.5 py-1 font-medium capitalize transition-colors",
+                "rounded-md px-2.5 py-1 font-semibold capitalize transition-colors",
                 filter === key
-                  ? "bg-card text-navy shadow-sm"
+                  ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -141,9 +141,21 @@ export function InboxConversationPane({
                       {formatDate(row.lastActivityAt)}
                     </span>
                   </div>
-                  <p className="truncate text-[12px] text-muted-foreground">
-                    {row.candidateName} · {row.jobTitle}
-                  </p>
+                  <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                    <span className="shrink-0 truncate text-[11.5px] text-foreground/70">
+                      {row.candidateName}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="text-muted-foreground/60"
+                    >
+                      ·
+                    </span>
+                    <span className="inline-flex min-w-0 items-center gap-1 rounded-md border border-border bg-primary/5 px-1.5 py-0.5 text-[11px] font-medium text-primary">
+                      <Briefcase className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{row.jobTitle}</span>
+                    </span>
+                  </div>
                   <p
                     className={cn(
                       "mt-0.5 truncate text-[12px]",
