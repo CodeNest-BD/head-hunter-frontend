@@ -54,6 +54,10 @@ const COPY: Record<
 
 type Filter = "all" | "unread";
 
+/** Server page size — shared by the query and the pager's range readout so the
+ * "N–M of total" it prints matches what the server actually returned. */
+const PAGE_SIZE = 20;
+
 /** Soft two-tone chip per pipeline stage, matching the design's colours. */
 const STATUS_STYLES: Record<CandidateStatus, string> = {
   submitted: "bg-[#EEF1F6] text-[#5B6B7C]",
@@ -108,7 +112,7 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
   const { data, isPending, isError, refetch, isPlaceholderData } =
     useInboxConversations(side, {
       page,
-      limit: 20,
+      limit: PAGE_SIZE,
       q: q || undefined,
       unreadOnly: filter === "unread",
     });
@@ -239,22 +243,13 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
                 />
               ))}
             </ul>
-          </div>
-
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[13px] text-muted-foreground">
-              Showing {rows.length} of {meta?.total ?? rows.length}{" "}
-              conversations
-            </span>
-            {meta && meta.totalPages > 1 ? (
-              <TablePager
-                page={meta.page}
-                totalPages={meta.totalPages}
-                total={meta.total}
-                pageSize={rows.length}
-                onPage={setPage}
-              />
-            ) : null}
+            <TablePager
+              page={meta?.page ?? 1}
+              totalPages={meta?.totalPages ?? 1}
+              total={meta?.total ?? rows.length}
+              pageSize={PAGE_SIZE}
+              onPage={setPage}
+            />
           </div>
         </>
       )}

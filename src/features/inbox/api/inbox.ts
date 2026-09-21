@@ -21,6 +21,9 @@ export interface InboxConversationsParams {
   q?: string;
   /** When true, only threads with unread messages. */
   unreadOnly?: boolean;
+  /** Scope to a single job — the per-job candidates view, server-side so it
+   * can't truncate when the recruiter has many conversations elsewhere. */
+  jobId?: string;
 }
 
 /** GET /v1/{side}/inbox/conversations — the flat inbox, most-recent first. */
@@ -36,6 +39,7 @@ export async function fetchInboxConversations(
         limit: params.limit ?? 25,
         q: params.q || undefined,
         unreadOnly: params.unreadOnly ? true : undefined,
+        jobId: params.jobId || undefined,
       },
     },
   );
