@@ -9,6 +9,7 @@ import {
   CandidateAttachments,
   CandidateFields,
   CandidateForm,
+  CandidateRailSkeleton,
   useCandidate,
   useDeleteCandidate,
   CANDIDATE_STATUS_LABELS,
@@ -68,9 +69,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
     interviewsQuery.isPending ||
     offersQuery.isPending
   ) {
-    return (
-      <div className="h-96 w-full animate-pulse rounded-md border border-border/70 bg-muted lg:h-full" />
-    );
+    return <CandidateRailSkeleton />;
   }
   if (candidateQuery.isError) {
     return (
