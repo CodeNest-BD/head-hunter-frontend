@@ -121,16 +121,9 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2.5">
-          <h1 className="font-heading text-2xl font-extrabold tracking-tight text-navy">
-            Inbox
-          </h1>
-          {meta ? (
-            <span className="rounded-full bg-secondary px-2 py-0.5 text-sm font-semibold text-muted-foreground">
-              {meta.total}
-            </span>
-          ) : null}
-        </div>
+        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-navy">
+          Inbox
+        </h1>
         <p className="text-sm text-muted-foreground">{copy.subtitle}</p>
       </div>
 
