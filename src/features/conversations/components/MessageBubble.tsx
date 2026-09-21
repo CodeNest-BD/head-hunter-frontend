@@ -21,10 +21,10 @@ export function MessageBubble({ event, isOwn }: MessageBubbleProps) {
   return (
     <div
       className={cn(
-        "max-w-[85%] whitespace-pre-wrap break-words rounded-md px-4 py-2 text-sm shadow-sm sm:max-w-[75%]",
+        "max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm sm:max-w-[75%]",
         isOwn
           ? "bg-primary text-primary-foreground"
-          : "bg-muted text-foreground",
+          : "border border-border bg-card text-foreground shadow-sm",
       )}
     >
       {event.body}
