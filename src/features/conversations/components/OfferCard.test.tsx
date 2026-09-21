@@ -72,7 +72,7 @@ describe("OfferCard", () => {
     expect(screen.getByText(formatMinor(13000000))).toBeInTheDocument();
   });
 
-  it("labels the commission as the recruiter's fee, distinct from the salary and never as an input", () => {
+  it("shows the fixed commission as the recruiter's own fee, distinct from the salary and never as an input", () => {
     renderWithProviders(
       <OfferCard
         data={offerData()}
@@ -81,7 +81,9 @@ describe("OfferCard", () => {
       />,
     );
 
-    expect(screen.getByText(/recruiter's fee/i)).toBeInTheDocument();
+    // The recruiter earns it, so from their view it reads as "Your fee".
+    expect(screen.getByText("Your fee")).toBeInTheDocument();
+    expect(screen.getByText("fixed")).toBeInTheDocument();
     expect(screen.getByText(formatMinor(500000))).toBeInTheDocument();
     expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
     expect(document.querySelector("input")).not.toBeInTheDocument();
