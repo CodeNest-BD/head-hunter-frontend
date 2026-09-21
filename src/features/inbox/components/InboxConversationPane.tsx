@@ -109,7 +109,11 @@ export function InboxConversationPane({
                 href={`/${side}/inbox/${row.candidateId}`}
                 className={cn(
                   "flex items-start gap-2.5 px-4 py-3 transition-colors",
-                  selected ? "bg-secondary/60" : "hover:bg-secondary/40",
+                  selected
+                    ? "bg-secondary/60"
+                    : unread
+                      ? "bg-primary/[0.05] hover:bg-primary/[0.09]"
+                      : "hover:bg-secondary/40",
                 )}
               >
                 <span className="flex w-1.5 shrink-0 justify-center pt-2">

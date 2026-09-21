@@ -299,7 +299,12 @@ function ConversationRow({
             onOpen();
           }
         }}
-        className="flex cursor-pointer items-start gap-3 px-5 py-4 transition-colors hover:bg-secondary/40"
+        className={cn(
+          "flex cursor-pointer items-start gap-3 px-5 py-4 transition-colors",
+          unread
+            ? "bg-primary/[0.05] hover:bg-primary/[0.09]"
+            : "hover:bg-secondary/40",
+        )}
       >
         {/* Unread dot */}
         <span className="flex w-2 shrink-0 justify-center pt-2">
