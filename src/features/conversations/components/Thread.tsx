@@ -342,21 +342,27 @@ export function Thread({ candidateId }: ThreadProps) {
       <div
         ref={scrollContainerRef}
         className={cn(
-          "flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-navy pr-1 [overflow-anchor:none]",
+          // A block with `space-y`, not a flex column: flex children in a
+          // fixed-height scroll box get shrunk to fit and any with
+          // `overflow-hidden` (the offer card) clip to a sliver when a
+          // proposal below expands. Block children keep their natural height
+          // and the box scrolls instead.
+          "min-h-0 flex-1 space-y-3 overflow-y-auto scrollbar-navy pr-1 [overflow-anchor:none]",
           isPlaceholderData && "opacity-60 transition-opacity",
         )}
       >
         {hasNextPage && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="self-center"
-            disabled={isFetchingNextPage}
-            onClick={handleLoadOlder}
-          >
-            {isFetchingNextPage ? "Loading…" : "Load older"}
-          </Button>
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isFetchingNextPage}
+              onClick={handleLoadOlder}
+            >
+              {isFetchingNextPage ? "Loading…" : "Load older"}
+            </Button>
+          </div>
         )}
         {events.length === 0 && (
           <p className="py-6 text-center text-sm text-muted-foreground">
