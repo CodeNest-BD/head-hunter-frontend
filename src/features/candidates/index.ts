@@ -2,6 +2,7 @@
 
 export { CandidateAttachments } from "./components/CandidateAttachments";
 export { CandidateCard } from "./components/CandidateCard";
+export { CandidateDetailPanel } from "./components/CandidateDetailPanel";
 export { CandidateFields } from "./components/CandidateFields";
 export { CandidateForm } from "./components/CandidateForm";
 export { CandidateRailSkeleton } from "./components/CandidateRailSkeleton";
