@@ -30,12 +30,6 @@ export interface OfferCardProps {
   viewerParty: "company" | "recruiter";
   /** The thread this offer belongs to — what "Notify Company" writes into. */
   candidateId: string;
-  /**
-   * False in the conversation thread, where this card is the record of the
-   * offer. The same offer is mounted beside the thread on the candidate card,
-   * which is the one place it is acted on.
-   */
-  actionable?: boolean;
 }
 
 /** Sent verbatim by "Notify Company", so the company reads why the offer is
@@ -82,13 +76,12 @@ function negotiationErrorMessage(error: unknown): string {
  * with `data.createdBy` and the viewer's own party; there is no local "was
  * this accepted" flag, so a mutation that fails leaves the card exactly
  * where the server says the offer actually is once the thread refetches.
+ *
+ * Only the live offer (`offerStatus === "sent"`) exposes buttons, so a
+ * thread's historical offer events render read-only on their own — the card
+ * needs no external "read-only" flag to stay quiet in the timeline.
  */
-export function OfferCard({
-  data,
-  viewerParty,
-  candidateId,
-  actionable = true,
-}: OfferCardProps) {
+export function OfferCard({ data, viewerParty, candidateId }: OfferCardProps) {
   const {
     offerId,
     offerStatus,
@@ -109,7 +102,7 @@ export function OfferCard({
   const counterOffer = useCounterOffer(offerId);
   const withdrawOffer = useWithdrawOffer(offerId);
 
-  const isSent = actionable && offerStatus === "sent";
+  const isSent = offerStatus === "sent";
   const isCreator = viewerParty === createdBy;
   // The party who did not create the current offer is the one who gets to
   // respond to it — the creator already said their number.
@@ -147,9 +140,9 @@ export function OfferCard({
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-sm font-semibold text-foreground">Offer</p>
+        <p className="text-sm font-semibold text-navy">Offer</p>
         <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
           {OFFER_EVENT_STATUS_LABELS[offerStatus]}
         </span>
@@ -179,13 +172,11 @@ export function OfferCard({
 
       {/* A hire (accepted offer) is what unlocks the company's review of the
           recruiter — one per hire, editable afterwards. */}
-      {actionable &&
-        offerStatus === "accepted" &&
-        viewerParty === "company" && (
-          <div className="border-t border-border/60 pt-3">
-            <ReviewCta offerId={offerId} />
-          </div>
-        )}
+      {offerStatus === "accepted" && viewerParty === "company" && (
+        <div className="border-t border-border/60 pt-3">
+          <ReviewCta offerId={offerId} />
+        </div>
+      )}
 
       {/* The commission is fixed by the job's advertised fee and read-only —
           shown as plain text, never an input, and kept visually apart from

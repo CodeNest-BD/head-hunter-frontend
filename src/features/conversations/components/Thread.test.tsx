@@ -281,10 +281,11 @@ describe("Thread", () => {
     expect(screen.getByText("Candidates submitted")).toBeInTheDocument();
   });
 
-  it("renders an offer event as a read-only OfferCard rather than plain text", async () => {
-    // The thread is the record of the negotiation; the same offer is mounted
-    // beside it on the candidate card, which is where it is acted on. Two live
-    // copies of Accept/Decline/Counter is the duplication this guards against.
+  it("renders an offer event as an OfferCard the responding party can act on", async () => {
+    // The offer lives in the conversation timeline where it was sent, and the
+    // party who did not create it — here the recruiter, on a company-sent
+    // offer — accepts, declines or counters it inline rather than reading a
+    // plain event title.
     useAuthMock.mockReturnValue({ user: { role: "recruiter" } });
     fetchConversationThreadMock.mockResolvedValue(
       threadResponse([systemEvent, offerEvent]),
@@ -297,8 +298,11 @@ describe("Thread", () => {
     // (naming the commission, not the salary) would never produce.
     expect(screen.getByText("$130,000")).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^counter$/i }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /^accept$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^counter$/i }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByText("Offer sent — $5,000 for J. Rivera"),
     ).not.toBeInTheDocument();

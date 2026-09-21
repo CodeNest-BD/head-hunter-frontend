@@ -20,28 +20,6 @@ vi.mock("./SendOfferForm", () => ({
 vi.mock("../hooks/useCandidates", () => ({
   useAttachments: () => ({ data: undefined, isPending: false, isError: false }),
 }));
-// `NegotiationActionCards` (shared with `CandidateItem` on the recruiter
-// page) has its own dedicated test file covering every card-mounting case
-// for both `viewerParty` values; this file only has to prove this card wires
-// its `negotiationState` and `viewerParty="company"` through to it.
-vi.mock("@/shared/ui-components/data/NegotiationActionCards", () => ({
-  NegotiationActionCards: ({
-    negotiationState,
-    viewerParty,
-  }: {
-    negotiationState: {
-      interviewRecord: { id: string } | null;
-      offerRecord: { id: string } | null;
-    } | null;
-    viewerParty: string;
-  }) => (
-    <div>
-      Negotiation action cards ({viewerParty}) — interview:
-      {negotiationState?.interviewRecord?.id ?? "none"} — offer:
-      {negotiationState?.offerRecord?.id ?? "none"}
-    </div>
-  ),
-}));
 
 function interview(overrides: Partial<Interview> & { id: string }): Interview {
   return {
@@ -132,7 +110,11 @@ describe("CandidateCard", () => {
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
 
-  it("mounts NegotiationActionCards for the company with this candidate's negotiation records", () => {
+  it("delegates responding to a live offer to the thread, keeping only create actions on the rail", () => {
+    // Accepting, declining or countering a live offer happens on the
+    // actionable card in the conversation thread beside this rail — the rail
+    // must not render a second set of those buttons. Its own create actions
+    // (schedule an interview, send an offer) still live here.
     renderWithProviders(
       <CandidateCard
         candidate={candidate()}
@@ -146,9 +128,12 @@ describe("CandidateCard", () => {
     );
 
     expect(
-      screen.getByText(
-        /Negotiation action cards \(company\) — interview:interview-1 — offer:offer-1/,
-      ),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /^accept$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^counter$/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Schedule interview action")).toBeInTheDocument();
+    expect(screen.getByText("Send offer form")).toBeInTheDocument();
   });
 });
