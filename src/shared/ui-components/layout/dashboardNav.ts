@@ -57,6 +57,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       icon: Send,
       badge: "inbox",
     },
+    { href: "/recruiter/submissions", label: "Submissions", icon: Users },
     // Recruiting is free during phases 1–2; the subscription page returns
     // with the flag flip.
     ...(PHASE1_FREE

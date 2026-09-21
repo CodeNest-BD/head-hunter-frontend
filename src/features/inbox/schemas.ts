@@ -77,6 +77,10 @@ export const inboxConversationRowSchema = z.object({
   lastMessagePreview: z.string().nullable(),
   lastMessageSender: z.enum(["company", "recruiter"]).nullable().optional(),
   lastActivityAt: z.coerce.date(),
+  // When the candidate was first submitted. Optional so a backend that only
+  // carries `lastActivityAt` still parses; the submissions table falls back to
+  // last activity when it's absent.
+  submittedAt: z.coerce.date().nullish(),
 });
 export type InboxConversationRow = z.infer<typeof inboxConversationRowSchema>;
 
