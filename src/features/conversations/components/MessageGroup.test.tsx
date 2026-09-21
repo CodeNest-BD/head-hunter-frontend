@@ -150,7 +150,7 @@ describe("MessageGroup", () => {
     expect(container.querySelector(".items-end")).not.toBeNull();
   });
 
-  it("colours and aligns the counterparty's messages using bg-muted, never by actor", () => {
+  it("colours and aligns the counterparty's messages as a bordered card, never by actor", () => {
     const { container } = render(
       <MessageGroup
         actor="company"
@@ -167,7 +167,7 @@ describe("MessageGroup", () => {
     );
 
     const bubble = screen.getByText("Their message");
-    expect(bubble).toHaveClass("bg-muted", "text-foreground");
+    expect(bubble).toHaveClass("bg-card", "text-foreground");
     expect(bubble.parentElement).toHaveClass("justify-start");
     expect(container.querySelector(".items-start")).not.toBeNull();
   });

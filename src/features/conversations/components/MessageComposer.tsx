@@ -2,9 +2,10 @@
 
 import { useId, useState } from "react";
 import { HttpStatusCode } from "axios";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, SendHorizontal } from "lucide-react";
 
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { useSendMessage } from "../hooks/useConversation";
@@ -16,6 +17,8 @@ export interface MessageComposerProps {
   candidateId: string;
   /** Display name for the scope indicator below. */
   candidateName?: string;
+  /** The counterparty's name, for the reply placeholder ("Write a reply to …"). */
+  replyToName?: string;
   /** False once the candidate is passed on: readable, closed to new messages. */
   acceptsMessages?: boolean;
 }
@@ -43,7 +46,7 @@ function sendMessageErrorMessage(error: unknown): string {
 /** Textarea + send button for one thread, disabled while a send is pending. */
 export function MessageComposer({
   candidateId,
-  candidateName,
+  replyToName,
   acceptsMessages = true,
 }: MessageComposerProps) {
   const scopeDescriptionId = useId();
@@ -51,46 +54,69 @@ export function MessageComposer({
   const sendMessage = useSendMessage(candidateId);
 
   const trimmed = body.trim();
-  // A quiet status cue, not a warning: it names who this conversation is
-  // about, which matters now that every candidate has a thread of their own.
-  const scopeLabel = acceptsMessages
-    ? `Sending about ${candidateName ?? "this candidate"}`
-    : "This candidate was passed on — the conversation is closed";
+  const canSend =
+    !sendMessage.isPending && trimmed.length > 0 && acceptsMessages;
 
   const handleSend = (): void => {
-    if (!trimmed) return;
+    if (!canSend) return;
     sendMessage.mutate({ body: trimmed }, { onSuccess: () => setBody("") });
   };
 
+  // Closed thread (candidate passed on): a quiet, read-only notice in place of
+  // the composer.
+  if (!acceptsMessages) {
+    return (
+      <p className="rounded-xl border border-border bg-secondary/40 px-4 py-3 text-center text-[13px] text-muted-foreground">
+        This candidate was passed on — the conversation is closed.
+      </p>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
-      <p id={scopeDescriptionId} className="text-xs text-muted-foreground">
-        {scopeLabel}
-      </p>
-      <Textarea
-        value={body}
-        onChange={(event) => setBody(event.target.value)}
-        maxLength={MAX_BODY_LENGTH}
-        placeholder="Write a message…"
-        disabled={sendMessage.isPending || !acceptsMessages}
-        aria-label="Message"
-        aria-describedby={scopeDescriptionId}
-      />
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">
-          {body.length}/{MAX_BODY_LENGTH}
-        </p>
-        <Button
-          type="button"
-          size="sm"
-          className="shrink-0"
-          disabled={
-            sendMessage.isPending || trimmed.length === 0 || !acceptsMessages
+      <div className="rounded-xl border border-border bg-card shadow-sm focus-within:border-primary/40">
+        <Textarea
+          value={body}
+          onChange={(event) => setBody(event.target.value)}
+          onKeyDown={(event) => {
+            // Enter sends; Shift+Enter is a newline. Never send mid-IME
+            // composition (nativeEvent.isComposing) — that Enter commits text.
+            if (
+              event.key === "Enter" &&
+              !event.shiftKey &&
+              !event.nativeEvent.isComposing
+            ) {
+              event.preventDefault();
+              handleSend();
+            }
+          }}
+          maxLength={MAX_BODY_LENGTH}
+          placeholder={
+            replyToName ? `Write a reply to ${replyToName}…` : "Write a reply…"
           }
-          onClick={handleSend}
-        >
-          {sendMessage.isPending ? "Sending…" : "Send"}
-        </Button>
+          disabled={sendMessage.isPending}
+          aria-label="Message"
+          aria-describedby={scopeDescriptionId}
+          className="min-h-[76px] resize-none border-0 bg-transparent px-4 py-3 shadow-none focus-visible:ring-0"
+        />
+        <div className="flex items-center justify-between gap-3 px-3 pb-3">
+          <p
+            id={scopeDescriptionId}
+            className="text-[11px] text-muted-foreground"
+          >
+            Enter to send · Shift + Enter for a new line
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            className={cn("shrink-0 gap-1.5")}
+            disabled={!canSend}
+            onClick={handleSend}
+          >
+            {sendMessage.isPending ? "Sending…" : "Send"}
+            <SendHorizontal className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
       {sendMessage.isError && (
         <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
