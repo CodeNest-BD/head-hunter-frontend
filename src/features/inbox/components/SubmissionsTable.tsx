@@ -305,7 +305,7 @@ export function SubmissionsTable({
 } = {}) {
   const { data, isPending, isError, refetch } = useInboxConversations(
     "recruiter",
-    { page: 1, limit: FETCH_LIMIT },
+    { page: 1, limit: FETCH_LIMIT, jobId },
   );
 
   const [searchInput, setSearchInput] = useState("");

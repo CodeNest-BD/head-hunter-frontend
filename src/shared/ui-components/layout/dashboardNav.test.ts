@@ -11,6 +11,7 @@ describe("recruiter navigation", () => {
       "Live Map",
       "Companies",
       "Inbox",
+      "Submissions",
       "Wallet",
       "Disputes",
       "My Profile",

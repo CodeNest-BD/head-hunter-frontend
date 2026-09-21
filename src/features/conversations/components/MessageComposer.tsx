@@ -15,8 +15,6 @@ const MAX_BODY_LENGTH = 4000;
 export interface MessageComposerProps {
   /** The thread. A conversation is one candidate. */
   candidateId: string;
-  /** Display name for the scope indicator below. */
-  candidateName?: string;
   /** The counterparty's name, for the reply placeholder ("Write a reply to …"). */
   replyToName?: string;
   /** False once the candidate is passed on: readable, closed to new messages. */
