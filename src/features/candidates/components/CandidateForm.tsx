@@ -91,6 +91,12 @@ function defaultValuesFor(candidate?: Candidate): CandidateFormValues {
   };
 }
 
+/** One outlined-field look across the whole form: white fill, taller touch
+ * target, softer corners — the same field treatment the inbox search and
+ * scheduling cards use, instead of the short transparent default. */
+const FIELD_CLASS = "h-11 rounded-lg bg-card";
+const LABEL_CLASS = "text-[13px] font-semibold text-navy";
+
 export function CandidateForm({
   jobId,
   candidate,
@@ -168,35 +174,63 @@ export function CandidateForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="fullName">Full name</Label>
-        <Input id="fullName" {...register("fullName")} />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="fullName" className={LABEL_CLASS}>
+          Full name
+        </Label>
+        <Input
+          id="fullName"
+          className={FIELD_CLASS}
+          {...register("fullName")}
+        />
         {errors.fullName && (
           <p className="text-xs text-destructive">{errors.fullName.message}</p>
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" {...register("email")} />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="email" className={LABEL_CLASS}>
+          Email
+        </Label>
+        <Input
+          id="email"
+          type="email"
+          className={FIELD_CLASS}
+          {...register("email")}
+        />
         {errors.email && (
           <p className="text-xs text-destructive">{errors.email.message}</p>
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="phone">Phone</Label>
-        <Input id="phone" {...register("phone")} />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="phone" className={LABEL_CLASS}>
+          Phone
+        </Label>
+        <Input id="phone" className={FIELD_CLASS} {...register("phone")} />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="overview">Overview</Label>
-        <Textarea id="overview" rows={4} {...register("overview")} />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="overview" className={LABEL_CLASS}>
+          Overview
+        </Label>
+        <Textarea
+          id="overview"
+          rows={4}
+          className="min-h-[110px] rounded-lg bg-card"
+          {...register("overview")}
+        />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
-        <Input id="linkedinUrl" {...register("linkedinUrl")} />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="linkedinUrl" className={LABEL_CLASS}>
+          LinkedIn URL
+        </Label>
+        <Input
+          id="linkedinUrl"
+          className={FIELD_CLASS}
+          {...register("linkedinUrl")}
+        />
         {errors.linkedinUrl && (
           <p className="text-xs text-destructive">
             {errors.linkedinUrl.message}
@@ -204,17 +238,26 @@ export function CandidateForm({
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="currentCompany">Current company</Label>
-        <Input id="currentCompany" {...register("currentCompany")} />
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="currentCompany" className={LABEL_CLASS}>
+          Current company
+        </Label>
+        <Input
+          id="currentCompany"
+          className={FIELD_CLASS}
+          {...register("currentCompany")}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="yearsOfExperience">Years of experience</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="yearsOfExperience" className={LABEL_CLASS}>
+            Years of experience
+          </Label>
           <NumericInput
             decimal
             id="yearsOfExperience"
+            className={FIELD_CLASS}
             {...register("yearsOfExperience")}
           />
           {errors.yearsOfExperience && (
@@ -223,11 +266,14 @@ export function CandidateForm({
             </p>
           )}
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="expectedSalary">Expected salary (USD/yr)</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="expectedSalary" className={LABEL_CLASS}>
+            Expected salary (USD/yr)
+          </Label>
           <NumericInput
             decimal
             id="expectedSalary"
+            className={FIELD_CLASS}
             {...register("expectedSalary")}
           />
           {errors.expectedSalary && (
@@ -236,10 +282,13 @@ export function CandidateForm({
             </p>
           )}
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="noticePeriodDays">Notice period (days)</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="noticePeriodDays" className={LABEL_CLASS}>
+            Notice period (days)
+          </Label>
           <NumericInput
             id="noticePeriodDays"
+            className={FIELD_CLASS}
             {...register("noticePeriodDays")}
           />
           {errors.noticePeriodDays && (
@@ -251,8 +300,10 @@ export function CandidateForm({
       </div>
 
       {!candidate && (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="cvFile">CV / Resume</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="cvFile" className={LABEL_CLASS}>
+            CV / Resume
+          </Label>
           <input
             id="cvFile"
             type="file"
@@ -261,7 +312,7 @@ export function CandidateForm({
               setCvTouched(true);
               setCvFile(event.target.files?.[0] ?? null);
             }}
-            className="text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+            className="rounded-lg border border-input bg-card px-3 py-2.5 text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
           />
           {cvTouched && cvError && (
             <p className="text-xs text-destructive">{cvError}</p>
@@ -269,7 +320,12 @@ export function CandidateForm({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center justify-end gap-2 border-t border-border/60 pt-4">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
         <Button type="submit" disabled={submitDisabled}>
           {candidate
             ? updateCandidate.isPending
@@ -279,11 +335,6 @@ export function CandidateForm({
               ? "Submitting…"
               : "Submit candidate"}
         </Button>
-        {onCancel && (
-          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
       </div>
     </form>
   );
