@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { RequireApprovedRecruiter, RequireRole } from "@/features/auth";
 import { useMyCandidatesForJob } from "@/features/candidates";
-import { InboxCandidatesTable } from "@/features/inbox";
+import { SubmissionsTable } from "@/features/inbox";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -45,26 +45,16 @@ function JobCandidates({ jobId }: { jobId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-6">
-        <Link
-          href="/recruiter/inbox"
-          className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to inbox
-        </Link>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <PageHeader
-            title="Your candidates"
-            subtitle="Everyone you have sent to this job. Open one for its conversation."
-            className="mb-0"
-          />
-          {!isEmpty && submitAction}
-        </div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <PageHeader
+          title="Your candidates"
+          subtitle="Everyone you have sent to this job. Open one for its conversation."
+          className="mb-0"
+        />
+        {!isEmpty && submitAction}
       </div>
 
-      <InboxCandidatesTable
-        side="recruiter"
+      <SubmissionsTable
         jobId={jobId}
         emptyAction={isEmpty ? submitAction : undefined}
       />
