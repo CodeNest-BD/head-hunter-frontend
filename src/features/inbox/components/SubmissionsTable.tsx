@@ -374,7 +374,10 @@ export function SubmissionsTable() {
         />
       </div>
       <Select value={sort} onValueChange={(next) => setSort(next as Sort)}>
-        <SelectTrigger className="h-11 w-[168px] rounded-lg" aria-label="Sort">
+        <SelectTrigger
+          className="h-11 w-[168px] rounded-lg bg-card"
+          aria-label="Sort"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
