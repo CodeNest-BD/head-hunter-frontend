@@ -143,19 +143,19 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search company, candidate or job"
-            className="h-11 rounded-lg pl-9"
+            className="h-11 rounded-lg bg-card pl-9"
           />
         </div>
-        <div className="inline-flex shrink-0 items-center rounded-lg bg-secondary p-1">
+        <div className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border bg-card p-1">
           {(["all", "unread"] as const).map((key) => (
             <button
               key={key}
               type="button"
               onClick={() => setFilter(key)}
               className={cn(
-                "rounded-md px-4 py-1.5 text-sm font-medium capitalize transition-colors",
+                "rounded-md px-4 py-1.5 text-sm font-semibold capitalize transition-colors",
                 filter === key
-                  ? "bg-card text-navy shadow-sm"
+                  ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
