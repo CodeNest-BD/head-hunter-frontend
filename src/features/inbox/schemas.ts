@@ -81,6 +81,9 @@ export const inboxConversationRowSchema = z.object({
   // carries `lastActivityAt` still parses; the submissions table falls back to
   // last activity when it's absent.
   submittedAt: z.coerce.date().nullish(),
+  // The job's advertised recruiter fee, for the submissions table's fee column
+  // and its highest/lowest-fee sort. Optional; the column shows "—" without it.
+  recruiterFeeMinor: z.number().nullish(),
 });
 export type InboxConversationRow = z.infer<typeof inboxConversationRowSchema>;
 
