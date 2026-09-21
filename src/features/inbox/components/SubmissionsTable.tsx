@@ -4,9 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
-  ArrowDown,
   ArrowRight,
-  ArrowUp,
   Briefcase,
   Check,
   ListFilter,
@@ -22,6 +20,7 @@ import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/status
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate, formatRelativeDay } from "@/shared/utils/formatDate";
+import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import {
@@ -29,6 +28,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/ui-components/controls/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui-components/controls/select";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
@@ -58,6 +64,14 @@ interface Option {
   value: string;
   label: string;
 }
+
+type Sort = "newest" | "oldest" | "fee-desc" | "fee-asc";
+const SORT_OPTIONS: { value: Sort; label: string }[] = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "fee-desc", label: "Highest fee" },
+  { value: "fee-asc", label: "Lowest fee" },
+];
 
 /** Distinct values of one field across the rows, as {value,label} options. */
 function distinct(
@@ -289,7 +303,7 @@ export function SubmissionsTable() {
   const [companySel, setCompanySel] = useState<Set<string>>(new Set());
   const [jobSel, setJobSel] = useState<Set<string>>(new Set());
   const [statusSel, setStatusSel] = useState<Set<string>>(new Set());
-  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [sort, setSort] = useState<Sort>("newest");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
 
@@ -330,29 +344,47 @@ export function SubmissionsTable() {
         (statusSel.size === 0 || statusSel.has(row.status)),
     );
     return matches.sort((a, b) => {
+      if (sort === "fee-desc" || sort === "fee-asc") {
+        const fee = (a.recruiterFeeMinor ?? 0) - (b.recruiterFeeMinor ?? 0);
+        return sort === "fee-desc" ? -fee : fee;
+      }
       const diff = submittedOf(a).getTime() - submittedOf(b).getTime();
-      return sortDir === "desc" ? -diff : diff;
+      return sort === "newest" ? -diff : diff;
     });
-  }, [rows, search, candidateSel, companySel, jobSel, statusSel, sortDir]);
+  }, [rows, search, candidateSel, companySel, jobSel, statusSel, sort]);
 
   // Any change to the search, filters, sort or page size starts on page 1.
   useEffect(() => {
     setPage(1);
-  }, [search, candidateSel, companySel, jobSel, statusSel, sortDir, limit]);
+  }, [search, candidateSel, companySel, jobSel, statusSel, sort, limit]);
 
   const total = visible.length;
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const pageRows = visible.slice((page - 1) * limit, page * limit);
 
   const searchBox = (
-    <div className="relative">
-      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-      <Input
-        value={searchInput}
-        onChange={(event) => setSearchInput(event.target.value)}
-        placeholder="Search by candidate, company or job title…"
-        className="h-11 rounded-lg bg-card pl-9"
-      />
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="relative min-w-[240px] max-w-[480px] flex-1">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
+          placeholder="Search by candidate, company or job title…"
+          className="h-11 rounded-lg bg-card pl-9"
+        />
+      </div>
+      <Select value={sort} onValueChange={(next) => setSort(next as Sort)}>
+        <SelectTrigger className="h-11 w-[168px] rounded-lg" aria-label="Sort">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SORT_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 
@@ -431,23 +463,7 @@ export function SubmissionsTable() {
                       onChange={setJobSel}
                     />
                   </FilterableHead>
-                  <th className={TABLE_TH}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
-                      }
-                      className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
-                      aria-label={`Sort by submitted date, ${sortDir === "desc" ? "newest" : "oldest"} first`}
-                    >
-                      Submitted
-                      {sortDir === "desc" ? (
-                        <ArrowDown className="h-3.5 w-3.5 text-primary" />
-                      ) : (
-                        <ArrowUp className="h-3.5 w-3.5 text-primary" />
-                      )}
-                    </button>
-                  </th>
+                  <th className={TABLE_TH}>Submitted</th>
                   <FilterableHead label="Status">
                     <ColumnFilter
                       label="Status"
@@ -456,6 +472,7 @@ export function SubmissionsTable() {
                       onChange={setStatusSel}
                     />
                   </FilterableHead>
+                  <th className={cn(TABLE_TH, "text-right")}>Recruiter fee</th>
                   <th className={cn(TABLE_TH, "text-right")}>Thread</th>
                 </tr>
               </thead>
@@ -500,6 +517,13 @@ export function SubmissionsTable() {
                     <td className={TABLE_TD}>
                       <StatusPill row={row} />
                     </td>
+                    <td
+                      className={`${TABLE_TD} whitespace-nowrap text-right tabular-nums font-medium text-navy`}
+                    >
+                      {row.recruiterFeeMinor != null
+                        ? formatMinor(row.recruiterFeeMinor)
+                        : "—"}
+                    </td>
                     <td className={`${TABLE_TD} text-right`}>
                       <ThreadCell row={row} />
                     </td>
@@ -532,6 +556,13 @@ export function SubmissionsTable() {
                   {
                     label: "Submitted",
                     value: `${formatDate(submittedOf(row))} · ${formatRelativeDay(submittedOf(row))}`,
+                  },
+                  {
+                    label: "Recruiter fee",
+                    value:
+                      row.recruiterFeeMinor != null
+                        ? formatMinor(row.recruiterFeeMinor)
+                        : "—",
                   },
                 ]}
                 actions={<OpenConversationLink candidateId={row.candidateId} />}
