@@ -2,16 +2,34 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, Briefcase, Users } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  Briefcase,
+  Check,
+  ListFilter,
+  Search,
+  Users,
+} from "lucide-react";
 
 import { UnreadBadge } from "@/features/conversations/components/UnreadBadge";
-import { CANDIDATE_STATUS_LABELS } from "@/features/candidates/schemas";
+import {
+  CANDIDATE_STATUSES,
+  CANDIDATE_STATUS_LABELS,
+} from "@/features/candidates/schemas";
 import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { Button } from "@/shared/ui-components/controls/button";
-import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
+import { Input } from "@/shared/ui-components/controls/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/ui-components/controls/popover";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
@@ -25,7 +43,6 @@ import {
   TABLE_SCROLL,
   TABLE_TD,
   TABLE_TH,
-  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 import {
   MobileRecordCard,
@@ -39,11 +56,16 @@ import type { InboxConversationRow } from "../schemas";
 // case where more exist than we fetched.
 const FETCH_LIMIT = 100;
 
-/** Distinct, alphabetically-sorted values of one field across the rows. */
+interface Option {
+  value: string;
+  label: string;
+}
+
+/** Distinct values of one field across the rows, as {value,label} options. */
 function distinct(
   rows: InboxConversationRow[],
   pick: (row: InboxConversationRow) => string,
-): { value: string; label: string }[] {
+): Option[] {
   const seen = new Set<string>();
   for (const row of rows) {
     const value = pick(row);
@@ -52,6 +74,129 @@ function distinct(
   return [...seen]
     .sort((a, b) => a.localeCompare(b))
     .map((value) => ({ value, label: value }));
+}
+
+/**
+ * The per-column header control: a filter icon that opens a searchable,
+ * multi-select value list. Empty selection means "all". The icon reads as
+ * active once anything is picked, so a narrowed column is never silent.
+ */
+function ColumnFilter({
+  label,
+  options,
+  selected,
+  onChange,
+}: {
+  label: string;
+  options: Option[];
+  selected: Set<string>;
+  onChange: (next: Set<string>) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const active = selected.size > 0;
+  const shown = options.filter((option) =>
+    option.label.toLowerCase().includes(search.trim().toLowerCase()),
+  );
+
+  const toggle = (value: string): void => {
+    const next = new Set(selected);
+    if (next.has(value)) next.delete(value);
+    else next.add(value);
+    onChange(next);
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Filter by ${label}`}
+          className={cn(
+            "inline-flex h-5 w-5 items-center justify-center rounded transition-colors",
+            active
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground/50 hover:text-foreground",
+          )}
+        >
+          <ListFilter className="h-3.5 w-3.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-60 p-0">
+        <div className="border-b border-border p-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              autoFocus
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={`Search ${label.toLowerCase()}…`}
+              className="h-8 w-full rounded-md border border-input bg-card pl-7 pr-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </div>
+        </div>
+        <div className="max-h-56 overflow-y-auto p-1">
+          {shown.length === 0 ? (
+            <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+              No matches
+            </p>
+          ) : (
+            shown.map((option) => {
+              const checked = selected.has(option.value);
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => toggle(option.value)}
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs transition-colors hover:bg-secondary"
+                >
+                  <span
+                    className={cn(
+                      "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                      checked
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input",
+                    )}
+                  >
+                    {checked && <Check className="h-3 w-3" />}
+                  </span>
+                  <span className="truncate">{option.label}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+        {active && (
+          <div className="border-t border-border p-1">
+            <button
+              type="button"
+              onClick={() => onChange(new Set())}
+              className="w-full rounded-sm px-2 py-1.5 text-left text-xs font-medium text-primary transition-colors hover:bg-secondary"
+            >
+              Clear ({selected.size})
+            </button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** A column header cell with its label and an inline filter control. */
+function FilterableHead({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <th className={TABLE_TH}>
+      <span className="inline-flex items-center gap-1.5">
+        {label}
+        {children}
+      </span>
+    </th>
+  );
 }
 
 function JobLink({ jobId, title }: { jobId: string; title: string }) {
@@ -89,10 +234,10 @@ function StatusPill({ row }: { row: InboxConversationRow }) {
 
 /**
  * Every candidate this recruiter has submitted, across all jobs — one row per
- * submission. Filterable by candidate name (search), company and job title;
- * the job title links to that job. Filtering and paging are client-side over
- * the recruiter's full conversation list, so the company/job dropdowns always
- * reflect the whole set rather than the current page.
+ * submission. One search box spans candidate, company and job; each column
+ * header carries its own searchable, multi-select filter. Filtering, sorting
+ * and paging are client-side over the recruiter's full conversation list, so
+ * the column filters always reflect the whole set, not the current page.
  */
 export function SubmissionsTable() {
   const { data, isPending, isError, refetch } = useInboxConversations(
@@ -100,19 +245,22 @@ export function SubmissionsTable() {
     { page: 1, limit: FETCH_LIMIT },
   );
 
-  const [qInput, setQInput] = useState("");
-  const q = useDebouncedValue(qInput.trim(), 250);
-  const [company, setCompany] = useState("");
-  const [jobTitle, setJobTitle] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const search = useDebouncedValue(searchInput.trim().toLowerCase(), 250);
+  const [candidateSel, setCandidateSel] = useState<Set<string>>(new Set());
+  const [companySel, setCompanySel] = useState<Set<string>>(new Set());
+  const [jobSel, setJobSel] = useState<Set<string>>(new Set());
+  const [statusSel, setStatusSel] = useState<Set<string>>(new Set());
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
 
-  // Any change to the filters or page size starts back on page 1.
-  useEffect(() => {
-    setPage(1);
-  }, [q, company, jobTitle, limit]);
-
   const rows = useMemo(() => data?.data ?? [], [data]);
+
+  const candidateOptions = useMemo(
+    () => distinct(rows, (row) => row.candidateName),
+    [rows],
+  );
   const companyOptions = useMemo(
     () => distinct(rows, (row) => row.counterpartyName),
     [rows],
@@ -121,51 +269,59 @@ export function SubmissionsTable() {
     () => distinct(rows, (row) => row.jobTitle),
     [rows],
   );
-
-  const filtered = useMemo(() => {
-    const needle = q.toLowerCase();
-    return rows.filter(
-      (row) =>
-        (!needle || row.candidateName.toLowerCase().includes(needle)) &&
-        (!company || row.counterpartyName === company) &&
-        (!jobTitle || row.jobTitle === jobTitle),
+  const statusOptions = useMemo<Option[]>(() => {
+    const present = new Set(rows.map((row) => row.status));
+    return CANDIDATE_STATUSES.filter((status) => present.has(status)).map(
+      (status) => ({ value: status, label: CANDIDATE_STATUS_LABELS[status] }),
     );
-  }, [rows, q, company, jobTitle]);
+  }, [rows]);
 
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-  const pageRows = filtered.slice((page - 1) * limit, page * limit);
   const submittedOf = (row: InboxConversationRow): Date =>
     row.submittedAt ?? row.lastActivityAt;
 
-  const toolbar = (
-    <div className={TABLE_TOOLBAR}>
-      <div className="flex-1">
-        <ListToolbar
-          query={qInput}
-          onQueryChange={setQInput}
-          placeholder="Search by candidate name…"
-          filter={{
-            value: company,
-            onChange: setCompany,
-            allLabel: "All companies",
-            options: companyOptions,
-          }}
-          extraFilter={{
-            value: jobTitle,
-            onChange: setJobTitle,
-            allLabel: "All jobs",
-            options: jobOptions,
-          }}
-        />
-      </div>
+  const visible = useMemo(() => {
+    const matches = rows.filter(
+      (row) =>
+        (!search ||
+          row.candidateName.toLowerCase().includes(search) ||
+          row.counterpartyName.toLowerCase().includes(search) ||
+          row.jobTitle.toLowerCase().includes(search)) &&
+        (candidateSel.size === 0 || candidateSel.has(row.candidateName)) &&
+        (companySel.size === 0 || companySel.has(row.counterpartyName)) &&
+        (jobSel.size === 0 || jobSel.has(row.jobTitle)) &&
+        (statusSel.size === 0 || statusSel.has(row.status)),
+    );
+    return matches.sort((a, b) => {
+      const diff = submittedOf(a).getTime() - submittedOf(b).getTime();
+      return sortDir === "desc" ? -diff : diff;
+    });
+  }, [rows, search, candidateSel, companySel, jobSel, statusSel, sortDir]);
+
+  // Any change to the search, filters, sort or page size starts on page 1.
+  useEffect(() => {
+    setPage(1);
+  }, [search, candidateSel, companySel, jobSel, statusSel, sortDir, limit]);
+
+  const total = visible.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const pageRows = visible.slice((page - 1) * limit, page * limit);
+
+  const searchBox = (
+    <div className="relative">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        value={searchInput}
+        onChange={(event) => setSearchInput(event.target.value)}
+        placeholder="Search by candidate, company or job title…"
+        className="h-11 rounded-lg bg-card pl-9"
+      />
     </div>
   );
 
   if (isError) {
     return (
       <div className="flex flex-col gap-4">
-        {toolbar}
+        {searchBox}
         <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
           <div className="flex items-center gap-2 font-medium">
             <AlertCircle className="h-[18px] w-[18px]" />
@@ -187,7 +343,7 @@ export function SubmissionsTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      {toolbar}
+      {searchBox}
 
       {isPending ? (
         <TableSkeleton />
@@ -204,7 +360,7 @@ export function SubmissionsTable() {
           <p className="max-w-sm text-sm text-muted-foreground">
             {rows.length === 0
               ? "Candidates you submit to jobs appear here, each with its own conversation."
-              : "Try clearing the company or job filter, or a different search."}
+              : "Try clearing a column filter or a different search."}
           </p>
         </div>
       ) : (
@@ -213,11 +369,55 @@ export function SubmissionsTable() {
             <table className={TABLE_EL}>
               <thead className={TABLE_HEAD}>
                 <tr className={TABLE_HEAD_ROW}>
-                  <th className={TABLE_TH}>Candidate</th>
-                  <th className={TABLE_TH}>Company</th>
-                  <th className={TABLE_TH}>Job title</th>
-                  <th className={TABLE_TH}>Submitted</th>
-                  <th className={TABLE_TH}>Status</th>
+                  <FilterableHead label="Candidate">
+                    <ColumnFilter
+                      label="Candidate"
+                      options={candidateOptions}
+                      selected={candidateSel}
+                      onChange={setCandidateSel}
+                    />
+                  </FilterableHead>
+                  <FilterableHead label="Company">
+                    <ColumnFilter
+                      label="Company"
+                      options={companyOptions}
+                      selected={companySel}
+                      onChange={setCompanySel}
+                    />
+                  </FilterableHead>
+                  <FilterableHead label="Job title">
+                    <ColumnFilter
+                      label="Job"
+                      options={jobOptions}
+                      selected={jobSel}
+                      onChange={setJobSel}
+                    />
+                  </FilterableHead>
+                  <th className={TABLE_TH}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSortDir((dir) => (dir === "desc" ? "asc" : "desc"))
+                      }
+                      className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+                      aria-label={`Sort by submitted date, ${sortDir === "desc" ? "newest" : "oldest"} first`}
+                    >
+                      Submitted
+                      {sortDir === "desc" ? (
+                        <ArrowDown className="h-3.5 w-3.5 text-primary" />
+                      ) : (
+                        <ArrowUp className="h-3.5 w-3.5 text-primary" />
+                      )}
+                    </button>
+                  </th>
+                  <FilterableHead label="Status">
+                    <ColumnFilter
+                      label="Status"
+                      options={statusOptions}
+                      selected={statusSel}
+                      onChange={setStatusSel}
+                    />
+                  </FilterableHead>
                   <th className={TABLE_TH} />
                 </tr>
               </thead>
