@@ -242,21 +242,15 @@ function OpenConversationLink({ candidateId }: { candidateId: string }) {
   );
 }
 
-/** The Thread column: the message count next to a button into the thread. */
+/** The Thread column: a button into the candidate's conversation. */
 function ThreadCell({ row }: { row: InboxConversationRow }) {
-  const count = row.messageCount ?? row.unreadMessages;
   return (
     <Link
       href={`/recruiter/inbox/${row.candidateId}`}
       aria-label="Open conversation"
-      className="inline-flex items-center gap-2.5"
+      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:border-primary hover:text-primary"
     >
-      <span className="text-[13px] tabular-nums text-muted-foreground">
-        {count}
-      </span>
-      <span className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:border-primary hover:text-primary">
-        <ArrowRight className="h-3.5 w-3.5" />
-      </span>
+      <ArrowRight className="h-3.5 w-3.5" />
     </Link>
   );
 }
