@@ -384,7 +384,6 @@ export function Thread({ candidateId }: ThreadProps) {
                 note={event.body}
                 data={event.data}
                 viewerParty={viewerParty}
-                actionable={false}
               />
             );
           }
@@ -398,7 +397,6 @@ export function Thread({ candidateId }: ThreadProps) {
                 data={event.data}
                 viewerParty={viewerParty}
                 candidateId={candidateId}
-                actionable={false}
               />
             );
           }

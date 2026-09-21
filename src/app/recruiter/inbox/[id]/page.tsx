@@ -21,7 +21,6 @@ import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
-import { NegotiationActionCards } from "@/shared/ui-components/data/NegotiationActionCards";
 import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -125,15 +124,12 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
         />
       </div>
 
+      {/* Read-only status. The recruiter accepts, declines or counters a
+          live offer — and confirms or counters interview times — on the
+          actionable cards in the conversation thread beside this rail. */}
       <NegotiationStateBadges
         interview={negotiationState?.interview ?? null}
         offer={negotiationState?.offer ?? null}
-      />
-
-      <NegotiationActionCards
-        negotiationState={negotiationState}
-        viewerParty="recruiter"
-        candidateId={candidate.id}
       />
 
       <CandidateFields candidate={candidate} />

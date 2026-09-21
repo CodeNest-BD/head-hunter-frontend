@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
-import { NegotiationActionCards } from "@/shared/ui-components/data/NegotiationActionCards";
 import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { CandidateAttachments } from "./CandidateAttachments";
@@ -71,15 +70,13 @@ export function CandidateCard({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3 p-4 pt-0">
+        {/* Read-only status only. Responding to a live offer or interview
+            proposal happens on the actionable cards in the conversation
+            thread beside this rail — one place to act, not two. Creating a
+            new interview or offer still starts here, below. */}
         <NegotiationStateBadges
           interview={negotiationState?.interview ?? null}
           offer={negotiationState?.offer ?? null}
-        />
-
-        <NegotiationActionCards
-          negotiationState={negotiationState}
-          viewerParty="company"
-          candidateId={candidate.id}
         />
 
         <ScheduleInterviewAction
