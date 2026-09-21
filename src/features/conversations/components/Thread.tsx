@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, Briefcase } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import {
+  CANDIDATE_STATUS_LABELS,
+  type CandidateStatus,
+} from "@/features/candidates/schemas";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
@@ -26,6 +31,37 @@ import { SystemEvent } from "./SystemEvent";
 
 export interface ThreadProps {
   candidateId: string;
+}
+
+/** Pipeline-stage chip colours, shared with the inbox list's rows. */
+const STATUS_STYLES: Record<CandidateStatus, string> = {
+  submitted: "bg-[#EEF1F6] text-[#5B6B7C]",
+  reviewing: "bg-[#FBF3DF] text-[#7A5109]",
+  interviewing: "bg-[#E8EEFB] text-[#3B5BA9]",
+  offered: "bg-[#EFE9FB] text-[#6B4FA8]",
+  hired: "bg-[#E7F4EC] text-[#17734E]",
+  passed: "bg-[#F1EFEF] text-[#8A7F7F]",
+};
+
+const AVATAR_PALETTE = [
+  "bg-[#E8EDFB] text-[#3F5BA9]",
+  "bg-[#FBF1DC] text-[#8A6D3B]",
+  "bg-[#E7F0E9] text-[#3F7A5A]",
+  "bg-[#F2E9F3] text-[#7A4F86]",
+  "bg-[#FBE9E6] text-[#9B4A3F]",
+];
+function avatarTint(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    h = (h * 31 + name.charCodeAt(i)) | 0;
+  }
+  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
+}
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 /**
@@ -259,16 +295,49 @@ export function Thread({ candidateId }: ThreadProps) {
   // name falls back the same as a missing one.
   const counterpartyHeading = counterpartyName?.trim() || counterpartyFallback;
 
+  const jobHref =
+    viewerParty === "company"
+      ? `/company/jobs/${threadHeader?.job.id ?? ""}`
+      : `/jobs/${threadHeader?.job.id ?? ""}`;
+
   return (
     <div className={THREAD_PANEL_CLASSNAME}>
       {threadHeader && (
-        <div>
-          <h2 className="font-heading text-lg font-semibold text-foreground">
-            {counterpartyHeading}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {threadHeader.job.title}
-          </p>
+        <div className="flex items-start gap-3 border-b border-border pb-3">
+          <span
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
+              avatarTint(counterpartyHeading),
+            )}
+          >
+            {initials(counterpartyHeading)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="font-heading text-base font-bold text-navy">
+                {counterpartyHeading}
+              </h2>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide",
+                  STATUS_STYLES[threadHeader.candidate.status],
+                )}
+              >
+                {CANDIDATE_STATUS_LABELS[threadHeader.candidate.status]}
+              </span>
+            </div>
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
+              <span>{threadHeader.candidate.fullName}</span>
+              <span aria-hidden="true">·</span>
+              <Link
+                href={jobHref}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[12px] font-medium text-primary transition-colors hover:bg-primary/5"
+              >
+                <Briefcase className="h-3 w-3 shrink-0" />
+                <span className="truncate">{threadHeader.job.title}</span>
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 
@@ -363,7 +432,7 @@ export function Thread({ candidateId }: ThreadProps) {
 
       <MessageComposer
         candidateId={candidateId}
-        candidateName={threadHeader?.candidate.fullName}
+        replyToName={counterpartyHeading}
         acceptsMessages={threadHeader?.acceptsMessages ?? true}
       />
     </div>
