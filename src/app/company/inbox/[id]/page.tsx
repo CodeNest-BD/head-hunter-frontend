@@ -6,6 +6,7 @@ import { AlertCircle } from "lucide-react";
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import { CandidateCard, useCandidate } from "@/features/candidates";
 import { Thread, useMessageUnreadCounts } from "@/features/conversations";
+import { InboxConversationPane } from "@/features/inbox";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
@@ -108,17 +109,26 @@ export default function CandidateReviewPage() {
     <RequireRole role="company">
       <RequireApprovedCompany>
         <DashboardLayout wide="detail">
-          <TwoColumnDetailLayout
-            header={
-              <PageHeader
-                title="Review candidate"
-                subtitle="Everything about this candidate, and the conversation about them."
+          <div className="flex gap-4">
+            {/* The design's left pane — the conversation list beside the open
+             * thread. Hidden below xl. */}
+            <aside className="hidden w-[320px] shrink-0 xl:block">
+              <InboxConversationPane side="company" selectedId={params.id} />
+            </aside>
+            <div className="min-w-0 flex-1">
+              <TwoColumnDetailLayout
+                header={
+                  <PageHeader
+                    title="Review candidate"
+                    subtitle="Everything about this candidate, and the conversation about them."
+                  />
+                }
+                left={<CandidateDetailColumn candidateId={params.id} />}
+                right={<Thread candidateId={params.id} />}
+                rightUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
               />
-            }
-            left={<CandidateDetailColumn candidateId={params.id} />}
-            right={<Thread candidateId={params.id} />}
-            rightUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
-          />
+            </div>
+          </div>
         </DashboardLayout>
       </RequireApprovedCompany>
     </RequireRole>

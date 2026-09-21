@@ -16,6 +16,7 @@ import {
   CANDIDATE_STATUS_STYLES,
 } from "@/features/candidates";
 import { Thread, useMessageUnreadCounts } from "@/features/conversations";
+import { InboxConversationPane } from "@/features/inbox";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
@@ -189,26 +190,36 @@ export default function RecruiterCandidatePage() {
          * `left`/`right` below, which `RequireApprovedRecruiter` swaps out
          * entirely rather than rendering hidden. */}
         <RequireApprovedRecruiter>
-          <TwoColumnDetailLayout
-            header={
-              <div className="flex flex-col gap-6">
-                <Link
-                  href="/recruiter/inbox"
-                  className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to inbox
-                </Link>
-                <PageHeader
-                  title="Candidate"
-                  subtitle="Your candidate, and the conversation with the company about them."
-                />
-              </div>
-            }
-            left={<CandidateDetailColumn candidateId={params.id} />}
-            right={<Thread candidateId={params.id} />}
-            rightUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
-          />
+          <div className="flex gap-4">
+            {/* The design's left pane — the conversation list beside the open
+             * thread. Hidden below xl, where the back link returns to the full
+             * inbox instead. */}
+            <aside className="hidden w-[320px] shrink-0 xl:block">
+              <InboxConversationPane side="recruiter" selectedId={params.id} />
+            </aside>
+            <div className="min-w-0 flex-1">
+              <TwoColumnDetailLayout
+                header={
+                  <div className="flex flex-col gap-6">
+                    <Link
+                      href="/recruiter/inbox"
+                      className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground xl:hidden"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Back to inbox
+                    </Link>
+                    <PageHeader
+                      title="Candidate"
+                      subtitle="Your candidate, and the conversation with the company about them."
+                    />
+                  </div>
+                }
+                left={<CandidateDetailColumn candidateId={params.id} />}
+                right={<Thread candidateId={params.id} />}
+                rightUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
+              />
+            </div>
+          </div>
         </RequireApprovedRecruiter>
       </DashboardLayout>
     </RequireRole>
