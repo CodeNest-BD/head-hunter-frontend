@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -290,8 +290,19 @@ function StatusPill({ row }: { row: InboxConversationRow }) {
  * header carries its own searchable, multi-select filter. Filtering, sorting
  * and paging are client-side over the recruiter's full conversation list, so
  * the column filters always reflect the whole set, not the current page.
+ *
+ * Scoped to one job via `jobId`, it's the same table a recruiter sees on a
+ * job's own candidates page — identical look, just that job's rows.
  */
-export function SubmissionsTable() {
+export function SubmissionsTable({
+  jobId,
+  emptyAction,
+}: {
+  /** Limit rows to a single job (the per-job candidates view). */
+  jobId?: string;
+  /** Offered inside the empty state, where the reader is already looking. */
+  emptyAction?: ReactNode;
+} = {}) {
   const { data, isPending, isError, refetch } = useInboxConversations(
     "recruiter",
     { page: 1, limit: FETCH_LIMIT },
@@ -307,7 +318,11 @@ export function SubmissionsTable() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
 
-  const rows = useMemo(() => data?.data ?? [], [data]);
+  const fetched = useMemo(() => data?.data ?? [], [data]);
+  const rows = useMemo(
+    () => (jobId ? fetched.filter((row) => row.jobId === jobId) : fetched),
+    [fetched, jobId],
+  );
 
   const candidateOptions = useMemo(
     () => distinct(rows, (row) => row.candidateName),
@@ -435,6 +450,7 @@ export function SubmissionsTable() {
               ? "Candidates you submit to jobs appear here, each with its own conversation."
               : "Try clearing a column filter or a different search."}
           </p>
+          {rows.length === 0 ? emptyAction : null}
         </div>
       ) : (
         <div className={TABLE_CARD}>
@@ -580,9 +596,9 @@ export function SubmissionsTable() {
             onPage={setPage}
             onPageSize={setLimit}
           />
-          {data && data.meta.total > rows.length ? (
+          {data && data.meta.total > fetched.length ? (
             <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
-              Showing your {rows.length} most recent submissions of{" "}
+              Showing your {fetched.length} most recent submissions of{" "}
               {data.meta.total}.
             </p>
           ) : null}
