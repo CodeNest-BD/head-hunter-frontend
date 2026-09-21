@@ -134,9 +134,10 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
         <p className="text-sm text-muted-foreground">{copy.subtitle}</p>
       </div>
 
-      {/* Search + All/Unread segmented control */}
+      {/* Search + All/Unread segmented control — a left-aligned group, so the
+       * control sits beside the search rather than stranded at the far edge. */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[240px] flex-1">
+        <div className="relative min-w-[240px] max-w-[480px] flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
