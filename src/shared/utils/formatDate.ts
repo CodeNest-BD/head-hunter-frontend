@@ -41,6 +41,30 @@ export function formatTime(value: Date | string): string {
   return toDate(value).toLocaleTimeString("en-US", TIME_OPTIONS);
 }
 
+const START_OF_LOCAL_DAY = (d: Date): number =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+/**
+ * A short, human relative label by calendar day: "Today", "Yesterday",
+ * "4 days ago", "2 weeks ago", "3 months ago". Pairs under an absolute date to
+ * give a feed the "how long ago" read without the reader doing the arithmetic.
+ */
+export function formatRelativeDay(value: Date | string): string {
+  const MS_PER_DAY = 86_400_000;
+  const days = Math.round(
+    (START_OF_LOCAL_DAY(new Date()) - START_OF_LOCAL_DAY(toDate(value))) /
+      MS_PER_DAY,
+  );
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 14) return "Last week";
+  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+  if (days < 60) return "Last month";
+  if (days < 365) return `${Math.floor(days / 30)} months ago`;
+  return `${Math.floor(days / 365)} years ago`;
+}
+
 // `en-CA` is the shortest way to a "yyyy-mm-dd" string in the *local* calendar
 // day; `toISOString()` would shift it a day for anyone west of UTC.
 const ISO_DATE_LOCALE = "en-CA";
