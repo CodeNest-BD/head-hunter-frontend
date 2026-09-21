@@ -14,7 +14,6 @@ import {
   Users,
 } from "lucide-react";
 
-import { UnreadBadge } from "@/features/conversations/components/UnreadBadge";
 import {
   CANDIDATE_STATUSES,
   CANDIDATE_STATUS_LABELS,
@@ -22,7 +21,7 @@ import {
 import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
-import { formatDate } from "@/shared/utils/formatDate";
+import { formatDate, formatRelativeDay } from "@/shared/utils/formatDate";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import {
@@ -30,7 +29,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/ui-components/controls/popover";
-import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
@@ -74,6 +72,27 @@ function distinct(
   return [...seen]
     .sort((a, b) => a.localeCompare(b))
     .map((value) => ({ value, label: value }));
+}
+
+const AVATAR_PALETTE = [
+  "bg-[#E8EDFB] text-[#3F5BA9]",
+  "bg-[#FBF1DC] text-[#8A6D3B]",
+  "bg-[#E7F0E9] text-[#3F7A5A]",
+  "bg-[#F2E9F3] text-[#7A4F86]",
+  "bg-[#FBE9E6] text-[#9B4A3F]",
+];
+function avatarTint(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 /**
@@ -223,12 +242,37 @@ function OpenConversationLink({ candidateId }: { candidateId: string }) {
   );
 }
 
+/** The Thread column: the message count next to a button into the thread. */
+function ThreadCell({ row }: { row: InboxConversationRow }) {
+  const count = row.messageCount ?? row.unreadMessages;
+  return (
+    <Link
+      href={`/recruiter/inbox/${row.candidateId}`}
+      aria-label="Open conversation"
+      className="inline-flex items-center gap-2.5"
+    >
+      <span className="text-[13px] tabular-nums text-muted-foreground">
+        {count}
+      </span>
+      <span className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+        <ArrowRight className="h-3.5 w-3.5" />
+      </span>
+    </Link>
+  );
+}
+
+/** A pill with a leading dot in the stage's own hue (`bg-current`). */
 function StatusPill({ row }: { row: InboxConversationRow }) {
   return (
-    <StatusBadge
-      label={CANDIDATE_STATUS_LABELS[row.status]}
-      className={CANDIDATE_STATUS_STYLES[row.status]}
-    />
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold",
+        CANDIDATE_STATUS_STYLES[row.status],
+      )}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
+      {CANDIDATE_STATUS_LABELS[row.status]}
+    </span>
   );
 }
 
@@ -418,16 +462,31 @@ export function SubmissionsTable() {
                       onChange={setStatusSel}
                     />
                   </FilterableHead>
-                  <th className={TABLE_TH} />
+                  <th className={cn(TABLE_TH, "text-right")}>Thread</th>
                 </tr>
               </thead>
               <tbody className={TABLE_BODY}>
                 {pageRows.map((row) => (
                   <tr key={row.candidateId} className={TABLE_ROW}>
-                    <td className={`${TABLE_TD} font-semibold text-navy`}>
-                      <span className="flex items-center gap-2">
-                        {row.candidateName}
-                        <UnreadBadge count={row.unreadMessages} />
+                    <td className={TABLE_TD}>
+                      <span className="flex items-center gap-2.5">
+                        <span
+                          className={cn(
+                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold",
+                            avatarTint(row.candidateName),
+                          )}
+                        >
+                          {initials(row.candidateName)}
+                        </span>
+                        <span className="flex items-center gap-1.5 font-semibold text-navy">
+                          {row.candidateName}
+                          {row.unreadMessages > 0 && (
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-primary"
+                              aria-label="Unread messages"
+                            />
+                          )}
+                        </span>
                       </span>
                     </td>
                     <td className={`${TABLE_TD} text-navy`}>
@@ -436,16 +495,19 @@ export function SubmissionsTable() {
                     <td className={TABLE_TD}>
                       <JobLink jobId={row.jobId} title={row.jobTitle} />
                     </td>
-                    <td
-                      className={`${TABLE_TD} whitespace-nowrap tabular-nums text-brand-gray`}
-                    >
-                      {formatDate(submittedOf(row))}
+                    <td className={`${TABLE_TD} whitespace-nowrap`}>
+                      <span className="block tabular-nums text-navy">
+                        {formatDate(submittedOf(row))}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {formatRelativeDay(submittedOf(row))}
+                      </span>
                     </td>
                     <td className={TABLE_TD}>
                       <StatusPill row={row} />
                     </td>
                     <td className={`${TABLE_TD} text-right`}>
-                      <OpenConversationLink candidateId={row.candidateId} />
+                      <ThreadCell row={row} />
                     </td>
                   </tr>
                 ))}
@@ -461,7 +523,11 @@ export function SubmissionsTable() {
                 trailing={
                   <div className="flex flex-col items-end gap-1.5">
                     <StatusPill row={row} />
-                    <UnreadBadge count={row.unreadMessages} />
+                    {row.unreadMessages > 0 && (
+                      <span className="text-[11px] font-medium text-primary">
+                        {row.unreadMessages} unread
+                      </span>
+                    )}
                   </div>
                 }
                 fields={[
@@ -469,7 +535,10 @@ export function SubmissionsTable() {
                     label: "Job",
                     value: <JobLink jobId={row.jobId} title={row.jobTitle} />,
                   },
-                  { label: "Submitted", value: formatDate(submittedOf(row)) },
+                  {
+                    label: "Submitted",
+                    value: `${formatDate(submittedOf(row))} · ${formatRelativeDay(submittedOf(row))}`,
+                  },
                 ]}
                 actions={<OpenConversationLink candidateId={row.candidateId} />}
               />

@@ -81,6 +81,9 @@ export const inboxConversationRowSchema = z.object({
   // carries `lastActivityAt` still parses; the submissions table falls back to
   // last activity when it's absent.
   submittedAt: z.coerce.date().nullish(),
+  // Total messages in the thread, for the submissions table's Thread column.
+  // Optional; falls back to the unread count when the backend doesn't send it.
+  messageCount: z.number().nullish(),
 });
 export type InboxConversationRow = z.infer<typeof inboxConversationRowSchema>;
 
