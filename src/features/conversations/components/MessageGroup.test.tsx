@@ -146,7 +146,7 @@ describe("MessageGroup", () => {
 
     const bubble = screen.getByText("Own message");
     expect(bubble).toHaveClass("bg-primary", "text-primary-foreground");
-    expect(bubble.parentElement).toHaveClass("justify-end");
+    expect(bubble.parentElement).toHaveClass("items-end");
     expect(container.querySelector(".items-end")).not.toBeNull();
   });
 
@@ -168,7 +168,7 @@ describe("MessageGroup", () => {
 
     const bubble = screen.getByText("Their message");
     expect(bubble).toHaveClass("bg-card", "text-foreground");
-    expect(bubble.parentElement).toHaveClass("justify-start");
+    expect(bubble.parentElement).toHaveClass("items-start");
     expect(container.querySelector(".items-start")).not.toBeNull();
   });
 });

@@ -21,6 +21,27 @@ const PARTY_FALLBACK_LABEL: Record<ConversationParty, string> = {
   recruiter: "Recruiter",
 };
 
+const AVATAR_PALETTE = [
+  "bg-[#E8EDFB] text-[#3F5BA9]",
+  "bg-[#FBF1DC] text-[#8A6D3B]",
+  "bg-[#E7F0E9] text-[#3F7A5A]",
+  "bg-[#F2E9F3] text-[#7A4F86]",
+  "bg-[#FBE9E6] text-[#9B4A3F]",
+];
+function avatarTint(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 /**
  * One run of consecutive messages from the same side of the conversation:
  * exactly one name label above the run and one timestamp — the last
@@ -44,24 +65,48 @@ export function MessageGroup({
 
   return (
     <div
-      className={cn("flex flex-col gap-1", isOwn ? "items-end" : "items-start")}
+      className={cn("flex gap-2.5", isOwn ? "flex-row-reverse" : "flex-row")}
     >
-      <span className="text-xs font-semibold text-muted-foreground">
-        {label}
-      </span>
-      <div className="flex w-full flex-col gap-1">
-        {events.map((event) => (
-          <div
-            key={eventKey(event)}
-            className={cn("flex", isOwn ? "justify-end" : "justify-start")}
-          >
-            <MessageBubble event={event} isOwn={isOwn} />
-          </div>
-        ))}
+      {/* The counterparty gets an avatar; the viewer's own run is simply
+          right-aligned, matching the design's asymmetry. */}
+      {!isOwn && (
+        <span
+          className={cn(
+            "mt-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold",
+            avatarTint(label),
+          )}
+        >
+          {initials(label)}
+        </span>
+      )}
+      <div
+        className={cn(
+          "flex min-w-0 max-w-[82%] flex-col gap-1",
+          isOwn ? "items-end" : "items-start",
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-baseline gap-2",
+            isOwn && "flex-row-reverse",
+          )}
+        >
+          <span className="text-xs font-semibold text-navy">{label}</span>
+          <span className="text-[11px] text-muted-foreground">
+            {formatDateTime(lastEvent.at)}
+          </span>
+        </div>
+        <div
+          className={cn(
+            "flex w-full flex-col gap-1",
+            isOwn ? "items-end" : "items-start",
+          )}
+        >
+          {events.map((event) => (
+            <MessageBubble key={eventKey(event)} event={event} isOwn={isOwn} />
+          ))}
+        </div>
       </div>
-      <span className="text-[11px] text-muted-foreground">
-        {formatDateTime(lastEvent.at)}
-      </span>
     </div>
   );
 }

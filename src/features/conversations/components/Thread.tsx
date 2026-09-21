@@ -5,6 +5,8 @@ import Link from "next/link";
 import { AlertCircle, Briefcase } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { CANDIDATE_STATUS_LABELS } from "@/features/candidates/schemas";
+import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
@@ -303,9 +305,19 @@ export function Thread({ candidateId }: ThreadProps) {
             {initials(counterpartyHeading)}
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="truncate font-heading text-base font-bold text-navy">
-              {counterpartyHeading}
-            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="truncate font-heading text-[15px] font-bold text-navy">
+                {counterpartyHeading}
+              </h2>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                  CANDIDATE_STATUS_STYLES[threadHeader.candidate.status],
+                )}
+              >
+                {CANDIDATE_STATUS_LABELS[threadHeader.candidate.status]}
+              </span>
+            </div>
             <Link
               href={jobHref}
               className="mt-1 inline-flex max-w-full items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[12px] font-medium text-primary transition-colors hover:bg-primary/5"
@@ -397,6 +409,7 @@ export function Thread({ candidateId }: ThreadProps) {
                 data={event.data}
                 viewerParty={viewerParty}
                 candidateId={candidateId}
+                sentAt={event.at}
               />
             );
           }
