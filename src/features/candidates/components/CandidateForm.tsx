@@ -335,7 +335,6 @@ export function CandidateForm({
               Expected salary (USD/yr)
             </Label>
             <NumericInput
-              decimal
               id="expectedSalary"
               className={FIELD_CLASS}
               {...register("expectedSalary")}

@@ -79,9 +79,10 @@ export const candidateFormSchema = z.object({
   expectedSalary: z
     .string()
     .trim()
-    .refine((v) => v === "" || (Number.isFinite(Number(v)) && Number(v) >= 0), {
-      message: "Enter an amount of 0 or more",
-    })
+    .refine(
+      (v) => v === "" || (Number.isInteger(Number(v)) && Number(v) >= 0),
+      { message: "Enter a whole amount of 0 or more" },
+    )
     .refine((v) => v === "" || Number(v) <= MAX_SALARY_MAJOR, {
       message: `Expected salary must be under ${MAX_SALARY_MAJOR_LABEL}`,
     }),
