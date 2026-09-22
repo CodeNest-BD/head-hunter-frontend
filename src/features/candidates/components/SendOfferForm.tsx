@@ -9,13 +9,21 @@ import { AlertCircle } from "lucide-react";
 import {
   offerTermsFormSchema,
   useCreateOffer,
+  useWithdrawOffer,
+  withdrawOfferErrorMessage,
+  type Offer,
   type OfferStatus,
   type OfferTermsFormValues,
 } from "@/features/offers";
-import type { CandidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
+import {
+  isInterviewOpen,
+  type CandidateNegotiationState,
+  type OpenInterviewBadge,
+} from "@/features/conversations/utils/candidateNegotiationState";
 import { firstStartDayAfterInterview } from "@/features/interviews/utils/slotTiming";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
+import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
@@ -45,6 +53,46 @@ function liveOfferDisabledReason(status: OfferStatus): string {
   return status === "accepted"
     ? "This candidate has already been hired."
     : "This candidate already has an offer awaiting a response.";
+}
+
+/**
+ * Whether this rail may withdraw the live offer. Mirrors `OfferCard`'s
+ * `creatorCanWithdraw`: only a `sent` offer, and only by the party that sent
+ * it. `CandidateCard` is company-only, so a recruiter counter-offer — which
+ * is `sent` and created by the recruiter — is deliberately not withdrawable
+ * from here.
+ */
+function isWithdrawableByCompany(offer: Offer | null): offer is Offer {
+  return offer?.status === "sent" && offer.createdBy === "company";
+}
+
+/** "Awaiting a time" and "scheduled" are different situations to the person
+ * reading them — one round has yet to be pinned down, the other has yet to be
+ * closed out — so each says what is actually outstanding. */
+function openInterviewDisabledReason(kind: OpenInterviewBadge["kind"]): string {
+  return kind === "scheduled"
+    ? "This candidate has an interview scheduled — record its outcome first."
+    : "This candidate has an interview awaiting a time — finish the round first.";
+}
+
+/**
+ * Why offering is closed right now, or `null` while it is open. A live offer
+ * outranks an open interview: it is the more specific fact about the very
+ * offer this button would create.
+ */
+function offerDisabledReason(
+  negotiationState: CandidateNegotiationState | null,
+): string | null {
+  const offerBadge = negotiationState?.offer ?? null;
+  if (offerBadge && LIVE_OFFER_STATUSES.has(offerBadge.kind)) {
+    return liveOfferDisabledReason(offerBadge.kind);
+  }
+  const interviewBadge = negotiationState?.interview ?? null;
+  // Recording "Ready for offer" on the open round is the step that leads here.
+  if (isInterviewOpen(interviewBadge)) {
+    return openInterviewDisabledReason(interviewBadge.kind);
+  }
+  return null;
 }
 
 /** 409 (a live offer already exists) and 404 (candidate on another
@@ -90,11 +138,17 @@ export function SendOfferForm({
 }: SendOfferFormProps) {
   const disabledReasonId = useId();
   const [isOpen, setIsOpen] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const createOffer = useCreateOffer();
 
-  const offerBadge = negotiationState?.offer ?? null;
-  const liveOffer =
-    offerBadge && LIVE_OFFER_STATUSES.has(offerBadge.kind) ? offerBadge : null;
+  const liveOffer = negotiationState?.offerRecord ?? null;
+  const withdrawableOffer = isWithdrawableByCompany(liveOffer)
+    ? liveOffer
+    : null;
+  // Hooks cannot be conditional, so this is mounted with an empty id when
+  // there is nothing to withdraw — the button that would fire it is not
+  // rendered in that case.
+  const withdrawOffer = useWithdrawOffer(withdrawableOffer?.id ?? "");
 
   const {
     register,
@@ -191,9 +245,7 @@ export function SendOfferForm({
     );
   }
 
-  const disabledReason = liveOffer
-    ? liveOfferDisabledReason(liveOffer.kind)
-    : null;
+  const disabledReason = offerDisabledReason(negotiationState);
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -211,6 +263,40 @@ export function SendOfferForm({
         <p id={disabledReasonId} className="text-xs text-muted-foreground">
           {disabledReason}
         </p>
+      )}
+      {withdrawableOffer &&
+        (isWithdrawing ? (
+          <ConfirmAction
+            message="Withdraw this offer? It will show as Declined afterward, since offers don't have a separate withdrawn status. This cannot be undone."
+            confirmLabel="Confirm withdraw"
+            busyLabel="Withdrawing…"
+            busy={withdrawOffer.isPending}
+            onCancel={() => setIsWithdrawing(false)}
+            // Closes itself rather than waiting to be unmounted once the
+            // offers query refetches: until then the panel would sit there
+            // re-enabled, inviting a second withdraw that can only 409.
+            onConfirm={() =>
+              withdrawOffer.mutate(undefined, {
+                onSuccess: () => setIsWithdrawing(false),
+              })
+            }
+          />
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="self-start"
+            onClick={() => setIsWithdrawing(true)}
+          >
+            Withdraw
+          </Button>
+        ))}
+      {withdrawOffer.isError && (
+        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          {withdrawOfferErrorMessage(withdrawOffer.error)}
+        </div>
       )}
     </div>
   );

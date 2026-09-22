@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Imported from the keys module directly, not the conversations barrel: the
@@ -15,11 +16,11 @@ import {
   proposeSlots,
   recordOutcome,
   setMeetingUrl,
-  type CreateInterviewInput,
   type InterviewListParams,
   type ProposeSlotsInput,
   type RecordOutcomeInput,
 } from "../api/interviews";
+import type { InterviewType } from "../schemas";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { interviewKeys } from "../keys";
 
@@ -57,18 +58,45 @@ function useInvalidateOnScheduling(): () => void {
   };
 }
 
-export function useCreateInterview() {
-  const invalidate = useInvalidateOnScheduling();
-  return useMutation({
-    mutationFn: (input: CreateInterviewInput) => createInterview(input),
-    onSuccess: invalidate,
-  });
-}
+/**
+ * Which interview a batch of times is for: one that already exists, or one
+ * this submit is about to open for a candidate. A union rather than an
+ * optional id, so "no interview yet" carries the candidate it needs instead
+ * of being a second nullable field the form has to cross-check.
+ */
+export type ProposeTimesTarget =
+  | { kind: "existing"; interviewId: string }
+  | { kind: "new"; candidateId: string; interviewType: InterviewType };
 
-export function useProposeSlots(interviewId: string) {
+/**
+ * Offering times, whether or not the interview exists yet. Creating the row
+ * only once times are actually being sent is what keeps a company from
+ * stranding a candidate on an interview that was opened and never filled in —
+ * that empty `proposed` row blocks every later `createInterview` with a 409,
+ * and withdrawing was the only way out of it.
+ *
+ * A created interview is remembered for the lifetime of the hook: if the
+ * create lands but `proposeSlots` then fails (overlapping windows, a slot in
+ * the past), retrying must reuse that interview — creating a second one can
+ * only 409 against the first.
+ */
+export function useProposeInterviewTimes(target: ProposeTimesTarget) {
   const invalidate = useInvalidateOnScheduling();
+  const createdInterviewId = useRef<string | null>(null);
+
   return useMutation({
-    mutationFn: (input: ProposeSlotsInput) => proposeSlots(interviewId, input),
+    mutationFn: async (input: ProposeSlotsInput) => {
+      const interviewId =
+        target.kind === "existing"
+          ? target.interviewId
+          : (createdInterviewId.current ??= (
+              await createInterview({
+                candidateId: target.candidateId,
+                interviewType: target.interviewType,
+              })
+            ).id);
+      return proposeSlots(interviewId, input);
+    },
     onSuccess: invalidate,
   });
 }

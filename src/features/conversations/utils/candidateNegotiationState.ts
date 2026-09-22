@@ -26,6 +26,24 @@ export type OfferBadge =
   | { kind: "declined"; salaryMinor: number | null }
   | { kind: "countered"; salaryMinor: number | null };
 
+/**
+ * An interview still in flight: a time is being agreed, or one is agreed and
+ * the round has yet to be closed out. These are exactly the two states the
+ * backend's one-open-interview rule keys on, and the two in which a candidate
+ * is mid-process — so they gate starting a second interview and sending an
+ * offer alike.
+ */
+export type OpenInterviewBadge = Extract<
+  InterviewBadge,
+  { kind: "awaiting_time" | "scheduled" }
+>;
+
+export function isInterviewOpen(
+  interview: InterviewBadge | null,
+): interview is OpenInterviewBadge {
+  return interview?.kind === "awaiting_time" || interview?.kind === "scheduled";
+}
+
 export interface CandidateNegotiationState {
   interview: InterviewBadge | null;
   offer: OfferBadge | null;

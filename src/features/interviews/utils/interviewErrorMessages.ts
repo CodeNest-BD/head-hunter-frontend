@@ -64,3 +64,23 @@ export function withdrawInterviewErrorMessage(error: unknown): string {
       return allMessages(error);
   }
 }
+
+/**
+ * 409 covers both "an outcome is already recorded" and "this interview was
+ * canceled" — the backend raises one message for the pair, and so does this,
+ * because from the company's side both mean the same thing: the round already
+ * closed somewhere else.
+ */
+export function recordOutcomeErrorMessage(error: unknown): string {
+  if (!isApiError(error)) {
+    return "Could not record this outcome. Please try again.";
+  }
+  switch (error.statusCode) {
+    case HttpStatusCode.Conflict:
+      return "This interview already has an outcome, or was canceled.";
+    case HttpStatusCode.NotFound:
+      return "This interview is no longer available — refresh and try again.";
+    default:
+      return allMessages(error);
+  }
+}

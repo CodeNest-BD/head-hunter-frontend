@@ -5,15 +5,14 @@
 // pull them into the server graph.
 /** Public surface of the interviews feature. */
 export { OpenInterviewActions } from "./components/OpenInterviewActions";
+export { ProposedSlotList } from "./components/ProposedSlotList";
 export { ProposeSlotsForm } from "./components/ProposeSlotsForm";
 export {
   useCancelInterview,
   useConfirmSlot,
   useCounterRequest,
-  useCreateInterview,
   useInterview,
   useInterviews,
-  useProposeSlots,
   useRecordOutcome,
   useSetMeetingUrl,
 } from "./hooks/useInterviews";
@@ -30,7 +29,7 @@ export {
   createInterviewErrorMessage,
   withdrawInterviewErrorMessage,
 } from "./utils/interviewErrorMessages";
-export type { OpenInterviewPanel } from "./components/OpenInterviewActions";
+export type { ProposeSlotsTarget } from "./components/ProposeSlotsForm";
 export type {
   Interview,
   InterviewOutcome,

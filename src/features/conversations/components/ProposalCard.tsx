@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import {
+  ProposedSlotList,
   ProposeSlotsForm,
   useCancelInterview,
   useConfirmSlot,
@@ -156,25 +157,6 @@ function ConfirmedTime({ start, end }: { start: string; end: string }) {
   );
 }
 
-/** Times from a batch that is no longer actionable — a superseded or
- * decided proposal kept for the record. The dashed, muted rows read as
- * "these were on the table" rather than an active choice. */
-function ReadOnlySlots({ slots }: { slots: SlotOption[] }) {
-  if (slots.length === 0) return null;
-  return (
-    <ul className="flex flex-col gap-1.5">
-      {slots.map((slot) => (
-        <li
-          key={slot.id}
-          className="rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-2 text-sm text-muted-foreground"
-        >
-          {formatDateTime(slot.startAt)} – {formatDateTime(slot.endAt)}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 interface SlotRadioGroupProps {
   slots: SlotOption[];
   selectedSlotId: string | null;
@@ -285,7 +267,7 @@ export function ProposalCard({
           <p className="text-sm font-semibold text-navy">Propose new times</p>
         </div>
         <ProposeSlotsForm
-          interviewId={interviewId}
+          target={{ kind: "existing", interviewId }}
           onDone={() => setShowProposeForm(false)}
           onCancel={() => setShowProposeForm(false)}
         />
@@ -325,7 +307,7 @@ export function ProposalCard({
           onSelect={setSelectedSlotId}
         />
       ) : (
-        <ReadOnlySlots slots={slots} />
+        <ProposedSlotList slots={slots} />
       )}
 
       {recruiterCanRespond && (

@@ -1,24 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle } from "lucide-react";
 
 import {
-  createInterviewErrorMessage,
-  INTERVIEW_TYPE_LABELS,
-  INTERVIEW_TYPE_OPTIONS,
-  interviewTypeSchema,
   OpenInterviewActions,
-  useCreateInterview,
+  ProposeSlotsForm,
   type Interview,
-  type InterviewType,
 } from "@/features/interviews";
-import type {
-  CandidateNegotiationState,
-  InterviewBadge,
+import {
+  isInterviewOpen,
+  type CandidateNegotiationState,
 } from "@/features/conversations/utils/candidateNegotiationState";
 import { Button } from "@/shared/ui-components/controls/button";
-import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
 
 export interface ScheduleInterviewActionProps {
   candidateId: string;
@@ -29,17 +22,32 @@ export interface ScheduleInterviewActionProps {
   negotiationState: CandidateNegotiationState | null;
 }
 
-// One interview per candidate may be `proposed` (awaiting a time) or
-// `scheduled` (a time is confirmed) at a time — the same rule
-// `createInterview`'s 409 enforces server-side.
-const OPEN_INTERVIEW_STATUSES = new Set(["proposed", "scheduled"]);
-const OPEN_INTERVIEW_BADGE_KINDS = new Set<InterviewBadge["kind"]>([
-  "awaiting_time",
-  "scheduled",
-]);
+/**
+ * The panel replaces the button while it is open. `proposed` covers the beat
+ * between a successful submit and the page-level interviews query learning
+ * about it — without it the button would reappear and invite a second
+ * interview that could only 409. It carries the latest interview as of the
+ * submit, because that is the only way to tell that beat from a later one:
+ * once the query reports a different interview, this state has served its
+ * purpose and holding the card quiet on it would strand the candidate with no
+ * control at all.
+ */
+type SchedulePanel =
+  | { kind: "none" }
+  | { kind: "proposing" }
+  | { kind: "proposed"; latestInterviewIdBefore: string | null };
 
-function isOpen(interview: Interview): boolean {
-  return OPEN_INTERVIEW_STATUSES.has(interview.status);
+/**
+ * Whether the company may open another round. A `completed` interview only
+ * invites one when its outcome was `next_round` — `offer` hands the candidate
+ * to `SendOfferForm` below this, and `pass` ends them. A `canceled` one
+ * decided nothing, so starting over is fair.
+ */
+function acceptsAnotherRound(latest: Interview | null): boolean {
+  if (!latest || latest.status !== "completed") {
+    return true;
+  }
+  return latest.outcome === "next_round";
 }
 
 /**
@@ -47,90 +55,74 @@ function isOpen(interview: Interview): boolean {
  * decisions a company makes about a candidate (see the status select right
  * above this in `CandidateCard`).
  *
- * A candidate may only have one open interview, so this either starts one or
- * hands over to `OpenInterviewActions` for the one already open — the open
- * interview is read from the `negotiationState` its parent already derived
- * from the page-level interviews query (there is no "has open interview"
- * endpoint) falling back to the interview this very component just created,
- * which that data may not have refetched yet.
+ * Nothing is written until times are actually proposed: the type and the times
+ * are picked in one panel and `ProposeSlotsForm` opens the interview as it
+ * sends them. Creating the interview on the button click instead used to leave
+ * a candidate holding an empty `proposed` interview that blocked every later
+ * one, with withdrawing as the only way out.
+ *
+ * A candidate may only have one open interview, so once one exists this hands
+ * over to `OpenInterviewActions` for it — read from the `negotiationState` its
+ * parent already derived from the page-level interviews query, since there is
+ * no "has open interview" endpoint.
  */
 export function ScheduleInterviewAction({
   candidateId,
   negotiationState,
 }: ScheduleInterviewActionProps) {
-  const [interviewType, setInterviewType] = useState<InterviewType>("video");
-  const createInterview = useCreateInterview();
+  const [panel, setPanel] = useState<SchedulePanel>({ kind: "none" });
 
-  const latestInterviewRecord = negotiationState?.interviewRecord ?? null;
-  const currentOpenInterview =
-    negotiationState?.interview &&
-    OPEN_INTERVIEW_BADGE_KINDS.has(negotiationState.interview.kind)
-      ? latestInterviewRecord
-      : null;
-  // React Query keeps a mutation's result until the component unmounts, so the
-  // created interview is only trusted while the negotiation state has yet to
-  // mention it at all — once that data knows about it, it is the only source,
-  // and a withdrawal (which lands there as `canceled`) is not overruled by
-  // this now-stale snapshot.
-  const created = createInterview.data;
-  const pendingCreated =
-    created && isOpen(created) && latestInterviewRecord?.id !== created.id
-      ? created
-      : undefined;
-  const openInterview = currentOpenInterview ?? pendingCreated;
+  const latestInterview = negotiationState?.interviewRecord ?? null;
+  // One interview per candidate may be open at a time — the same rule
+  // `createInterview`'s 409 enforces server-side.
+  const openInterview = isInterviewOpen(negotiationState?.interview ?? null)
+    ? latestInterview
+    : null;
 
   if (openInterview) {
     return (
-      <OpenInterviewActions
-        key={openInterview.id}
-        interview={openInterview}
-        // Creating an interview is only ever step one of offering times, so the
-        // form opens straight away rather than asking for a second click. Only
-        // while it is still this component's own fresh creation, though: once
-        // the list owns it, a remount means arriving at an interview whose
-        // times may already have been offered.
-        initialPanel={openInterview === pendingCreated ? "proposing" : "none"}
-      />
+      <OpenInterviewActions key={openInterview.id} interview={openInterview} />
+    );
+  }
+
+  const isAwaitingRefetch =
+    panel.kind === "proposed" &&
+    panel.latestInterviewIdBefore === (latestInterview?.id ?? null);
+
+  if (isAwaitingRefetch || !acceptsAnotherRound(latestInterview)) {
+    return null;
+  }
+
+  if (panel.kind === "proposing") {
+    return (
+      <div className="flex flex-col gap-2 rounded-md border border-border/60 p-3">
+        <p className="text-sm font-medium text-foreground">
+          Schedule Interview
+        </p>
+        <ProposeSlotsForm
+          target={{ kind: "new", candidateId }}
+          onDone={() =>
+            setPanel({
+              kind: "proposed",
+              latestInterviewIdBefore: latestInterview?.id ?? null,
+            })
+          }
+          onCancel={() => setPanel({ kind: "none" })}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2">
-        <NativeSelect
-          aria-label="Interview type"
-          value={interviewType}
-          className="w-auto shrink-0"
-          onChange={(event) => {
-            // A native select's onChange only ever gives a string; parsing it
-            // against the same schema the API layer validates with means an
-            // unexpected DOM value is caught here instead of flowing into
-            // the mutation's request body.
-            const parsed = interviewTypeSchema.safeParse(event.target.value);
-            if (parsed.success) setInterviewType(parsed.data);
-          }}
-        >
-          {INTERVIEW_TYPE_OPTIONS.map((type) => (
-            <option key={type} value={type}>
-              {INTERVIEW_TYPE_LABELS[type]}
-            </option>
-          ))}
-        </NativeSelect>
-        <Button
-          type="button"
-          size="sm"
-          disabled={createInterview.isPending}
-          onClick={() => createInterview.mutate({ candidateId, interviewType })}
-        >
-          {createInterview.isPending ? "Scheduling…" : "Schedule interview"}
-        </Button>
-      </div>
-      {createInterview.isError && (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          {createInterviewErrorMessage(createInterview.error)}
-        </div>
-      )}
-    </div>
+    <Button
+      type="button"
+      size="sm"
+      className="self-start"
+      onClick={() => setPanel({ kind: "proposing" })}
+    >
+      {latestInterview?.outcome === "next_round"
+        ? "Schedule next round"
+        : "Schedule interview"}
+    </Button>
   );
 }

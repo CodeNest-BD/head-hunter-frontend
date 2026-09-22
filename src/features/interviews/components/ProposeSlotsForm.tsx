@@ -9,23 +9,39 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
 import { Label } from "@/shared/ui-components/controls/label";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
-import { useProposeSlots } from "../hooks/useInterviews";
+import { useProposeInterviewTimes } from "../hooks/useInterviews";
 import {
+  INTERVIEW_TYPE_LABELS,
+  INTERVIEW_TYPE_OPTIONS,
+  interviewTypeSchema,
   MAX_PROPOSAL_SLOTS,
   proposeSlotsFormSchema,
   SLOT_DURATION_OPTIONS,
+  type InterviewType,
   type ProposeSlotsFormValues,
   type SlotDurationMinutes,
 } from "../schemas";
-import { proposeSlotsErrorMessage } from "../utils/interviewErrorMessages";
+import {
+  createInterviewErrorMessage,
+  proposeSlotsErrorMessage,
+} from "../utils/interviewErrorMessages";
 import {
   formatSlotWindow,
   selectableTimeOptions,
   toSlotRange,
 } from "../utils/slotTiming";
 
+/**
+ * The interview these times are for. `new` is the company's first batch on a
+ * candidate: the interview itself is opened by the submit, which is why the
+ * type is picked here and not before the form.
+ */
+export type ProposeSlotsTarget =
+  | { kind: "existing"; interviewId: string }
+  | { kind: "new"; candidateId: string };
+
 export interface ProposeSlotsFormProps {
-  interviewId: string;
+  target: ProposeSlotsTarget;
   /** Called once the batch is proposed successfully — the caller decides what
    * "done" means (close the panel, collapse back into the thread, etc.). */
   onDone: () => void;
@@ -35,6 +51,7 @@ export interface ProposeSlotsFormProps {
 }
 
 const DEFAULT_DURATION: SlotDurationMinutes = 60;
+const DEFAULT_INTERVIEW_TYPE: InterviewType = "video";
 
 /**
  * Why the picker cannot add right now, or that it can. A union rather than the
@@ -53,6 +70,9 @@ type AddState =
  * 1-5 candidate windows for one interview. Used by the company's scheduling
  * entry point and by `ProposalCard`'s "Propose new times".
  *
+ * On a `new` target this form is the whole scheduling step — type, times and
+ * the interview itself — so nothing is written until it is submitted.
+ *
  * Reads top-down as "here is what I am sending, here is how I add to it": the
  * staged list sits above the day/start-time/length row that appends to it, and
  * keeps an empty state — an empty list used to render as nothing at all, which
@@ -61,12 +81,20 @@ type AddState =
  * so the API contract is unchanged.
  */
 export function ProposeSlotsForm({
-  interviewId,
+  target,
   onDone,
   onCancel,
 }: ProposeSlotsFormProps) {
   const stagedHeadingId = useId();
-  const proposeSlots = useProposeSlots(interviewId);
+  // An existing interview's type was fixed when it was created and there is no
+  // endpoint to change it, so the select is only offered where it still means
+  // something: the batch that opens the interview.
+  const [interviewType, setInterviewType] = useState<InterviewType>(
+    DEFAULT_INTERVIEW_TYPE,
+  );
+  const proposeSlots = useProposeInterviewTimes(
+    target.kind === "new" ? { ...target, interviewType } : target,
+  );
   const {
     control,
     handleSubmit,
@@ -159,6 +187,14 @@ export function ProposeSlotsForm({
     );
   });
 
+  // A `new` target's submit opens the interview before it proposes, so its
+  // failures are the create endpoint's — chiefly the 409 for a candidate whose
+  // interview another tab already opened.
+  const submitErrorMessage =
+    target.kind === "new"
+      ? createInterviewErrorMessage
+      : proposeSlotsErrorMessage;
+
   const canSubmit =
     fields.length > 0 || (day !== "" && effectiveStartTime !== "");
   // An array-level issue (too few, too many) lands on the array's own
@@ -185,6 +221,31 @@ export function ProposeSlotsForm({
       }}
       className="flex flex-col gap-4"
     >
+      {target.kind === "new" && (
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="propose-interview-type">Interview type</Label>
+          <NativeSelect
+            id="propose-interview-type"
+            className="w-auto"
+            value={interviewType}
+            onChange={(event) => {
+              // A native select's onChange only ever gives a string; parsing it
+              // against the same schema the API layer validates with means an
+              // unexpected DOM value is caught here instead of flowing into
+              // the request body.
+              const parsed = interviewTypeSchema.safeParse(event.target.value);
+              if (parsed.success) setInterviewType(parsed.data);
+            }}
+          >
+            {INTERVIEW_TYPE_OPTIONS.map((type) => (
+              <option key={type} value={type}>
+                {INTERVIEW_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+      )}
+
       {/* The batch being assembled comes first, so it reads as the thing being
           built rather than as output of the picker below it. */}
       <div className="flex flex-col gap-1.5">
@@ -344,7 +405,7 @@ export function ProposeSlotsForm({
       {proposeSlots.isError && (
         <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          {proposeSlotsErrorMessage(proposeSlots.error)}
+          {submitErrorMessage(proposeSlots.error)}
         </div>
       )}
     </form>

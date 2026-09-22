@@ -12,7 +12,7 @@ const mutateMock = vi.fn();
 // Only the mutation is stubbed. Stubbing it also keeps `../api/interviews` —
 // which reads NEXT_PUBLIC_API_URL at import time — out of this test.
 vi.mock("../hooks/useInterviews", () => ({
-  useProposeSlots: () => ({
+  useProposeInterviewTimes: () => ({
     mutate: mutateMock,
     isPending: false,
     isError: false,
@@ -65,7 +65,10 @@ async function pickToday(): Promise<void> {
 
 function renderForm() {
   return renderWithProviders(
-    <ProposeSlotsForm interviewId="interview-1" onDone={vi.fn()} />,
+    <ProposeSlotsForm
+      target={{ kind: "existing", interviewId: "interview-1" }}
+      onDone={vi.fn()}
+    />,
   );
 }
 

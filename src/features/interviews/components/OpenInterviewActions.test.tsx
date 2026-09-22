@@ -15,8 +15,13 @@ vi.mock("../hooks/useInterviews", () => ({
   useCancelInterview: (...args: unknown[]) => useCancelInterviewMock(...args),
 }));
 vi.mock("./ProposeSlotsForm", () => ({
-  ProposeSlotsForm: ({ interviewId }: { interviewId: string }) => (
-    <div>Propose slots form for {interviewId}</div>
+  ProposeSlotsForm: ({ target }: { target: { interviewId?: string } }) => (
+    <div>Propose slots form for {target.interviewId}</div>
+  ),
+}));
+vi.mock("./RecordOutcomeActions", () => ({
+  RecordOutcomeActions: ({ interview }: { interview: Interview }) => (
+    <div>Record outcome for {interview.id}</div>
   ),
 }));
 
@@ -77,16 +82,6 @@ describe("OpenInterviewActions", () => {
     ).toBeInTheDocument();
   });
 
-  it("starts on the propose-times form when the caller already knows the next step", () => {
-    renderWithProviders(
-      <OpenInterviewActions interview={interview()} initialPanel="proposing" />,
-    );
-
-    expect(
-      screen.getByText(/propose slots form for interview-1/i),
-    ).toBeInTheDocument();
-  });
-
   it("withdraws only after the confirmation step", () => {
     const mutate = vi.fn();
     useCancelInterviewMock.mockReturnValue(mutationStub({ mutate }));
@@ -130,19 +125,42 @@ describe("OpenInterviewActions", () => {
     expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
   });
 
-  it("defers to ProposalCard once a batch is open, instead of offering a second way to propose times", () => {
-    const { container } = renderWithProviders(
+  it("reports an open batch's times and still offers a way out of it", () => {
+    const start = "2026-09-23T09:00:00.000Z";
+    const end = "2026-09-23T10:00:00.000Z";
+
+    renderWithProviders(
       <OpenInterviewActions
         interview={interview({
-          liveProposal: { id: "prop-1", status: "proposed", slots: [] },
+          liveProposal: {
+            id: "prop-1",
+            status: "proposed",
+            slots: [{ id: "slot-1", startAt: start, endAt: end }],
+          },
         })}
       />,
     );
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText(/times proposed/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `${formatDateTime(start)} – ${formatDateTime(end)}`.replace(
+          /\s+/g,
+          " ",
+        ),
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^withdraw$/i }),
+    ).toBeInTheDocument();
+    // Replacing an open batch stays with the thread's ProposalCard, which
+    // knows which batch it supersedes.
+    expect(
+      screen.queryByRole("button", { name: /propose times/i }),
+    ).not.toBeInTheDocument();
   });
 
-  it("shows the agreed time for a scheduled interview instead of any action", () => {
+  it("shows the agreed time for a scheduled interview, with the outcome decision beside it", () => {
     const start = "2026-09-01T16:00:00.000Z";
     const end = "2026-09-01T17:00:00.000Z";
 
@@ -163,6 +181,9 @@ describe("OpenInterviewActions", () => {
           " ",
         ),
       ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/record outcome for interview-1/i),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /propose times/i }),

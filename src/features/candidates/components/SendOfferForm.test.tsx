@@ -9,6 +9,7 @@ import { SendOfferForm } from "./SendOfferForm";
 
 const fetchOffersMock = vi.fn();
 const createOfferMock = vi.fn();
+const withdrawOfferMock = vi.fn();
 
 // `fetchOffers` is mocked only so a stray call would be caught, not because
 // the component still uses it — it reads its candidate's negotiation state
@@ -16,6 +17,7 @@ const createOfferMock = vi.fn();
 vi.mock("@/features/offers/api/offers", () => ({
   fetchOffers: (...args: unknown[]) => fetchOffersMock(...args),
   createOffer: (...args: unknown[]) => createOfferMock(...args),
+  withdrawOffer: (...args: unknown[]) => withdrawOfferMock(...args),
 }));
 
 function offer(overrides: Partial<Offer> = {}): Offer {
@@ -50,6 +52,7 @@ describe("SendOfferForm", () => {
   beforeEach(() => {
     fetchOffersMock.mockReset();
     createOfferMock.mockReset();
+    withdrawOfferMock.mockReset();
     vi.setSystemTime(new Date("2026-08-22T12:00:00"));
   });
 
@@ -118,6 +121,86 @@ describe("SendOfferForm", () => {
     );
     expect(screen.queryByText(/already has an offer/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/already been hired/i)).not.toBeInTheDocument();
+  });
+
+  it("disables sending an offer while an interview is scheduled, so its outcome is recorded first", async () => {
+    renderWithProviders(
+      <SendOfferForm
+        candidateId="candidate-1"
+        negotiationState={negotiationState({
+          interview: {
+            kind: "scheduled",
+            confirmedSlotStart: "2026-09-01T16:00:00.000Z",
+            confirmedSlotEnd: "2026-09-01T17:00:00.000Z",
+          },
+        })}
+      />,
+    );
+
+    expect(
+      await screen.findByRole("button", { name: /send offer/i }),
+    ).toBeDisabled();
+    expect(screen.getByText(/record its outcome first/i)).toBeInTheDocument();
+  });
+
+  it("disables sending an offer while an interview is still awaiting a time", async () => {
+    renderWithProviders(
+      <SendOfferForm
+        candidateId="candidate-1"
+        negotiationState={negotiationState({
+          interview: { kind: "awaiting_time" },
+        })}
+      />,
+    );
+
+    expect(
+      await screen.findByRole("button", { name: /send offer/i }),
+    ).toBeDisabled();
+    expect(screen.getByText(/finish the round first/i)).toBeInTheDocument();
+  });
+
+  it("withdraws the company's own live offer only after the confirmation step", async () => {
+    const user = userEvent.setup();
+    withdrawOfferMock.mockResolvedValue(offer({ status: "declined" }));
+
+    renderWithProviders(
+      <SendOfferForm
+        candidateId="candidate-1"
+        negotiationState={negotiationState({
+          offer: { kind: "sent", salaryMinor: 1500000 },
+          offerRecord: offer({ status: "sent", createdBy: "company" }),
+        })}
+      />,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: /^withdraw$/i }),
+    );
+    expect(withdrawOfferMock).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: /confirm withdraw/i }));
+    await waitFor(() =>
+      expect(withdrawOfferMock).toHaveBeenCalledWith("offer-1"),
+    );
+  });
+
+  it("offers no withdraw on a counter the recruiter sent, which is theirs to pull", async () => {
+    renderWithProviders(
+      <SendOfferForm
+        candidateId="candidate-1"
+        negotiationState={negotiationState({
+          offer: { kind: "sent", salaryMinor: 1500000 },
+          offerRecord: offer({ status: "sent", createdBy: "recruiter" }),
+        })}
+      />,
+    );
+
+    expect(
+      await screen.findByRole("button", { name: /send offer/i }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: /^withdraw$/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("converts the entered salary to minor units and sends optional fields on submit", async () => {

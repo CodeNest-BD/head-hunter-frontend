@@ -88,6 +88,20 @@ export const proposalSchema = z.object({
 });
 export type Proposal = z.infer<typeof proposalSchema>;
 
+/** What the company decides once a round is over. `next_round` is what frees
+ * it to open round N+1: the backend completes this interview, leaves the
+ * candidate `interviewing`, and the one-open-interview rule keys on
+ * `proposed`/`scheduled` only. */
+export const INTERVIEW_OUTCOME_LABELS: Record<InterviewOutcome, string> = {
+  offer: "Ready for offer",
+  next_round: "Next round",
+  pass: "Pass",
+};
+
+/** The same cap `RecordOutcomeDto` enforces, so the textarea stops where the
+ * 400 would. */
+export const MAX_PASS_FEEDBACK_LENGTH = 4000;
+
 export const INTERVIEW_TYPE_LABELS: Record<InterviewType, string> = {
   phone: "Phone",
   video: "Video",

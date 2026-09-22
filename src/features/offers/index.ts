@@ -14,6 +14,7 @@ export {
   useWithdrawOffer,
 } from "./hooks/useOffers";
 export { offerKeys } from "./keys";
+export { withdrawOfferErrorMessage } from "./utils/offerErrorMessages";
 export {
   OFFER_STATUS_LABELS,
   OFFER_STATUSES,
