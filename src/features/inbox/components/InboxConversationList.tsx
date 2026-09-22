@@ -58,6 +58,10 @@ type Filter = "all" | "unread";
  * "N–M of total" it prints matches what the server actually returned. */
 const PAGE_SIZE = 20;
 
+/** The chip a thread wears while it carries news the reader has not seen — the
+ * platform's needs-action amber, as on an open dispute. */
+const REVIEW_STYLE = "bg-[#FBF3DF] text-[#7A5109]";
+
 /** Soft two-tone chip per pipeline stage, matching the design's colours. */
 const STATUS_STYLES: Record<CandidateStatus, string> = {
   submitted: "bg-[#EEF1F6] text-[#5B6B7C]",
@@ -119,7 +123,11 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
 
   const rows = data?.data ?? [];
   const meta = data?.meta;
-  const unreadOnPage = rows.filter((r) => r.unreadMessages > 0).length;
+  // Counts what the page highlights, so the readout matches the tinted rows —
+  // a thread waiting on an answer is one of them.
+  const unreadOnPage = rows.filter(
+    (r) => r.unreadMessages > 0 || r.needsReview,
+  ).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -276,6 +284,10 @@ function ConversationRow({
   jobHref: string;
 }) {
   const unread = row.unreadMessages > 0;
+  // Anything unseen on the thread — a status change, an offer, a proposed
+  // interview — stands out exactly like an unread message does. It is the same
+  // rule the sidebar badge counts.
+  const needsYou = unread || row.needsReview;
   const youSentLast = row.lastMessageSender === side;
   const hasMessage = row.lastMessagePreview !== null;
   const preview = hasMessage
@@ -296,14 +308,14 @@ function ConversationRow({
         }}
         className={cn(
           "flex cursor-pointer items-start gap-3 px-5 py-4 transition-colors",
-          unread
+          needsYou
             ? "bg-primary/[0.05] hover:bg-primary/[0.09]"
             : "hover:bg-secondary/40",
         )}
       >
         {/* Unread dot */}
         <span className="flex w-2 shrink-0 justify-center pt-2">
-          {unread ? (
+          {needsYou ? (
             <span
               className="h-2 w-2 rounded-full bg-primary"
               aria-label="Unread"
@@ -327,7 +339,7 @@ function ConversationRow({
             <span
               className={cn(
                 "min-w-0 flex-1 truncate text-[15px]",
-                unread ? "font-bold text-navy" : "font-semibold text-navy",
+                needsYou ? "font-bold text-navy" : "font-semibold text-navy",
               )}
             >
               {row.counterpartyName}
@@ -353,7 +365,7 @@ function ConversationRow({
               <span className="truncate">{row.jobTitle}</span>
             </Link>
             <span className="ml-auto shrink-0">
-              <StatusPill status={row.status} />
+              <StatusPill status={row.status} needsReview={row.needsReview} />
             </span>
           </div>
 
@@ -373,15 +385,26 @@ function ConversationRow({
   );
 }
 
-function StatusPill({ status }: { status: CandidateStatus }) {
+/**
+ * The stage chip, except while the thread carries unseen news: then it says
+ * what to do rather than where the candidate stands, because the stage is in
+ * the thing waiting to be read.
+ */
+function StatusPill({
+  status,
+  needsReview,
+}: {
+  status: CandidateStatus;
+  needsReview: boolean;
+}) {
   return (
     <span
       className={cn(
         "rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide",
-        STATUS_STYLES[status],
+        needsReview ? REVIEW_STYLE : STATUS_STYLES[status],
       )}
     >
-      {CANDIDATE_STATUS_LABELS[status]}
+      {needsReview ? "Review" : CANDIDATE_STATUS_LABELS[status]}
     </span>
   );
 }

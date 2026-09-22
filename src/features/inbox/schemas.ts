@@ -74,6 +74,10 @@ export const inboxConversationRowSchema = z.object({
   counterpartyName: z.string(),
   recruiter: recruiterSummarySchema.nullable().optional(),
   unreadMessages: z.number(),
+  // Something happened on this thread the reader has not seen — a status
+  // change, a message, an offer, an interview update. Tolerated as absent so a
+  // backend that predates it still parses.
+  needsReview: z.boolean().catch(false),
   lastMessagePreview: z.string().nullable(),
   lastMessageSender: z.enum(["company", "recruiter"]).nullable().optional(),
   lastActivityAt: z.coerce.date(),
