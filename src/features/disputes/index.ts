@@ -7,7 +7,10 @@ export { MyDisputesList } from "./components/MyDisputesList";
 export { ParticipantDisputeView } from "./components/ParticipantDisputeView";
 export { RaiseDisputeForm } from "./components/RaiseDisputeForm";
 export { RaiseDisputePanel } from "./components/RaiseDisputePanel";
-export { useDisputeAttentionCount } from "./hooks/useDisputes";
+export {
+  useAdminDisputeAttentionCount,
+  useDisputeAttentionCount,
+} from "./hooks/useDisputes";
 export { disputeKeys } from "./keys";
 export { isDisputeOpen } from "./schemas";
 export type {

@@ -91,6 +91,7 @@ export const adminDisputeListItemSchema = z.object({
   reason: z.string(),
   createdAt: z.string(),
   resolvedAt: z.string().nullable(),
+  unread: z.boolean(),
 });
 export type AdminDisputeListItem = z.infer<typeof adminDisputeListItemSchema>;
 

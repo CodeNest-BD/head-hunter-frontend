@@ -16,6 +16,7 @@ import {
   type AdminDisputeListItem,
   type DisputeChannel,
   type DisputeMessage,
+  type DisputeStatus,
   type ParticipantDispute,
   type ParticipantDisputeDetail,
 } from "../schemas";
@@ -167,17 +168,25 @@ export async function fetchEligiblePlacements(
 
 // ---- Admin ------------------------------------------------------------
 
+/** GET /v1/admin/disputes/attention-count — the number behind the nav badge. */
+export async function fetchAdminDisputeAttentionCount(): Promise<number> {
+  const { data } = await apiClient.get<unknown>(
+    "/admin/disputes/attention-count",
+  );
+  return disputeAttentionCountSchema.parse(data).count;
+}
+
 /** GET /v1/admin/disputes — the admin inbox. */
 export async function fetchAdminDisputes(
   page: number,
-  status?: string,
+  statuses?: readonly DisputeStatus[],
   raisedBy?: DisputeChannel,
 ): Promise<Paginated<AdminDisputeListItem>> {
   const { data } = await apiClient.get<unknown>("/admin/disputes", {
     params: {
       page,
       limit: 25,
-      ...(status ? { status } : {}),
+      ...(statuses?.length ? { status: statuses } : {}),
       ...(raisedBy ? { raisedBy } : {}),
     },
   });

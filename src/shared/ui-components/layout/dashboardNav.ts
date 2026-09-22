@@ -80,7 +80,12 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
     // Conversations are consolidated under Jobs: a job's candidate count
     // links into the conversations view, so no separate nav item.
-    { href: "/admin/disputes", label: "Disputes", icon: Gavel },
+    {
+      href: "/admin/disputes",
+      label: "Disputes",
+      icon: Gavel,
+      badge: "disputes",
+    },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ],
 };

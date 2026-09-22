@@ -22,7 +22,7 @@ import {
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 
 import { useAdminDisputes } from "../hooks/useDisputes";
-import type { DisputeChannel } from "../schemas";
+import type { DisputeChannel, DisputeStatus } from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
 const TH = "px-5 py-3 font-semibold";
@@ -31,12 +31,30 @@ const HEAD_ROW =
 const BODY_ROW =
   "border-b border-border/60 transition-colors last:border-0 even:bg-muted/20 hover:bg-accent/50";
 
-const FILTERS: { label: string; value: string }[] = [
-  { label: "Open", value: "open_active" },
+/** Each view names the statuses the server should keep; "All" names none. */
+const FILTERS: {
+  label: string;
+  value: string;
+  statuses?: readonly DisputeStatus[];
+}[] = [
+  { label: "Open", value: "open_active", statuses: ["open", "under_review"] },
   { label: "All", value: "all" },
-  { label: "Resolved — Refunded", value: "resolved_refund" },
-  { label: "Resolved — Paid Recruiter", value: "resolved_release" },
+  {
+    label: "Resolved — Refunded",
+    value: "resolved_refund",
+    statuses: ["resolved_refund"],
+  },
+  {
+    label: "Resolved — Paid Recruiter",
+    value: "resolved_release",
+    statuses: ["resolved_release"],
+  },
 ];
+
+/** A dispute nobody has reviewed since the last participant message, tinted
+ * like an unread conversation in the inbox. */
+const UNREAD_ROW =
+  "bg-primary/[0.05] even:bg-primary/[0.05] hover:bg-primary/[0.09]";
 
 /** Whose side opened the dispute — "any" is the unfiltered tab. */
 type RaisedByTab = DisputeChannel | "any";
@@ -57,22 +75,14 @@ export function AdminDisputesTable() {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("open_active");
   const [raisedByTab, setRaisedByTab] = useState<RaisedByTab>("any");
-  // "open_active" is a convenience view: the backend filters by a single status,
-  // so "open" is the actionable subset admins live in; "all" clears it.
-  const status =
-    filter === "all" || filter === "open_active" ? undefined : filter;
+  const statuses = FILTERS.find((f) => f.value === filter)?.statuses;
   const { data, isPending, isError, refetch } = useAdminDisputes(
     page,
-    status,
+    statuses,
     raisedByTab === "any" ? undefined : raisedByTab,
   );
 
-  const rows =
-    filter === "open_active" && data
-      ? data.data.filter(
-          (d) => d.status === "open" || d.status === "under_review",
-        )
-      : (data?.data ?? []);
+  const rows = data?.data ?? [];
 
   return (
     <Card>
@@ -162,9 +172,25 @@ export function AdminDisputesTable() {
                 </thead>
                 <tbody>
                   {rows.map((d) => (
-                    <tr key={d.id} className={BODY_ROW}>
-                      <td className="px-5 py-3 font-medium text-navy">
-                        {d.companyName}
+                    <tr
+                      key={d.id}
+                      className={cn(BODY_ROW, d.unread && UNREAD_ROW)}
+                    >
+                      <td
+                        className={cn(
+                          "px-5 py-3 text-navy",
+                          d.unread ? "font-bold" : "font-medium",
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          {d.unread && (
+                            <span
+                              className="h-2 w-2 shrink-0 rounded-full bg-primary"
+                              aria-label="New activity"
+                            />
+                          )}
+                          {d.companyName}
+                        </span>
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">
                         {d.recruiterName}
@@ -202,6 +228,7 @@ export function AdminDisputesTable() {
                   subtitle={`${d.companyName} ↔ ${d.recruiterName}`}
                   trailing={<DisputeStatusBadge status={d.status} />}
                   href={`/admin/disputes/${d.id}`}
+                  className={cn(d.unread && UNREAD_ROW)}
                   fields={[
                     { label: "Fee", value: formatMinor(d.amountMinor) },
                     { label: "Opened", value: formatDate(d.createdAt) },

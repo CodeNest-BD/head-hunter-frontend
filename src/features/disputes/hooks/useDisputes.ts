@@ -9,6 +9,7 @@ import type { Role } from "@/features/auth";
 
 import {
   fetchAdminDispute,
+  fetchAdminDisputeAttentionCount,
   fetchAdminDisputes,
   fetchEligiblePlacements,
   fetchDisputeAttentionCount,
@@ -22,7 +23,7 @@ import {
 import { uploadToPresignedUrl } from "@/shared/libs/documentUpload";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { disputeKeys } from "../keys";
-import type { DisputeChannel } from "../schemas";
+import type { DisputeChannel, DisputeStatus } from "../schemas";
 
 // ---- Participant ------------------------------------------------------
 
@@ -118,22 +119,48 @@ export function usePostDisputeMessage(id: string) {
 
 // ---- Admin ------------------------------------------------------------
 
+/** The admin's Disputes nav badge, polled like the participants' own. */
+export function useAdminDisputeAttentionCount(enabled: boolean) {
+  return useQuery({
+    queryKey: disputeKeys.adminAttentionCount,
+    queryFn: fetchAdminDisputeAttentionCount,
+    enabled,
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
+  });
+}
+
 export function useAdminDisputes(
   page: number,
-  status?: string,
+  statuses?: readonly DisputeStatus[],
   raisedBy?: DisputeChannel,
 ) {
   return useQuery({
-    queryKey: disputeKeys.adminList(page, status, raisedBy),
-    queryFn: () => fetchAdminDisputes(page, status, raisedBy),
+    queryKey: disputeKeys.adminList(page, statuses, raisedBy),
+    queryFn: () => fetchAdminDisputes(page, statuses, raisedBy),
     placeholderData: keepPreviousData,
   });
 }
 
+/**
+ * Opening a dispute is what marks it reviewed server-side, so the fetch leaves
+ * the nav badge and the list's unread tint stale — both are invalidated here
+ * rather than waiting out the badge's poll interval.
+ */
 export function useAdminDispute(id: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: disputeKeys.adminDetail(id),
-    queryFn: () => fetchAdminDispute(id),
+    queryFn: async () => {
+      const dispute = await fetchAdminDispute(id);
+      void queryClient.invalidateQueries({
+        queryKey: disputeKeys.adminAttentionCount,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: disputeKeys.adminLists,
+      });
+      return dispute;
+    },
   });
 }
 
