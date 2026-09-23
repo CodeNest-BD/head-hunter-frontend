@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Wallet2 } from "lucide-react";
 
 import { RaiseDisputeForm } from "@/features/disputes";
+import { ENABLE_RECRUITER_PAYOUTS } from "@/shared/config/featureFlags";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -22,12 +23,17 @@ import {
   useRecruiterPlacements,
   useRecruiterWallet,
 } from "../hooks/useBilling";
+import { useBillingRefreshBurst } from "../hooks/useBillingRefreshBurst";
 import {
   PLACEMENT_STATUS_LABELS,
   type PlacementStatus,
   type RecruiterPlacement,
   type RecruiterWalletSummary,
 } from "../schemas";
+import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./billingTable";
+import { CheckoutResultBanner } from "./CheckoutResultBanner";
+import { PayoutsCard } from "./PayoutsCard";
+import { PayoutsTable } from "./PayoutsTable";
 
 const STATUS_STYLES: Record<PlacementStatus, string> = {
   released: "bg-[#E7F4EC] text-[#17734E]",
@@ -49,8 +55,19 @@ const COMMISSION_STEPS: readonly { title: string; detail: string }[] = [
   },
   {
     title: "Released to balance",
-    detail: "Paid out to your payout method.",
+    detail: ENABLE_RECRUITER_PAYOUTS
+      ? "The commission lands in your balance, ready to withdraw."
+      : "Paid out to your payout method.",
   },
+  ...(ENABLE_RECRUITER_PAYOUTS
+    ? [
+        {
+          title: "Withdraw to your bank",
+          detail:
+            "Move your balance to your bank account — it arrives in 2–3 business days.",
+        },
+      ]
+    : []),
 ];
 
 /** A single balance card: navy for the headline total, white for the rest. */
@@ -102,27 +119,68 @@ function BalanceCard({
 }
 
 function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
+  const pendingPayoutMinor = data?.pendingPayoutMinor ?? 0;
+
+  // One card list, so the shared escrow/dispute cards exist exactly once —
+  // only the head and tail of the strip change with the payout flag.
+  const cards: readonly {
+    label: string;
+    valueMinor: number | undefined;
+    hint: string;
+  }[] = [
+    ...(ENABLE_RECRUITER_PAYOUTS
+      ? [
+          {
+            label: "Available to withdraw",
+            valueMinor: data?.availableMinor,
+            hint:
+              pendingPayoutMinor > 0
+                ? `${formatMinor(pendingPayoutMinor)} already on its way`
+                : "Ready to move to your bank",
+          },
+        ]
+      : [
+          {
+            label: "Total balance",
+            valueMinor: data?.totalMinor,
+            hint: "Everything you've earned so far",
+          },
+        ]),
+    {
+      label: "In escrow",
+      valueMinor: data?.inEscrowMinor,
+      hint: data?.nextReleaseAt
+        ? `Next release ${formatDate(data.nextReleaseAt)}`
+        : "Awaiting the 30-day release",
+    },
+    {
+      label: "In dispute",
+      valueMinor: data?.inDisputeMinor,
+      hint: "Held pending a dispute",
+    },
+    ...(ENABLE_RECRUITER_PAYOUTS
+      ? [
+          {
+            label: "Earned YTD",
+            valueMinor: data?.earnedYtdMinor,
+            hint: "Released to you this calendar year",
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <BalanceCard
-        label="Total balance"
-        valueMinor={data?.totalMinor}
-        hint="Everything you've earned so far"
-      />
-      <BalanceCard
-        label="In escrow"
-        valueMinor={data?.inEscrowMinor}
-        hint={
-          data?.nextReleaseAt
-            ? `Next release ${formatDate(data.nextReleaseAt)}`
-            : "Awaiting the 30-day release"
-        }
-      />
-      <BalanceCard
-        label="In dispute"
-        valueMinor={data?.inDisputeMinor}
-        hint="Held pending a dispute"
-      />
+    <div
+      className={cn(
+        "grid gap-4",
+        ENABLE_RECRUITER_PAYOUTS
+          ? "sm:grid-cols-2 lg:grid-cols-4"
+          : "sm:grid-cols-3",
+      )}
+    >
+      {cards.map((card) => (
+        <BalanceCard key={card.label} {...card} />
+      ))}
     </div>
   );
 }
@@ -173,12 +231,6 @@ function PlacementsEmpty() {
     </section>
   );
 }
-
-const TH = "px-5 py-3 font-semibold";
-const HEAD_ROW =
-  "border-b border-border bg-muted/40 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground";
-const BODY_ROW =
-  "border-b border-border/60 transition-colors last:border-0 even:bg-muted/20 hover:bg-accent/50";
 
 // Status and the release date are rendered by both the desktop table and the
 // mobile card.
@@ -332,32 +384,12 @@ function PlacementsTable({
             />
           ))}
         </MobileRecordList>
-        <div className="flex items-center justify-between border-t border-border px-5 py-3 text-sm">
-          <span className="text-muted-foreground">
-            {data.meta.total.toLocaleString()} total · page {page} of{" "}
-            {Math.max(data.meta.totalPages, 1)}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => onPage(page - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page >= data.meta.totalPages}
-              onClick={() => onPage(page + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <BillingTableFooter
+          total={data.meta.total}
+          page={page}
+          totalPages={data.meta.totalPages}
+          onPage={onPage}
+        />
       </CardContent>
     </Card>
   );
@@ -368,8 +400,19 @@ export function RecruiterWalletPanel() {
   const [page, setPage] = useState(1);
   const wallet = useRecruiterWallet();
   const placements = useRecruiterPlacements(page);
+  // Returning from Stripe Connect onboarding with `?connect=success` races the
+  // `account.updated` webhook, so burst-refresh the billing queries.
+  const refresh = useBillingRefreshBurst();
 
   const hasPlacements = (placements.data?.data.length ?? 0) > 0;
+
+  const startRefresh = refresh.start;
+  const onConnectResult = useCallback(
+    (result: "success" | "canceled") => {
+      if (result === "success") startRefresh();
+    },
+    [startRefresh],
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -377,6 +420,15 @@ export function RecruiterWalletPanel() {
         title="Wallet"
         subtitle="Commissions paid out, held in escrow, and under dispute."
       />
+
+      {ENABLE_RECRUITER_PAYOUTS ? (
+        <CheckoutResultBanner
+          param="connect"
+          successMessage="Bank details saved — withdrawing unlocks as soon as Stripe finishes verifying."
+          cancelMessage="Payout setup canceled. You can pick it up again anytime."
+          onResult={onConnectResult}
+        />
+      ) : null}
 
       {wallet.isError ? (
         <Card>
@@ -395,6 +447,13 @@ export function RecruiterWalletPanel() {
       ) : (
         <BalanceCards data={wallet.data} />
       )}
+
+      {ENABLE_RECRUITER_PAYOUTS ? (
+        <>
+          <PayoutsCard wallet={wallet.data} />
+          <PayoutsTable />
+        </>
+      ) : null}
 
       {placements.isError ? (
         <Card>

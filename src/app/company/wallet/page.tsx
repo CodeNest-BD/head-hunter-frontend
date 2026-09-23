@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import {
@@ -11,16 +10,10 @@ import {
   LedgerTable,
   TopUpCard,
   WalletSummary,
-  billingKeys,
+  useBillingRefreshBurst,
 } from "@/features/billing";
 import { PageBanner } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
-
-// The wallet is credited by the Stripe webhook, which usually lands a moment
-// after the browser returns from checkout. Poll the balance briefly so it
-// appears without a manual refresh.
-const REFRESH_TICKS = 6;
-const REFRESH_INTERVAL_MS = 2500;
 
 const RESERVE_STEPS: readonly { title: string; detail: string }[] = [
   {
@@ -65,27 +58,18 @@ function HowReservedFeesWork() {
 }
 
 function WalletContent() {
-  const queryClient = useQueryClient();
-  const [refreshing, setRefreshing] = useState(false);
+  // The wallet is credited by the Stripe webhook, which usually lands a moment
+  // after the browser returns from checkout — burst-refresh so the balance
+  // appears without a manual refresh.
+  const refresh = useBillingRefreshBurst();
+  const startRefresh = refresh.start;
 
-  const onCheckoutResult = useCallback((result: "success" | "canceled") => {
-    if (result === "success") setRefreshing(true);
-  }, []);
-
-  useEffect(() => {
-    if (!refreshing) return;
-    let ticks = 0;
-    void queryClient.invalidateQueries({ queryKey: billingKeys.all });
-    const id = setInterval(() => {
-      ticks += 1;
-      void queryClient.invalidateQueries({ queryKey: billingKeys.all });
-      if (ticks >= REFRESH_TICKS) {
-        clearInterval(id);
-        setRefreshing(false);
-      }
-    }, REFRESH_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [refreshing, queryClient]);
+  const onCheckoutResult = useCallback(
+    (result: "success" | "canceled") => {
+      if (result === "success") startRefresh();
+    },
+    [startRefresh],
+  );
 
   return (
     <div className="flex w-full flex-col gap-6">

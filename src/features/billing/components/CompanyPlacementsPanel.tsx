@@ -20,6 +20,7 @@ import {
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { useCompanyPlacements, useRejectPlacement } from "../hooks/useBilling";
+import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./billingTable";
 import {
   PLACEMENT_STATUS_LABELS,
   type CompanyPlacement,
@@ -33,12 +34,6 @@ const STATUS_STYLES: Record<PlacementStatus, string> = {
   disputed: "bg-[#FBEAEA] text-[#9B3535]",
   refunded: "bg-muted text-muted-foreground",
 };
-
-const TH = "px-5 py-3 font-semibold";
-const HEAD_ROW =
-  "border-b border-border bg-muted/40 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground";
-const BODY_ROW =
-  "border-b border-border/60 transition-colors last:border-0 even:bg-muted/20 hover:bg-accent/50";
 
 /** A placement can be rejected only while its fee is held and its guarantee is
  * still open — the same window the backend enforces. */
@@ -331,32 +326,12 @@ export function CompanyPlacementsPanel() {
           ))}
         </MobileRecordList>
 
-        <div className="flex items-center justify-between border-t border-border px-5 py-3 text-sm">
-          <span className="text-muted-foreground">
-            {data.meta.total.toLocaleString()} total · page {page} of{" "}
-            {Math.max(data.meta.totalPages, 1)}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page >= data.meta.totalPages}
-              onClick={() => setPage(page + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <BillingTableFooter
+          total={data.meta.total}
+          page={page}
+          totalPages={data.meta.totalPages}
+          onPage={setPage}
+        />
       </CardContent>
     </Card>
   );

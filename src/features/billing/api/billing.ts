@@ -5,6 +5,8 @@ import {
   companyPlacementSchema,
   minRecruiterFeeResponseSchema,
   ledgerEntrySchema,
+  payoutAccountSchema,
+  payoutSchema,
   recruiterPlacementSchema,
   recruiterPriceSchema,
   recruiterWalletSummarySchema,
@@ -12,6 +14,8 @@ import {
   walletSummarySchema,
   type CompanyPlacement,
   type LedgerEntry,
+  type Payout,
+  type PayoutAccount,
   type RecruiterPlacement,
   type RecruiterPrice,
   type RecruiterWalletSummary,
@@ -113,6 +117,53 @@ export async function createSubscriptionPortal(): Promise<string> {
     "/billing/subscription/portal",
   );
   return checkoutUrlSchema.parse(data).url;
+}
+
+/** GET /v1/recruiter/payouts/account — the Stripe Connect payout account. */
+export async function fetchPayoutAccount(): Promise<PayoutAccount> {
+  const { data } = await apiClient.get<unknown>("/recruiter/payouts/account");
+  return payoutAccountSchema.parse(data);
+}
+
+/**
+ * POST /v1/recruiter/payouts/account/onboarding — creates the Connect Express
+ * account on first call and returns a Stripe account-link URL. Also used to
+ * resume unfinished onboarding or update bank details.
+ */
+export async function createPayoutOnboarding(): Promise<string> {
+  const { data } = await apiClient.post<unknown>(
+    "/recruiter/payouts/account/onboarding",
+  );
+  return checkoutUrlSchema.parse(data).url;
+}
+
+/**
+ * POST /v1/recruiter/payouts — withdraw from the released balance. The
+ * Idempotency-Key makes an ambiguous retry (timeout, then resubmit) safe:
+ * the backend returns the original payout instead of creating a second one.
+ * The dialog surfaces errors inline, so the global toast is suppressed.
+ */
+export async function createPayout(
+  amountMinor: number,
+  idempotencyKey: string,
+): Promise<Payout> {
+  const { data } = await apiClient.post<unknown>(
+    "/recruiter/payouts",
+    { amountMinor },
+    {
+      headers: { "Idempotency-Key": idempotencyKey },
+      suppressGlobalErrorToast: true,
+    },
+  );
+  return payoutSchema.parse(data);
+}
+
+/** GET /v1/recruiter/payouts — withdrawal history, newest first. */
+export async function fetchPayouts(page: number): Promise<Paginated<Payout>> {
+  const { data } = await apiClient.get<unknown>("/recruiter/payouts", {
+    params: { page, limit: 20 },
+  });
+  return paginatedSchema(payoutSchema).parse(data);
 }
 
 /**
