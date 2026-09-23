@@ -9,7 +9,6 @@ describe("recruiter navigation", () => {
     expect(labels).toEqual([
       "Dashboard",
       "Live Map",
-      "Companies",
       "Inbox",
       "Submissions",
       "Wallet",

@@ -11,7 +11,7 @@ export const PHASE1_FREE = true;
  * the code/routes behind them. Flip to `false` to reveal them all again.
  *
  * What it hides (see docs/phase-1-hidden-features.md for the full list):
- *  - Recruiter nav (sidebar + top dropdown): Companies, Inbox, Wallet
+ *  - Recruiter nav (sidebar + top dropdown): Inbox, Wallet
  *  - Company nav (sidebar + top dropdown): Inbox
  *  - The "Candidates" column on the company AND admin Jobs tables
  */

@@ -1,5 +1,3 @@
-import type { CompanyListParams } from "./api/companyProfiles";
-
 /**
  * One place defines this feature's cache namespace. Invalidation uses
  * `companyKeys.all` rather than a repeated ["companies"] literal, so renaming
@@ -8,5 +6,4 @@ import type { CompanyListParams } from "./api/companyProfiles";
 export const companyKeys = {
   all: ["companies"] as const,
   myProfile: ["companies", "me"] as const,
-  list: (params: CompanyListParams) => ["companies", "list", params] as const,
 };

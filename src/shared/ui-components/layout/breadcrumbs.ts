@@ -30,7 +30,6 @@ const SEGMENT_LABELS: Record<string, string> = {
  */
 const LINKABLE_PATHS = new Set<string>([
   "/dashboard",
-  "/companies",
   "/jobs",
   "/notifications",
   "/company/jobs",

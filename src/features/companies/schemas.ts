@@ -86,20 +86,6 @@ export type ReapplyCompanyVerificationResult = z.infer<
   typeof reapplyCompanyVerificationResponseSchema
 >;
 
-/** A company as seen by someone browsing. */
-export const companySummarySchema = z.object({
-  id: z.string(),
-  companyName: z.string(),
-  website: z.string().nullable(),
-  description: z.string().nullable(),
-  commissionRangeMinMinor: z.number().nullable(),
-  commissionRangeMaxMinor: z.number().nullable(),
-  hasLogo: z.boolean().catch(false),
-  // Null while the company's number is unverified — the API withholds it.
-  phone: z.string().nullable(),
-});
-export type CompanySummary = z.infer<typeof companySummarySchema>;
-
 /**
  * Edit form. Every field optional so a partial save is valid, mirroring the
  * backend's UpdateCompanyProfileDto. The cross-field range rule matches

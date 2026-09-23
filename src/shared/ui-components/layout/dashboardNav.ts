@@ -50,7 +50,6 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     // The job map is a primary recruiter surface, so it sits in the sidebar
     // nav alongside the dashboard. Notifications stay in the bell dropdown.
     { href: "/explore-jobs", label: "Live Map", icon: Map },
-    { href: "/companies", label: "Companies", icon: Building2 },
     {
       href: "/recruiter/inbox",
       label: "Inbox",
@@ -112,7 +111,7 @@ const UNAPPROVED_LABELS: Record<Role, readonly string[]> = {
  * Removing them here covers both the sidebar and the top dropdown at once.
  */
 const HIDDEN_PHASE2_LABELS: Record<Role, readonly string[]> = {
-  recruiter: ["Companies", "Inbox", "Wallet"],
+  recruiter: ["Inbox", "Wallet"],
   company: ["Inbox"],
   admin: [],
 };

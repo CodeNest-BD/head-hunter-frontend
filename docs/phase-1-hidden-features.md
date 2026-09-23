@@ -17,13 +17,13 @@ revert the two test expectations noted below. Nothing else needs to change.
 
 ## What is hidden while the flag is `true`
 
-### 1. Recruiter navigation — Companies, Inbox, Wallet
+### 1. Recruiter navigation — Inbox, Wallet
 
 Hidden from **both** the sidebar and the top-right account dropdown (both read
 `navForRole`). An approved recruiter then sees only **Dashboard** and
 **Profile** (Explore Jobs stays in the top bar as before).
 
-- `src/shared/ui-components/layout/dashboardNav.ts` — `HIDDEN_PHASE2_LABELS.recruiter = ["Companies", "Inbox", "Wallet"]`, filtered in `navForRole`.
+- `src/shared/ui-components/layout/dashboardNav.ts` — `HIDDEN_PHASE2_LABELS.recruiter = ["Inbox", "Wallet"]`, filtered in `navForRole`.
 
 ### 2. Company navigation — Inbox
 
@@ -54,14 +54,14 @@ as a **disabled** button instead of a link to the submission workspace.
 `src/shared/ui-components/layout/dashboardNav.test.ts` was updated to expect the
 phase-1 navs. When flipping the flag back, restore:
 
-- **recruiter approved** → `["Dashboard", "Companies", "Inbox", "Wallet", "Profile"]`
+- **recruiter approved** → `["Dashboard", "Inbox", "Wallet", "Profile"]`
 - **company approved** → contains `"Inbox"` again
 
 ## Not changed (still reachable by direct URL)
 
 Only the **navigation entry points** and the candidate column are hidden — the
 underlying pages/routes (`/recruiter/inbox`, `/company/inbox`, `/recruiter/wallet`,
-`/companies`, `/admin/conversations`, …) still exist and respond if visited
+`/admin/conversations`, …) still exist and respond if visited
 directly. If phase-1 also needs those routes blocked, add guards/redirects
 behind the same `HIDE_PHASE2_FEATURES` flag — call it out separately.
 

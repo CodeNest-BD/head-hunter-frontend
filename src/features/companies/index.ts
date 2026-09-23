@@ -10,17 +10,11 @@
  */
 export { CompanyApprovalBanner } from "./components/CompanyApprovalBanner";
 export { CompanyEmployeeInfoForm } from "./components/CompanyEmployeeInfoForm";
-export { CompanyList } from "./components/CompanyList";
 export { CompanyProfileForm } from "./components/CompanyProfileForm";
 export { useCompanyApprovalGate } from "./hooks/useCompanyApprovalGate";
 export {
   useMyCompanyProfile,
   useReapplyCompanyVerification,
 } from "./hooks/useCompanyProfile";
-export { useCompanies } from "./hooks/useCompanies";
 export { companyKeys } from "./keys";
-export type {
-  CompanyProfile,
-  CompanySummary,
-  VerificationStatus,
-} from "./schemas";
+export type { CompanyProfile, VerificationStatus } from "./schemas";

@@ -1,12 +1,9 @@
 import { apiClient } from "@/shared/libs/apiClient";
-import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   companyProfileSchema,
-  companySummarySchema,
   presignedUploadSchema,
   reapplyCompanyVerificationResponseSchema,
   type CompanyProfile,
-  type CompanySummary,
   type ReapplyCompanyVerificationResult,
 } from "../schemas";
 
@@ -41,12 +38,6 @@ export interface UpdateCompanyProfileInput {
   commissionRangeMaxMinor?: number | null;
 }
 
-export interface CompanyListParams {
-  page?: number;
-  limit?: number;
-  q?: string;
-}
-
 /** GET /v1/company-profiles/me */
 export async function fetchMyCompanyProfile(): Promise<CompanyProfile> {
   const { data } = await apiClient.get<unknown>("/company-profiles/me");
@@ -62,16 +53,6 @@ export async function updateMyCompanyProfile(
     input,
   );
   return companyProfileSchema.parse(data);
-}
-
-/** GET /v1/company-profiles */
-export async function fetchCompanies(
-  params: CompanyListParams,
-): Promise<Paginated<CompanySummary>> {
-  const { data } = await apiClient.get<unknown>("/company-profiles", {
-    params,
-  });
-  return paginatedSchema(companySummarySchema).parse(data);
 }
 
 /**

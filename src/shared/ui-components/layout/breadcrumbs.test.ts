@@ -8,9 +8,9 @@ describe("deriveBreadcrumbs", () => {
   });
 
   it("roots every other page at a linked Dashboard", () => {
-    expect(deriveBreadcrumbs("/companies")).toEqual([
+    expect(deriveBreadcrumbs("/notifications")).toEqual([
       { label: "Dashboard", href: "/dashboard" },
-      { label: "Companies", href: undefined },
+      { label: "Notifications", href: undefined },
     ]);
   });
 
