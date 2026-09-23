@@ -70,6 +70,13 @@ export const recruiterWalletSummarySchema = z.object({
   inDisputeMinor: z.number(),
   placementsCount: z.number(),
   nextReleaseAt: z.string().nullable(),
+  // Payout fields ship with the payout backend; optional so wallets parsed
+  // from the current API keep working during the rollout window. Deliberately
+  // NOT defaulted from releasedMinor: a missing figure must read as "unknown"
+  // (withdrawing stays locked), never as "everything released is available" —
+  // overstating a withdrawable balance is a money-visible bug.
+  availableMinor: z.number().optional(),
+  pendingPayoutMinor: z.number().optional(),
 });
 export type RecruiterWalletSummary = z.infer<
   typeof recruiterWalletSummarySchema
@@ -123,3 +130,59 @@ export const minRecruiterFeeResponseSchema = z.object({
 export type MinRecruiterFeeResponse = z.infer<
   typeof minRecruiterFeeResponseSchema
 >;
+
+/**
+ * The recruiter's Stripe Connect payout account. `none` means setup was never
+ * started; `onboarding` that a Stripe account exists but the account-link flow
+ * wasn't finished; `restricted` that Stripe disabled payouts after
+ * verification (disabledReason says why).
+ */
+export const payoutAccountSchema = z.object({
+  status: z.enum([
+    "none",
+    "onboarding",
+    "pending_verification",
+    "verified",
+    "restricted",
+  ]),
+  bankName: z.string().nullable(),
+  bankLast4: z.string().nullable(),
+  disabledReason: z.string().nullable(),
+});
+export type PayoutAccount = z.infer<typeof payoutAccountSchema>;
+
+/**
+ * The smallest withdrawal we accept, in minor units ($50) — below it the
+ * per-transfer overhead outweighs the payout. Mirrors the backend's floor;
+ * becomes an admin-configured, fetched value in a later phase (see
+ * docs/recruiter-payouts-plan.md §3.2), at which point this constant goes away.
+ */
+export const MIN_PAYOUT_MINOR = 50_00;
+
+export const payoutStatusSchema = z.enum([
+  "pending",
+  "processing",
+  "paid",
+  "failed",
+  "canceled",
+]);
+export type PayoutStatus = z.infer<typeof payoutStatusSchema>;
+
+export const PAYOUT_STATUS_LABELS: Record<PayoutStatus, string> = {
+  pending: "Pending",
+  processing: "Processing",
+  paid: "Paid",
+  failed: "Failed",
+  canceled: "Canceled",
+};
+
+/** One withdrawal from the recruiter's balance to their bank. */
+export const payoutSchema = z.object({
+  id: z.string(),
+  amountMinor: z.number(),
+  status: payoutStatusSchema,
+  failureReason: z.string().nullable(),
+  createdAt: z.string(),
+  paidAt: z.string().nullable(),
+});
+export type Payout = z.infer<typeof payoutSchema>;

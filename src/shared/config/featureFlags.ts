@@ -16,3 +16,11 @@ export const PHASE1_FREE = true;
  *  - The "Candidates" column on the company AND admin Jobs tables
  */
 export const HIDE_PHASE2_FEATURES = false;
+
+/**
+ * Recruiter payouts (withdraw released commission to a bank account via
+ * Stripe Connect Express). The frontend is fully built behind this flag; flip
+ * to `true` together with the backend's payout endpoints going live
+ * (see docs/recruiter-payouts-plan.md for the API contract).
+ */
+export const ENABLE_RECRUITER_PAYOUTS = false;

@@ -6,12 +6,16 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  createPayout,
+  createPayoutOnboarding,
   createSubscriptionCheckout,
   createSubscriptionPortal,
   createTopUpCheckout,
   fetchCompanyPlacements,
   fetchLedger,
   fetchMinRecruiterFee,
+  fetchPayoutAccount,
+  fetchPayouts,
   fetchRecruiterPlacements,
   fetchRecruiterPrice,
   fetchRecruiterWallet,
@@ -117,6 +121,57 @@ export function useOpenSubscriptionPortal() {
     mutationFn: createSubscriptionPortal,
     onSuccess: (url) => {
       window.location.assign(url);
+    },
+  });
+}
+
+export function usePayoutAccount() {
+  return useQuery({
+    queryKey: billingKeys.payoutAccount,
+    queryFn: fetchPayoutAccount,
+  });
+}
+
+/**
+ * Ends in a full-page redirect to Stripe's Connect onboarding, so there is
+ * nothing to invalidate — the account status refetches when the user lands
+ * back with `?connect=success` (same shape as the checkout mutations above).
+ */
+export function useStartPayoutOnboarding() {
+  return useMutation({
+    mutationFn: createPayoutOnboarding,
+    onSuccess: (url) => {
+      window.location.assign(url);
+    },
+  });
+}
+
+export function usePayouts(page: number) {
+  return useQuery({
+    queryKey: billingKeys.payouts(page),
+    queryFn: () => fetchPayouts(page),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Withdraw from the released balance. Moves the available balance and adds a
+ * payout row, so the whole billing tree refetches. The caller surfaces errors
+ * inline (the API call suppresses the global toast) and supplies the
+ * idempotency key so a resubmit after an ambiguous failure cannot double-pay.
+ */
+export function useWithdraw() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      amountMinor,
+      idempotencyKey,
+    }: {
+      amountMinor: number;
+      idempotencyKey: string;
+    }) => createPayout(amountMinor, idempotencyKey),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: billingKeys.all });
     },
   });
 }
