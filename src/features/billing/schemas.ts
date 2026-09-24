@@ -137,22 +137,30 @@ export type MinRecruiterFeeResponse = z.infer<
  * wasn't finished; `restricted` that Stripe disabled payouts after
  * verification (disabledReason says why).
  */
-export const payoutAccountSchema = z.object({
-  status: z.enum([
-    "none",
-    "onboarding",
-    "pending_verification",
-    "verified",
-    "restricted",
-  ]),
-  bankName: z.string().nullable(),
-  bankLast4: z.string().nullable(),
-  disabledReason: z.string().nullable(),
-  // Which in-app setup steps still need input. Tolerant defaults so a backend
-  // that predates the fields reads as "everything still to do" only for `none`.
-  needsIdentity: z.boolean().catch(false),
-  needsBank: z.boolean().catch(false),
-});
+export const payoutAccountSchema = z
+  .object({
+    status: z.enum([
+      "none",
+      "onboarding",
+      "pending_verification",
+      "verified",
+      "restricted",
+    ]),
+    bankName: z.string().nullable(),
+    bankLast4: z.string().nullable(),
+    disabledReason: z.string().nullable(),
+    needsIdentity: z.boolean().optional(),
+    needsBank: z.boolean().optional(),
+  })
+  .transform((account) => ({
+    ...account,
+    // A backend that predates these fields must fail SAFE: assume a step is
+    // still needed unless the account state proves otherwise. Defaulting to
+    // "done" would skip the KYC step and attach a bank to an account with no
+    // identity on file.
+    needsIdentity: account.needsIdentity ?? account.status !== "verified",
+    needsBank: account.needsBank ?? account.bankLast4 === null,
+  }));
 export type PayoutAccount = z.infer<typeof payoutAccountSchema>;
 
 /**

@@ -1,39 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { usePayouts } from "../hooks/useBilling";
+import { payoutDetail } from "../payoutTracking";
 import { type Payout } from "../schemas";
-import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./billingTable";
+import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./BillingTable";
 import {
   PayoutStatusBadge,
   PayoutTrackingDialog,
 } from "./PayoutTrackingDialog";
-
-/** One line of context per status — exhaustive so no state shows stale copy. */
-function payoutDetail(payout: Payout): string {
-  switch (payout.status) {
-    case "pending":
-    case "processing":
-      return "Arrives in 2–3 business days";
-    case "paid":
-      return payout.paidAt ? `Paid ${formatDate(payout.paidAt)}` : "Paid";
-    case "failed":
-      return payout.failureReason ?? "Returned by the bank — balance restored.";
-    case "canceled":
-      return "Canceled — balance restored.";
-  }
-}
 
 /**
  * Withdrawal history. Renders nothing until the first withdrawal exists, so
@@ -48,19 +35,10 @@ export function PayoutsTable() {
 
   if (payouts.isError) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-          <AlertCircle className="h-6 w-6" />
-          Could not load your withdrawals.
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void payouts.refetch()}
-          >
-            Retry
-          </Button>
-        </CardContent>
-      </Card>
+      <ErrorRetryCallout
+        message="Could not load your withdrawals."
+        onRetry={() => void payouts.refetch()}
+      />
     );
   }
 

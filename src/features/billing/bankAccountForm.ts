@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+import { phoneSchema } from "@/shared/libs/phone";
+import {
+  addressLineSchema,
+  citySchema,
+  stateSchema,
+  zipSchema,
+} from "@/shared/libs/usAddress";
+
 /**
  * ABA routing checksum: 3·(d1+d4+d7) + 7·(d2+d5+d8) + (d3+d6+d9) ≡ 0 (mod 10).
  * Catches transposed/typoed routing numbers before they leave the form; the
@@ -24,28 +32,38 @@ function isAdultBirthDate(day: number, month: number, year: number): boolean {
   return Date.UTC(year + 18, month - 1, day) <= Date.now();
 }
 
+/**
+ * Normalizes what people actually type — "(614) 555-0177", "614 555 0177" —
+ * to the E.164 wire shape the backend's PHONE_PATTERN requires, assuming US
+ * for bare 10-digit numbers (this form collects a US payout identity), then
+ * validates it as a real number via the shared schema.
+ */
+const usPhoneInputSchema = z
+  .string()
+  .trim()
+  .transform((value) => {
+    const digits = value.replace(/\D/g, "");
+    return value.startsWith("+")
+      ? `+${digits}`
+      : `+${digits.length === 10 ? `1${digits}` : digits}`;
+  })
+  .pipe(phoneSchema);
+
 /** Step 1 — who is being paid. Mirrors the backend's SubmitIdentityDto. */
 export const identityFormSchema = z
   .object({
-    firstName: z.string().trim().min(1, "First name is required").max(100),
-    lastName: z.string().trim().min(1, "Last name is required").max(100),
+    firstName: z.string().trim().min(1, "First name is required").max(80),
+    lastName: z.string().trim().min(1, "Last name is required").max(80),
     email: z.string().trim().email("Enter a valid email"),
-    phone: z
-      .string()
-      .trim()
-      .regex(/^\+?[\d\s().-]{7,20}$/, "Enter a valid phone number"),
+    phone: usPhoneInputSchema,
     dobMonth: z.string().regex(/^(0?[1-9]|1[0-2])$/, "MM"),
     dobDay: z.string().regex(/^(0?[1-9]|[12]\d|3[01])$/, "DD"),
     dobYear: z.string().regex(/^(19|20)\d{2}$/, "YYYY"),
     ssnLast4: z.string().regex(/^\d{4}$/, "Enter the last 4 digits"),
-    addressLine1: z
-      .string()
-      .trim()
-      .min(1, "Street address is required")
-      .max(200),
-    city: z.string().trim().min(1, "City is required").max(100),
-    state: z.string().regex(/^[A-Za-z]{2}$/, "Select a state"),
-    postalCode: z.string().regex(/^\d{5}(-\d{4})?$/, "Enter a valid ZIP code"),
+    addressLine1: addressLineSchema,
+    city: citySchema,
+    state: stateSchema,
+    postalCode: zipSchema,
     tosAccepted: z.boolean().refine((accepted) => accepted, {
       message: "You must accept the payout terms to continue",
     }),

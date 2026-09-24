@@ -139,7 +139,7 @@ describe("AddBankAccountDialog", () => {
   it("rejects a routing number with a bad checksum before calling the API", async () => {
     const user = userEvent.setup();
     renderDialog(
-      account({ status: "onboarding", needsIdentity: false, needsBank: true }),
+      account({ status: "verified", needsIdentity: false, needsBank: true }),
     );
 
     await user.click(screen.getByRole("button", { name: "Open setup" }));
@@ -162,7 +162,7 @@ describe("AddBankAccountDialog", () => {
   it("rejects mismatched account numbers", async () => {
     const user = userEvent.setup();
     renderDialog(
-      account({ status: "onboarding", needsIdentity: false, needsBank: true }),
+      account({ status: "verified", needsIdentity: false, needsBank: true }),
     );
 
     await user.click(screen.getByRole("button", { name: "Open setup" }));
@@ -186,10 +186,22 @@ describe("AddBankAccountDialog", () => {
 
     await user.click(screen.getByRole("button", { name: "Open setup" }));
 
-    expect(screen.getByText("Update bank account")).toBeInTheDocument();
+    expect(screen.getByText("Update Bank Account")).toBeInTheDocument();
     expect(screen.getByLabelText("Routing number")).toBeInTheDocument();
     expect(
       screen.queryByLabelText("Last 4 digits of SSN"),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps the identity step editable while verification is pending", async () => {
+    const user = userEvent.setup();
+    // needsIdentity is false during pending_verification, but the dialog is
+    // the only place a typoed SSN/DOB can be corrected before Stripe fails it.
+    renderDialog(accountView());
+
+    await user.click(screen.getByRole("button", { name: "Open setup" }));
+
+    expect(screen.getByText("Set Up Payouts")).toBeInTheDocument();
+    expect(screen.getByLabelText("Last 4 digits of SSN")).toBeInTheDocument();
   });
 });

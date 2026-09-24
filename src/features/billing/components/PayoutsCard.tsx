@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Landmark } from "lucide-react";
+import { Landmark } from "lucide-react";
 
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -11,9 +11,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
+import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import { usePayoutAccount } from "../hooks/useBilling";
 import { useBillingRefreshBurst } from "../hooks/useBillingRefreshBurst";
-import { bankLabel } from "../payoutTracking";
+import { billingKeys } from "../keys";
+import { ARRIVAL_WINDOW_LABEL, bankLabel } from "../payoutTracking";
 import {
   MIN_PAYOUT_MINOR,
   type PayoutAccount,
@@ -21,6 +23,14 @@ import {
 } from "../schemas";
 import { AddBankAccountDialog } from "./AddBankAccountDialog";
 import { WithdrawDialog } from "./WithdrawDialog";
+
+// Bank verification only moves the payout account and the wallet's available
+// figure — bursting the whole billing tree would refetch placement/payout
+// history that cannot have changed.
+const BANK_REFRESH_KEYS = [
+  billingKeys.payoutAccount,
+  billingKeys.recruiterWallet,
+];
 
 /** Copy for each not-yet-verified state; the dialog is the single CTA. */
 const SETUP_COPY: Record<
@@ -31,7 +41,7 @@ const SETUP_COPY: Record<
     headline: "Add your bank account",
     detail:
       "Tell us who's getting paid and where — two short steps, right here. " +
-      "Withdrawals land in your account in 2–3 business days.",
+      `Withdrawals land in your account in ${ARRIVAL_WINDOW_LABEL}.`,
     action: "Add bank account",
   },
   onboarding: {
@@ -61,8 +71,8 @@ const SETUP_COPY: Record<
 export function PayoutsCard({ wallet }: { wallet?: RecruiterWalletSummary }) {
   const account = usePayoutAccount();
   // A just-added bank sits in Stripe verification for a short window — burst
-  // the billing queries so the card flips to verified without a manual refresh.
-  const refresh = useBillingRefreshBurst();
+  // the affected queries so the card flips to verified without a manual refresh.
+  const refresh = useBillingRefreshBurst(BANK_REFRESH_KEYS);
 
   // undefined means the balance is unknown (wallet still loading, failed, or
   // the backend doesn't report it yet) — distinct from a real $0, so a load
@@ -89,18 +99,10 @@ export function PayoutsCard({ wallet }: { wallet?: RecruiterWalletSummary }) {
         {account.isPending ? (
           <div className="h-16 animate-pulse rounded-md bg-muted/40" />
         ) : account.isError ? (
-          <div className="flex items-center gap-3 text-sm text-destructive">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            Could not load your payout account.
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void account.refetch()}
-            >
-              Retry
-            </Button>
-          </div>
+          <ErrorRetryCallout
+            message="Could not load your payout account."
+            onRetry={() => void account.refetch()}
+          />
         ) : account.data.status === "verified" ? (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
@@ -110,7 +112,7 @@ export function PayoutsCard({ wallet }: { wallet?: RecruiterWalletSummary }) {
               <p className="mt-0.5 text-[13px] text-muted-foreground">
                 {pendingMinor > 0
                   ? `${formatMinor(pendingMinor)} on its way to your bank.`
-                  : `Withdrawals arrive in 2–3 business days · minimum ${formatMinor(MIN_PAYOUT_MINOR)}.`}
+                  : `Withdrawals arrive in ${ARRIVAL_WINDOW_LABEL} · minimum ${formatMinor(MIN_PAYOUT_MINOR)}.`}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">

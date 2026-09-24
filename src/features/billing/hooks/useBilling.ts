@@ -183,7 +183,10 @@ export function useWithdraw() {
       amountMinor: number;
       idempotencyKey: string;
     }) => createPayout(amountMinor, idempotencyKey),
-    onSuccess: () => {
+    // onSettled, not onSuccess: the backend's "ambiguous transfer" outcome is
+    // an error response thrown AFTER the payout row was committed and the
+    // balance debited — the error path must refresh the cached figures too.
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: billingKeys.all });
     },
   });

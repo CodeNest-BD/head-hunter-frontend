@@ -429,7 +429,14 @@ export function AddBankAccountDialog({
   const identity = useSubmitPayoutIdentity();
   const bank = useSubmitPayoutBank();
 
-  const skipIdentity = !account.needsIdentity && account.status !== "none";
+  // The identity step is skipped when nothing identity-side is outstanding
+  // AND the account is mid-onboarding (just submitted it) or verified (a pure
+  // bank update). pending_verification and restricted keep the step visible:
+  // the dialog is the only place a typoed SSN/DOB can be corrected before or
+  // after Stripe fails verification on it.
+  const skipIdentity =
+    !account.needsIdentity &&
+    (account.status === "verified" || account.status === "onboarding");
 
   const onOpenChange = (next: boolean) => {
     setOpen(next);
@@ -481,7 +488,7 @@ export function AddBankAccountDialog({
                 <Landmark className="h-4 w-4" />
               </span>
               <Dialog.Title className="text-sm font-semibold text-foreground">
-                {skipIdentity ? "Update bank account" : "Set up payouts"}
+                {skipIdentity ? "Update Bank Account" : "Set Up Payouts"}
               </Dialog.Title>
             </div>
             <Dialog.Close asChild>
