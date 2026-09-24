@@ -1,8 +1,21 @@
 # Recruiter Payouts (Withdraw Funds) — Implementation Plan
 
-> Status: **frontend implemented behind `ENABLE_RECRUITER_PAYOUTS` (off)** — flip together with the backend shipping §3.
-> Owner: frontend (this repo) + backend (external NestJS API)
-> Scope: let a verified recruiter move their released commission balance to their own bank account.
+> Status: **implemented on both repos** (frontend behind `ENABLE_RECRUITER_PAYOUTS`,
+> backend PR feat/recruiter-payouts). Onboarding is **fully in-app (Deel-style)**:
+> identity + bank are collected by our own two-step dialog and submitted to a
+> Stripe **Custom** account via the API — no redirect to Stripe-hosted pages.
+> Endpoints: `POST account/identity`, `POST account/bank` (replacing the earlier
+> account-link redirect design in §2/§3 below, kept for history).
+>
+> ⚠️ **Stripe platform-account constraint (action needed before production):**
+> the current test key belongs to a **Singapore-registered** Stripe account.
+> Stripe blocks SG platforms from sending funds to US accounts entirely
+> ("restricted outside of your platform's region"), so on this account the
+> in-app onboarding + verification work end to end, but the actual transfer is
+> rejected (handled gracefully: payout FAILED, balance restored). Production
+> requires the client's **US Stripe platform account** — on a US platform the
+> same code works, and `card_payments` can be dropped from
+> `StripeClient.createRecipientAccount` for the lighter transfers-only KYC.
 >
 > Implementation notes that refine §4 below: `MIN_PAYOUT_MINOR` lives in
 > `src/features/billing/schemas.ts` (replace with the fetched admin setting in
@@ -10,7 +23,9 @@
 > deliberately NOT defaulted — an absent figure renders as unknown and keeps
 > withdrawing locked, so a lagging wallet deploy can never overstate the
 > withdrawable balance; the withdraw dialog re-mints its Idempotency-Key
-> whenever the amount changes (same amount retried = same key).
+> whenever the amount changes (same amount retried = same key); a stale
+> `PENDING` payout (crash between balance commit and transfer) is retried
+> idempotently by a 10-minute reconcile cron on the backend.
 
 ## 1. Where money stops today
 

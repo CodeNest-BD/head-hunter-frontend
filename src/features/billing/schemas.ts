@@ -148,6 +148,10 @@ export const payoutAccountSchema = z.object({
   bankName: z.string().nullable(),
   bankLast4: z.string().nullable(),
   disabledReason: z.string().nullable(),
+  // Which in-app setup steps still need input. Tolerant defaults so a backend
+  // that predates the fields reads as "everything still to do" only for `none`.
+  needsIdentity: z.boolean().catch(false),
+  needsBank: z.boolean().catch(false),
 });
 export type PayoutAccount = z.infer<typeof payoutAccountSchema>;
 
