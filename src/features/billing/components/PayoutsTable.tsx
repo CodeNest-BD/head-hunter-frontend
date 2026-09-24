@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronRight } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
-import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import {
@@ -14,29 +13,12 @@ import {
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { usePayouts } from "../hooks/useBilling";
-import {
-  PAYOUT_STATUS_LABELS,
-  type Payout,
-  type PayoutStatus,
-} from "../schemas";
+import { type Payout } from "../schemas";
 import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./billingTable";
-
-const STATUS_STYLES: Record<PayoutStatus, string> = {
-  pending: "bg-[#FBF3DF] text-[#7A5109]",
-  processing: "bg-primary/15 text-primary",
-  paid: "bg-[#E7F4EC] text-[#17734E]",
-  failed: "bg-[#FBEAEA] text-[#9B3535]",
-  canceled: "bg-muted text-muted-foreground",
-};
-
-function PayoutStatusBadge({ status }: { status: PayoutStatus }) {
-  return (
-    <StatusBadge
-      label={PAYOUT_STATUS_LABELS[status] ?? status}
-      className={STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
-    />
-  );
-}
+import {
+  PayoutStatusBadge,
+  PayoutTrackingDialog,
+} from "./PayoutTrackingDialog";
 
 /** One line of context per status — exhaustive so no state shows stale copy. */
 function payoutDetail(payout: Payout): string {
@@ -57,9 +39,11 @@ function payoutDetail(payout: Payout): string {
  * Withdrawal history. Renders nothing until the first withdrawal exists, so
  * recruiters who haven't set up payouts don't see an empty shell — but a fetch
  * failure surfaces as an error card rather than silently vanishing history.
+ * Every row opens its tracking timeline.
  */
 export function PayoutsTable() {
   const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<Payout | null>(null);
   const payouts = usePayouts(page);
 
   if (payouts.isError) {
@@ -107,11 +91,18 @@ export function PayoutsTable() {
                 <th scope="col" className={TH}>
                   Detail
                 </th>
+                <th scope="col" className={TH}>
+                  <span className="sr-only">Track</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {data.data.map((payout) => (
-                <tr key={payout.id} className={BODY_ROW}>
+                <tr
+                  key={payout.id}
+                  className={cn(BODY_ROW, "cursor-pointer")}
+                  onClick={() => setSelected(payout)}
+                >
                   <td className="whitespace-nowrap px-5 py-3 text-navy">
                     {formatDate(payout.createdAt)}
                   </td>
@@ -123,6 +114,21 @@ export function PayoutsTable() {
                   </td>
                   <td className="px-5 py-3 text-muted-foreground">
                     {payoutDetail(payout)}
+                  </td>
+                  <td className="px-3 py-3 text-right">
+                    <button
+                      type="button"
+                      aria-label={`Track withdrawal of ${formatMinor(payout.amountMinor)}`}
+                      className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-primary"
+                      onClick={(event) => {
+                        // The row click already opens the dialog; keep the
+                        // button as the keyboard/screen-reader entry point.
+                        event.stopPropagation();
+                        setSelected(payout);
+                      }}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -139,6 +145,16 @@ export function PayoutsTable() {
               fields={[
                 { label: "Requested", value: formatDate(payout.createdAt) },
               ]}
+              actions={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelected(payout)}
+                >
+                  Track
+                </Button>
+              }
             />
           ))}
         </MobileRecordList>
@@ -147,6 +163,10 @@ export function PayoutsTable() {
           page={page}
           totalPages={data.meta.totalPages}
           onPage={setPage}
+        />
+        <PayoutTrackingDialog
+          payout={selected}
+          onClose={() => setSelected(null)}
         />
       </CardContent>
     </Card>
