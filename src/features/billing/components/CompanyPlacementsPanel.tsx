@@ -20,7 +20,7 @@ import {
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { useCompanyPlacements, useRejectPlacement } from "../hooks/useBilling";
-import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./billingTable";
+import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./BillingTable";
 import {
   PLACEMENT_STATUS_LABELS,
   type CompanyPlacement,

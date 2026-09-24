@@ -92,7 +92,7 @@ describe("PayoutsCard", () => {
       await screen.findByRole("button", { name: "Add bank account" }),
     );
 
-    expect(screen.getByText("Set up payouts")).toBeInTheDocument();
+    expect(screen.getByText("Set Up Payouts")).toBeInTheDocument();
     // Prefilled from the session user.
     expect(screen.getByLabelText("Legal first name")).toHaveValue("Dana");
     expect(screen.getByLabelText("Last 4 digits of SSN")).toBeInTheDocument();

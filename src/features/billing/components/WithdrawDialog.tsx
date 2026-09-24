@@ -15,6 +15,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Label } from "@/shared/ui-components/controls/label";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { useWithdraw } from "../hooks/useBilling";
+import { ARRIVAL_WINDOW_LABEL } from "../payoutTracking";
 import { MIN_PAYOUT_MINOR } from "../schemas";
 
 /** Whole dollars, optionally with cents — no sub-cent digits to round away. */
@@ -112,7 +113,7 @@ export function WithdrawDialog({
         onSuccess: (payout) => {
           setOpen(false);
           toast.success(
-            `Withdrawal of ${formatMinor(payout.amountMinor)} started — it arrives in 2–3 business days.`,
+            `Withdrawal of ${formatMinor(payout.amountMinor)} started — it arrives in ${ARRIVAL_WINDOW_LABEL}.`,
           );
         },
       },
@@ -127,7 +128,7 @@ export function WithdrawDialog({
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card shadow-card-lg focus:outline-none">
           <div className="flex items-center justify-between border-b border-border px-5 py-3">
             <Dialog.Title className="text-sm font-semibold text-foreground">
-              Withdraw funds
+              Withdraw Funds
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -178,8 +179,8 @@ export function WithdrawDialog({
                 <p className="text-sm text-destructive">{validationError}</p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Minimum {formatMinor(MIN_PAYOUT_MINOR)} · no fee · arrives in
-                  2–3 business days.
+                  Minimum {formatMinor(MIN_PAYOUT_MINOR)} · no fee · arrives in{" "}
+                  {ARRIVAL_WINDOW_LABEL}.
                 </p>
               )}
               {withdraw.isError && (

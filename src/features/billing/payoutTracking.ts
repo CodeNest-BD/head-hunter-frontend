@@ -37,6 +37,28 @@ export function addBusinessDays(start: Date, days: number): Date {
 const ARRIVAL_BUSINESS_DAYS_MIN = 2;
 const ARRIVAL_BUSINESS_DAYS_MAX = 3;
 
+/** The one phrase every payout surface quotes for the arrival promise. */
+export const ARRIVAL_WINDOW_LABEL = `${ARRIVAL_BUSINESS_DAYS_MIN}–${ARRIVAL_BUSINESS_DAYS_MAX} business days`;
+
+/**
+ * One line of context per status — the table-row companion to the dialog's
+ * timeline, derived from the same constants so the two can never quote
+ * different promises. Exhaustive so no state shows stale copy.
+ */
+export function payoutDetail(payout: Payout): string {
+  switch (payout.status) {
+    case "pending":
+    case "processing":
+      return `Arrives in ${ARRIVAL_WINDOW_LABEL}`;
+    case "paid":
+      return payout.paidAt ? `Paid ${formatDate(payout.paidAt)}` : "Paid";
+    case "failed":
+      return payout.failureReason ?? "Returned by the bank — balance restored.";
+    case "canceled":
+      return "Canceled — balance restored.";
+  }
+}
+
 export type PayoutTimelineState =
   | "done"
   | "current"

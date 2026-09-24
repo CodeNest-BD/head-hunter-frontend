@@ -29,7 +29,7 @@ import {
   type RecruiterPlacement,
   type RecruiterWalletSummary,
 } from "../schemas";
-import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./billingTable";
+import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./BillingTable";
 import { PayoutsCard } from "./PayoutsCard";
 import { PayoutsTable } from "./PayoutsTable";
 
@@ -129,7 +129,7 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
     ...(ENABLE_RECRUITER_PAYOUTS
       ? [
           {
-            label: "Available to withdraw",
+            label: "Available to Withdraw",
             valueMinor: data?.availableMinor,
             hint:
               pendingPayoutMinor > 0
@@ -139,20 +139,20 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
         ]
       : [
           {
-            label: "Total balance",
+            label: "Total Balance",
             valueMinor: data?.totalMinor,
             hint: "Everything you've earned so far",
           },
         ]),
     {
-      label: "In escrow",
+      label: "In Escrow",
       valueMinor: data?.inEscrowMinor,
       hint: data?.nextReleaseAt
         ? `Next release ${formatDate(data.nextReleaseAt)}`
         : "Awaiting the 30-day release",
     },
     {
-      label: "In dispute",
+      label: "In Dispute",
       valueMinor: data?.inDisputeMinor,
       hint: "Held pending a dispute",
     },
@@ -304,7 +304,7 @@ function PlacementsTable({
                   Status
                 </th>
                 <th scope="col" className={TH}>
-                  Released / hold ends
+                  Released / Hold Ends
                 </th>
                 <th scope="col" className={TH} />
               </tr>
@@ -364,7 +364,7 @@ function PlacementsTable({
               trailing={<PlacementStatusBadge status={p.status} />}
               fields={[
                 { label: "Commission", value: formatMinor(p.amountMinor) },
-                { label: "Released / hold ends", value: releaseLabel(p) },
+                { label: "Released / Hold Ends", value: releaseLabel(p) },
               ]}
               actions={
                 p.status === "held" ? (

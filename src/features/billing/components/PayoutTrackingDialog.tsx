@@ -30,8 +30,8 @@ const STATUS_STYLES: Record<PayoutStatus, string> = {
 export function PayoutStatusBadge({ status }: { status: PayoutStatus }) {
   return (
     <StatusBadge
-      label={PAYOUT_STATUS_LABELS[status] ?? status}
-      className={STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
+      label={PAYOUT_STATUS_LABELS[status]}
+      className={STATUS_STYLES[status]}
     />
   );
 }
