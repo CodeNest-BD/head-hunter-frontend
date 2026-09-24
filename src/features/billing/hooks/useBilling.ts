@@ -7,7 +7,6 @@ import {
 
 import {
   createPayout,
-  createPayoutOnboarding,
   createSubscriptionCheckout,
   createSubscriptionPortal,
   createTopUpCheckout,
@@ -16,6 +15,8 @@ import {
   fetchMinRecruiterFee,
   fetchPayoutAccount,
   fetchPayouts,
+  submitPayoutBank,
+  submitPayoutIdentity,
   fetchRecruiterPlacements,
   fetchRecruiterPrice,
   fetchRecruiterWallet,
@@ -133,15 +134,27 @@ export function usePayoutAccount() {
 }
 
 /**
- * Ends in a full-page redirect to Stripe's Connect onboarding, so there is
- * nothing to invalidate — the account status refetches when the user lands
- * back with `?connect=success` (same shape as the checkout mutations above).
+ * The identity step of the in-app payout setup. The response is the fresh
+ * account view — written straight into the cache so the dialog's stepper and
+ * the card behind it advance without a refetch.
  */
-export function useStartPayoutOnboarding() {
+export function useSubmitPayoutIdentity() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createPayoutOnboarding,
-    onSuccess: (url) => {
-      window.location.assign(url);
+    mutationFn: submitPayoutIdentity,
+    onSuccess: (account) => {
+      queryClient.setQueryData(billingKeys.payoutAccount, account);
+    },
+  });
+}
+
+/** The bank step of the in-app payout setup. Same cache handling as identity. */
+export function useSubmitPayoutBank() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: submitPayoutBank,
+    onSuccess: (account) => {
+      queryClient.setQueryData(billingKeys.payoutAccount, account);
     },
   });
 }

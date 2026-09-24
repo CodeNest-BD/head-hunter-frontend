@@ -1,5 +1,6 @@
 import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
+import type { SubmitBankInput, SubmitIdentityInput } from "../bankAccountForm";
 import {
   checkoutUrlSchema,
   companyPlacementSchema,
@@ -119,22 +120,42 @@ export async function createSubscriptionPortal(): Promise<string> {
   return checkoutUrlSchema.parse(data).url;
 }
 
-/** GET /v1/recruiter/payouts/account — the Stripe Connect payout account. */
+/** GET /v1/recruiter/payouts/account — the recruiter's payout account. */
 export async function fetchPayoutAccount(): Promise<PayoutAccount> {
   const { data } = await apiClient.get<unknown>("/recruiter/payouts/account");
   return payoutAccountSchema.parse(data);
 }
 
 /**
- * POST /v1/recruiter/payouts/account/onboarding — creates the Connect Express
- * account on first call and returns a Stripe account-link URL. Also used to
- * resume unfinished onboarding or update bank details.
+ * POST /v1/recruiter/payouts/account/identity — the identity step of the
+ * in-app payout setup. Values are forwarded to Stripe for KYC and never
+ * logged or stored. The dialog surfaces errors inline, so the global toast
+ * is suppressed.
  */
-export async function createPayoutOnboarding(): Promise<string> {
+export async function submitPayoutIdentity(
+  input: SubmitIdentityInput,
+): Promise<PayoutAccount> {
   const { data } = await apiClient.post<unknown>(
-    "/recruiter/payouts/account/onboarding",
+    "/recruiter/payouts/account/identity",
+    input,
+    { suppressGlobalErrorToast: true },
   );
-  return checkoutUrlSchema.parse(data).url;
+  return payoutAccountSchema.parse(data);
+}
+
+/**
+ * POST /v1/recruiter/payouts/account/bank — adds (or replaces) the payout
+ * bank account. Same privacy handling as the identity step.
+ */
+export async function submitPayoutBank(
+  input: SubmitBankInput,
+): Promise<PayoutAccount> {
+  const { data } = await apiClient.post<unknown>(
+    "/recruiter/payouts/account/bank",
+    input,
+    { suppressGlobalErrorToast: true },
+  );
+  return payoutAccountSchema.parse(data);
 }
 
 /**

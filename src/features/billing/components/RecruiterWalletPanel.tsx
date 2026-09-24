@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Wallet2 } from "lucide-react";
@@ -23,7 +23,6 @@ import {
   useRecruiterPlacements,
   useRecruiterWallet,
 } from "../hooks/useBilling";
-import { useBillingRefreshBurst } from "../hooks/useBillingRefreshBurst";
 import {
   PLACEMENT_STATUS_LABELS,
   type PlacementStatus,
@@ -31,7 +30,6 @@ import {
   type RecruiterWalletSummary,
 } from "../schemas";
 import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./billingTable";
-import { CheckoutResultBanner } from "./CheckoutResultBanner";
 import { PayoutsCard } from "./PayoutsCard";
 import { PayoutsTable } from "./PayoutsTable";
 
@@ -400,19 +398,8 @@ export function RecruiterWalletPanel() {
   const [page, setPage] = useState(1);
   const wallet = useRecruiterWallet();
   const placements = useRecruiterPlacements(page);
-  // Returning from Stripe Connect onboarding with `?connect=success` races the
-  // `account.updated` webhook, so burst-refresh the billing queries.
-  const refresh = useBillingRefreshBurst();
 
   const hasPlacements = (placements.data?.data.length ?? 0) > 0;
-
-  const startRefresh = refresh.start;
-  const onConnectResult = useCallback(
-    (result: "success" | "canceled") => {
-      if (result === "success") startRefresh();
-    },
-    [startRefresh],
-  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -420,15 +407,6 @@ export function RecruiterWalletPanel() {
         title="Wallet"
         subtitle="Commissions paid out, held in escrow, and under dispute."
       />
-
-      {ENABLE_RECRUITER_PAYOUTS ? (
-        <CheckoutResultBanner
-          param="connect"
-          successMessage="Bank details saved — withdrawing unlocks as soon as Stripe finishes verifying."
-          cancelMessage="Payout setup canceled. You can pick it up again anytime."
-          onResult={onConnectResult}
-        />
-      ) : null}
 
       {wallet.isError ? (
         <Card>

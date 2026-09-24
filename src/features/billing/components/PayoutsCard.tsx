@@ -11,15 +11,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
-import {
-  usePayoutAccount,
-  useStartPayoutOnboarding,
-} from "../hooks/useBilling";
+import { usePayoutAccount } from "../hooks/useBilling";
+import { useBillingRefreshBurst } from "../hooks/useBillingRefreshBurst";
 import {
   MIN_PAYOUT_MINOR,
   type PayoutAccount,
   type RecruiterWalletSummary,
 } from "../schemas";
+import { AddBankAccountDialog } from "./AddBankAccountDialog";
 import { WithdrawDialog } from "./WithdrawDialog";
 
 function bankLabel(account: PayoutAccount): string {
@@ -29,45 +28,47 @@ function bankLabel(account: PayoutAccount): string {
     : `Bank account •••• ${account.bankLast4}`;
 }
 
-/** Copy for each account state; the onboarding CTA reuses one mutation. */
-const ONBOARDING_CTA: Record<
+/** Copy for each not-yet-verified state; the dialog is the single CTA. */
+const SETUP_COPY: Record<
   Exclude<PayoutAccount["status"], "verified">,
   { headline: string; detail: string; action: string }
 > = {
   none: {
-    headline: "Set up payouts",
+    headline: "Add your bank account",
     detail:
-      "Connect a bank account to withdraw your commission. Identity and bank details are collected securely on Stripe.",
-    action: "Set up payouts",
+      "Tell us who's getting paid and where — two short steps, right here. " +
+      "Withdrawals land in your account in 2–3 business days.",
+    action: "Add bank account",
   },
   onboarding: {
     headline: "Finish payout setup",
-    detail:
-      "Your Stripe setup isn't finished yet — resume where you left off to start withdrawing.",
-    action: "Resume setup",
+    detail: "Almost there — a step or two left before you can withdraw.",
+    action: "Continue setup",
   },
   pending_verification: {
-    headline: "Verification pending",
+    headline: "Verifying your details",
     detail:
-      "Stripe is verifying your details. This usually takes a few minutes; withdrawing unlocks as soon as it clears.",
-    action: "Review details",
+      "Stripe is verifying your identity. This usually takes a few minutes; " +
+      "withdrawing unlocks as soon as it clears.",
+    action: "Edit details",
   },
   restricted: {
     headline: "Payouts paused",
-    detail:
-      "Stripe needs more information before it can pay this account again.",
-    action: "Fix on Stripe",
+    detail: "Your payout details need an update before withdrawals resume.",
+    action: "Update details",
   },
 };
 
 /**
- * The recruiter's payout surface: connect/repair the Stripe payout account,
- * and withdraw the released balance once the account is verified. All the
- * state machinery (five account states, balance gating) stays inside.
+ * The recruiter's payout surface: add/repair the bank account entirely in-app
+ * (no Stripe redirect), and withdraw the released balance once verified. All
+ * the state machinery (five account states, balance gating) stays inside.
  */
 export function PayoutsCard({ wallet }: { wallet?: RecruiterWalletSummary }) {
   const account = usePayoutAccount();
-  const onboarding = useStartPayoutOnboarding();
+  // A just-added bank sits in Stripe verification for a short window — burst
+  // the billing queries so the card flips to verified without a manual refresh.
+  const refresh = useBillingRefreshBurst();
 
   // undefined means the balance is unknown (wallet still loading, failed, or
   // the backend doesn't report it yet) — distinct from a real $0, so a load
@@ -119,15 +120,14 @@ export function PayoutsCard({ wallet }: { wallet?: RecruiterWalletSummary }) {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={onboarding.isPending}
-                onClick={() => onboarding.mutate()}
+              <AddBankAccountDialog
+                account={account.data}
+                onBankSubmitted={refresh.start}
               >
-                Update bank
-              </Button>
+                <Button type="button" variant="ghost" size="sm">
+                  Update bank
+                </Button>
+              </AddBankAccountDialog>
               <WithdrawDialog availableMinor={availableMinor ?? 0}>
                 <Button
                   type="button"
@@ -147,30 +147,31 @@ export function PayoutsCard({ wallet }: { wallet?: RecruiterWalletSummary }) {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-navy">
-                {ONBOARDING_CTA[account.data.status].headline}
+                {SETUP_COPY[account.data.status].headline}
               </p>
               <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
                 {account.data.status === "restricted" &&
                 account.data.disabledReason
                   ? account.data.disabledReason
-                  : ONBOARDING_CTA[account.data.status].detail}
+                  : SETUP_COPY[account.data.status].detail}
               </p>
             </div>
-            <div className="flex shrink-0 flex-col items-start gap-1 sm:items-end">
-              <Button
-                type="button"
-                disabled={onboarding.isPending}
-                onClick={() => onboarding.mutate()}
+            <div className="shrink-0">
+              <AddBankAccountDialog
+                account={account.data}
+                onBankSubmitted={refresh.start}
               >
-                {onboarding.isPending
-                  ? "Redirecting…"
-                  : ONBOARDING_CTA[account.data.status].action}
-              </Button>
-              {onboarding.isError && (
-                <p className="text-sm text-destructive">
-                  Could not open Stripe. Please try again.
-                </p>
-              )}
+                <Button
+                  type="button"
+                  variant={
+                    account.data.status === "pending_verification"
+                      ? "outline"
+                      : "default"
+                  }
+                >
+                  {SETUP_COPY[account.data.status].action}
+                </Button>
+              </AddBankAccountDialog>
             </div>
           </div>
         )}
