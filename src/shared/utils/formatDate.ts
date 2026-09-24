@@ -35,6 +35,14 @@ export function formatDateTime(value: Date | string): string {
   return toDate(value).toLocaleDateString("en-US", DATE_TIME_OPTIONS);
 }
 
+/** "2026-08-09" -> "Aug 9" — for near-future dates where the year is noise. */
+export function formatMonthDay(value: Date | string): string {
+  return toDate(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 /** "2026-08-09T14:05:00Z" -> "2:05 PM", for a pair already known to share a
  * day (both ends of one interview window). */
 export function formatTime(value: Date | string): string {

@@ -13,6 +13,7 @@ import {
 } from "@/shared/ui-components/controls/card";
 import { usePayoutAccount } from "../hooks/useBilling";
 import { useBillingRefreshBurst } from "../hooks/useBillingRefreshBurst";
+import { bankLabel } from "../payoutTracking";
 import {
   MIN_PAYOUT_MINOR,
   type PayoutAccount,
@@ -20,13 +21,6 @@ import {
 } from "../schemas";
 import { AddBankAccountDialog } from "./AddBankAccountDialog";
 import { WithdrawDialog } from "./WithdrawDialog";
-
-function bankLabel(account: PayoutAccount): string {
-  if (!account.bankLast4) return "Bank account connected";
-  return account.bankName
-    ? `${account.bankName} •••• ${account.bankLast4}`
-    : `Bank account •••• ${account.bankLast4}`;
-}
 
 /** Copy for each not-yet-verified state; the dialog is the single CTA. */
 const SETUP_COPY: Record<
