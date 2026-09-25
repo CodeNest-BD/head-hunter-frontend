@@ -218,6 +218,15 @@ describe("SendOfferForm", () => {
       await screen.findByRole("button", { name: /send offer/i }),
     );
     await user.type(screen.getByLabelText(/salary/i), "150000");
+    await user.click(screen.getByText(/pick a start date/i));
+    const today = format(new Date(), "yyyy-MM-dd");
+    const todayCell = document.querySelector<HTMLButtonElement>(
+      `[data-day="${today}"] button`,
+    );
+    if (!todayCell) {
+      throw new Error(`today (${today}) is not rendered in the calendar`);
+    }
+    await user.click(todayCell);
     await user.type(screen.getByLabelText(/notes/i), "Relocation covered.");
     await user.click(screen.getByRole("button", { name: /^send offer$/i }));
 
@@ -226,6 +235,7 @@ describe("SendOfferForm", () => {
         expect.objectContaining({
           candidateId: "candidate-1",
           salaryMinor: 15000000,
+          startDate: today,
           notes: "Relocation covered.",
         }),
       );

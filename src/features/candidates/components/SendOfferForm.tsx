@@ -173,7 +173,7 @@ export function SendOfferForm({
       {
         candidateId,
         salaryMinor,
-        startDate: values.startDate.trim() || undefined,
+        startDate: values.startDate,
         notes: values.notes.trim() || undefined,
       },
       { onSuccess: closeForm },

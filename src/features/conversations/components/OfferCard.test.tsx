@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { format } from "date-fns";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
 import { ApiError } from "@/shared/libs/errorHandler";
@@ -291,11 +292,20 @@ describe("OfferCard", () => {
     fireEvent.change(screen.getByLabelText(/new salary/i), {
       target: { value: "150000" },
     });
+    fireEvent.click(screen.getByText(/pick a start date/i));
+    const today = format(new Date(), "yyyy-MM-dd");
+    const todayCell = document.querySelector<HTMLButtonElement>(
+      `[data-day="${today}"] button`,
+    );
+    if (!todayCell) {
+      throw new Error(`today (${today}) is not rendered in the calendar`);
+    }
+    fireEvent.click(todayCell);
     fireEvent.click(screen.getByRole("button", { name: /send counter/i }));
 
     await waitFor(() =>
       expect(counterMutate).toHaveBeenCalledWith(
-        expect.objectContaining({ salaryMinor: 15000000 }),
+        expect.objectContaining({ salaryMinor: 15000000, startDate: today }),
         expect.anything(),
       ),
     );

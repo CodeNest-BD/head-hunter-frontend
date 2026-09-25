@@ -46,7 +46,7 @@ describe("offerSchema", () => {
 
 const sendOfferForm = {
   salary: "150000",
-  startDate: "",
+  startDate: "2999-01-01",
   notes: "",
 };
 
@@ -63,6 +63,12 @@ const sendOfferErrorMessages = (
 describe("offerTermsFormSchema", () => {
   it("accepts a plain positive salary", () => {
     expect(offerTermsFormSchema.safeParse(sendOfferForm).success).toBe(true);
+  });
+
+  it("requires a start date — escrow runs from it", () => {
+    expect(sendOfferErrorMessages({ startDate: "" })).toContain(
+      "Start date is required",
+    );
   });
 
   it("still rejects a salary of 0 or below", () => {

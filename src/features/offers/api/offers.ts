@@ -18,7 +18,7 @@ export interface CreateOfferInput {
   candidateId: string;
   salaryMinor: number;
   jobTitle?: string;
-  startDate?: string;
+  startDate: string;
   notes?: string;
 }
 
@@ -26,7 +26,7 @@ export interface CreateOfferInput {
 export interface CounterOfferInput {
   salaryMinor: number;
   jobTitle?: string;
-  startDate?: string;
+  startDate: string;
   notes?: string;
 }
 

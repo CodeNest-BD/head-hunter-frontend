@@ -107,10 +107,9 @@ export const offerTermsFormSchema = z.object({
   startDate: z
     .string()
     .trim()
+    .min(1, "Start date is required")
     .refine(
-      (value) =>
-        value === "" ||
-        value >= format(subDays(startOfToday(), 1), "yyyy-MM-dd"),
+      (value) => value >= format(subDays(startOfToday(), 1), "yyyy-MM-dd"),
       { message: "Pick a start date of today or later" },
     ),
   notes: z.string().trim(),
