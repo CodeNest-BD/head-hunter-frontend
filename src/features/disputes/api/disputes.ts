@@ -16,6 +16,7 @@ import {
   type AdminDisputeListItem,
   type DisputeChannel,
   type DisputeMessage,
+  type DisputeResolution,
   type DisputeStatus,
   type DisputeSubject,
   type ParticipantDispute,
@@ -200,6 +201,20 @@ export async function fetchAdminDispute(
   id: string,
 ): Promise<AdminDisputeDetail> {
   const { data } = await apiClient.get<unknown>(`/admin/disputes/${id}`);
+  return adminDisputeDetailSchema.parse(data);
+}
+
+/** POST /v1/admin/disputes/:id/resolve — close the dispute with one outcome. */
+export async function resolveDispute(
+  id: string,
+  outcome: DisputeResolution,
+  note?: string,
+): Promise<AdminDisputeDetail> {
+  const { data } = await apiClient.post<unknown>(
+    `/admin/disputes/${id}/resolve`,
+    { outcome, ...(note ? { note } : {}) },
+    { suppressGlobalErrorToast: true },
+  );
   return adminDisputeDetailSchema.parse(data);
 }
 

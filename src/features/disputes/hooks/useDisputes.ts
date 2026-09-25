@@ -20,11 +20,17 @@ import {
   postDisputeMessage,
   presignDisputeProof,
   raiseDispute,
+  resolveDispute,
 } from "../api/disputes";
 import { uploadToPresignedUrl } from "@/shared/libs/documentUpload";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { disputeKeys } from "../keys";
-import type { DisputeChannel, DisputeStatus, DisputeSubject } from "../schemas";
+import type {
+  DisputeChannel,
+  DisputeResolution,
+  DisputeStatus,
+  DisputeSubject,
+} from "../schemas";
 
 // ---- Participant ------------------------------------------------------
 
@@ -186,6 +192,18 @@ export function useAdminDispute(id: string) {
         queryKey: disputeKeys.adminLists,
       });
       return dispute;
+    },
+  });
+}
+
+export function useResolveDispute(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { outcome: DisputeResolution; note?: string }) =>
+      resolveDispute(id, input.outcome, input.note),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: disputeKeys.all });
+      void queryClient.invalidateQueries({ queryKey: ["billing"] });
     },
   });
 }

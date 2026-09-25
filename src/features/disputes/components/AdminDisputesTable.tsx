@@ -63,6 +63,11 @@ const UNREAD_ROW =
  * shadow on a `<tr>` doesn't render reliably across browsers. */
 const UNREAD_CELL = "shadow-[inset_3px_0_0_0_hsl(var(--primary))]";
 
+const RAISED_BY_LABELS: Record<DisputeChannel, string> = {
+  company: "Company",
+  recruiter: "Recruiter",
+};
+
 /** Whose side opened the dispute — "any" is the unfiltered tab. */
 type RaisedByTab = DisputeChannel | "any";
 
@@ -166,6 +171,9 @@ export function AdminDisputesTable() {
                       Candidate / Role
                     </th>
                     <th scope="col" className={TH}>
+                      Raised By
+                    </th>
+                    <th scope="col" className={TH}>
                       Subject
                     </th>
                     <th scope="col" className={cn(TH, "text-right")}>
@@ -213,6 +221,9 @@ export function AdminDisputesTable() {
                         </span>
                       </td>
                       <td className="px-5 py-3 text-navy">
+                        {RAISED_BY_LABELS[d.raisedBy]}
+                      </td>
+                      <td className="px-5 py-3 text-navy">
                         {DISPUTE_SUBJECT_LABELS[d.subject]}
                       </td>
                       <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
@@ -245,6 +256,7 @@ export function AdminDisputesTable() {
                   href={`/admin/disputes/${d.id}`}
                   className={cn(d.unread && UNREAD_ROW)}
                   fields={[
+                    { label: "Raised By", value: RAISED_BY_LABELS[d.raisedBy] },
                     {
                       label: "Subject",
                       value: DISPUTE_SUBJECT_LABELS[d.subject],

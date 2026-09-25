@@ -73,6 +73,26 @@ export function formatRelativeDay(value: Date | string): string {
   return `${Math.floor(days / 365)} years ago`;
 }
 
+/**
+ * A span of time as its two largest units: "12 days 4 hours", "3 hours 20
+ * minutes", "5 minutes". Under a minute reads "less than a minute".
+ */
+export function formatElapsed(ms: number): string {
+  const units: [number, string][] = [
+    [Math.floor(ms / 86_400_000), "day"],
+    [Math.floor(ms / 3_600_000) % 24, "hour"],
+    [Math.floor(ms / 60_000) % 60, "minute"],
+  ];
+  const firstNonZero = units.findIndex(([count]) => count > 0);
+  if (firstNonZero === -1) return "less than a minute";
+  return units
+    .slice(firstNonZero, firstNonZero + 2)
+    .flatMap(([count, unit]) =>
+      count > 0 ? [`${count} ${unit}${count === 1 ? "" : "s"}`] : [],
+    )
+    .join(" ");
+}
+
 // `en-CA` is the shortest way to a "yyyy-mm-dd" string in the *local* calendar
 // day; `toISOString()` would shift it a day for anyone west of UTC.
 const ISO_DATE_LOCALE = "en-CA";

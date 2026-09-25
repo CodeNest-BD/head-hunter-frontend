@@ -10,6 +10,8 @@ const STATUS_STYLES: Record<DisputeStatus, string> = {
   resolved_release: "bg-[#E7F4EC] text-[#17734E]",
   resolved_refund: "bg-[#E7F4EC] text-[#17734E]",
   resolved_split: "bg-[#E7F4EC] text-[#17734E]",
+  resolved_resumed: "bg-[#E7F4EC] text-[#17734E]",
+  closed: "bg-muted text-muted-foreground",
 };
 
 export function DisputeStatusBadge({ status }: { status: DisputeStatus }) {
