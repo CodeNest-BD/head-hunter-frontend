@@ -4,9 +4,17 @@ import { useState } from "react";
 
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
+import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 
 import { useRaiseDispute } from "../hooks/useDisputes";
+import {
+  DISPUTE_SUBJECT_LABELS,
+  DISPUTE_SUBJECTS_BY_PARTY,
+  disputeSubjectSchema,
+  type DisputeChannel,
+  type DisputeSubject,
+} from "../schemas";
 import { DisputeProofField, proofFileError } from "./DisputeProofField";
 
 const MIN_REASON = 10;
@@ -18,13 +26,16 @@ const MIN_REASON = 10;
  */
 export function RaiseDisputeForm({
   placementId,
+  party,
   onCancel,
   onRaised,
 }: {
   placementId: string;
+  party: DisputeChannel;
   onCancel: () => void;
   onRaised: (disputeId: string) => void;
 }) {
+  const [subject, setSubject] = useState<DisputeSubject | null>(null);
   const [reason, setReason] = useState("");
   const [proof, setProof] = useState<File[]>([]);
   const raise = useRaiseDispute();
@@ -34,8 +45,9 @@ export function RaiseDisputeForm({
   const proofError = proof.map(proofFileError).find(Boolean) ?? null;
 
   const submit = (): void => {
+    if (!subject) return;
     raise.mutate(
-      { placementId, reason: reason.trim(), proof },
+      { placementId, subject, reason: reason.trim(), proof },
       { onSuccess: (dispute) => onRaised(dispute.id) },
     );
   };
@@ -50,6 +62,29 @@ export function RaiseDisputeForm({
           This freezes the fee in escrow and sends the details to support. An
           admin will review both sides and decide.
         </p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label
+          htmlFor={`dispute-subject-${placementId}`}
+          className="text-[13px] font-semibold text-navy"
+        >
+          Subject
+        </label>
+        <NativeSelect
+          id={`dispute-subject-${placementId}`}
+          value={subject ?? ""}
+          onChange={(e) => {
+            const parsed = disputeSubjectSchema.safeParse(e.target.value);
+            setSubject(parsed.success ? parsed.data : null);
+          }}
+        >
+          <option value="">Select a subject…</option>
+          {DISPUTE_SUBJECTS_BY_PARTY[party].map((s) => (
+            <option key={s} value={s}>
+              {DISPUTE_SUBJECT_LABELS[s]}
+            </option>
+          ))}
+        </NativeSelect>
       </div>
       <Textarea
         value={reason}
@@ -84,7 +119,9 @@ export function RaiseDisputeForm({
         <Button
           type="button"
           size="sm"
-          disabled={raise.isPending || tooShort || proofError !== null}
+          disabled={
+            raise.isPending || !subject || tooShort || proofError !== null
+          }
           onClick={submit}
         >
           {raise.isPending

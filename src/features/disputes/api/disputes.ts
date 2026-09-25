@@ -17,6 +17,7 @@ import {
   type DisputeChannel,
   type DisputeMessage,
   type DisputeStatus,
+  type DisputeSubject,
   type ParticipantDispute,
   type ParticipantDisputeDetail,
 } from "../schemas";
@@ -34,6 +35,7 @@ export interface StagedProof {
 /** POST /v1/disputes — open a dispute on a held placement. */
 export async function raiseDispute(input: {
   placementId: string;
+  subject: DisputeSubject;
   reason: string;
   attachments?: StagedProof[];
 }): Promise<ParticipantDisputeDetail> {

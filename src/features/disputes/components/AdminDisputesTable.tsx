@@ -22,7 +22,11 @@ import {
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 
 import { useAdminDisputes } from "../hooks/useDisputes";
-import type { DisputeChannel, DisputeStatus } from "../schemas";
+import {
+  DISPUTE_SUBJECT_LABELS,
+  type DisputeChannel,
+  type DisputeStatus,
+} from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
 const TH = "px-5 py-3 font-semibold";
@@ -161,6 +165,9 @@ export function AdminDisputesTable() {
                     <th scope="col" className={TH}>
                       Candidate / Role
                     </th>
+                    <th scope="col" className={TH}>
+                      Subject
+                    </th>
                     <th scope="col" className={cn(TH, "text-right")}>
                       Fee
                     </th>
@@ -205,6 +212,9 @@ export function AdminDisputesTable() {
                           {d.candidateName} · {d.jobTitle}
                         </span>
                       </td>
+                      <td className="px-5 py-3 text-navy">
+                        {DISPUTE_SUBJECT_LABELS[d.subject]}
+                      </td>
                       <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
                         {formatMinor(d.amountMinor)}
                       </td>
@@ -235,6 +245,10 @@ export function AdminDisputesTable() {
                   href={`/admin/disputes/${d.id}`}
                   className={cn(d.unread && UNREAD_ROW)}
                   fields={[
+                    {
+                      label: "Subject",
+                      value: DISPUTE_SUBJECT_LABELS[d.subject],
+                    },
                     { label: "Fee", value: formatMinor(d.amountMinor) },
                     { label: "Opened", value: formatDate(d.createdAt) },
                   ]}

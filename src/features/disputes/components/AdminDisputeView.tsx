@@ -14,7 +14,7 @@ import {
   useAdminDispute,
   usePostAdminDisputeMessage,
 } from "../hooks/useDisputes";
-import { isDisputeOpen } from "../schemas";
+import { DISPUTE_SUBJECT_LABELS, isDisputeOpen } from "../schemas";
 import { DisputeChannelThread } from "./DisputeChannelThread";
 import { DisputeProofList } from "./DisputeProofList";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
@@ -91,6 +91,12 @@ export function AdminDisputeView({ id }: { id: string }) {
           <Fact label="Fee In Escrow" value={formatMinor(data.amountMinor)} />
           <Fact label="Joining Date" value={formatDate(data.joiningDate)} />
           <Fact label="Guarantee Ends" value={formatDate(data.holdExpiresAt)} />
+          <div className="sm:col-span-3">
+            <Fact
+              label="Subject"
+              value={DISPUTE_SUBJECT_LABELS[data.subject]}
+            />
+          </div>
           <div className="sm:col-span-3">
             <Fact label="Reason" value={data.reason} />
           </div>

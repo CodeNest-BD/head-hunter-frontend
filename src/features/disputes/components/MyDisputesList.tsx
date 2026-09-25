@@ -16,7 +16,7 @@ import {
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 
 import { useMyDisputes } from "../hooks/useDisputes";
-import { isDisputeOpen } from "../schemas";
+import { DISPUTE_SUBJECT_LABELS, isDisputeOpen } from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
 /** Same pill as the inbox's "New": a row still waiting on somebody. An open
@@ -101,6 +101,9 @@ export function MyDisputesList() {
                   Role
                 </th>
                 <th scope="col" className={TH}>
+                  Subject
+                </th>
+                <th scope="col" className={TH}>
                   Counterparty
                 </th>
                 <th scope="col" className={cn(TH, "text-right")}>
@@ -134,6 +137,9 @@ export function MyDisputesList() {
                       {d.jobTitle}
                       {isDisputeOpen(d.status) && <PendingPill />}
                     </span>
+                  </td>
+                  <td className="px-5 py-3 text-navy">
+                    {DISPUTE_SUBJECT_LABELS[d.subject]}
                   </td>
                   <td className="px-5 py-3 text-muted-foreground">
                     {d.counterpartyName}
@@ -173,6 +179,7 @@ export function MyDisputesList() {
               href={`/disputes/${d.id}`}
               className={cn(d.hasUpdate && UPDATED_ROW)}
               fields={[
+                { label: "Subject", value: DISPUTE_SUBJECT_LABELS[d.subject] },
                 { label: "Fee", value: formatMinor(d.amountMinor) },
                 { label: "Opened", value: formatDate(d.createdAt) },
               ]}

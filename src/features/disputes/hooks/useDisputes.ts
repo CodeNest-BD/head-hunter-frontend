@@ -24,7 +24,7 @@ import {
 import { uploadToPresignedUrl } from "@/shared/libs/documentUpload";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { disputeKeys } from "../keys";
-import type { DisputeChannel, DisputeStatus } from "../schemas";
+import type { DisputeChannel, DisputeStatus, DisputeSubject } from "../schemas";
 
 // ---- Participant ------------------------------------------------------
 
@@ -103,6 +103,7 @@ export function useRaiseDispute() {
   return useMutation({
     mutationFn: async (input: {
       placementId: string;
+      subject: DisputeSubject;
       reason: string;
       proof?: File[];
     }) => {
@@ -120,6 +121,7 @@ export function useRaiseDispute() {
       );
       return raiseDispute({
         placementId: input.placementId,
+        subject: input.subject,
         reason: input.reason,
         attachments,
       });

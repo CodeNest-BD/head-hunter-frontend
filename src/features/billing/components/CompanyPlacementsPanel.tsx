@@ -175,6 +175,7 @@ export function CompanyPlacementsPanel() {
           <div className="border-b border-border p-4">
             <RaiseDisputeForm
               placementId={disputing.placementId}
+              party="company"
               onCancel={() => setDisputingId(null)}
               onRaised={(id) => {
                 setDisputingId(null);

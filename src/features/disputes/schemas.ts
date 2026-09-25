@@ -24,6 +24,68 @@ export const isDisputeOpen = (status: DisputeStatus): boolean =>
 export const disputeChannelSchema = z.enum(["company", "recruiter"]);
 export type DisputeChannel = z.infer<typeof disputeChannelSchema>;
 
+/** Mirrors the backend `DisputeSubject` enum and its per-side lists. */
+export const disputeSubjectSchema = z.enum([
+  "candidate_did_not_join",
+  "candidate_left_during_guarantee",
+  "candidate_misrepresented",
+  "candidate_not_as_presented",
+  "duplicate_candidate",
+  "recruiter_misconduct",
+  "placement_wrongly_rejected",
+  "hired_outside_platform",
+  "fee_not_released",
+  "offer_terms_changed",
+  "company_unresponsive",
+  "company_misconduct",
+  "fee_amount_incorrect",
+  "other",
+]);
+export type DisputeSubject = z.infer<typeof disputeSubjectSchema>;
+
+export const DISPUTE_SUBJECT_LABELS: Record<DisputeSubject, string> = {
+  candidate_did_not_join: "Candidate Did Not Join",
+  candidate_left_during_guarantee: "Candidate Left During Guarantee",
+  candidate_misrepresented: "Candidate Misrepresented",
+  candidate_not_as_presented: "Candidate Not As Presented",
+  duplicate_candidate: "Duplicate Candidate",
+  recruiter_misconduct: "Recruiter Misconduct",
+  placement_wrongly_rejected: "Placement Wrongly Rejected",
+  hired_outside_platform: "Hired Outside The Platform",
+  fee_not_released: "Fee Not Released",
+  offer_terms_changed: "Offer Terms Changed",
+  company_unresponsive: "Company Unresponsive",
+  company_misconduct: "Company Misconduct",
+  fee_amount_incorrect: "Fee Amount Incorrect",
+  other: "Other",
+};
+
+export const DISPUTE_SUBJECTS_BY_PARTY: Record<
+  DisputeChannel,
+  readonly DisputeSubject[]
+> = {
+  company: [
+    "candidate_did_not_join",
+    "candidate_left_during_guarantee",
+    "candidate_misrepresented",
+    "candidate_not_as_presented",
+    "duplicate_candidate",
+    "fee_amount_incorrect",
+    "recruiter_misconduct",
+    "other",
+  ],
+  recruiter: [
+    "placement_wrongly_rejected",
+    "hired_outside_platform",
+    "fee_not_released",
+    "fee_amount_incorrect",
+    "offer_terms_changed",
+    "company_unresponsive",
+    "company_misconduct",
+    "other",
+  ],
+};
+
 export const disputeMessageSchema = z.object({
   id: z.string(),
   channel: disputeChannelSchema,
@@ -57,6 +119,7 @@ export const participantDisputeSchema = z.object({
   amountMinor: z.number(),
   status: disputeStatusSchema,
   raisedByMe: z.boolean(),
+  subject: disputeSubjectSchema,
   reason: z.string(),
   resolutionNote: z.string().nullable(),
   createdAt: z.string(),
@@ -89,6 +152,7 @@ export const adminDisputeListItemSchema = z.object({
   placementId: z.string(),
   placementStatus: z.string(),
   amountMinor: z.number(),
+  subject: disputeSubjectSchema,
   reason: z.string(),
   createdAt: z.string(),
   resolvedAt: z.string().nullable(),
