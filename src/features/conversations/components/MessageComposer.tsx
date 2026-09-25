@@ -9,12 +9,15 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { useSendMessage } from "../hooks/useConversation";
+import type { ConversationParty } from "../utils/groupEvents";
 
 const MAX_BODY_LENGTH = 4000;
 
 export interface MessageComposerProps {
   /** The thread. A conversation is one candidate. */
   candidateId: string;
+  /** Who is writing — the optimistic message is drawn on their side. */
+  senderParty: ConversationParty;
   /** The counterparty's name, for the reply placeholder ("Write a reply to …"). */
   replyToName?: string;
   /** False once the candidate is passed on: readable, closed to new messages. */
@@ -44,20 +47,29 @@ function sendMessageErrorMessage(error: unknown): string {
 /** Textarea + send button for one thread, disabled while a send is pending. */
 export function MessageComposer({
   candidateId,
+  senderParty,
   replyToName,
   acceptsMessages = true,
 }: MessageComposerProps) {
   const scopeDescriptionId = useId();
   const [body, setBody] = useState("");
-  const sendMessage = useSendMessage(candidateId);
+  const sendMessage = useSendMessage(candidateId, senderParty);
 
   const trimmed = body.trim();
-  const canSend =
-    !sendMessage.isPending && trimmed.length > 0 && acceptsMessages;
+  // Not gated on a pending send: the message is already in the thread, so the
+  // next one can go straight after it, like any chat.
+  const canSend = trimmed.length > 0 && acceptsMessages;
 
+  // Cleared at once — the message is already in the thread (optimistic) — and
+  // handed back only if the send fails and nothing new was typed meanwhile.
   const handleSend = (): void => {
     if (!canSend) return;
-    sendMessage.mutate({ body: trimmed }, { onSuccess: () => setBody("") });
+    const sent = trimmed;
+    setBody("");
+    sendMessage.mutate(
+      { body: sent },
+      { onError: () => setBody((current) => current || sent) },
+    );
   };
 
   // Closed thread (candidate passed on): a quiet, read-only notice in place of
@@ -92,7 +104,6 @@ export function MessageComposer({
           placeholder={
             replyToName ? `Write a reply to ${replyToName}…` : "Write a reply…"
           }
-          disabled={sendMessage.isPending}
           aria-label="Message"
           aria-describedby={scopeDescriptionId}
           className="min-h-[76px] resize-none border-0 bg-transparent px-4 py-3 shadow-none focus-visible:ring-0"
@@ -111,7 +122,7 @@ export function MessageComposer({
             disabled={!canSend}
             onClick={handleSend}
           >
-            {sendMessage.isPending ? "Sending…" : "Send"}
+            Send
             <SendHorizontal className="h-3.5 w-3.5" />
           </Button>
         </div>

@@ -437,6 +437,7 @@ export function Thread({ candidateId }: ThreadProps) {
 
       <MessageComposer
         candidateId={candidateId}
+        senderParty={viewerParty}
         replyToName={counterpartyHeading}
         acceptsMessages={threadHeader?.acceptsMessages ?? true}
       />

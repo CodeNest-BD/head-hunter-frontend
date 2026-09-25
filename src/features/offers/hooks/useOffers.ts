@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // conversations API client into every module that merely wants to invalidate
 // its cache — this hook only needs the static key array.
 import { conversationKeys } from "@/features/conversations/keys";
+import { candidateKeys } from "@/features/candidates/keys";
+import { inboxKeys } from "@/features/inbox/keys";
 import {
   acceptOffer,
   counterOffer,
@@ -43,18 +45,23 @@ export function useOffers(params: OfferListParams) {
 }
 
 /**
- * Every offer mutation below invalidates both this feature's own keys and
- * `conversationKeys.all`: sending, countering, accepting, declining or
- * withdrawing an offer all change what the thread renders next — the same
- * reasoning `features/interviews/hooks/useInterviews.ts` applies to a
- * scheduling mutation.
+ * Every offer mutation below changes the thread, the candidate's stage and
+ * the inbox row as well as the offers themselves — the same reasoning
+ * `features/interviews/hooks/useInterviews.ts` applies to a scheduling
+ * mutation. The refetch is returned, not fired and forgotten, so the mutation
+ * stays pending until the new state is on screen: a button that stopped
+ * spinning while the card still showed the old state read as "nothing
+ * happened" until the next poll.
  */
-function useInvalidateOnOffer(): () => void {
+function useInvalidateOnOffer(): () => Promise<unknown> {
   const queryClient = useQueryClient();
-  return () => {
-    void queryClient.invalidateQueries({ queryKey: offerKeys.all });
-    void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
-  };
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: offerKeys.all }),
+      queryClient.invalidateQueries({ queryKey: conversationKeys.all }),
+      queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
+      queryClient.invalidateQueries({ queryKey: inboxKeys.all }),
+    ]);
 }
 
 export function useCreateOffer() {

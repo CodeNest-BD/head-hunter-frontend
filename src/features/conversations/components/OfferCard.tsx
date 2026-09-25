@@ -117,7 +117,7 @@ export function OfferCard({
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [confirmingWithdraw, setConfirmingWithdraw] = useState(false);
 
-  const notifyCompany = useSendMessage(candidateId);
+  const notifyCompany = useSendMessage(candidateId, viewerParty);
   const acceptOffer = useAcceptOffer(offerId);
   const declineOffer = useDeclineOffer(offerId);
   const counterOffer = useCounterOffer(offerId);

@@ -4,6 +4,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type InfiniteData,
 } from "@tanstack/react-query";
 
 // Imported from the keys module directly, not the feature barrel: the barrel
@@ -23,6 +24,8 @@ import {
 } from "../api/conversations";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { conversationKeys } from "../keys";
+import type { ConversationEvent, ConversationThread } from "../schemas";
+import type { ConversationParty } from "../utils/groupEvents";
 import type { ConversationRealtimeStatus } from "./useConversationRealtime";
 
 const FIRST_PAGE = 1;
@@ -85,14 +88,91 @@ export function useMessageUnreadCount() {
   });
 }
 
-export function useSendMessage(candidateId: string) {
+type ThreadCache = InfiniteData<ConversationThread, number>;
+
+/** Pages are newest-first (the API's default DESC), so page one's head is the latest entry. */
+function withNewestEvent(
+  cache: ThreadCache,
+  event: ConversationEvent,
+): ThreadCache {
+  const [newest, ...older] = cache.pages;
+  if (!newest) return cache;
+  return {
+    ...cache,
+    pages: [
+      {
+        ...newest,
+        events: { ...newest.events, data: [event, ...newest.events.data] },
+      },
+      ...older,
+    ],
+  };
+}
+
+function withoutEvent(cache: ThreadCache, messageId: string): ThreadCache {
+  return {
+    ...cache,
+    pages: cache.pages.map((page) => ({
+      ...page,
+      events: {
+        ...page.events,
+        data: page.events.data.filter((event) => event.messageId !== messageId),
+      },
+    })),
+  };
+}
+
+/**
+ * Optimistic: the message lands in the thread the moment it is sent, shaped
+ * exactly like the server's own message event, and is rolled back if the send
+ * fails. Waiting for the refetch instead left a gap — the composer had
+ * cleared, but the message only appeared once the thread came back.
+ */
+export function useSendMessage(
+  candidateId: string,
+  senderParty: ConversationParty,
+) {
   const queryClient = useQueryClient();
+  const threadKey = conversationKeys.threadsFor(candidateId);
+  const mutationKey = ["send-message", candidateId];
   return useMutation({
+    mutationKey,
     mutationFn: (input: SendMessageInput) => sendMessage(candidateId, input),
-    // A new message changes both the thread (it has a new entry) and the
-    // notifications badge, so both key sets are invalidated together.
-    onSuccess: () => {
+    onMutate: async (input) => {
+      // A refetch already in flight would land without the message and wipe it.
+      await queryClient.cancelQueries({ queryKey: threadKey });
+      const optimisticId = `optimistic-${crypto.randomUUID()}`;
+      const optimistic: ConversationEvent = {
+        type: "message",
+        at: new Date().toISOString(),
+        actor: senderParty,
+        title: "Message",
+        body: input.body,
+        candidateId,
+        messageId: optimisticId,
+        data: null,
+      };
+      queryClient.setQueriesData<ThreadCache>({ queryKey: threadKey }, (old) =>
+        old ? withNewestEvent(old, optimistic) : old,
+      );
+      return { optimisticId };
+    },
+    // Removes only this send's own entry rather than restoring a snapshot:
+    // with several sends in flight, a snapshot would also wipe the others.
+    onError: (_error, _input, context) => {
+      if (!context) return;
+      queryClient.setQueriesData<ThreadCache>({ queryKey: threadKey }, (old) =>
+        old ? withoutEvent(old, context.optimisticId) : old,
+      );
+    },
+    // Reconcile in the background (the real message id, the inbox preview,
+    // the badges) — but only once the last send in flight settles, so an
+    // earlier send's refetch can't land between a later one's optimistic
+    // insert and its save and wipe it. The settling mutation still counts.
+    onSettled: () => {
+      if (queryClient.isMutating({ mutationKey }) > 1) return;
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
+      void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
       void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });

@@ -6,6 +6,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // conversations API client into every module that merely wants to invalidate
 // its cache — this hook only needs the static key array.
 import { conversationKeys } from "@/features/conversations/keys";
+import { candidateKeys } from "@/features/candidates/keys";
+import { inboxKeys } from "@/features/inbox/keys";
 import {
   cancelInterview,
   confirmSlot,
@@ -45,17 +47,21 @@ export function useInterviews(params: InterviewListParams) {
 }
 
 /**
- * Every scheduling mutation below invalidates both this feature's own keys
- * and `conversationKeys.all`: a new proposal, a confirmed slot, a recorded
- * outcome all change what the thread renders next — the same reasoning
- * `useSendMessage` already applies to a plain message.
+ * Every scheduling mutation below changes the thread, the candidate's stage
+ * and the inbox row as well as the interviews themselves: a new proposal, a
+ * confirmed slot, a recorded outcome. The refetch is returned so the mutation
+ * stays pending until the new state is on screen — see
+ * `useInvalidateOnOffer` for why.
  */
-function useInvalidateOnScheduling(): () => void {
+function useInvalidateOnScheduling(): () => Promise<unknown> {
   const queryClient = useQueryClient();
-  return () => {
-    void queryClient.invalidateQueries({ queryKey: interviewKeys.all });
-    void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
-  };
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: interviewKeys.all }),
+      queryClient.invalidateQueries({ queryKey: conversationKeys.all }),
+      queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
+      queryClient.invalidateQueries({ queryKey: inboxKeys.all }),
+    ]);
 }
 
 /**

@@ -419,7 +419,10 @@ describe("OfferCard", () => {
       );
       fireEvent.click(screen.getByRole("button", { name: "Notify Company" }));
 
-      expect(useSendMessageMock).toHaveBeenCalledWith("candidate-1");
+      expect(useSendMessageMock).toHaveBeenCalledWith(
+        "candidate-1",
+        "recruiter",
+      );
       expect(mutate).toHaveBeenCalledWith({
         body: "I cannot accept your offer due to your lack of balance.",
       });
