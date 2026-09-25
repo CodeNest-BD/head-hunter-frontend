@@ -115,6 +115,7 @@ export function RaiseDisputePanel() {
               <RaiseDisputeForm
                 key={selected.placementId}
                 placementId={selected.placementId}
+                party={role}
                 onCancel={() => setPlacementId("")}
                 onRaised={(id) => router.push(`/disputes/${id}`)}
               />

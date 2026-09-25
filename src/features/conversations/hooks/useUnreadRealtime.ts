@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 // The keys module, not the barrel: this hook only needs the static key
 // array, and the barrel would pull the inbox components in behind it.
 import { inboxKeys } from "@/features/inbox/keys";
+import { notificationKeys } from "@/features/notifications/keys";
 
 import { CONVERSATION_EVENT } from "../events";
 import { conversationKeys } from "../keys";
@@ -38,6 +39,9 @@ export function useUnreadRealtime(): void {
     // Prefix key: the nav badge and the inbox rows both carry unread counts,
     // so one message makes both stale.
     void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
+    // The action behind the frame also wrote a notification, so the bell is
+    // stale too — refreshed now rather than on its next poll.
+    void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
   };
 
   useConversationSocket({

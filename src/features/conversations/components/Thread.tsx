@@ -7,6 +7,7 @@ import { AlertCircle, Briefcase } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { CANDIDATE_STATUS_LABELS } from "@/features/candidates/schemas";
 import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
+import { jobPath } from "@/features/jobs/utils/jobPath";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
@@ -113,7 +114,16 @@ export function Thread({ candidateId }: ThreadProps) {
   // A thread is one candidate now, so there is nothing left to filter by and
   // the params are constant — memoised only to keep the query key stable.
   const params = useMemo(() => ({}), []);
-  const { status: realtimeStatus } = useConversationRealtime(candidateId);
+  const markRead = useMarkThreadRead(candidateId);
+  // Activity arriving on the open thread is seen as it lands — without this it
+  // stayed unread until the tab regained focus, lighting the row and the badge
+  // for the very thread on screen. A hidden tab is not looking, so it waits
+  // for the focus handler below.
+  const { status: realtimeStatus } = useConversationRealtime(candidateId, {
+    onActivity: () => {
+      if (document.visibilityState === "visible") markRead.mutate();
+    },
+  });
   const {
     data,
     isPending,
@@ -124,7 +134,6 @@ export function Thread({ candidateId }: ThreadProps) {
     hasNextPage,
     isFetchingNextPage,
   } = useConversationThread(candidateId, params, realtimeStatus);
-  const markRead = useMarkThreadRead(candidateId);
 
   // A fresh array every render regardless of whether the underlying data
   // changed (`orderedEvents` always allocates), so this is memoised on
@@ -286,7 +295,10 @@ export function Thread({ candidateId }: ThreadProps) {
   const jobHref =
     viewerParty === "company"
       ? `/company/jobs/${threadHeader?.job.id ?? ""}`
-      : `/jobs/${threadHeader?.job.id ?? ""}`;
+      : jobPath({
+          id: threadHeader?.job.id ?? "",
+          title: threadHeader?.job.title,
+        });
 
   return (
     <div className={THREAD_PANEL_CLASSNAME}>
@@ -425,6 +437,7 @@ export function Thread({ candidateId }: ThreadProps) {
 
       <MessageComposer
         candidateId={candidateId}
+        senderParty={viewerParty}
         replyToName={counterpartyHeading}
         acceptsMessages={threadHeader?.acceptsMessages ?? true}
       />

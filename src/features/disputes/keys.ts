@@ -1,5 +1,6 @@
 export const disputeKeys = {
   all: ["disputes"] as const,
+  lists: ["disputes", "list"] as const,
   list: (page: number) => ["disputes", "list", page] as const,
   detail: (id: string) => ["disputes", "detail", id] as const,
   attentionCount: ["disputes", "attention-count"] as const,

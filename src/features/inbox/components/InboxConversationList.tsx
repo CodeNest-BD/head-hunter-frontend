@@ -9,6 +9,7 @@ import {
   CANDIDATE_STATUS_LABELS,
   type CandidateStatus,
 } from "@/features/candidates/schemas";
+import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -24,7 +25,7 @@ const COPY: Record<
   InboxSide,
   {
     subtitle: string;
-    jobHref: (jobId: string) => string;
+    jobHref: (jobId: string, jobTitle: string) => string;
     emptyHint: { href: string; label: string; before: string; after: string };
   }
 > = {
@@ -42,7 +43,7 @@ const COPY: Record<
   recruiter: {
     subtitle:
       "Conversations with companies about the candidates you submitted.",
-    jobHref: (jobId) => `/jobs/${jobId}`,
+    jobHref: (jobId, jobTitle) => jobPath({ id: jobId, title: jobTitle }),
     emptyHint: {
       before: "Submit a candidate from the ",
       href: "/explore-jobs",
@@ -247,7 +248,7 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
                   onOpen={() =>
                     router.push(`/${side}/inbox/${row.candidateId}`)
                   }
-                  jobHref={copy.jobHref(row.jobId)}
+                  jobHref={copy.jobHref(row.jobId, row.jobTitle)}
                 />
               ))}
             </ul>
@@ -309,15 +310,15 @@ function ConversationRow({
         className={cn(
           "flex cursor-pointer items-start gap-3 px-5 py-4 transition-colors",
           needsYou
-            ? "bg-primary/[0.05] hover:bg-primary/[0.09]"
+            ? "bg-primary/[0.04] shadow-[inset_3px_0_0_0_hsl(var(--primary))] hover:bg-primary/[0.08]"
             : "hover:bg-secondary/40",
         )}
       >
         {/* Unread dot */}
-        <span className="flex w-2 shrink-0 justify-center pt-2">
+        <span className="flex w-2.5 shrink-0 justify-center pt-2">
           {needsYou ? (
             <span
-              className="h-2 w-2 rounded-full bg-primary"
+              className="block h-2.5 w-2.5 shrink-0 rounded-full bg-primary"
               aria-label="Unread"
             />
           ) : null}

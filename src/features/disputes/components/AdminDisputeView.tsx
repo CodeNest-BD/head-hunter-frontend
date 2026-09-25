@@ -14,13 +14,14 @@ import {
   useAdminDispute,
   usePostAdminDisputeMessage,
 } from "../hooks/useDisputes";
-import { isDisputeOpen } from "../schemas";
+import { DISPUTE_SUBJECT_LABELS, isDisputeOpen } from "../schemas";
+import { describeCountdown } from "../utils/describeCountdown";
 import { DisputeChannelThread } from "./DisputeChannelThread";
 import { DisputeProofList } from "./DisputeProofList";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
+import { ResolveDisputeCard } from "./ResolveDisputeCard";
 
-/** Full admin adjudication view: context and both channels. Settling the
- * escrow is not done from here — an admin moves that money by hand. */
+/** Full admin adjudication view: context, both channels, and resolution. */
 export function AdminDisputeView({ id }: { id: string }) {
   const { data, isPending, isError, refetch } = useAdminDispute(id);
   const post = usePostAdminDisputeMessage(id);
@@ -90,9 +91,21 @@ export function AdminDisputeView({ id }: { id: string }) {
           />
           <Fact label="Fee In Escrow" value={formatMinor(data.amountMinor)} />
           <Fact label="Joining Date" value={formatDate(data.joiningDate)} />
-          <Fact label="Guarantee Ends" value={formatDate(data.holdExpiresAt)} />
+          <Fact label="Release Date" value={formatDate(data.holdExpiresAt)} />
+          <div className="sm:col-span-3">
+            <Fact
+              label="Subject"
+              value={DISPUTE_SUBJECT_LABELS[data.subject]}
+            />
+          </div>
           <div className="sm:col-span-3">
             <Fact label="Reason" value={data.reason} />
+          </div>
+          <div className="sm:col-span-3">
+            <Fact
+              label="Release Countdown"
+              value={describeCountdown(data.countdown)}
+            />
           </div>
           {data.resolutionNote ? (
             <div className="sm:col-span-3">
@@ -121,8 +134,8 @@ export function AdminDisputeView({ id }: { id: string }) {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardContent className="p-5">
+        <Card className="flex flex-col">
+          <CardContent className="flex flex-1 flex-col p-5">
             <h2 className="mb-3 font-heading text-base font-bold text-navy">
               Channel With Company
             </h2>
@@ -135,8 +148,8 @@ export function AdminDisputeView({ id }: { id: string }) {
             />
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-5">
+        <Card className="flex flex-col">
+          <CardContent className="flex flex-1 flex-col p-5">
             <h2 className="mb-3 font-heading text-base font-bold text-navy">
               Channel With Recruiter
             </h2>
@@ -150,6 +163,8 @@ export function AdminDisputeView({ id }: { id: string }) {
           </CardContent>
         </Card>
       </div>
+
+      {open ? <ResolveDisputeCard dispute={data} /> : null}
     </div>
   );
 }

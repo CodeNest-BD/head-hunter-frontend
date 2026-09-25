@@ -116,13 +116,21 @@ describe("NotificationList", () => {
 
   it("renders an unroutable notification as text rather than a link", async () => {
     fetchNotificationsMock.mockResolvedValue(
-      flatPaginated([item({ type: "payout_sent", data: null })]),
+      flatPaginated([
+        item({
+          type: "company_followed",
+          title: "A recruiter followed you",
+          data: null,
+        }),
+      ]),
     );
-    useAuthMock.mockReturnValue({ user: { id: "u", role: "recruiter" } });
+    useAuthMock.mockReturnValue({ user: { id: "u", role: "company" } });
 
     renderList();
 
-    expect(await screen.findByText("Payout sent")).toBeInTheDocument();
+    expect(
+      await screen.findByText("A recruiter followed you"),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 

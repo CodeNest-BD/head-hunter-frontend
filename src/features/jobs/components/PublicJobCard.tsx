@@ -24,6 +24,7 @@ import {
   type RoleCategory,
 } from "../schemas";
 import { formatSalaryRange } from "../utils/formatSalaryRange";
+import { jobPath } from "../utils/jobPath";
 
 function locationLine(job: PublicJobCardData): string {
   if (job.isRemote) return "Remote";
@@ -209,7 +210,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
           </p>
         </div>
         <Link
-          href={`/jobs/${job.id}`}
+          href={jobPath(job)}
           className="inline-flex w-full shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 2xl:w-auto"
         >
           View details

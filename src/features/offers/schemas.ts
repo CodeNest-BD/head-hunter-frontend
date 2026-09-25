@@ -17,6 +17,7 @@ export const OFFER_STATUSES = [
   "declined",
   "countered",
   "superseded",
+  "withdrawn",
 ] as const;
 export const offerStatusSchema = z.enum(OFFER_STATUSES);
 export type OfferStatus = z.infer<typeof offerStatusSchema>;
@@ -27,6 +28,7 @@ export const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   declined: "Declined",
   countered: "Countered",
   superseded: "Superseded",
+  withdrawn: "Withdrawn",
 };
 
 /** Which side sent this offer or counter-offer. */
@@ -105,10 +107,9 @@ export const offerTermsFormSchema = z.object({
   startDate: z
     .string()
     .trim()
+    .min(1, "Start date is required")
     .refine(
-      (value) =>
-        value === "" ||
-        value >= format(subDays(startOfToday(), 1), "yyyy-MM-dd"),
+      (value) => value >= format(subDays(startOfToday(), 1), "yyyy-MM-dd"),
       { message: "Pick a start date of today or later" },
     ),
   notes: z.string().trim(),

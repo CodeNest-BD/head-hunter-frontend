@@ -11,7 +11,8 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 
 import { useMyDispute, usePostDisputeMessage } from "../hooks/useDisputes";
-import { isDisputeOpen } from "../schemas";
+import { DISPUTE_SUBJECT_LABELS, isDisputeOpen } from "../schemas";
+import { describeCountdown } from "../utils/describeCountdown";
 import { DisputeChannelThread } from "./DisputeChannelThread";
 import { DisputeProofList } from "./DisputeProofList";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
@@ -75,7 +76,19 @@ export function ParticipantDisputeView({ id }: { id: string }) {
           <Fact label="Fee In Escrow" value={formatMinor(data.amountMinor)} />
           <Fact label="Opened" value={formatDate(data.createdAt)} />
           <div className="sm:col-span-3">
+            <Fact
+              label="Subject"
+              value={DISPUTE_SUBJECT_LABELS[data.subject]}
+            />
+          </div>
+          <div className="sm:col-span-3">
             <Fact label="Your Reason" value={data.reason} />
+          </div>
+          <div className="sm:col-span-3">
+            <Fact
+              label="Release Countdown"
+              value={describeCountdown(data.countdown)}
+            />
           </div>
           {data.resolutionNote ? (
             <div className="sm:col-span-3">

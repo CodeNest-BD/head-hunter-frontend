@@ -2,6 +2,7 @@ import type {
   InterviewBadge,
   OfferBadge,
 } from "@/features/conversations/utils/candidateNegotiationState";
+import type { OfferParty } from "@/features/offers";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
@@ -9,6 +10,8 @@ import { formatMinor } from "@/shared/utils/money";
 export interface NegotiationStateBadgesProps {
   interview: InterviewBadge | null;
   offer: OfferBadge | null;
+  /** Who is reading — a pending offer reads differently to whoever sent it. */
+  viewerParty: OfferParty;
 }
 
 /**
@@ -49,19 +52,28 @@ function describeInterview(interview: InterviewBadge | null): BadgeContent {
   }
 }
 
-function describeOffer(offer: OfferBadge | null): BadgeContent {
+function describeOffer(
+  offer: OfferBadge | null,
+  viewerParty: OfferParty,
+): BadgeContent {
   if (!offer) return { phrase: "none yet", tone: "neutral" };
   const salary =
     offer.salaryMinor !== null ? ` · ${formatMinor(offer.salaryMinor)}` : "";
   switch (offer.kind) {
+    // "Offer sent" alone didn't say whose number it was or who owes the next
+    // move — after a counter the answer flips, so it is phrased per viewer.
     case "sent":
-      return { phrase: `offer sent${salary}`, tone: "pending" };
+      return offer.sentBy === viewerParty
+        ? { phrase: `you sent${salary} · awaiting reply`, tone: "pending" }
+        : { phrase: `awaiting your reply${salary}`, tone: "active" };
     case "accepted":
       return { phrase: `accepted${salary}`, tone: "positive" };
     case "declined":
       return { phrase: `declined${salary}`, tone: "neutral" };
     case "countered":
       return { phrase: `countered${salary}`, tone: "active" };
+    case "withdrawn":
+      return { phrase: `withdrawn${salary}`, tone: "neutral" };
   }
 }
 
@@ -98,6 +110,7 @@ function NegotiationBadge({ label, content }: NegotiationBadgeProps) {
 export function NegotiationStateBadges({
   interview,
   offer,
+  viewerParty,
 }: NegotiationStateBadgesProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -105,7 +118,10 @@ export function NegotiationStateBadges({
         label="Interview"
         content={describeInterview(interview)}
       />
-      <NegotiationBadge label="Offer" content={describeOffer(offer)} />
+      <NegotiationBadge
+        label="Offer"
+        content={describeOffer(offer, viewerParty)}
+      />
     </div>
   );
 }

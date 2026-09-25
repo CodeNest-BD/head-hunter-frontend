@@ -93,7 +93,7 @@ describe("CandidateCard", () => {
         candidate={candidate()}
         negotiationState={{
           interview: { kind: "awaiting_time" },
-          offer: { kind: "sent", salaryMinor: 13000000 },
+          offer: { kind: "sent", salaryMinor: 13000000, sentBy: "company" },
           interviewRecord: null,
           offerRecord: null,
         }}
@@ -104,7 +104,7 @@ describe("CandidateCard", () => {
       "Interview: awaiting a time",
     );
     expect(screen.getByText(/Offer:/)).toHaveTextContent(
-      "Offer: offer sent · $130,000",
+      "Offer: you sent · $130,000 · awaiting reply",
     );
     expect(screen.getByText("Submitted")).toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
@@ -120,7 +120,7 @@ describe("CandidateCard", () => {
         candidate={candidate()}
         negotiationState={{
           interview: { kind: "awaiting_time" },
-          offer: { kind: "sent", salaryMinor: null },
+          offer: { kind: "sent", salaryMinor: null, sentBy: "company" },
           interviewRecord: interview({ id: "interview-1" }),
           offerRecord: offer({ id: "offer-1" }),
         }}

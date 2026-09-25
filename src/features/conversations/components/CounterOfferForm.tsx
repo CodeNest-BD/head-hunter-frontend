@@ -21,7 +21,7 @@ import { majorInputToMinor } from "@/shared/utils/money";
  * API copies that from the offer being countered. */
 export interface CounterOfferTerms {
   salaryMinor: number;
-  startDate?: string;
+  startDate: string;
   notes?: string;
 }
 
@@ -70,7 +70,7 @@ export function CounterOfferForm({
     if (salaryMinor === null) return;
     onSubmit({
       salaryMinor,
-      startDate: values.startDate.trim() || undefined,
+      startDate: values.startDate,
       notes: values.notes.trim() || undefined,
     });
   });

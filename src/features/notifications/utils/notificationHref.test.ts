@@ -53,10 +53,46 @@ describe("notificationHref", () => {
     );
   });
 
-  it("returns null for a recruiter payout — there is no recruiter wallet page", () => {
+  it("sends a recruiter to their wallet for payout and placement events", () => {
     expect(
-      notificationHref(notification("payout_sent", null), "recruiter"),
-    ).toBeNull();
+      notificationHref(notification("payout_failed", null), "recruiter"),
+    ).toBe("/recruiter/wallet");
+    expect(
+      notificationHref(
+        notification("placement_released", { candidateId: "cand-1" }),
+        "recruiter",
+      ),
+    ).toBe("/recruiter/wallet");
+  });
+
+  it("sends a company to the expired job, and each role to its profile for verification", () => {
+    expect(
+      notificationHref(
+        notification("job_expired", { jobId: "job-1" }),
+        "company",
+      ),
+    ).toBe("/company/jobs/job-1");
+    expect(
+      notificationHref(
+        notification("verification_rejected", null),
+        "recruiter",
+      ),
+    ).toBe("/recruiter/profile");
+  });
+
+  it("sends an admin to the account awaiting approval, or the queue for older rows", () => {
+    expect(
+      notificationHref(
+        notification("recruiter_awaiting_approval", { subjectUserId: "u-1" }),
+        "admin",
+      ),
+    ).toBe("/admin/recruiters/u-1");
+    expect(
+      notificationHref(
+        notification("company_awaiting_approval", null),
+        "admin",
+      ),
+    ).toBe("/admin/companies");
   });
 
   it("returns null for an admin rather than falling back to the recruiter route", () => {

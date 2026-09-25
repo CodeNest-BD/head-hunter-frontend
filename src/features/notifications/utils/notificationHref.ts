@@ -13,14 +13,28 @@ const CANDIDATE_TYPES = new Set([
   "offer_accepted",
   "offer_declined",
   "hire_confirmation_requested",
+  "submission_status_changed",
 ]);
 
-/** Money events. There is no recruiter equivalent of /company/wallet. */
+/** Money events — each role's own wallet page. */
 const WALLET_TYPES = new Set([
   "placement_created",
   "placement_released",
   "payout_sent",
+  "payout_failed",
 ]);
+
+/** Account events — the verification status lives on each role's profile. */
+const PROFILE_TYPES = new Set([
+  "verification_approved",
+  "verification_rejected",
+]);
+
+/** Admin approval queue — the account's admin detail page. */
+const ADMIN_APPROVAL_ROUTES: Record<string, string> = {
+  recruiter_awaiting_approval: "/admin/recruiters",
+  company_awaiting_approval: "/admin/companies",
+};
 
 /** Dispute events route to the ticket — the admin's or the participant's view. */
 const DISPUTE_TYPES = new Set([
@@ -71,10 +85,29 @@ export function notificationHref(
     return role === "recruiter" ? "/recruiter/subscription" : null;
   }
 
-  // Recruiters have no wallet or payouts page today, so these are unroutable
-  // for them. That is a real product gap, not an oversight of this map.
   if (WALLET_TYPES.has(type)) {
-    return role === "company" ? "/company/wallet" : null;
+    if (role === "company") return "/company/wallet";
+    if (role === "recruiter") return "/recruiter/wallet";
+    return null;
+  }
+
+  if (PROFILE_TYPES.has(type)) {
+    if (role === "company") return "/company/profile";
+    if (role === "recruiter") return "/recruiter/profile";
+    return null;
+  }
+
+  if (type === "job_expired") {
+    const jobId = readId(data, "jobId");
+    return role === "company" && jobId ? `/company/jobs/${jobId}` : null;
+  }
+
+  const approvalRoute = ADMIN_APPROVAL_ROUTES[type];
+  if (approvalRoute) {
+    if (role !== "admin") return null;
+    // Older rows predate `subjectUserId`; the queue still gets them there.
+    const userId = readId(data, "subjectUserId");
+    return userId ? `${approvalRoute}/${userId}` : approvalRoute;
   }
 
   if (DISPUTE_TYPES.has(type)) {

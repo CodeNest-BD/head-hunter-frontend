@@ -61,6 +61,7 @@ import {
   type RoleCategory,
 } from "../schemas";
 import { useDeleteJob, useJobs } from "../hooks/useJobs";
+import { jobPath } from "../utils/jobPath";
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
@@ -163,7 +164,7 @@ function CandidateCount({
  * and a two-step Delete (soft-delete) so the destructive action needs a
  * deliberate confirm.
  */
-function JobRowActions({ jobId }: { jobId: string }) {
+function JobRowActions({ jobId, title }: { jobId: string; title: string }) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const del = useDeleteJob();
@@ -219,7 +220,7 @@ function JobRowActions({ jobId }: { jobId: string }) {
         ) : (
           <>
             <Link
-              href={`/jobs/${jobId}`}
+              href={jobPath({ id: jobId, title })}
               onClick={() => setOpen(false)}
               className={itemClass}
             >
@@ -423,7 +424,7 @@ export function JobsTable() {
                             {/* Title opens the job's public-style detail view;
                                 the row's Edit action is where you change it. */}
                             <Link
-                              href={`/jobs/${job.id}`}
+                              href={jobPath(job)}
                               className="font-semibold text-navy transition-colors hover:text-primary"
                             >
                               {job.title}
@@ -463,7 +464,7 @@ export function JobsTable() {
                             )}
                           <td className={`${TABLE_TD} text-right`}>
                             <div className="flex justify-end">
-                              <JobRowActions jobId={job.id} />
+                              <JobRowActions jobId={job.id} title={job.title} />
                             </div>
                           </td>
                         </tr>
@@ -476,7 +477,7 @@ export function JobsTable() {
                 {data.data.map((job) => (
                   <MobileRecordCard
                     key={job.id}
-                    href={`/jobs/${job.id}`}
+                    href={jobPath(job)}
                     title={job.title}
                     subtitle={formatDate(job.publishedAt ?? job.createdAt)}
                     trailing={<JobStatusBadge status={job.status} />}
@@ -509,7 +510,7 @@ export function JobsTable() {
                             },
                           ]),
                     ]}
-                    actions={<JobRowActions jobId={job.id} />}
+                    actions={<JobRowActions jobId={job.id} title={job.title} />}
                   />
                 ))}
               </MobileRecordList>

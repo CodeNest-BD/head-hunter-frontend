@@ -45,8 +45,8 @@ export function DisputeChannelThread({
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-1 flex-col gap-3">
+      <div className="flex flex-1 flex-col gap-2">
         {messages.length === 0 ? (
           <p className="rounded-md border border-dashed border-input bg-secondary/40 p-3 text-[13px] text-muted-foreground">
             {emptyLabel}

@@ -31,6 +31,7 @@ import { JOB_STATUS_LABELS, type AdminJobListItem } from "../schemas";
 import { JobRowActions } from "./JobRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
+import { jobPath } from "@/features/jobs/utils/jobPath";
 import { JOB_STATUS_STYLES } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 import { TABLE_TOOLBAR } from "@/shared/ui-components/data/tableStyles";
@@ -142,7 +143,7 @@ function JobCard({
     <MobileRecordCard
       title={job.title}
       subtitle={job.locationState || undefined}
-      href={`/jobs/${job.jobId}`}
+      href={jobPath({ id: job.jobId, title: job.title })}
       trailing={<JobStatus status={job.status} />}
       fields={fields}
       actions={<JobRowActions jobId={job.jobId} jobTitle={job.title} />}
@@ -332,7 +333,7 @@ export function JobsTable({
                         <td className="px-5 py-3">
                           {/* Job title → the public job view. */}
                           <Link
-                            href={`/jobs/${job.jobId}`}
+                            href={jobPath({ id: job.jobId, title: job.title })}
                             className="block max-w-[260px] truncate font-medium text-navy hover:text-primary hover:underline"
                           >
                             {job.title}

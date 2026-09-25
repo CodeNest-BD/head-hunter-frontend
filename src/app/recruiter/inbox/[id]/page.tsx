@@ -15,8 +15,12 @@ import {
   CANDIDATE_STATUS_STYLES,
 } from "@/features/candidates";
 import { Thread, useMessageUnreadCounts } from "@/features/conversations";
+import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { InboxConversationPane, InboxMessageWorkspace } from "@/features/inbox";
+import { useInterviews } from "@/features/interviews";
+import { useOffers } from "@/features/offers";
 import { Button } from "@/shared/ui-components/controls/button";
+import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 function ErrorCallout({
@@ -55,6 +59,8 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
   const [mode, setMode] = useState<"view" | "edit" | "confirm-remove">("view");
   const candidateQuery = useCandidate(candidateId);
   const deleteCandidate = useDeleteCandidate(candidateQuery.data?.jobId ?? "");
+  const interviewsQuery = useInterviews({ candidateId, limit: 100 });
+  const offersQuery = useOffers({ candidateId, limit: 100 });
 
   if (candidateQuery.isPending) {
     return <CandidateRailSkeleton />;
@@ -69,6 +75,15 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
   }
 
   const candidate = candidateQuery.data;
+  // Read-only here, unlike the company card: shown once both lists resolve so
+  // it never flashes "none yet" over a live offer.
+  const negotiationState =
+    interviewsQuery.data && offersQuery.data
+      ? (candidateNegotiationState(
+          interviewsQuery.data.data,
+          offersQuery.data.data,
+        ).get(candidateId) ?? null)
+      : undefined;
 
   if (mode === "edit") {
     return (
@@ -89,6 +104,15 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
       candidate={candidate}
       stageLabel={CANDIDATE_STATUS_LABELS[candidate.status]}
       stageClassName={CANDIDATE_STATUS_STYLES[candidate.status]}
+      negotiation={
+        negotiationState !== undefined ? (
+          <NegotiationStateBadges
+            interview={negotiationState?.interview ?? null}
+            offer={negotiationState?.offer ?? null}
+            viewerParty="recruiter"
+          />
+        ) : null
+      }
       headerActions={
         <>
           <Button

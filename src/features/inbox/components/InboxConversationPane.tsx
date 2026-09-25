@@ -97,6 +97,9 @@ export function InboxConversationPane({
         {rows.map((row) => {
           const selected = row.candidateId === selectedId;
           const unread = row.unreadMessages > 0;
+          // Same rule as `InboxConversationList` and the sidebar badge: an
+          // unseen offer, interview or status change marks the row too.
+          const needsYou = unread || row.needsReview;
           return (
             <li key={row.candidateId} className="relative">
               {selected ? (
@@ -111,14 +114,14 @@ export function InboxConversationPane({
                   "flex items-start gap-2.5 px-4 py-3 transition-colors",
                   selected
                     ? "bg-secondary/60"
-                    : unread
-                      ? "bg-primary/[0.05] hover:bg-primary/[0.09]"
+                    : needsYou
+                      ? "bg-primary/[0.04] hover:bg-primary/[0.08]"
                       : "hover:bg-secondary/40",
                 )}
               >
                 <span className="flex w-1.5 shrink-0 justify-center pt-2">
-                  {unread && !selected ? (
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  {needsYou && !selected ? (
+                    <span className="block h-2 w-2 shrink-0 rounded-full bg-primary" />
                   ) : null}
                 </span>
                 <span
@@ -134,7 +137,7 @@ export function InboxConversationPane({
                     <span
                       className={cn(
                         "truncate text-[13px]",
-                        unread
+                        needsYou
                           ? "font-bold text-navy"
                           : "font-semibold text-navy",
                       )}

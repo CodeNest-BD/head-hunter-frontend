@@ -14,6 +14,8 @@ import {
   type CandidateInput,
 } from "../api/candidates";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
+import { conversationKeys } from "@/features/conversations/keys";
+import { inboxKeys } from "@/features/inbox/keys";
 import { candidateKeys } from "../keys";
 
 /** The calling recruiter's own candidates on one job — at most five. */
@@ -108,10 +110,16 @@ export function useUpdateCandidate(jobId: string) {
       id: string;
       input: Partial<CandidateInput>;
     }) => updateCandidate(id, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: candidateKeys.forJob(jobId),
-      });
+    // The edit shows in three places: the candidate rail, the thread (its
+    // header carries the candidate) and the inbox rows. Refreshing only the
+    // job list left the rail and the thread stale until their next poll; the
+    // refetch is awaited so the form stays saving until both panes show it.
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
+        queryClient.invalidateQueries({ queryKey: conversationKeys.all }),
+        queryClient.invalidateQueries({ queryKey: inboxKeys.all }),
+      ]);
       toast.success("Candidate updated");
     },
   });
@@ -125,6 +133,7 @@ export function useDeleteCandidate(jobId: string) {
       void queryClient.invalidateQueries({
         queryKey: candidateKeys.forJob(jobId),
       });
+      void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
       toast.success("Candidate removed");
     },
   });

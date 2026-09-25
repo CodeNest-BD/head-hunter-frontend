@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { format } from "date-fns";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
 import { ApiError } from "@/shared/libs/errorHandler";
@@ -135,7 +136,7 @@ describe("OfferCard", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("warns the creator that withdrawing will show as Declined, then withdraws on confirm", () => {
+  it("warns the creator that withdrawing restores the candidate's previous status, then withdraws on confirm", () => {
     const withdrawMutate = vi.fn();
     useWithdrawOfferMock.mockReturnValue({
       mutate: withdrawMutate,
@@ -153,7 +154,9 @@ describe("OfferCard", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
-    expect(screen.getByText(/show as declined/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/back to their previous status/i),
+    ).toBeInTheDocument();
     expect(withdrawMutate).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: /confirm withdraw/i }));
@@ -289,11 +292,20 @@ describe("OfferCard", () => {
     fireEvent.change(screen.getByLabelText(/new salary/i), {
       target: { value: "150000" },
     });
+    fireEvent.click(screen.getByText(/pick a start date/i));
+    const today = format(new Date(), "yyyy-MM-dd");
+    const todayCell = document.querySelector<HTMLButtonElement>(
+      `[data-day="${today}"] button`,
+    );
+    if (!todayCell) {
+      throw new Error(`today (${today}) is not rendered in the calendar`);
+    }
+    fireEvent.click(todayCell);
     fireEvent.click(screen.getByRole("button", { name: /send counter/i }));
 
     await waitFor(() =>
       expect(counterMutate).toHaveBeenCalledWith(
-        expect.objectContaining({ salaryMinor: 15000000 }),
+        expect.objectContaining({ salaryMinor: 15000000, startDate: today }),
         expect.anything(),
       ),
     );
@@ -417,7 +429,10 @@ describe("OfferCard", () => {
       );
       fireEvent.click(screen.getByRole("button", { name: "Notify Company" }));
 
-      expect(useSendMessageMock).toHaveBeenCalledWith("candidate-1");
+      expect(useSendMessageMock).toHaveBeenCalledWith(
+        "candidate-1",
+        "recruiter",
+      );
       expect(mutate).toHaveBeenCalledWith({
         body: "I cannot accept your offer due to your lack of balance.",
       });

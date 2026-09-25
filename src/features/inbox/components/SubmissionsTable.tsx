@@ -17,6 +17,7 @@ import {
   CANDIDATE_STATUS_LABELS,
 } from "@/features/candidates/schemas";
 import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
+import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate, formatRelativeDay } from "@/shared/utils/formatDate";
@@ -235,7 +236,7 @@ function FilterableHead({
 function JobLink({ jobId, title }: { jobId: string; title: string }) {
   return (
     <Link
-      href={`/jobs/${jobId}`}
+      href={jobPath({ id: jobId, title })}
       className="inline-flex max-w-full items-center gap-1 rounded-[5px] border border-[#D7E0EF] bg-[#F1F5FC] px-1.5 py-0.5 text-[12px] font-medium text-[#24457A] transition-colors hover:bg-[#E7EEFA]"
     >
       <Briefcase className="h-3 w-3 shrink-0" />

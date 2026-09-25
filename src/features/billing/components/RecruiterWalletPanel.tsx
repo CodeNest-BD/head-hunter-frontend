@@ -276,6 +276,7 @@ function PlacementsTable({
           <div className="border-b border-border p-4">
             <RaiseDisputeForm
               placementId={disputing.placementId}
+              party="recruiter"
               onCancel={() => setDisputingId(null)}
               onRaised={(id) => {
                 setDisputingId(null);

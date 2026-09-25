@@ -1,5 +1,5 @@
 import type { Interview } from "@/features/interviews";
-import type { Offer } from "@/features/offers";
+import type { Offer, OfferParty } from "@/features/offers";
 
 /**
  * The interview side of a candidate's negotiation state. `superseded` has no
@@ -21,10 +21,12 @@ export type InterviewBadge =
  * caller to remember to check the status.
  */
 export type OfferBadge =
-  | { kind: "sent"; salaryMinor: number | null }
+  /** `sentBy` is whose number it is — the other side owes the response. */
+  | { kind: "sent"; salaryMinor: number | null; sentBy: OfferParty }
   | { kind: "accepted"; salaryMinor: number | null }
   | { kind: "declined"; salaryMinor: number | null }
-  | { kind: "countered"; salaryMinor: number | null };
+  | { kind: "countered"; salaryMinor: number | null }
+  | { kind: "withdrawn"; salaryMinor: number | null };
 
 /**
  * An interview still in flight: a time is being agreed, or one is agreed and
@@ -42,6 +44,17 @@ export function isInterviewOpen(
   interview: InterviewBadge | null,
 ): interview is OpenInterviewBadge {
   return interview?.kind === "awaiting_time" || interview?.kind === "scheduled";
+}
+
+/**
+ * An offer awaiting a response (`sent`) or already taken (`accepted`) — the
+ * backend allows at most one per candidate, and while one exists the company
+ * may neither send another offer nor open another interview round.
+ */
+export type LiveOfferBadge = Extract<OfferBadge, { kind: "sent" | "accepted" }>;
+
+export function isOfferLive(offer: OfferBadge | null): offer is LiveOfferBadge {
+  return offer?.kind === "sent" || offer?.kind === "accepted";
 }
 
 export interface CandidateNegotiationState {
@@ -119,13 +132,15 @@ function toOfferBadge(offer: Offer): OfferBadge | null {
   const salaryMinor = offer.placementDetails?.salaryMinor ?? null;
   switch (offer.status) {
     case "sent":
-      return { kind: "sent", salaryMinor };
+      return { kind: "sent", salaryMinor, sentBy: offer.createdBy };
     case "accepted":
       return { kind: "accepted", salaryMinor };
     case "declined":
       return { kind: "declined", salaryMinor };
     case "countered":
       return { kind: "countered", salaryMinor };
+    case "withdrawn":
+      return { kind: "withdrawn", salaryMinor };
     case "superseded":
       return null;
   }

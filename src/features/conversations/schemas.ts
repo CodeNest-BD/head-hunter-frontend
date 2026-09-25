@@ -86,6 +86,7 @@ export const conversationEventSchema = z.object({
             "declined",
             "countered",
             "superseded",
+            "withdrawn",
             "unknown",
           ],
           "unknown",

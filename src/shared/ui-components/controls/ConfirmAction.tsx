@@ -27,8 +27,11 @@ export function ConfirmAction({
   busy = false,
 }: ConfirmActionProps) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-xs text-destructive">{message}</p>
+    // Wraps on the container's width rather than switching at a viewport
+    // breakpoint — it also renders in narrow side rails on wide screens, where
+    // a row squeezes the message into a sliver beside the buttons.
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-3">
+      <p className="grow basis-64 text-xs text-destructive">{message}</p>
       <div className="flex shrink-0 gap-2">
         <Button
           type="button"

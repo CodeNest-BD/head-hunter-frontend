@@ -16,7 +16,9 @@ import {
   type AdminDisputeListItem,
   type DisputeChannel,
   type DisputeMessage,
+  type DisputeResolution,
   type DisputeStatus,
+  type DisputeSubject,
   type ParticipantDispute,
   type ParticipantDisputeDetail,
 } from "../schemas";
@@ -34,6 +36,7 @@ export interface StagedProof {
 /** POST /v1/disputes — open a dispute on a held placement. */
 export async function raiseDispute(input: {
   placementId: string;
+  subject: DisputeSubject;
   reason: string;
   attachments?: StagedProof[];
 }): Promise<ParticipantDisputeDetail> {
@@ -198,6 +201,20 @@ export async function fetchAdminDispute(
   id: string,
 ): Promise<AdminDisputeDetail> {
   const { data } = await apiClient.get<unknown>(`/admin/disputes/${id}`);
+  return adminDisputeDetailSchema.parse(data);
+}
+
+/** POST /v1/admin/disputes/:id/resolve — close the dispute with one outcome. */
+export async function resolveDispute(
+  id: string,
+  outcome: DisputeResolution,
+  note?: string,
+): Promise<AdminDisputeDetail> {
+  const { data } = await apiClient.post<unknown>(
+    `/admin/disputes/${id}/resolve`,
+    { outcome, ...(note ? { note } : {}) },
+    { suppressGlobalErrorToast: true },
+  );
   return adminDisputeDetailSchema.parse(data);
 }
 

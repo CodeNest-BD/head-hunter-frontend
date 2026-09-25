@@ -4,6 +4,9 @@ export const conversationKeys = {
   all: ["conversations"] as const,
   thread: (candidateId: string, params: ThreadParams) =>
     ["conversations", "thread", candidateId, params] as const,
+  /** Prefix of every `thread(candidateId, …)` key, whatever its params. */
+  threadsFor: (candidateId: string) =>
+    ["conversations", "thread", candidateId] as const,
   unreadCount: ["conversations", "unread-count"] as const,
   unreadCounts: ["conversations", "unread-counts"] as const,
 };

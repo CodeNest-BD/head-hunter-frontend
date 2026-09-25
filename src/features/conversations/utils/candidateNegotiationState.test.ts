@@ -146,7 +146,7 @@ describe("candidateNegotiationState", () => {
     });
     expect(state.get("cand-2")).toEqual({
       interview: null,
-      offer: { kind: "sent", salaryMinor: null },
+      offer: { kind: "sent", salaryMinor: null, sentBy: offers[0].createdBy },
       interviewRecord: null,
       offerRecord: offers[0],
     });

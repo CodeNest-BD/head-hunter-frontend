@@ -16,7 +16,7 @@ import {
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 
 import { useMyDisputes } from "../hooks/useDisputes";
-import { isDisputeOpen } from "../schemas";
+import { DISPUTE_SUBJECT_LABELS, isDisputeOpen } from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
 /** Same pill as the inbox's "New": a row still waiting on somebody. An open
@@ -36,7 +36,24 @@ const HEAD_ROW =
 const BODY_ROW =
   "border-b border-border/60 transition-colors last:border-0 even:bg-muted/20 hover:bg-accent/50";
 
-/** The caller's disputes, newest first. */
+/** A dispute with news the caller hasn't opened yet — tinted like an unread
+ * conversation in the inbox. */
+const UPDATED_ROW =
+  "bg-primary/[0.04] even:bg-primary/[0.04] hover:bg-primary/[0.08]";
+/** The inbox's left accent bar. On the first cell, not the row: an inset
+ * shadow on a `<tr>` doesn't render reliably across browsers. */
+const UPDATED_CELL = "shadow-[inset_3px_0_0_0_hsl(var(--primary))]";
+
+function UpdateDot() {
+  return (
+    <span
+      className="block h-2.5 w-2.5 shrink-0 rounded-full bg-primary"
+      aria-label="New activity"
+    />
+  );
+}
+
+/** The caller's disputes, most recently active first. */
 export function MyDisputesList() {
   const [page, setPage] = useState(1);
   const { data, isPending, isError, refetch } = useMyDisputes(page);
@@ -84,6 +101,9 @@ export function MyDisputesList() {
                   Role
                 </th>
                 <th scope="col" className={TH}>
+                  Subject
+                </th>
+                <th scope="col" className={TH}>
                   Counterparty
                 </th>
                 <th scope="col" className={cn(TH, "text-right")}>
@@ -100,12 +120,26 @@ export function MyDisputesList() {
             </thead>
             <tbody>
               {data.data.map((d) => (
-                <tr key={d.id} className={BODY_ROW}>
-                  <td className="px-5 py-3 font-medium text-navy">
+                <tr
+                  key={d.id}
+                  className={cn(BODY_ROW, d.hasUpdate && UPDATED_ROW)}
+                >
+                  <td
+                    className={cn(
+                      "px-5 py-3 text-navy",
+                      d.hasUpdate ? `font-bold ${UPDATED_CELL}` : "font-medium",
+                    )}
+                  >
                     <span className="flex items-center gap-2">
+                      <span className="flex w-2.5 shrink-0 justify-center">
+                        {d.hasUpdate && <UpdateDot />}
+                      </span>
                       {d.jobTitle}
                       {isDisputeOpen(d.status) && <PendingPill />}
                     </span>
+                  </td>
+                  <td className="px-5 py-3 text-navy">
+                    {DISPUTE_SUBJECT_LABELS[d.subject]}
                   </td>
                   <td className="px-5 py-3 text-muted-foreground">
                     {d.counterpartyName}
@@ -143,7 +177,9 @@ export function MyDisputesList() {
                 </span>
               }
               href={`/disputes/${d.id}`}
+              className={cn(d.hasUpdate && UPDATED_ROW)}
               fields={[
+                { label: "Subject", value: DISPUTE_SUBJECT_LABELS[d.subject] },
                 { label: "Fee", value: formatMinor(d.amountMinor) },
                 { label: "Opened", value: formatDate(d.createdAt) },
               ]}
