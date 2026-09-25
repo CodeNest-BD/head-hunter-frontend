@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 
 import type { Role } from "@/features/auth";
+import { notificationKeys } from "@/features/notifications/keys";
 
 import {
   fetchAdminDispute,
@@ -27,11 +28,16 @@ import type { DisputeChannel, DisputeStatus } from "../schemas";
 
 // ---- Participant ------------------------------------------------------
 
+/** Polls like the nav badge: an admin reply or a decision produces no event
+ * this client listens for, and the list's order and "new" marker move with
+ * them. */
 export function useMyDisputes(page: number) {
   return useQuery({
     queryKey: disputeKeys.list(page),
     queryFn: () => fetchMyDisputes(page),
     placeholderData: keepPreviousData,
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -51,10 +57,28 @@ export function useDisputeAttentionCount(enabled: boolean) {
   });
 }
 
+/**
+ * Opening a dispute marks its notifications read server-side, so the fetch
+ * leaves the list's "new" marker and the notification bell stale — both are
+ * invalidated here, the participant counterpart of `useAdminDispute`.
+ */
 export function useMyDispute(id: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: disputeKeys.detail(id),
-    queryFn: () => fetchMyDispute(id),
+    queryFn: async () => {
+      const dispute = await fetchMyDispute(id);
+      void queryClient.invalidateQueries({ queryKey: disputeKeys.lists });
+      void queryClient.invalidateQueries({
+        queryKey: disputeKeys.attentionCount,
+      });
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+      return dispute;
+    },
+    // Keeps an open dispute showing new admin replies — and, since each fetch
+    // marks read, stops them lighting the list and bell while being read.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
   });
 }
 

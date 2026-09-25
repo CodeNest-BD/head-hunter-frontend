@@ -135,7 +135,7 @@ describe("OfferCard", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("warns the creator that withdrawing will show as Declined, then withdraws on confirm", () => {
+  it("warns the creator that withdrawing restores the candidate's previous status, then withdraws on confirm", () => {
     const withdrawMutate = vi.fn();
     useWithdrawOfferMock.mockReturnValue({
       mutate: withdrawMutate,
@@ -153,7 +153,9 @@ describe("OfferCard", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
-    expect(screen.getByText(/show as declined/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/back to their previous status/i),
+    ).toBeInTheDocument();
     expect(withdrawMutate).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: /confirm withdraw/i }));

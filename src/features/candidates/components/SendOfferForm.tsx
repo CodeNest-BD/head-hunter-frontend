@@ -17,6 +17,7 @@ import {
 } from "@/features/offers";
 import {
   isInterviewOpen,
+  isOfferLive,
   type CandidateNegotiationState,
   type OpenInterviewBadge,
 } from "@/features/conversations/utils/candidateNegotiationState";
@@ -38,13 +39,6 @@ export interface SendOfferFormProps {
    * fetched per candidate here. */
   negotiationState: CandidateNegotiationState | null;
 }
-
-// At most one offer may be `sent` (awaiting a response) or `accepted` (the
-// candidate has already been hired) per candidate at a time — the same
-// invariant the backend's create endpoint enforces with a 409, distinguishing
-// the same two cases, and the same shape as `ScheduleInterviewAction`'s
-// open-interview check.
-const LIVE_OFFER_STATUSES = new Set<OfferStatus>(["sent", "accepted"]);
 
 /** "Awaiting a response" and "already hired" are different situations to the
  * person reading them, so each gets its own copy rather than one generic
@@ -84,7 +78,7 @@ function offerDisabledReason(
   negotiationState: CandidateNegotiationState | null,
 ): string | null {
   const offerBadge = negotiationState?.offer ?? null;
-  if (offerBadge && LIVE_OFFER_STATUSES.has(offerBadge.kind)) {
+  if (isOfferLive(offerBadge)) {
     return liveOfferDisabledReason(offerBadge.kind);
   }
   const interviewBadge = negotiationState?.interview ?? null;
@@ -267,7 +261,7 @@ export function SendOfferForm({
       {withdrawableOffer &&
         (isWithdrawing ? (
           <ConfirmAction
-            message="Withdraw this offer? It will show as Declined afterward, since offers don't have a separate withdrawn status. This cannot be undone."
+            message="Withdraw this offer? The candidate will go back to their previous status."
             confirmLabel="Confirm withdraw"
             busyLabel="Withdrawing…"
             busy={withdrawOffer.isPending}

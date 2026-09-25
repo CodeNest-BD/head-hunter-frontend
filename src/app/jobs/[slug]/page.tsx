@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft, Send, SquarePen } from "lucide-react";
 
 import { RequireApprovedRecruiter, useAuth } from "@/features/auth";
@@ -9,6 +10,7 @@ import { useJob, usePublishJob } from "@/features/jobs";
 import type { Job } from "@/features/jobs/schemas";
 import { useMyCompanyProfile } from "@/features/companies";
 import { JobDetailBody } from "@/features/jobs/components/JobDetailView";
+import { jobIdFromSlug, jobPath } from "@/features/jobs/utils/jobPath";
 import { jobToJobView } from "@/features/jobs/utils/toJobView";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { PublicShell } from "@/components/landing/PublicShell";
@@ -113,6 +115,21 @@ function RecruiterCta({ jobId }: { jobId: string }) {
 }
 
 /**
+ * Rewrites a bare-uuid link, or one whose slug went stale after a rename, to
+ * the job's current `/jobs/<slug>-<uuid>` — `replace` so Back doesn't bounce
+ * through the old URL.
+ */
+function useCanonicalJobPath(job: Job | undefined): void {
+  const router = useRouter();
+  const pathname = usePathname();
+  useEffect(() => {
+    if (!job) return;
+    const canonical = jobPath(job);
+    if (pathname !== canonical) router.replace(canonical);
+  }, [job, pathname, router]);
+}
+
+/**
  * Fetches and renders the job itself. Deliberately kept as a child mounted
  * only inside `RequireApprovedRecruiter` (see `AuthedJobDetail`) rather than
  * called at that component's own top level — an unapproved recruiter must
@@ -121,6 +138,7 @@ function RecruiterCta({ jobId }: { jobId: string }) {
  */
 function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
   const { data: job, isPending, isError, refetch } = useJob(jobId);
+  useCanonicalJobPath(job);
 
   return (
     <>
@@ -232,7 +250,7 @@ function GuestJobDetail() {
 }
 
 export default function JobDetailPage() {
-  const params = useParams<{ id: string }>();
+  const params = useParams<{ slug: string }>();
   const { status, user } = useAuth();
 
   // While the session boots, stay chrome-neutral — avoids a guest→dashboard
@@ -246,7 +264,9 @@ export default function JobDetailPage() {
   }
 
   if (status === "authenticated" && user) {
-    return <AuthedJobDetail jobId={params.id} role={user.role} />;
+    return (
+      <AuthedJobDetail jobId={jobIdFromSlug(params.slug)} role={user.role} />
+    );
   }
   return <GuestJobDetail />;
 }

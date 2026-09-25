@@ -87,6 +87,7 @@ const isNegotiationChangedFrame = (
  */
 export function useConversationRealtime(
   candidateId: string,
+  { onActivity }: { onActivity?: () => void } = {},
 ): ConversationRealtimeState {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -117,6 +118,7 @@ export function useConversationRealtime(
       // its own namespace and needs its own call.
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
       void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
+      onActivity?.();
     },
 
     // The party who did not act has no mutation of their own to learn from. The
@@ -133,6 +135,7 @@ export function useConversationRealtime(
       void queryClient.invalidateQueries({ queryKey: candidateKeys.all });
       void queryClient.invalidateQueries({ queryKey: conversationKeys.all });
       void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
+      onActivity?.();
     },
   });
 

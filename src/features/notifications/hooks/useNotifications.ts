@@ -1,4 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
+
+import { disputeKeys } from "@/features/disputes/keys";
+import { inboxKeys } from "@/features/inbox/keys";
 import {
   fetchNotifications,
   fetchUnreadCount,
@@ -46,14 +54,21 @@ export function useUnreadCount() {
   });
 }
 
-/** Both mutations invalidate the list and the badge, which must stay in step. */
+/** A notification's read state is also what the inbox rows, the inbox badge
+ * and the disputes list's "new" marker read, so every read/unread mutation
+ * refreshes them alongside the bell's list and badge. */
+function invalidateReadState(queryClient: QueryClient): void {
+  void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+  void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
+  void queryClient.invalidateQueries({ queryKey: disputeKeys.lists });
+  void queryClient.invalidateQueries({ queryKey: disputeKeys.attentionCount });
+}
+
 export function useMarkRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => markNotificationRead(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-    },
+    onSuccess: () => invalidateReadState(queryClient),
   });
 }
 
@@ -61,9 +76,7 @@ export function useMarkUnread() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => markNotificationUnread(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-    },
+    onSuccess: () => invalidateReadState(queryClient),
   });
 }
 
@@ -71,8 +84,6 @@ export function useMarkAllRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: markAllNotificationsRead,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
-    },
+    onSuccess: () => invalidateReadState(queryClient),
   });
 }

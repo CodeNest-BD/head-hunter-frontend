@@ -2,6 +2,7 @@ import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "@/test/utils";
 import type { Interview } from "@/features/interviews/schemas";
+import type { Offer, OfferStatus } from "@/features/offers/schemas";
 import {
   candidateNegotiationState,
   type CandidateNegotiationState,
@@ -60,8 +61,26 @@ function interview(overrides: Partial<Interview> = {}): Interview {
  * the component is handed rather than a hand-rolled stand-in. */
 function negotiationStateFor(
   interviews: Interview[],
+  offers: Offer[] = [],
 ): CandidateNegotiationState | null {
-  return candidateNegotiationState(interviews, []).get("candidate-1") ?? null;
+  return (
+    candidateNegotiationState(interviews, offers).get("candidate-1") ?? null
+  );
+}
+
+function offer(status: OfferStatus): Offer {
+  return {
+    id: "offer-1",
+    candidateId: "candidate-1",
+    jobId: "job-1",
+    previousOfferId: null,
+    createdBy: "company",
+    amountMinor: 500000,
+    status,
+    placementDetails: null,
+    createdAt: "2026-08-02T00:00:00.000Z",
+    companyCanCoverFee: null,
+  };
 }
 
 function renderAction(negotiationState: CandidateNegotiationState | null) {
@@ -128,6 +147,33 @@ describe("ScheduleInterviewAction", () => {
       negotiationStateFor([
         interview({ status: "completed", outcome: "next_round" }),
       ]),
+    );
+
+    expect(
+      screen.getByRole("button", { name: /schedule next round/i }),
+    ).toBeEnabled();
+  });
+
+  it.each([["sent"], ["accepted"]] as const)(
+    "offers no next round while an offer is %s",
+    (status) => {
+      const { container } = renderAction(
+        negotiationStateFor(
+          [interview({ status: "completed", outcome: "next_round" })],
+          [offer(status)],
+        ),
+      );
+
+      expect(container).toBeEmptyDOMElement();
+    },
+  );
+
+  it("offers the next round again once the offer is no longer live", () => {
+    renderAction(
+      negotiationStateFor(
+        [interview({ status: "completed", outcome: "next_round" })],
+        [offer("declined")],
+      ),
     );
 
     expect(

@@ -24,7 +24,8 @@ export type OfferBadge =
   | { kind: "sent"; salaryMinor: number | null }
   | { kind: "accepted"; salaryMinor: number | null }
   | { kind: "declined"; salaryMinor: number | null }
-  | { kind: "countered"; salaryMinor: number | null };
+  | { kind: "countered"; salaryMinor: number | null }
+  | { kind: "withdrawn"; salaryMinor: number | null };
 
 /**
  * An interview still in flight: a time is being agreed, or one is agreed and
@@ -42,6 +43,17 @@ export function isInterviewOpen(
   interview: InterviewBadge | null,
 ): interview is OpenInterviewBadge {
   return interview?.kind === "awaiting_time" || interview?.kind === "scheduled";
+}
+
+/**
+ * An offer awaiting a response (`sent`) or already taken (`accepted`) — the
+ * backend allows at most one per candidate, and while one exists the company
+ * may neither send another offer nor open another interview round.
+ */
+export type LiveOfferBadge = Extract<OfferBadge, { kind: "sent" | "accepted" }>;
+
+export function isOfferLive(offer: OfferBadge | null): offer is LiveOfferBadge {
+  return offer?.kind === "sent" || offer?.kind === "accepted";
 }
 
 export interface CandidateNegotiationState {
@@ -126,6 +138,8 @@ function toOfferBadge(offer: Offer): OfferBadge | null {
       return { kind: "declined", salaryMinor };
     case "countered":
       return { kind: "countered", salaryMinor };
+    case "withdrawn":
+      return { kind: "withdrawn", salaryMinor };
     case "superseded":
       return null;
   }

@@ -275,10 +275,19 @@ export function InboxCandidatesTable({
                       TABLE_ROW,
                       // The same tint level 1 gives a job with new candidates,
                       // so the row the sidebar count refers to is findable.
-                      candidateNeedsAttention(side, row) && "bg-primary/[0.04]",
+                      candidateNeedsAttention(row) && "bg-primary/[0.04]",
                     )}
                   >
-                    <td className={`${TABLE_TD} font-semibold text-navy`}>
+                    <td
+                      className={cn(
+                        TABLE_TD,
+                        "font-semibold text-navy",
+                        // The inbox's accent bar — on the cell, since an inset
+                        // shadow on a `<tr>` doesn't render reliably.
+                        candidateNeedsAttention(row) &&
+                          "shadow-[inset_3px_0_0_0_hsl(var(--primary))]",
+                      )}
+                    >
                       <span className="flex items-center gap-2">
                         {row.candidateName}
                         {isCompany && row.status === "submitted" && <NewPill />}
@@ -333,7 +342,7 @@ export function InboxCandidatesTable({
               <MobileRecordCard
                 key={row.candidateId}
                 className={cn(
-                  candidateNeedsAttention(side, row) && "bg-primary/[0.04]",
+                  candidateNeedsAttention(row) && "bg-primary/[0.04]",
                 )}
                 title={row.candidateName}
                 subtitle={

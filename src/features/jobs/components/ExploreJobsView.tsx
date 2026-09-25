@@ -49,6 +49,7 @@ import { US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
 import { useStateCities } from "@/shared/hooks/useStateCities";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
+import { jobPath } from "../utils/jobPath";
 import { PublicJobCard } from "./PublicJobCard";
 import { UsJobMap, type MapSelection } from "./UsJobMap";
 
@@ -1071,7 +1072,7 @@ function JobRow({ job }: { job: PublicJobCardData }) {
           {posted}
         </span>
         <Button asChild variant="outline" size="sm">
-          <Link href={`/jobs/${job.id}`}>View</Link>
+          <Link href={jobPath(job)}>View</Link>
         </Button>
       </div>
     </li>

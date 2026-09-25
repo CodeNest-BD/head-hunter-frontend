@@ -55,6 +55,7 @@ export const inboxCandidateRowSchema = z.object({
   status: candidateStatusSchema,
   submittedAt: z.coerce.date(),
   unreadMessages: z.number(),
+  needsReview: z.boolean(),
   recruiter: recruiterSummarySchema.nullable().optional(),
   companyName: z.string().nullable().optional(),
 });
@@ -107,15 +108,11 @@ export const inboxAttentionCountSchema = z.object({
 
 /**
  * Whether a candidate row is one of the ones the nav badge is counting —
- * unread messages, or never reviewed. Written once here because the sidebar
- * count comes from the server and the row highlight from the client: if the
- * two rules drifted, the badge would say 1 and no row would explain it.
- *
- * A recruiter's own `submitted` candidate is not news to them, which is why
- * the second clause is the company's alone.
+ * unread messages, or unseen activity (a new submission, offer, interview or
+ * status change). Written once here because the sidebar count comes from the
+ * server and the row highlight from the client: if the two rules drifted, the
+ * badge would say 1 and no row would explain it.
  */
 export const candidateNeedsAttention = (
-  side: "company" | "recruiter",
-  row: Pick<InboxCandidateRow, "status" | "unreadMessages">,
-): boolean =>
-  row.unreadMessages > 0 || (side === "company" && row.status === "submitted");
+  row: Pick<InboxCandidateRow, "unreadMessages" | "needsReview">,
+): boolean => row.unreadMessages > 0 || row.needsReview;

@@ -13,10 +13,9 @@ import { CountBadge } from "./CountBadge";
  * Reads the caller's role itself rather than taking one, the same shape as
  * `InboxBadge` — the nav render sites have no user in scope.
  *
- * Counts disputes still undecided, not unread admin replies: a dispute is
- * pending from the moment it is opened, and an admin who has not written back
- * yet is exactly the case the badge exists to surface. The admin's count is
- * every such dispute, so it reads its own endpoint.
+ * Counts disputes with unseen news — the rule behind each row's "new" dot —
+ * so it clears as they are opened, like `InboxBadge`. The admin's count uses
+ * the admin unread rule, so it reads its own endpoint.
  */
 export function DisputesBadge() {
   const { user } = useAuth();

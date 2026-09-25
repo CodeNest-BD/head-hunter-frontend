@@ -17,6 +17,7 @@ export const OFFER_STATUSES = [
   "declined",
   "countered",
   "superseded",
+  "withdrawn",
 ] as const;
 export const offerStatusSchema = z.enum(OFFER_STATUSES);
 export type OfferStatus = z.infer<typeof offerStatusSchema>;
@@ -27,6 +28,7 @@ export const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
   declined: "Declined",
   countered: "Countered",
   superseded: "Superseded",
+  withdrawn: "Withdrawn",
 };
 
 /** Which side sent this offer or counter-offer. */

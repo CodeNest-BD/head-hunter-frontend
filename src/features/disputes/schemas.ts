@@ -61,6 +61,7 @@ export const participantDisputeSchema = z.object({
   resolutionNote: z.string().nullable(),
   createdAt: z.string(),
   resolvedAt: z.string().nullable(),
+  hasUpdate: z.boolean(),
 });
 export type ParticipantDispute = z.infer<typeof participantDisputeSchema>;
 

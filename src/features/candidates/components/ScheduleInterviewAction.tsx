@@ -9,6 +9,7 @@ import {
 } from "@/features/interviews";
 import {
   isInterviewOpen,
+  isOfferLive,
   type CandidateNegotiationState,
 } from "@/features/conversations/utils/candidateNegotiationState";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -89,7 +90,11 @@ export function ScheduleInterviewAction({
     panel.kind === "proposed" &&
     panel.latestInterviewIdBefore === (latestInterview?.id ?? null);
 
-  if (isAwaitingRefetch || !acceptsAnotherRound(latestInterview)) {
+  if (
+    isAwaitingRefetch ||
+    isOfferLive(negotiationState?.offer ?? null) ||
+    !acceptsAnotherRound(latestInterview)
+  ) {
     return null;
   }
 

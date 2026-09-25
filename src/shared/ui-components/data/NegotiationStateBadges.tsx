@@ -62,6 +62,8 @@ function describeOffer(offer: OfferBadge | null): BadgeContent {
       return { phrase: `declined${salary}`, tone: "neutral" };
     case "countered":
       return { phrase: `countered${salary}`, tone: "active" };
+    case "withdrawn":
+      return { phrase: `withdrawn${salary}`, tone: "neutral" };
   }
 }
 

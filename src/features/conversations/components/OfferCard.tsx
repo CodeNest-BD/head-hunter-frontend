@@ -49,6 +49,7 @@ const OFFER_EVENT_STATUS_LABELS: Record<OfferEventData["offerStatus"], string> =
     declined: "Declined",
     countered: "Countered",
     superseded: "Superseded",
+    withdrawn: "Withdrawn",
     unknown: "Status unknown",
   };
 
@@ -59,6 +60,7 @@ const OFFER_STATUS_TONES: Record<OfferEventData["offerStatus"], string> = {
   declined: "border-destructive/30 bg-destructive/10 text-destructive",
   countered: "border-primary/25 bg-primary/10 text-primary",
   superseded: "border-border bg-secondary text-muted-foreground",
+  withdrawn: "border-border bg-secondary text-muted-foreground",
   unknown: "border-border bg-secondary text-muted-foreground",
 };
 
@@ -321,7 +323,7 @@ export function OfferCard({
 
         {creatorCanWithdraw && confirmingWithdraw && (
           <ConfirmAction
-            message="Withdraw this offer? It will show as Declined afterward, since offers don't have a separate withdrawn status. This cannot be undone."
+            message="Withdraw this offer? The candidate will go back to their previous status."
             confirmLabel="Confirm withdraw"
             busyLabel="Withdrawing…"
             busy={withdrawOffer.isPending}

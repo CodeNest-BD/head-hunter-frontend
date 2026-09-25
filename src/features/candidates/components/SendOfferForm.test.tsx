@@ -161,7 +161,7 @@ describe("SendOfferForm", () => {
 
   it("withdraws the company's own live offer only after the confirmation step", async () => {
     const user = userEvent.setup();
-    withdrawOfferMock.mockResolvedValue(offer({ status: "declined" }));
+    withdrawOfferMock.mockResolvedValue(offer({ status: "withdrawn" }));
 
     renderWithProviders(
       <SendOfferForm

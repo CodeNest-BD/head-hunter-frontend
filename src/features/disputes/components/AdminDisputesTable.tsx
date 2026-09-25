@@ -54,7 +54,10 @@ const FILTERS: {
 /** A dispute nobody has reviewed since the last participant message, tinted
  * like an unread conversation in the inbox. */
 const UNREAD_ROW =
-  "bg-primary/[0.05] even:bg-primary/[0.05] hover:bg-primary/[0.09]";
+  "bg-primary/[0.04] even:bg-primary/[0.04] hover:bg-primary/[0.08]";
+/** The inbox's left accent bar. On the first cell, not the row: an inset
+ * shadow on a `<tr>` doesn't render reliably across browsers. */
+const UNREAD_CELL = "shadow-[inset_3px_0_0_0_hsl(var(--primary))]";
 
 /** Whose side opened the dispute — "any" is the unfiltered tab. */
 type RaisedByTab = DisputeChannel | "any";
@@ -179,16 +182,18 @@ export function AdminDisputesTable() {
                       <td
                         className={cn(
                           "px-5 py-3 text-navy",
-                          d.unread ? "font-bold" : "font-medium",
+                          d.unread ? `font-bold ${UNREAD_CELL}` : "font-medium",
                         )}
                       >
                         <span className="flex items-center gap-2">
-                          {d.unread && (
-                            <span
-                              className="h-2 w-2 shrink-0 rounded-full bg-primary"
-                              aria-label="New activity"
-                            />
-                          )}
+                          <span className="flex w-2.5 shrink-0 justify-center">
+                            {d.unread && (
+                              <span
+                                className="block h-2.5 w-2.5 shrink-0 rounded-full bg-primary"
+                                aria-label="New activity"
+                              />
+                            )}
+                          </span>
                           {d.companyName}
                         </span>
                       </td>

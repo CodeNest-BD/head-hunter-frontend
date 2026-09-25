@@ -121,8 +121,8 @@ export function AdminDisputeView({ id }: { id: string }) {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardContent className="p-5">
+        <Card className="flex flex-col">
+          <CardContent className="flex flex-1 flex-col p-5">
             <h2 className="mb-3 font-heading text-base font-bold text-navy">
               Channel With Company
             </h2>
@@ -135,8 +135,8 @@ export function AdminDisputeView({ id }: { id: string }) {
             />
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-5">
+        <Card className="flex flex-col">
+          <CardContent className="flex flex-1 flex-col p-5">
             <h2 className="mb-3 font-heading text-base font-bold text-navy">
               Channel With Recruiter
             </h2>
