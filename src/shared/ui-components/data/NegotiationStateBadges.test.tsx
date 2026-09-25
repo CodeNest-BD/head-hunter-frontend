@@ -6,7 +6,13 @@ import { NegotiationStateBadges } from "./NegotiationStateBadges";
 
 describe("NegotiationStateBadges", () => {
   it("shows an explicit empty state for both rows when nothing has happened yet", () => {
-    render(<NegotiationStateBadges interview={null} offer={null} />);
+    render(
+      <NegotiationStateBadges
+        interview={null}
+        offer={null}
+        viewerParty="company"
+      />,
+    );
 
     expect(screen.getByText(/Interview:/)).toHaveTextContent(
       "Interview: none yet",
@@ -19,6 +25,7 @@ describe("NegotiationStateBadges", () => {
       <NegotiationStateBadges
         interview={{ kind: "awaiting_time" }}
         offer={null}
+        viewerParty="company"
       />,
     );
 
@@ -36,6 +43,7 @@ describe("NegotiationStateBadges", () => {
           confirmedSlotEnd: "2026-09-01T17:00:00.000Z",
         }}
         offer={null}
+        viewerParty="company"
       />,
     );
 
@@ -45,16 +53,31 @@ describe("NegotiationStateBadges", () => {
     );
   });
 
-  it("shows the offer sent state with its salary", () => {
+  it("tells the sender of a pending offer that the reply is outstanding", () => {
     render(
       <NegotiationStateBadges
         interview={null}
-        offer={{ kind: "sent", salaryMinor: 13000000 }}
+        offer={{ kind: "sent", salaryMinor: 13000000, sentBy: "company" }}
+        viewerParty="company"
       />,
     );
 
     expect(screen.getByText(/Offer:/)).toHaveTextContent(
-      "Offer: offer sent · $130,000",
+      "Offer: you sent · $130,000 · awaiting reply",
+    );
+  });
+
+  it("tells the other side a pending offer — e.g. a recruiter's counter — awaits their reply", () => {
+    render(
+      <NegotiationStateBadges
+        interview={null}
+        offer={{ kind: "sent", salaryMinor: 1500000, sentBy: "recruiter" }}
+        viewerParty="company"
+      />,
+    );
+
+    expect(screen.getByText(/Offer:/)).toHaveTextContent(
+      "Offer: awaiting your reply · $15,000",
     );
   });
 
@@ -63,6 +86,7 @@ describe("NegotiationStateBadges", () => {
       <NegotiationStateBadges
         interview={null}
         offer={{ kind: "accepted", salaryMinor: null }}
+        viewerParty="recruiter"
       />,
     );
 
@@ -74,6 +98,7 @@ describe("NegotiationStateBadges", () => {
       <NegotiationStateBadges
         interview={null}
         offer={{ kind: "countered", salaryMinor: 9000000 }}
+        viewerParty="recruiter"
       />,
     );
 

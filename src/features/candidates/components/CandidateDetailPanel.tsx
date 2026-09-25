@@ -93,6 +93,8 @@ interface CandidateDetailPanelProps {
   headerActions?: ReactNode;
   /** A full-width strip below the header, e.g. a remove-confirmation. */
   banner?: ReactNode;
+  /** Live interview/offer state, shown right under the stage it explains. */
+  negotiation?: ReactNode;
   /** Extra sections appended after the standard ones (company actions). */
   children?: ReactNode;
 }
@@ -109,6 +111,7 @@ export function CandidateDetailPanel({
   stageClassName,
   headerActions,
   banner,
+  negotiation,
   children,
 }: CandidateDetailPanelProps) {
   const hasProfile =
@@ -185,6 +188,8 @@ export function CandidateDetailPanel({
           </div>
         ) : null}
       </div>
+
+      {negotiation}
 
       <Section
         icon={<User className="h-3.5 w-3.5" />}

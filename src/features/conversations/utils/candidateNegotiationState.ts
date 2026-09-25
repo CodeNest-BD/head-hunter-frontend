@@ -1,5 +1,5 @@
 import type { Interview } from "@/features/interviews";
-import type { Offer } from "@/features/offers";
+import type { Offer, OfferParty } from "@/features/offers";
 
 /**
  * The interview side of a candidate's negotiation state. `superseded` has no
@@ -21,7 +21,8 @@ export type InterviewBadge =
  * caller to remember to check the status.
  */
 export type OfferBadge =
-  | { kind: "sent"; salaryMinor: number | null }
+  /** `sentBy` is whose number it is — the other side owes the response. */
+  | { kind: "sent"; salaryMinor: number | null; sentBy: OfferParty }
   | { kind: "accepted"; salaryMinor: number | null }
   | { kind: "declined"; salaryMinor: number | null }
   | { kind: "countered"; salaryMinor: number | null }
@@ -131,7 +132,7 @@ function toOfferBadge(offer: Offer): OfferBadge | null {
   const salaryMinor = offer.placementDetails?.salaryMinor ?? null;
   switch (offer.status) {
     case "sent":
-      return { kind: "sent", salaryMinor };
+      return { kind: "sent", salaryMinor, sentBy: offer.createdBy };
     case "accepted":
       return { kind: "accepted", salaryMinor };
     case "declined":

@@ -77,6 +77,7 @@ export function CandidateCard({
         <NegotiationStateBadges
           interview={negotiationState?.interview ?? null}
           offer={negotiationState?.offer ?? null}
+          viewerParty="company"
         />
 
         <ScheduleInterviewAction

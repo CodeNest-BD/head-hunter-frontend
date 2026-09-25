@@ -77,7 +77,7 @@ describe("SendOfferForm", () => {
       <SendOfferForm
         candidateId="candidate-1"
         negotiationState={negotiationState({
-          offer: { kind: "sent", salaryMinor: null },
+          offer: { kind: "sent", salaryMinor: null, sentBy: "company" },
         })}
       />,
     );
@@ -167,7 +167,7 @@ describe("SendOfferForm", () => {
       <SendOfferForm
         candidateId="candidate-1"
         negotiationState={negotiationState({
-          offer: { kind: "sent", salaryMinor: 1500000 },
+          offer: { kind: "sent", salaryMinor: 1500000, sentBy: "company" },
           offerRecord: offer({ status: "sent", createdBy: "company" }),
         })}
       />,
@@ -189,7 +189,7 @@ describe("SendOfferForm", () => {
       <SendOfferForm
         candidateId="candidate-1"
         negotiationState={negotiationState({
-          offer: { kind: "sent", salaryMinor: 1500000 },
+          offer: { kind: "sent", salaryMinor: 1500000, sentBy: "recruiter" },
           offerRecord: offer({ status: "sent", createdBy: "recruiter" }),
         })}
       />,
