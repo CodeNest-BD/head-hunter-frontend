@@ -23,4 +23,4 @@ export const HIDE_PHASE2_FEATURES = false;
  * to `true` together with the backend's payout endpoints going live
  * (see docs/recruiter-payouts-plan.md for the API contract).
  */
-export const ENABLE_RECRUITER_PAYOUTS = false;
+export const ENABLE_RECRUITER_PAYOUTS = true;
