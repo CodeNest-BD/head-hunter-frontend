@@ -1,8 +1,21 @@
 "use client";
 
-import { forwardRef, useEffect, useState, type ReactNode } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useRef,
+  useState,
+  type BaseSyntheticEvent,
+  type ReactNode,
+} from "react";
+import { toNestErrors } from "@hookform/resolvers";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import {
+  Controller,
+  useForm,
+  type FieldError,
+  type Resolver,
+} from "react-hook-form";
 import { Info, PanelRightOpen, X } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -29,12 +42,7 @@ import {
 import { useMinRecruiterFee } from "@/features/billing";
 import { sanitizeRichText } from "@/shared/libs/richText";
 import { isoDateAfter } from "@/shared/utils/formatDate";
-import {
-  formatMinor,
-  majorInputToMinor,
-  majorToMinor,
-  minorToMajorInput,
-} from "@/shared/utils/money";
+import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
 import {
   BENEFIT_CHECKBOXES,
   EMPLOYMENT_TYPES,
@@ -58,12 +66,13 @@ import {
   SALARY_RATE_PERIOD_LABELS,
   WORK_MODELS,
   WORK_MODEL_LABELS,
+  draftBlockingIssues,
   jobFormSchema,
   type Job,
   type JobFormValues,
   type WorkModel,
 } from "../schemas";
-import { intakeToFormValues, toIntakeInput } from "../utils/jobIntake";
+import { jobToFormValues, toIntakeInput } from "../utils/jobIntake";
 import {
   BenefitsAttachmentField,
   benefitsDocumentError,
@@ -122,29 +131,6 @@ interface JobFormProps {
    * so cannot presign an upload against a company's job.
    */
   canAttachBenefitsDocument?: boolean;
-}
-
-function toDefaults(job?: Job): JobFormValues {
-  return {
-    title: job?.title ?? "",
-    description: job?.description ?? "",
-    roleCategory: job?.roleCategory ?? "",
-    employmentType: job?.employmentType ?? "",
-    locationState: job?.locationState ?? "",
-    locationCity: job?.locationCity ?? "",
-    salaryMin: minorToMajorInput(job?.salaryMinMinor),
-    salaryMax: minorToMajorInput(job?.salaryMaxMinor),
-    // Older jobs saved before rate period existed default to the common case.
-    salaryRatePeriod: job?.salaryRatePeriod ?? "per_year",
-    recruiterFee: minorToMajorInput(job?.recruiterFeeMinor),
-    // Filled from the company profile once it resolves — it is not stored on
-    // the job, so there is nothing to read back here.
-    companyName: "",
-    ...intakeToFormValues(job?.intake ?? null),
-    // Jobs saved before the three-state control only have the boolean, so it
-    // seeds the model unless the intake already recorded one.
-    workModel: job?.intake?.workModel ?? (job?.isRemote ? "remote" : "on_site"),
-  };
 }
 
 /** A labelled field cell: label, control, then a hint or its error in one slot. */
@@ -309,6 +295,31 @@ const MoneyInput = forwardRef<
 ));
 MoneyInput.displayName = "MoneyInput";
 
+type ValidationRules = "draft" | "publish";
+
+const publishResolver = zodResolver(jobFormSchema);
+
+/** Publish rules, or for a draft save only those `draftBlockingIssues` keeps. */
+function jobFormResolver(
+  rules: () => ValidationRules,
+): Resolver<JobFormValues> {
+  return async (values, context, options) => {
+    if (rules() === "publish") return publishResolver(values, context, options);
+    const parsed = jobFormSchema.safeParse(values);
+    if (parsed.success) return { values: parsed.data, errors: {} };
+    const blocking = draftBlockingIssues(values, parsed.error.issues);
+    if (blocking.length === 0) return { values, errors: {} };
+    const flatErrors: Record<string, FieldError> = {};
+    for (const issue of blocking) {
+      flatErrors[issue.path.join(".")] ??= {
+        type: issue.code,
+        message: issue.message,
+      };
+    }
+    return { values: {}, errors: toNestErrors(flatErrors, options) };
+  };
+}
+
 export function JobForm({
   job,
   onSubmit,
@@ -318,6 +329,15 @@ export function JobForm({
   canAttachBenefitsDocument = true,
 }: JobFormProps) {
   const { data: minFee } = useMinRecruiterFee();
+  // Only a job nobody has published yet can be saved incomplete; editing a
+  // live listing keeps it publishable.
+  const allowsPartialSave = !job || job.status === "draft";
+  // A ref, not state: set by the button that fired, read by the resolver in
+  // the same submit, and by re-validation as the company fixes what it flagged.
+  const validationRules = useRef<ValidationRules>("publish");
+  const [resolver] = useState(() =>
+    jobFormResolver(() => validationRules.current),
+  );
   const {
     register,
     control,
@@ -327,8 +347,8 @@ export function JobForm({
     formState: { errors },
     watch,
   } = useForm<JobFormValues>({
-    resolver: zodResolver(jobFormSchema),
-    defaultValues: toDefaults(job),
+    resolver,
+    defaultValues: jobToFormValues(job),
   });
 
   // The whole form is watched so the live preview reacts as the company types;
@@ -505,8 +525,9 @@ export function JobForm({
     salaryMinMinor: majorInputToMinor(formValues.salaryMin),
     salaryMaxMinor: majorInputToMinor(formValues.salaryMax),
     salaryRatePeriod: formValues.salaryRatePeriod,
-    // Required by the schema, so a plain conversion is safe here.
-    recruiterFeeMinor: majorToMinor(Number(formValues.recruiterFee)),
+    // A draft may leave the fee blank, but the API requires a number; the
+    // floor keeps a zero fee from being published.
+    recruiterFeeMinor: majorInputToMinor(formValues.recruiterFee) ?? 0,
     intake: toIntakeInput(
       formValues,
       job?.intake ?? null,
@@ -518,22 +539,33 @@ export function JobForm({
   // The fee floor is checked here rather than in the schema: it is an
   // admin-tunable marketplace policy the API serves, so the figure must not be
   // hardcoded into the form's validation.
-  const emit = (intent: "draft" | "publish") =>
-    handleSubmit((formValues) => {
-      if (minFee != null && (feeMinor ?? 0) < minFee.amountMinor) {
-        setError("recruiterFee", {
-          message: feeFloorMessage(minFee.amountMinor),
-        });
-        return;
-      }
-      onSubmit(
-        toInput(formValues),
-        intent,
-        benefitsDocument.status === "selected" ? benefitsDocument.file : null,
-      );
-    });
+  // The API applies the floor only on publish, so a draft may sit below it.
+  const emit = (intent: "draft" | "publish") => {
+    const rules: ValidationRules =
+      intent === "draft" && allowsPartialSave ? "draft" : "publish";
+    return (event?: BaseSyntheticEvent) => {
+      validationRules.current = rules;
+      return handleSubmit((formValues) => {
+        if (
+          rules === "publish" &&
+          minFee != null &&
+          (feeMinor ?? 0) < minFee.amountMinor
+        ) {
+          setError("recruiterFee", {
+            message: feeFloorMessage(minFee.amountMinor),
+          });
+          return;
+        }
+        onSubmit(
+          toInput(formValues),
+          intent,
+          benefitsDocument.status === "selected" ? benefitsDocument.file : null,
+        );
+      })(event);
+    };
+  };
 
-  const statusText = job
+  const statusText = !allowsPartialSave
     ? "Changes are live as soon as you save."
     : remaining === 0
       ? "Ready to publish. Recruiters are notified immediately."
@@ -871,7 +903,11 @@ export function JobForm({
                       id="locationState"
                       className={CONTROL_HEIGHT}
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(code) => {
+                        // A city belongs to one state, so it can't carry over.
+                        if (code !== field.value) setValue("locationCity", "");
+                        field.onChange(code);
+                      }}
                     />
                   )}
                 />
@@ -1573,7 +1609,9 @@ export function JobForm({
             <span
               className={cn(
                 "h-2 w-2 shrink-0 rounded-full",
-                job || remaining === 0 ? "bg-emerald-500" : "bg-amber-400",
+                !allowsPartialSave || remaining === 0
+                  ? "bg-emerald-500"
+                  : "bg-amber-400",
               )}
             />
             <span className="hidden sm:inline">{statusText}</span>

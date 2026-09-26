@@ -66,7 +66,7 @@ function SubmitCandidatesButton({ jobId }: { jobId: string }) {
  */
 function CompanyJobActions({ job }: { job: Job }) {
   const { data: profile } = useMyCompanyProfile();
-  const { publish, isPending } = usePublishJob(job.id);
+  const { publish, isPending } = usePublishJob(job);
 
   if (!profile || profile.id !== job.companyProfileId) return null;
 

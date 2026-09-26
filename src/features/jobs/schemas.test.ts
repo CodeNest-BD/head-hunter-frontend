@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatDaysAndHours, jobFormSchema } from "./schemas";
-import { intakeToFormValues } from "./utils/jobIntake";
+import {
+  draftBlockingIssues,
+  formatDaysAndHours,
+  jobFormSchema,
+  type JobFormValues,
+} from "./schemas";
+import { intakeToFormValues, jobToFormValues } from "./utils/jobIntake";
 
 const valid = {
   title: "Senior Software Engineer",
@@ -264,5 +269,46 @@ describe("formatDaysAndHours", () => {
         endHour: 13,
       }),
     ).toBe("Mon, Wed, Fri · 12:00 AM – 1:00 PM");
+  });
+});
+
+describe("draftBlockingIssues", () => {
+  const blockingPaths = (overrides: Partial<JobFormValues>): string[] => {
+    const values = { ...jobToFormValues(), ...overrides };
+    const result = jobFormSchema.safeParse(values);
+    return result.success
+      ? []
+      : draftBlockingIssues(values, result.error.issues).map((issue) =>
+          issue.path.join("."),
+        );
+  };
+
+  it("lets a draft leave everything but the essentials blank", () => {
+    expect(
+      blockingPaths({
+        title: "Senior Software Engineer",
+        roleCategory: "engineering",
+        employmentType: "full_time",
+      }),
+    ).toEqual([]);
+  });
+
+  it("still requires the essentials", () => {
+    expect(blockingPaths({}).sort()).toEqual(
+      ["employmentType", "roleCategory", "title"].sort(),
+    );
+  });
+
+  it("still rejects a value that is filled in wrongly", () => {
+    expect(
+      blockingPaths({
+        title: "Senior Software Engineer",
+        roleCategory: "engineering",
+        employmentType: "full_time",
+        locationState: "C",
+        salaryMin: "150000",
+        salaryMax: "100000",
+      }).sort(),
+    ).toEqual(["locationState", "salaryMax"]);
   });
 });

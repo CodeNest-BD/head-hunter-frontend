@@ -85,7 +85,11 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
         ).get(candidateId) ?? null)
       : undefined;
 
-  if (mode === "edit") {
+  // Once the company starts reviewing, the details it is judging must hold
+  // still — the API refuses edits and removal past this point too.
+  const canManageCandidate = candidate.status === "submitted";
+
+  if (mode === "edit" && canManageCandidate) {
     return (
       <div className="rounded-md border border-border/70 bg-card p-4 shadow-sm lg:h-full lg:overflow-y-auto">
         <CandidateForm
@@ -114,36 +118,38 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
         ) : null
       }
       headerActions={
-        <>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            aria-label="Edit candidate"
-            onClick={() => setMode("edit")}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            aria-label="Remove candidate"
-            aria-pressed={mode === "confirm-remove"}
-            onClick={() =>
-              setMode((current) =>
-                current === "confirm-remove" ? "view" : "confirm-remove",
-              )
-            }
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </>
+        canManageCandidate && (
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              aria-label="Edit candidate"
+              onClick={() => setMode("edit")}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              aria-label="Remove candidate"
+              aria-pressed={mode === "confirm-remove"}
+              onClick={() =>
+                setMode((current) =>
+                  current === "confirm-remove" ? "view" : "confirm-remove",
+                )
+              }
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </>
+        )
       }
       banner={
-        mode === "confirm-remove" ? (
+        mode === "confirm-remove" && canManageCandidate ? (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
             <ConfirmAction
               message="Remove this candidate? This cannot be undone."

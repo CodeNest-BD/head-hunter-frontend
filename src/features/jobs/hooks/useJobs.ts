@@ -21,7 +21,8 @@ import {
   type JobWriteInput,
 } from "../api/jobs";
 import { jobKeys } from "../keys";
-import type { Job, JobStatus } from "../schemas";
+import { jobFormSchema, type Job, type JobStatus } from "../schemas";
+import { jobToFormValues } from "../utils/jobIntake";
 
 /** Verbatim from the client feedback round — do not reword. */
 const BENEFITS_DOCUMENT_FAILED =
@@ -223,10 +224,21 @@ export function useUpdateJob(id: string) {
  * followers: the follow feature is hidden from the UI, so naming it would
  * promise something the reader cannot see.
  */
-export function usePublishJob(id: string) {
-  const update = useUpdateJob(id);
+export function usePublishJob(job: Job) {
+  const update = useUpdateJob(job.id);
   return {
-    publish: () =>
+    publish: () => {
+      // A draft may have been saved incomplete, and the API only gates the fee
+      // floor, so the form's publish rules are checked against the saved copy.
+      if (
+        job.status === "draft" &&
+        !jobFormSchema.safeParse(jobToFormValues(job)).success
+      ) {
+        toast.error(
+          "Fill in the remaining required fields and save before publishing.",
+        );
+        return;
+      }
       update.mutate(
         { input: { status: "published" } },
         {
@@ -235,7 +247,8 @@ export function usePublishJob(id: string) {
               "Job published. Recruiters can now submit candidates.",
             ),
         },
-      ),
+      );
+    },
     isPending: update.isPending,
   };
 }

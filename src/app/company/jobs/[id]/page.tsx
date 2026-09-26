@@ -6,7 +6,13 @@ import { toast } from "sonner";
 import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
 
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
-import { JobForm, useJob, usePublishJob, useUpdateJob } from "@/features/jobs";
+import {
+  JobForm,
+  useJob,
+  usePublishJob,
+  useUpdateJob,
+  type Job,
+} from "@/features/jobs";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -31,12 +37,23 @@ function FormSkeleton() {
   );
 }
 
+function PublishJobButton({ job }: { job: Job }) {
+  const { publish, isPending } = usePublishJob(job);
+  return (
+    <Button type="button" disabled={isPending} onClick={publish}>
+      {isPending
+        ? "Publishing…"
+        : job.status === "expired"
+          ? "Republish for 30 days"
+          : "Publish"}
+    </Button>
+  );
+}
+
 function EditJobContent({ jobId }: { jobId: string }) {
   const router = useRouter();
   const { data: job, isPending, isError, refetch } = useJob(jobId);
   const update = useUpdateJob(jobId);
-  const { publish, isPending: isPublishing } = usePublishJob(jobId);
-
   if (isPending) {
     return <FormSkeleton />;
   }
@@ -86,13 +103,7 @@ function EditJobContent({ jobId }: { jobId: string }) {
         subtitle="Update the details, then publish when you are ready."
         actions={
           canPublish ? (
-            <Button type="button" disabled={isPublishing} onClick={publish}>
-              {isPublishing
-                ? "Publishing…"
-                : isExpired
-                  ? "Republish for 30 days"
-                  : "Publish"}
-            </Button>
+            <PublishJobButton job={job} />
           ) : (
             <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <CheckCircle2 className="h-4 w-4 text-[#17734E]" />

@@ -1,8 +1,10 @@
+import { minorToMajorInput } from "@/shared/utils/money";
 import type {
   Benefits,
   BenefitsAttachment,
   CompanyDetails,
   DaysAndHours,
+  Job,
   JobFormValues,
   JobIntake,
 } from "../schemas";
@@ -150,6 +152,30 @@ function toBenefitsInput(values: FormOwnedIntake["benefits"]): Benefits {
           ? Number(values.retirement401kMatch)
           : undefined,
     },
+  };
+}
+
+/** The job form's values for a job, or an empty form for a new one. */
+export function jobToFormValues(job?: Job): JobFormValues {
+  return {
+    title: job?.title ?? "",
+    description: job?.description ?? "",
+    roleCategory: job?.roleCategory ?? "",
+    employmentType: job?.employmentType ?? "",
+    locationState: job?.locationState ?? "",
+    locationCity: job?.locationCity ?? "",
+    salaryMin: minorToMajorInput(job?.salaryMinMinor),
+    salaryMax: minorToMajorInput(job?.salaryMaxMinor),
+    // Older jobs saved before rate period existed default to the common case.
+    salaryRatePeriod: job?.salaryRatePeriod ?? "per_year",
+    recruiterFee: minorToMajorInput(job?.recruiterFeeMinor),
+    // Filled from the company profile once it resolves — it is not stored on
+    // the job, so there is nothing to read back here.
+    companyName: "",
+    ...intakeToFormValues(job?.intake ?? null),
+    // Jobs saved before the three-state control only have the boolean, so it
+    // seeds the model unless the intake already recorded one.
+    workModel: job?.intake?.workModel ?? (job?.isRemote ? "remote" : "on_site"),
   };
 }
 

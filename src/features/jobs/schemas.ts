@@ -773,6 +773,45 @@ export const jobFormSchema = z
   });
 export type JobFormValues = z.infer<typeof jobFormSchema>;
 
+/** The least a draft can be saved with: enough to tell it apart in the jobs list. */
+const DRAFT_REQUIRED_FIELDS = new Set([
+  "title",
+  "roleCategory",
+  "employmentType",
+]);
+
+function valueAtPath(root: unknown, path: ReadonlyArray<string | number>) {
+  let current = root;
+  for (const key of path) {
+    if (typeof current !== "object" || current === null) return undefined;
+    current = Reflect.get(current, key);
+  }
+  return current;
+}
+
+function isFilled(value: unknown): boolean {
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  return value !== undefined;
+}
+
+/**
+ * The publish-rule failures a draft save still has to fix. A draft may leave
+ * any field but the essentials blank, yet what it does hold must be
+ * well-formed: the API refuses a malformed value whatever the job's status (a
+ * one-letter state, a pay range upside down).
+ */
+export function draftBlockingIssues(
+  values: JobFormValues,
+  issues: ReadonlyArray<z.ZodIssue>,
+): z.ZodIssue[] {
+  return issues.filter(
+    (issue) =>
+      DRAFT_REQUIRED_FIELDS.has(issue.path.join(".")) ||
+      isFilled(valueAtPath(values, issue.path)),
+  );
+}
+
 /** One row of GET /v1/jobs/map — a per-state/city aggregate behind the job map. */
 export const jobMapEntrySchema = z.object({
   locationState: z.string(),
