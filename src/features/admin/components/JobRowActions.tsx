@@ -3,26 +3,33 @@
 import { useState } from "react";
 import Link from "next/link";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
-import * as AlertDialog from "@radix-ui/react-alert-dialog";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, RotateCcw, Trash2 } from "lucide-react";
 
-import { Button } from "@/shared/ui-components/controls/button";
-import { useDeleteAdminJob } from "../hooks/useAdmin";
+import { ConfirmActionDialog } from "./ConfirmActionDialog";
+import { useDeleteAdminJob, useRepostAdminJob } from "../hooks/useAdmin";
+import type { JobStatus } from "../schemas";
+
+/** Which confirmation is open — the actions are mutually exclusive. */
+type PendingAction = "delete" | "repost" | null;
 
 /**
  * Per-row admin actions on a job: a 3-dot menu with Edit (→ the admin job
- * editor) and Delete (soft-delete, behind a confirmation). Admins can act on
- * any company's job.
+ * editor), Re-post (expired listings only) and Delete, each destructive/
+ * outward-facing action behind a confirmation. Admins can act on any
+ * company's job.
  */
 export function JobRowActions({
   jobId,
   jobTitle,
+  status,
 }: {
   jobId: string;
   jobTitle: string;
+  status: JobStatus;
 }) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pending, setPending] = useState<PendingAction>(null);
   const deleteJob = useDeleteAdminJob();
+  const repostJob = useRepostAdminJob();
 
   return (
     <>
@@ -51,10 +58,22 @@ export function JobRowActions({
                 Edit job
               </Link>
             </Dropdown.Item>
+            {status === "expired" && (
+              <Dropdown.Item
+                onSelect={(event) => {
+                  event.preventDefault();
+                  setPending("repost");
+                }}
+                className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none hover:bg-accent focus:bg-accent"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Re-post job
+              </Dropdown.Item>
+            )}
             <Dropdown.Item
               onSelect={(event) => {
                 event.preventDefault();
-                setConfirmOpen(true);
+                setPending("delete");
               }}
               className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none hover:bg-destructive/10 focus:bg-destructive/10"
             >
@@ -65,39 +84,31 @@ export function JobRowActions({
         </Dropdown.Portal>
       </Dropdown.Root>
 
-      <AlertDialog.Root open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
-            <AlertDialog.Title className="font-heading text-lg font-extrabold text-foreground">
-              Delete this job?
-            </AlertDialog.Title>
-            <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
-              &ldquo;{jobTitle}&rdquo; will be removed and any reserved fee
-              released back to the company. This is recoverable by support.
-            </AlertDialog.Description>
-            <div className="mt-5 flex justify-end gap-2">
-              <AlertDialog.Cancel asChild>
-                <Button type="button" variant="outline">
-                  Cancel
-                </Button>
-              </AlertDialog.Cancel>
-              <Button
-                type="button"
-                variant="destructive"
-                disabled={deleteJob.isPending}
-                onClick={() =>
-                  deleteJob.mutate(jobId, {
-                    onSuccess: () => setConfirmOpen(false),
-                  })
-                }
-              >
-                {deleteJob.isPending ? "Deleting…" : "Delete job"}
-              </Button>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
+      <ConfirmActionDialog
+        open={pending === "delete"}
+        onOpenChange={(open) => setPending(open ? "delete" : null)}
+        title="Delete this job?"
+        description={`“${jobTitle}” will be removed and any reserved fee released back to the company. This is recoverable by support.`}
+        confirmLabel="Delete job"
+        pendingLabel="Deleting…"
+        destructive
+        isPending={deleteJob.isPending}
+        onConfirm={() =>
+          deleteJob.mutate(jobId, { onSuccess: () => setPending(null) })
+        }
+      />
+      <ConfirmActionDialog
+        open={pending === "repost"}
+        onOpenChange={(open) => setPending(open ? "repost" : null)}
+        title="Re-post this job?"
+        description={`“${jobTitle}” goes live again for 30 days on the company's behalf. The recruiter fee is re-checked against the current floor and the company's funds.`}
+        confirmLabel="Re-post job"
+        pendingLabel="Re-posting…"
+        isPending={repostJob.isPending}
+        onConfirm={() =>
+          repostJob.mutate(jobId, { onSuccess: () => setPending(null) })
+        }
+      />
     </>
   );
 }

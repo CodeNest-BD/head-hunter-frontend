@@ -7,6 +7,7 @@ import {
   adminJobListItemSchema,
   adminStatsSchema,
   adminUserSchema,
+  bulkJobActionResultSchema,
   companyDetailSchema,
   companyListItemSchema,
   conversationListItemSchema,
@@ -18,6 +19,7 @@ import {
   type AccountStatus,
   type AdminJobListItem,
   type AdminUser,
+  type BulkJobActionResult,
   type CompanyDetail,
   type CompanyListItem,
   type ConversationListItem,
@@ -276,4 +278,29 @@ export async function updateAdminJob(
 /** DELETE /v1/admin/jobs/:jobId — admin deletes any job. */
 export async function deleteAdminJob(jobId: string): Promise<void> {
   await apiClient.delete<unknown>(`/admin/jobs/${jobId}`);
+}
+
+/** POST /v1/admin/jobs/:jobId/repost — publish an expired listing for 30 more days. */
+export async function repostAdminJob(jobId: string): Promise<void> {
+  await apiClient.post<unknown>(`/admin/jobs/${jobId}/repost`);
+}
+
+/** POST /v1/admin/jobs/bulk/repost — per-item outcomes, never all-or-nothing. */
+export async function bulkRepostAdminJobs(
+  jobIds: string[],
+): Promise<BulkJobActionResult> {
+  const { data } = await apiClient.post<unknown>("/admin/jobs/bulk/repost", {
+    jobIds,
+  });
+  return bulkJobActionResultSchema.parse(data);
+}
+
+/** POST /v1/admin/jobs/bulk/delete — per-item outcomes, never all-or-nothing. */
+export async function bulkDeleteAdminJobs(
+  jobIds: string[],
+): Promise<BulkJobActionResult> {
+  const { data } = await apiClient.post<unknown>("/admin/jobs/bulk/delete", {
+    jobIds,
+  });
+  return bulkJobActionResultSchema.parse(data);
 }
