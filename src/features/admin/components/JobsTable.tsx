@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Briefcase, X } from "lucide-react";
+import { AlertCircle, Briefcase, RotateCcw, Trash2, X } from "lucide-react";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -21,13 +22,17 @@ import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import { Checkbox } from "@/shared/ui-components/controls/checkbox";
 import {
   useAdminJobs,
   useAdminStats,
+  useBulkDeleteAdminJobs,
+  useBulkRepostAdminJobs,
   useMinRecruiterFeeSetting,
 } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
 import { JOB_STATUS_LABELS, type AdminJobListItem } from "../schemas";
+import { ConfirmActionDialog } from "./ConfirmActionDialog";
 import { JobRowActions } from "./JobRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
@@ -146,7 +151,13 @@ function JobCard({
       href={jobPath({ id: job.jobId, title: job.title })}
       trailing={<JobStatus status={job.status} />}
       fields={fields}
-      actions={<JobRowActions jobId={job.jobId} jobTitle={job.title} />}
+      actions={
+        <JobRowActions
+          jobId={job.jobId}
+          jobTitle={job.title}
+          status={job.status}
+        />
+      }
     />
   );
 }
@@ -183,6 +194,50 @@ export function JobsTable({
     status: status || undefined,
     companyProfileId: companyProfileId || undefined,
   });
+
+  // Multi-select is page-scoped: acting on rows you can no longer see is how
+  // bulk tools delete the wrong things, so navigation/filtering clears it.
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState<"repost" | "delete" | null>(
+    null,
+  );
+  const bulkRepost = useBulkRepostAdminJobs();
+  const bulkDelete = useBulkDeleteAdminJobs();
+  useEffect(() => {
+    setSelected(new Set());
+  }, [page, q, status, limit, companyProfileId]);
+
+  const pageJobs = data?.data ?? [];
+  const allOnPageSelected =
+    pageJobs.length > 0 && pageJobs.every((job) => selected.has(job.jobId));
+
+  const toggleOne = (jobId: string, checked: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(jobId);
+      } else {
+        next.delete(jobId);
+      }
+      return next;
+    });
+  };
+
+  const toggleAllOnPage = (checked: boolean) => {
+    setSelected(
+      checked ? new Set(pageJobs.map((job) => job.jobId)) : new Set(),
+    );
+  };
+
+  const runBulk = (action: "repost" | "delete") => {
+    const mutation = action === "repost" ? bulkRepost : bulkDelete;
+    mutation.mutate([...selected], {
+      onSuccess: () => {
+        setBulkConfirm(null);
+        setSelected(new Set());
+      },
+    });
+  };
 
   const stats = useAdminStats();
   const minFeeMinor = useMinRecruiterFeeSetting().data?.amountMinor ?? 0;
@@ -249,6 +304,42 @@ export function JobsTable({
           />
         </div>
 
+        {selected.size > 0 && (
+          <div className="flex flex-wrap items-center gap-3 rounded-md border border-primary/30 bg-accent px-4 py-2.5 text-sm">
+            <span className="font-semibold text-navy">
+              {selected.size} selected
+            </span>
+            <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setBulkConfirm("repost")}
+              >
+                <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                Re-post
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setBulkConfirm("delete")}
+              >
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                Delete
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelected(new Set())}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
+
         {isPending ? (
           <TableSkeleton />
         ) : isError ? (
@@ -284,6 +375,15 @@ export function JobsTable({
                 <table className={TABLE_CLASS}>
                   <thead>
                     <tr className={THEAD_ROW_CLASS}>
+                      <th scope="col" className="w-10 py-3 pl-4">
+                        <Checkbox
+                          aria-label="Select all jobs on this page"
+                          checked={allOnPageSelected}
+                          onCheckedChange={(checked) =>
+                            toggleAllOnPage(checked === true)
+                          }
+                        />
+                      </th>
                       <th scope="col" className="px-5 py-3 font-semibold">
                         Job
                       </th>
@@ -330,6 +430,15 @@ export function JobsTable({
                   <tbody>
                     {data.data.map((job) => (
                       <tr key={job.jobId} className={BODY_ROW_CLASS}>
+                        <td className="w-10 py-3 pl-4">
+                          <Checkbox
+                            aria-label={`Select ${job.title}`}
+                            checked={selected.has(job.jobId)}
+                            onCheckedChange={(checked) =>
+                              toggleOne(job.jobId, checked === true)
+                            }
+                          />
+                        </td>
                         <td className="px-5 py-3">
                           {/* Job title → the public job view. */}
                           <Link
@@ -372,6 +481,7 @@ export function JobsTable({
                           <JobRowActions
                             jobId={job.jobId}
                             jobTitle={job.title}
+                            status={job.status}
                           />
                         </td>
                       </tr>
@@ -400,6 +510,28 @@ export function JobsTable({
           </Card>
         )}
       </div>
+
+      <ConfirmActionDialog
+        open={bulkConfirm === "repost"}
+        onOpenChange={(open) => setBulkConfirm(open ? "repost" : null)}
+        title={`Re-post ${selected.size} selected job${selected.size === 1 ? "" : "s"}?`}
+        description="Expired listings go live again for 30 days; anything not expired is skipped and reported. Fees are re-checked against the current floor and each company's funds."
+        confirmLabel="Re-post"
+        pendingLabel="Re-posting…"
+        isPending={bulkRepost.isPending}
+        onConfirm={() => runBulk("repost")}
+      />
+      <ConfirmActionDialog
+        open={bulkConfirm === "delete"}
+        onOpenChange={(open) => setBulkConfirm(open ? "delete" : null)}
+        title={`Delete ${selected.size} selected job${selected.size === 1 ? "" : "s"}?`}
+        description="Each job is removed independently; filled jobs are skipped and reported. This is recoverable by support."
+        confirmLabel="Delete"
+        pendingLabel="Deleting…"
+        destructive
+        isPending={bulkDelete.isPending}
+        onConfirm={() => runBulk("delete")}
+      />
     </div>
   );
 }

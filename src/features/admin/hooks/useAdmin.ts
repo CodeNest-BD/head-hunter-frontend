@@ -10,6 +10,8 @@ import {
 import {
   changeAdminPassword,
   createAdmin,
+  bulkDeleteAdminJobs,
+  bulkRepostAdminJobs,
   deleteAdminJob,
   deleteRecruiter,
   decideCompanyVerification,
@@ -30,11 +32,13 @@ import {
   suspendAccount,
   updateMinRecruiterFee,
   updateAdmin,
+  repostAdminJob,
   updateAdminJob,
   updateRecruiterPricing,
   type CreateAdminInput,
   type VerificationDecisionInput,
 } from "../api/admin";
+import type { BulkJobActionResult } from "../schemas";
 import { adminKeys, type AdminListParams } from "../keys";
 
 export function useAdminStats() {
@@ -275,6 +279,63 @@ export function useDeleteAdminJob() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
       toast.success("Job deleted");
+    },
+  });
+}
+
+/** Publish an expired listing for 30 more days. */
+export function useRepostAdminJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (jobId: string) => repostAdminJob(jobId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      toast.success("Job re-posted for 30 days");
+    },
+  });
+}
+
+/**
+ * One toast per bulk outcome: the wins as success, the skips as an error that
+ * names the first reason — a mixed batch must never read as a clean sweep.
+ */
+function announceBulkOutcome(verb: string, result: BulkJobActionResult): void {
+  if (result.succeeded > 0) {
+    toast.success(
+      `${verb} ${result.succeeded} job${result.succeeded === 1 ? "" : "s"}`,
+    );
+  }
+  if (result.failed.length > 0) {
+    const [first] = result.failed;
+    const more =
+      result.failed.length > 1 ? ` (+${result.failed.length - 1} more)` : "";
+    toast.error(
+      `${result.failed.length} job${result.failed.length === 1 ? "" : "s"} skipped: ${first.reason}${more}`,
+    );
+  }
+}
+
+export function useBulkRepostAdminJobs() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (jobIds: string[]) => bulkRepostAdminJobs(jobIds),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      announceBulkOutcome("Re-posted", result);
+    },
+  });
+}
+
+export function useBulkDeleteAdminJobs() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (jobIds: string[]) => bulkDeleteAdminJobs(jobIds),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      announceBulkOutcome("Deleted", result);
     },
   });
 }

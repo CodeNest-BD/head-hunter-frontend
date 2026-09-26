@@ -286,6 +286,13 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   unknown: "Unknown",
 };
 
+/** Per-item outcome of a bulk job action — one bad row never aborts the batch. */
+export const bulkJobActionResultSchema = z.object({
+  succeeded: z.number(),
+  failed: z.array(z.object({ jobId: z.string(), reason: z.string() })),
+});
+export type BulkJobActionResult = z.infer<typeof bulkJobActionResultSchema>;
+
 export const minRecruiterFeeSchema = z.object({
   amountMinor: z.number(),
   currency: z.string().catch("usd"),
