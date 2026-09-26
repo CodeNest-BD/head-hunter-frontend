@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import {
+  EditorContent,
+  useEditor,
+  useEditorState,
+  type Editor,
+} from "@tiptap/react";
 import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import {
@@ -20,6 +25,22 @@ import {
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { isRichTextEmpty } from "@/shared/libs/richText";
+
+/**
+ * StarterKit with a link that stops at its last character. Link makes itself
+ * inclusive whenever autolink is on, so a space or word typed right after a
+ * link joined it. StarterKit does not export Link, so its own instance is
+ * swapped rather than adding a second copy of the package.
+ */
+const EditorKit = StarterKit.extend({
+  addExtensions() {
+    return (this.parent?.() ?? []).map((extension) =>
+      extension.name === "link" && extension.type === "mark"
+        ? extension.extend({ inclusive: () => false })
+        : extension,
+    );
+  },
+});
 
 interface RichTextEditorProps {
   /** Current HTML value (RHF-controlled). */
@@ -46,7 +67,7 @@ export function RichTextEditor({
     // Next.js SSR: render only after hydration.
     immediatelyRender: false,
     extensions: [
-      StarterKit.configure({
+      EditorKit.configure({
         heading: { levels: [2, 3] },
         codeBlock: false,
         horizontalRule: false,
@@ -83,6 +104,21 @@ export function RichTextEditor({
     }
   }, [editor, value]);
 
+  // Tiptap v3 no longer re-renders on every transaction, so reading
+  // `isActive` in render went stale as soon as the caret moved without typing.
+  const active = useEditorState({
+    editor,
+    selector: ({ editor: current }) => ({
+      bold: current?.isActive("bold") ?? false,
+      italic: current?.isActive("italic") ?? false,
+      heading2: current?.isActive("heading", { level: 2 }) ?? false,
+      heading3: current?.isActive("heading", { level: 3 }) ?? false,
+      bulletList: current?.isActive("bulletList") ?? false,
+      orderedList: current?.isActive("orderedList") ?? false,
+      link: current?.isActive("link") ?? false,
+    }),
+  });
+
   const toggleLink = useCallback(() => {
     if (!editor) return;
     if (editor.isActive("link")) {
@@ -112,20 +148,20 @@ export function RichTextEditor({
         <ToolbarButton
           icon={Bold}
           label="Bold"
-          isActive={editor.isActive("bold")}
+          isActive={active?.bold}
           onClick={() => editor.chain().focus().toggleBold().run()}
         />
         <ToolbarButton
           icon={Italic}
           label="Italic"
-          isActive={editor.isActive("italic")}
+          isActive={active?.italic}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         />
         <Divider />
         <ToolbarButton
           icon={Heading2}
           label="Heading"
-          isActive={editor.isActive("heading", { level: 2 })}
+          isActive={active?.heading2}
           onClick={() =>
             editor.chain().focus().toggleHeading({ level: 2 }).run()
           }
@@ -133,7 +169,7 @@ export function RichTextEditor({
         <ToolbarButton
           icon={Heading3}
           label="Subheading"
-          isActive={editor.isActive("heading", { level: 3 })}
+          isActive={active?.heading3}
           onClick={() =>
             editor.chain().focus().toggleHeading({ level: 3 }).run()
           }
@@ -142,20 +178,20 @@ export function RichTextEditor({
         <ToolbarButton
           icon={List}
           label="Bullet list"
-          isActive={editor.isActive("bulletList")}
+          isActive={active?.bulletList}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         />
         <ToolbarButton
           icon={ListOrdered}
           label="Numbered list"
-          isActive={editor.isActive("orderedList")}
+          isActive={active?.orderedList}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         />
         <Divider />
         <ToolbarButton
-          icon={editor.isActive("link") ? Link2Off : Link2}
-          label={editor.isActive("link") ? "Remove link" : "Add link"}
-          isActive={editor.isActive("link")}
+          icon={active?.link ? Link2Off : Link2}
+          label={active?.link ? "Remove link" : "Add link"}
+          isActive={active?.link}
           onClick={toggleLink}
         />
         <Divider />
