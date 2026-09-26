@@ -5,7 +5,8 @@ import Link from "next/link";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { MoreVertical, Pencil, RotateCcw, Trash2 } from "lucide-react";
 
-import { ConfirmActionDialog } from "./ConfirmActionDialog";
+import { ConfirmActionDialog } from "@/shared/ui-components/controls/ConfirmActionDialog";
+
 import { useDeleteAdminJob, useRepostAdminJob } from "../hooks/useAdmin";
 import type { JobStatus } from "../schemas";
 

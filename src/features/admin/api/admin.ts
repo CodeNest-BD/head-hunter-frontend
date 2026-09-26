@@ -285,22 +285,40 @@ export async function repostAdminJob(jobId: string): Promise<void> {
   await apiClient.post<unknown>(`/admin/jobs/${jobId}/repost`);
 }
 
-/** POST /v1/admin/jobs/bulk/repost — per-item outcomes, never all-or-nothing. */
-export async function bulkRepostAdminJobs(
+/**
+ * Requests per bulk call. Well under the backend's 100-id cap, and small
+ * enough that each request finishes far inside proxy timeouts even when every
+ * job runs its full fee/funding checks — a select-all of a 1000-row page
+ * becomes a sequence of short requests with the outcomes merged.
+ */
+const BULK_CHUNK_SIZE = 25;
+
+async function bulkJobAction(
+  path: string,
   jobIds: string[],
 ): Promise<BulkJobActionResult> {
-  const { data } = await apiClient.post<unknown>("/admin/jobs/bulk/repost", {
-    jobIds,
-  });
-  return bulkJobActionResultSchema.parse(data);
+  const merged: BulkJobActionResult = { succeeded: 0, failed: [] };
+  for (let start = 0; start < jobIds.length; start += BULK_CHUNK_SIZE) {
+    const { data } = await apiClient.post<unknown>(path, {
+      jobIds: jobIds.slice(start, start + BULK_CHUNK_SIZE),
+    });
+    const result = bulkJobActionResultSchema.parse(data);
+    merged.succeeded += result.succeeded;
+    merged.failed.push(...result.failed);
+  }
+  return merged;
+}
+
+/** POST /v1/admin/jobs/bulk/repost — per-item outcomes, never all-or-nothing. */
+export function bulkRepostAdminJobs(
+  jobIds: string[],
+): Promise<BulkJobActionResult> {
+  return bulkJobAction("/admin/jobs/bulk/repost", jobIds);
 }
 
 /** POST /v1/admin/jobs/bulk/delete — per-item outcomes, never all-or-nothing. */
-export async function bulkDeleteAdminJobs(
+export function bulkDeleteAdminJobs(
   jobIds: string[],
 ): Promise<BulkJobActionResult> {
-  const { data } = await apiClient.post<unknown>("/admin/jobs/bulk/delete", {
-    jobIds,
-  });
-  return bulkJobActionResultSchema.parse(data);
+  return bulkJobAction("/admin/jobs/bulk/delete", jobIds);
 }
