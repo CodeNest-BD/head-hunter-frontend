@@ -1,14 +1,15 @@
 "use client";
 
+import type { ReactNode } from "react";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 
-import { Button } from "@/shared/ui-components/controls/button";
+import { Button } from "./button";
 
 interface ConfirmActionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
+  description: ReactNode;
   confirmLabel: string;
   /** Shown on the confirm button while the mutation runs. */
   pendingLabel: string;
@@ -18,9 +19,10 @@ interface ConfirmActionDialogProps {
 }
 
 /**
- * The confirmation gate in front of every destructive or outward-facing admin
+ * The modal confirmation gate in front of a destructive or outward-facing
  * action (delete, re-post, bulk variants) — one styling and focus behavior
- * instead of a hand-rolled AlertDialog per action.
+ * instead of a hand-rolled AlertDialog per action. For inline (non-modal)
+ * confirmation, see ConfirmAction.
  */
 export function ConfirmActionDialog({
   open,
@@ -34,7 +36,16 @@ export function ConfirmActionDialog({
   onConfirm,
 }: ConfirmActionDialogProps) {
   return (
-    <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
+    // While the action runs the dialog is not dismissable (Esc/cancel): a
+    // half-watched mutation with the modal gone invites firing a second,
+    // conflicting action on the same rows.
+    <AlertDialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (isPending && !next) return;
+        onOpenChange(next);
+      }}
+    >
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
         <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
@@ -46,7 +57,7 @@ export function ConfirmActionDialog({
           </AlertDialog.Description>
           <div className="mt-5 flex justify-end gap-2">
             <AlertDialog.Cancel asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" disabled={isPending}>
                 Cancel
               </Button>
             </AlertDialog.Cancel>

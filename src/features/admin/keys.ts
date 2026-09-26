@@ -25,6 +25,8 @@ export const adminKeys = {
     ["admin", "conversations", params] as const,
   conversation: (candidateId: string) =>
     ["admin", "conversation", candidateId] as const,
+  /** Prefix matching every jobs-list page — what job mutations invalidate. */
+  jobsAll: ["admin", "jobs"] as const,
   jobs: (params: AdminListParams) => ["admin", "jobs", params] as const,
   pricing: ["admin", "pricing"] as const,
   minRecruiterFee: ["admin", "min-recruiter-fee"] as const,

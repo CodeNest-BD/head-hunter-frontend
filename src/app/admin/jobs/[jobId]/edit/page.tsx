@@ -7,11 +7,8 @@ import { AlertCircle, ArrowLeft, RotateCcw } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
 import { JobForm, useJob } from "@/features/jobs";
-import {
-  ConfirmActionDialog,
-  useRepostAdminJob,
-  useUpdateAdminJob,
-} from "@/features/admin";
+import { useRepostAdminJob, useUpdateAdminJob } from "@/features/admin";
+import { ConfirmActionDialog } from "@/shared/ui-components/controls/ConfirmActionDialog";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -67,7 +64,7 @@ function EditContent({ jobId }: { jobId: string }) {
             onClick={() => setConfirmRepost(true)}
           >
             <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-            Re-post for 30 Days
+            Re-post for 30 days
           </Button>
         </div>
       )}

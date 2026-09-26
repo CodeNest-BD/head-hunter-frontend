@@ -23,6 +23,7 @@ import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { Checkbox } from "@/shared/ui-components/controls/checkbox";
+import { ConfirmActionDialog } from "@/shared/ui-components/controls/ConfirmActionDialog";
 import {
   useAdminJobs,
   useAdminStats,
@@ -32,7 +33,6 @@ import {
 } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
 import { JOB_STATUS_LABELS, type AdminJobListItem } from "../schemas";
-import { ConfirmActionDialog } from "./ConfirmActionDialog";
 import { JobRowActions } from "./JobRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
@@ -195,21 +195,29 @@ export function JobsTable({
     companyProfileId: companyProfileId || undefined,
   });
 
-  // Multi-select is page-scoped: acting on rows you can no longer see is how
-  // bulk tools delete the wrong things, so navigation/filtering clears it.
+  // Multi-select is visible-rows-scoped: acting on rows you can no longer see
+  // is how bulk tools delete the wrong things, so the selection is pruned to
+  // the rows currently on screen whenever the list changes — pagination,
+  // filtering, or a row deleted/re-posted out from under the selection.
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [bulkConfirm, setBulkConfirm] = useState<"repost" | "delete" | null>(
     null,
   );
   const bulkRepost = useBulkRepostAdminJobs();
   const bulkDelete = useBulkDeleteAdminJobs();
+  const pageJobs = data?.data;
   useEffect(() => {
-    setSelected(new Set());
-  }, [page, q, status, limit, companyProfileId]);
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const visible = new Set((pageJobs ?? []).map((job) => job.jobId));
+      const next = new Set([...prev].filter((id) => visible.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [pageJobs]);
 
-  const pageJobs = data?.data ?? [];
   const allOnPageSelected =
-    pageJobs.length > 0 && pageJobs.every((job) => selected.has(job.jobId));
+    (pageJobs ?? []).length > 0 &&
+    (pageJobs ?? []).every((job) => selected.has(job.jobId));
 
   const toggleOne = (jobId: string, checked: boolean) => {
     setSelected((prev) => {
@@ -225,17 +233,20 @@ export function JobsTable({
 
   const toggleAllOnPage = (checked: boolean) => {
     setSelected(
-      checked ? new Set(pageJobs.map((job) => job.jobId)) : new Set(),
+      checked ? new Set((pageJobs ?? []).map((job) => job.jobId)) : new Set(),
     );
   };
 
   const runBulk = (action: "repost" | "delete") => {
     const mutation = action === "repost" ? bulkRepost : bulkDelete;
     mutation.mutate([...selected], {
-      onSuccess: () => {
+      onSuccess: (result) => {
         setBulkConfirm(null);
-        setSelected(new Set());
+        // Skipped rows stay selected so a partial failure is actionable —
+        // the admin can see exactly which jobs need attention and retry.
+        setSelected(new Set(result.failed.map((failure) => failure.jobId)));
       },
+      onError: () => setBulkConfirm(null),
     });
   };
 
@@ -305,7 +316,7 @@ export function JobsTable({
         </div>
 
         {selected.size > 0 && (
-          <div className="flex flex-wrap items-center gap-3 rounded-md border border-primary/30 bg-accent px-4 py-2.5 text-sm">
+          <div className="hidden flex-wrap items-center gap-3 rounded-md border border-primary/30 bg-accent px-4 py-2.5 text-sm sm:flex">
             <span className="font-semibold text-navy">
               {selected.size} selected
             </span>
