@@ -8,10 +8,10 @@ import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import {
   JobForm,
+  JobFormPublishButton,
   useJob,
-  usePublishJob,
   useUpdateJob,
-  type Job,
+  type JobWriteInput,
 } from "@/features/jobs";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -34,19 +34,6 @@ function FormSkeleton() {
       <div className="h-72 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
       <div className="h-48 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
     </div>
-  );
-}
-
-function PublishJobButton({ job }: { job: Job }) {
-  const { publish, isPending } = usePublishJob(job);
-  return (
-    <Button type="button" disabled={isPending} onClick={publish}>
-      {isPending
-        ? "Publishing…"
-        : job.status === "expired"
-          ? "Republish for 30 days"
-          : "Publish"}
-    </Button>
   );
 }
 
@@ -84,6 +71,30 @@ function EditJobContent({ jobId }: { jobId: string }) {
   const isExpired = job.status === "expired";
   const canPublish = isDraft || isExpired;
 
+  // Saved first, then published: the form may hold edits the stored copy
+  // lacks, and those are what the publish rules just passed.
+  const saveAndPublish = (
+    input: JobWriteInput,
+    benefitsDocument: File | null,
+  ) =>
+    update.mutate(
+      { input, benefitsDocument },
+      {
+        onSuccess: ({ benefitsDocumentFailed }) =>
+          update.mutate(
+            { input: { status: "published" } },
+            {
+              onSuccess: () => {
+                toast.success(
+                  "Job published. Recruiters can now submit candidates.",
+                );
+                if (!benefitsDocumentFailed) router.push("/company/jobs");
+              },
+            },
+          ),
+      },
+    );
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -103,7 +114,13 @@ function EditJobContent({ jobId }: { jobId: string }) {
         subtitle="Update the details, then publish when you are ready."
         actions={
           canPublish ? (
-            <PublishJobButton job={job} />
+            <JobFormPublishButton disabled={update.isPending}>
+              {update.isPending
+                ? "Publishing…"
+                : isExpired
+                  ? "Republish for 30 days"
+                  : "Publish"}
+            </JobFormPublishButton>
           ) : (
             <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <CheckCircle2 className="h-4 w-4 text-[#17734E]" />
@@ -125,19 +142,21 @@ function EditJobContent({ jobId }: { jobId: string }) {
 
       <JobForm
         job={job}
-        onSubmit={(input, _intent, benefitsDocument) =>
-          update.mutate(
-            { input, benefitsDocument },
-            {
-              onSuccess: ({ benefitsDocumentFailed }) => {
-                // The hook has already said so; stay put so the company can
-                // re-attach instead of being sent away from the field.
-                if (benefitsDocumentFailed) return;
-                toast.success("Job updated");
-                router.push("/company/jobs");
-              },
-            },
-          )
+        onSubmit={(input, intent, benefitsDocument) =>
+          intent === "publish"
+            ? saveAndPublish(input, benefitsDocument)
+            : update.mutate(
+                { input, benefitsDocument },
+                {
+                  onSuccess: ({ benefitsDocumentFailed }) => {
+                    // The hook has already said so; stay put so the company can
+                    // re-attach instead of being sent away from the field.
+                    if (benefitsDocumentFailed) return;
+                    toast.success("Job updated");
+                    router.push("/company/jobs");
+                  },
+                },
+              )
         }
         isSubmitting={update.isPending}
         submitLabel="Save changes"

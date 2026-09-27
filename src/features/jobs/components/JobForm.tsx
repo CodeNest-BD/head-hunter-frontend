@@ -297,6 +297,41 @@ MoneyInput.displayName = "MoneyInput";
 
 type ValidationRules = "draft" | "publish";
 
+const JOB_FORM_ID = "job-form";
+const PUBLISH_SUBMITTER_VALUE = "publish";
+
+/**
+ * Publish for a page that renders it outside the form (the edit header). It
+ * submits the form, so the publish rules run against what is on screen and
+ * flag each missing field, as the new-job form's own Publish does.
+ */
+export function JobFormPublishButton({
+  disabled,
+  children,
+}: {
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Button
+      type="submit"
+      form={JOB_FORM_ID}
+      value={PUBLISH_SUBMITTER_VALUE}
+      disabled={disabled}
+    >
+      {children}
+    </Button>
+  );
+}
+
+function submitIntent(event: BaseSyntheticEvent): "draft" | "publish" {
+  const { nativeEvent } = event;
+  return nativeEvent instanceof SubmitEvent &&
+    nativeEvent.submitter?.getAttribute("value") === PUBLISH_SUBMITTER_VALUE
+    ? "publish"
+    : "draft";
+}
+
 const publishResolver = zodResolver(jobFormSchema);
 
 /** Publish rules, or for a draft save only those `draftBlockingIssues` keeps. */
@@ -595,7 +630,8 @@ export function JobForm({
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
       {/* The form takes ~70% and the preview ~30% of the row (flex 7:3). */}
       <form
-        onSubmit={emit("draft")}
+        id={JOB_FORM_ID}
+        onSubmit={(event) => emit(submitIntent(event))(event)}
         className="flex min-w-0 flex-col gap-4 lg:flex-[7]"
       >
         <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">

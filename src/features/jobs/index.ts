@@ -4,7 +4,7 @@
 // use client-only React APIs, so a Server Component importing this file must
 // not pull them into the server graph.
 /** Public surface of the jobs feature. */
-export { JobForm } from "./components/JobForm";
+export { JobForm, JobFormPublishButton } from "./components/JobForm";
 export { JobsTable } from "./components/JobsTable";
 export {
   useCreateAndPublishJob,
@@ -28,3 +28,4 @@ export { ROLE_CATEGORIES } from "./schemas";
 export { ROLE_CATEGORY_LABELS } from "./schemas";
 export { EMPLOYMENT_TYPE_LABELS } from "./schemas";
 export type { PublicJobStats, PublicJobMapEntry } from "./publicSchemas";
+export type { JobWriteInput } from "./api/jobs";
