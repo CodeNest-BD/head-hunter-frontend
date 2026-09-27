@@ -35,6 +35,22 @@ export function formatDateTime(value: Date | string): string {
   return toDate(value).toLocaleDateString("en-US", DATE_TIME_OPTIONS);
 }
 
+/**
+ * Compact "how long ago" for queue rows: "just now", "5m ago", "3h ago",
+ * "6d ago"; past 30 days the absolute date reads better than "47d ago".
+ */
+export function formatTimeAgo(value: Date | string): string {
+  const ms = Date.now() - toDate(value).getTime();
+  if (ms < 60_000) return "just now";
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days <= 30) return `${days}d ago`;
+  return formatDate(value);
+}
+
 /** "2026-08-09" -> "Aug 9" — for near-future dates where the year is noise. */
 export function formatMonthDay(value: Date | string): string {
   return toDate(value).toLocaleDateString("en-US", {

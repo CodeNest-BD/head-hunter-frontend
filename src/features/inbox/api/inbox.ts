@@ -5,11 +5,18 @@ import {
   inboxCandidateRowSchema,
   inboxConversationRowSchema,
   inboxJobRowSchema,
+  inboxSubmissionRowSchema,
+  inboxSubmissionStatsSchema,
   type InboxCandidateRow,
   type InboxCandidateSort,
   type InboxConversationRow,
   type InboxJobRow,
+  type InboxSubmissionRow,
+  type InboxSubmissionStats,
+  type SubmissionRecruiterKind,
+  type SubmissionSort,
 } from "../schemas";
+import type { CandidateStatus } from "@/features/candidates/schemas";
 
 /** Which side is asking. The two inboxes are the same list, mirrored. */
 export type InboxSide = "company" | "recruiter";
@@ -112,4 +119,45 @@ export async function fetchInboxAttentionCount(
     `/${side}/inbox/attention-count`,
   );
   return inboxAttentionCountSchema.parse(data).count;
+}
+
+export interface CompanySubmissionsParams {
+  page?: number;
+  limit?: number;
+  /** Case-insensitive match on candidate, recruiter or job name. */
+  q?: string;
+  /** Job = scope: restrict the queue to one listing. */
+  jobId?: string;
+  /** Status = filter: one of the product's candidate statuses. */
+  status?: CandidateStatus;
+  /** Surface rated or not-yet-rated recruiters only. */
+  recruiterKind?: SubmissionRecruiterKind;
+  /** Rating = priority, Time = tie-breaker (the default `priority`). */
+  sortBy?: SubmissionSort;
+}
+
+/** GET /v1/company/inbox/submissions — the job-based candidate submission queue. */
+export async function fetchCompanySubmissions(
+  params: CompanySubmissionsParams,
+): Promise<Paginated<InboxSubmissionRow>> {
+  const { data } = await apiClient.get<unknown>("/company/inbox/submissions", {
+    params: {
+      page: params.page ?? 1,
+      limit: params.limit ?? 25,
+      q: params.q || undefined,
+      jobId: params.jobId || undefined,
+      status: params.status || undefined,
+      recruiterKind: params.recruiterKind || undefined,
+      sortBy: params.sortBy ?? "priority",
+    },
+  });
+  return paginatedSchema(inboxSubmissionRowSchema).parse(data);
+}
+
+/** GET /v1/company/inbox/submissions/stats — company-wide per-status counts. */
+export async function fetchCompanySubmissionStats(): Promise<InboxSubmissionStats> {
+  const { data } = await apiClient.get<unknown>(
+    "/company/inbox/submissions/stats",
+  );
+  return inboxSubmissionStatsSchema.parse(data);
 }
