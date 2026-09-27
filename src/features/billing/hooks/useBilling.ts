@@ -78,7 +78,7 @@ export function useCompanyPlacements(page: number) {
 }
 
 /**
- * Rejecting a placement within its guarantee refunds the held fee and reopens
+ * Rejecting a placement before its joining date refunds the held fee and reopens
  * the job, so the wallet balance, the placements list and the job lists all move
  * — invalidate the whole billing tree plus jobs. The caller surfaces the error
  * inline (the API call suppresses the global toast).

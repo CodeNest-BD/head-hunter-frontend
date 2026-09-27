@@ -92,8 +92,8 @@ export async function fetchCompanyPlacements(
 }
 
 /**
- * POST /v1/company/placements/:id/reject — reject a hire within the 30-day
- * guarantee. Refunds the held fee and reopens the job. Returns nothing (204).
+ * POST /v1/company/placements/:id/reject — reject a hire before its joining
+ * date. Refunds the held fee and reopens the job. Returns nothing (204).
  * The inline confirmation surfaces the error, so the global toast is suppressed.
  */
 export async function rejectPlacement(placementId: string): Promise<void> {

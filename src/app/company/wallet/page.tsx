@@ -28,7 +28,7 @@ const RESERVE_STEPS: readonly { title: string; detail: string }[] = [
   {
     title: "Released or refunded",
     detail:
-      "Paid to the recruiter after 30 days — or refunded to you if you reject the hire first.",
+      "Paid to the recruiter after 30 days — or refunded to you if you reject the hire before the joining date, or a dispute is resolved in your favour.",
   },
 ];
 

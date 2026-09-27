@@ -35,12 +35,14 @@ const STATUS_STYLES: Record<PlacementStatus, string> = {
   refunded: "bg-muted text-muted-foreground",
 };
 
-/** A placement can be rejected only while its fee is held and its guarantee is
- * still open — the same window the backend enforces. */
+/** A placement can be rejected only while its fee is held and the candidate has
+ * not reached their joining date — the countdown starts at midnight UTC that
+ * day, the same cut-off the backend enforces. After it, only a dispute can
+ * bring the fee back. */
 function isRejectable(placement: CompanyPlacement): boolean {
   return (
     placement.status === "held" &&
-    new Date(placement.holdExpiresAt).getTime() > Date.now()
+    new Date(`${placement.joiningDate}T00:00:00.000Z`).getTime() > Date.now()
   );
 }
 
@@ -86,7 +88,8 @@ function PlacementsEmpty() {
           <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
             When a candidate accepts your offer, its recruiter fee is held in
             escrow and appears here. It releases to the recruiter 30 days after
-            the candidate joins, unless you reject the hire first.
+            the candidate joins. You can reject the hire until the joining date;
+            after that, raise a dispute.
           </p>
         </div>
       </div>
@@ -96,7 +99,7 @@ function PlacementsEmpty() {
 
 /**
  * The company's escrow view: every placement it is funding, with a "Reject &amp;
- * refund" action on placements still inside their 30-day guarantee. Rejecting
+ * refund" action on placements whose candidate has not joined yet. Rejecting
  * returns the held fee to the wallet and reopens the job.
  */
 export function CompanyPlacementsPanel() {
@@ -152,7 +155,8 @@ export function CompanyPlacementsPanel() {
           </h2>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
             Fees held for your hires. Each releases to the recruiter 30 days
-            after the joining date — reject a hire before then to refund it.
+            after the joining date. Reject a hire before the joining date to
+            refund it; after that, raise a dispute.
           </p>
         </div>
 
