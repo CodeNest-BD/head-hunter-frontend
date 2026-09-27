@@ -13,6 +13,7 @@ import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationS
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { CandidateAttachments } from "./CandidateAttachments";
 import { CandidateFields } from "./CandidateFields";
+import { PassCandidateAction } from "./PassCandidateAction";
 import { ScheduleInterviewAction } from "./ScheduleInterviewAction";
 import { SendOfferForm } from "./SendOfferForm";
 import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
@@ -80,14 +81,28 @@ export function CandidateCard({
           viewerParty="company"
         />
 
-        <ScheduleInterviewAction
-          candidateId={candidate.id}
-          negotiationState={negotiationState}
-        />
-        <SendOfferForm
-          candidateId={candidate.id}
-          negotiationState={negotiationState}
-        />
+        {candidate.status === "passed" ? (
+          <p className="text-xs text-muted-foreground">
+            This candidate was passed on, so no more interviews or offers can be
+            sent.
+          </p>
+        ) : (
+          <>
+            <ScheduleInterviewAction
+              candidateId={candidate.id}
+              negotiationState={negotiationState}
+            />
+            <SendOfferForm
+              candidateId={candidate.id}
+              negotiationState={negotiationState}
+            />
+            {/* A hire is undone through the placement's guarantee, which
+                refunds the fee — never by passing. */}
+            {candidate.status !== "hired" && (
+              <PassCandidateAction candidateId={candidate.id} />
+            )}
+          </>
+        )}
 
         <CandidateFields candidate={candidate} />
 

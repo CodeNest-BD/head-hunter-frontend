@@ -17,6 +17,9 @@ vi.mock("./ScheduleInterviewAction", () => ({
 vi.mock("./SendOfferForm", () => ({
   SendOfferForm: () => <div>Send offer form</div>,
 }));
+vi.mock("./PassCandidateAction", () => ({
+  PassCandidateAction: () => <div>Pass candidate action</div>,
+}));
 vi.mock("../hooks/useCandidates", () => ({
   useAttachments: () => ({ data: undefined, isPending: false, isError: false }),
 }));

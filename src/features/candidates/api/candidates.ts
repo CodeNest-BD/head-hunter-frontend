@@ -99,6 +99,15 @@ export async function updateCandidate(
   return candidateSchema.parse(data);
 }
 
+/** PATCH /v1/candidates/:id — the company passes on the candidate; the server
+ * withdraws any offer still awaiting a response. */
+export async function passCandidate(id: string): Promise<Candidate> {
+  const { data } = await apiClient.patch<unknown>(`/candidates/${id}`, {
+    status: "passed",
+  });
+  return candidateSchema.parse(data);
+}
+
 /** DELETE /v1/candidates/:id */
 export async function deleteCandidate(id: string): Promise<void> {
   await apiClient.delete(`/candidates/${id}`);

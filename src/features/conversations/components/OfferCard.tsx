@@ -35,6 +35,9 @@ export interface OfferCardProps {
    * offer payload itself carries no timestamp, so the thread passes the
    * event's own `at`. */
   sentAt?: string;
+  /** A passed candidate's offer takes no more responses, even one the server
+   * still reports as `sent`. */
+  isCandidatePassed?: boolean;
 }
 
 /** Sent verbatim by "Notify Company", so the company reads why the offer is
@@ -103,6 +106,7 @@ export function OfferCard({
   viewerParty,
   candidateId,
   sentAt,
+  isCandidatePassed = false,
 }: OfferCardProps) {
   const {
     offerId,
@@ -123,12 +127,12 @@ export function OfferCard({
   const counterOffer = useCounterOffer(offerId);
   const withdrawOffer = useWithdrawOffer(offerId);
 
-  const isSent = offerStatus === "sent";
+  const isAwaitingResponse = offerStatus === "sent" && !isCandidatePassed;
   const isCreator = viewerParty === createdBy;
   // The party who did not create the current offer is the one who gets to
   // respond to it — the creator already said their number.
-  const counterpartyCanRespond = isSent && !isCreator;
-  const creatorCanWithdraw = isSent && isCreator;
+  const counterpartyCanRespond = isAwaitingResponse && !isCreator;
+  const creatorCanWithdraw = isAwaitingResponse && isCreator;
   // Accepting is what holds the fee in escrow, so an underfunded company means
   // the accept would be refused server-side. `null` is "not reported" — only a
   // definite false blocks the button. Recruiter-only: on a recruiter-created
@@ -266,6 +270,13 @@ export function OfferCard({
                   : "Notify Company"}
             </Button>
           </div>
+        )}
+
+        {offerStatus === "sent" && isCandidatePassed && (
+          <p className="text-xs text-muted-foreground">
+            This candidate was passed on, so this offer can no longer be
+            answered.
+          </p>
         )}
 
         {counterpartyCanRespond && !showCounterForm && (

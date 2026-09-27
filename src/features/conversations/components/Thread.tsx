@@ -428,6 +428,7 @@ export function Thread({ candidateId }: ThreadProps) {
                 viewerParty={viewerParty}
                 candidateId={candidateId}
                 sentAt={event.at}
+                isCandidatePassed={threadHeader?.acceptsMessages === false}
               />
             );
           }
