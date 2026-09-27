@@ -116,3 +116,56 @@ export const inboxAttentionCountSchema = z.object({
 export const candidateNeedsAttention = (
   row: Pick<InboxCandidateRow, "unreadMessages" | "needsReview">,
 ): boolean => row.unreadMessages > 0 || row.needsReview;
+
+/** One row of the company submissions queue. */
+export const inboxSubmissionRowSchema = z.object({
+  candidateId: z.string(),
+  candidateName: z.string(),
+  status: candidateStatusSchema,
+  jobId: z.string(),
+  jobTitle: z.string(),
+  submittedAt: z.coerce.date(),
+  unreadMessages: z.number(),
+  needsReview: z.boolean().catch(false),
+  recruiter: recruiterSummarySchema.nullable(),
+});
+export type InboxSubmissionRow = z.infer<typeof inboxSubmissionRowSchema>;
+
+/** The queue's stat cards — one count per status the product actually uses. */
+export const inboxSubmissionStatsSchema = z.object({
+  total: z.number(),
+  submitted: z.number(),
+  reviewing: z.number(),
+  interviewing: z.number(),
+  offered: z.number(),
+  hired: z.number(),
+  passed: z.number(),
+});
+export type InboxSubmissionStats = z.infer<typeof inboxSubmissionStatsSchema>;
+
+/**
+ * Sort modes for the queue. Priority — the default — is the requirements-doc
+ * rule: recruiter rating first, newest submission breaking ties, unrated
+ * recruiters after every rated one.
+ */
+export const SUBMISSION_SORTS = [
+  "priority",
+  "newest",
+  "oldest",
+  "ratingHigh",
+  "ratingLow",
+] as const;
+export type SubmissionSort = (typeof SUBMISSION_SORTS)[number];
+
+export const SUBMISSION_SORT_LABELS: Record<SubmissionSort, string> = {
+  priority: "Priority (Rating ↓)",
+  newest: "Newest Submission",
+  oldest: "Oldest Submission",
+  ratingHigh: "Rating: High to Low",
+  ratingLow: "Rating: Low to High",
+};
+
+/** Rated vs not-yet-rated recruiters — keeps new recruiters findable. */
+export const SUBMISSION_RECRUITER_KINDS = ["rated", "unrated"] as const;
+export type SubmissionRecruiterKind =
+  (typeof SUBMISSION_RECRUITER_KINDS)[number];

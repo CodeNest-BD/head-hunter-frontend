@@ -1,19 +1,21 @@
 "use client";
 
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
-import { InboxConversationList } from "@/features/inbox";
+import { CompanySubmissionsQueue } from "@/features/inbox";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 /**
- * The inbox: a flat list of your recruiter conversations, most-recent first.
- * Click a row to open the conversation directly.
+ * The company inbox as a Job-based Candidate Submission Queue (see
+ * requirements/Company_inbox_requirement.pdf): stat cards per status, filters
+ * for job/status/recruiter, rating-priority ordering, and a table whose rows
+ * open the conversation thread.
  */
 export default function CompanyInboxPage() {
   return (
     <RequireRole role="company">
       <DashboardLayout wide>
         <RequireApprovedCompany>
-          <InboxConversationList side="company" />
+          <CompanySubmissionsQueue />
         </RequireApprovedCompany>
       </DashboardLayout>
     </RequireRole>

@@ -3,10 +3,13 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 
 import {
+  fetchCompanySubmissionStats,
+  fetchCompanySubmissions,
   fetchInboxAttentionCount,
   fetchInboxCandidates,
   fetchInboxConversations,
   fetchInboxJobs,
+  type CompanySubmissionsParams,
   type InboxCandidatesParams,
   type InboxConversationsParams,
   type InboxJobsParams,
@@ -61,6 +64,28 @@ export function useInboxAttentionCount(side: InboxSide) {
   return useQuery({
     queryKey: inboxKeys.attentionCount(side),
     queryFn: () => fetchInboxAttentionCount(side),
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useCompanySubmissions(params: CompanySubmissionsParams) {
+  return useQuery({
+    queryKey: inboxKeys.submissions(params),
+    queryFn: () => fetchCompanySubmissions(params),
+    placeholderData: keepPreviousData,
+    // Poll like the sidebar badge so a candidate submitted while the company
+    // sits on the queue appears without a manual refresh — otherwise the badge
+    // would increment while the table and its counts stayed stale.
+    refetchInterval: REALTIME_POLL_MS,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useCompanySubmissionStats() {
+  return useQuery({
+    queryKey: inboxKeys.submissionStats,
+    queryFn: fetchCompanySubmissionStats,
     refetchInterval: REALTIME_POLL_MS,
     refetchOnWindowFocus: true,
   });
