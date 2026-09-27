@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/test/utils";
 import type { InboxSubmissionRow } from "../schemas";
@@ -99,44 +99,73 @@ vi.mock("../hooks/useInbox", () => ({
 }));
 
 describe("CompanySubmissionsQueue", () => {
+  beforeAll(() => {
+    // Radix Popover uses these; jsdom doesn't implement them.
+    Element.prototype.scrollIntoView = vi.fn();
+    Element.prototype.hasPointerCapture = vi.fn();
+  });
+
   beforeEach(() => {
     submissionsMock.mockClear();
     pushMock.mockClear();
   });
 
-  it("renders stat cards from the current statuses and defaults to priority sort", () => {
+  it("renders read-only stat cards from the current statuses and defaults to priority sort", () => {
     renderWithProviders(<CompanySubmissionsQueue />);
 
     expect(screen.getByText("Total Submissions")).toBeInTheDocument();
     expect(screen.getByText("238")).toBeInTheDocument();
     expect(screen.getByText("42")).toBeInTheDocument(); // New
     expect(screen.getByText("120")).toBeInTheDocument(); // Reviewing
-    expect(screen.getByText("2 submissions found")).toBeInTheDocument();
+    // Cards are informational — not clickable filters.
+    expect(
+      screen.queryByRole("button", { name: /Reviewing/ }),
+    ).not.toBeInTheDocument();
     expect(submissionsMock).toHaveBeenCalledWith(
       expect.objectContaining({ sortBy: "priority", status: undefined }),
     );
   });
 
-  it("filters by status when a stat card is clicked", async () => {
+  it("filters by status from the status column header", async () => {
     const user = userEvent.setup();
     renderWithProviders(<CompanySubmissionsQueue />);
 
-    await user.click(screen.getByRole("button", { name: /New 42/ }));
+    await user.click(screen.getByRole("button", { name: "Filter by Status" }));
+    // Scope to the popover option (the label and badge also read "Reviewing").
+    await user.click(screen.getByRole("button", { name: "Reviewing" }));
 
     expect(submissionsMock).toHaveBeenLastCalledWith(
-      expect.objectContaining({ status: "submitted", page: 1 }),
+      expect.objectContaining({ status: "reviewing", page: 1 }),
+    );
+  });
+
+  it("passes the recruiter-kind filter from the recruiter column header", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<CompanySubmissionsQueue />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Filter by Recruiter" }),
+    );
+    await user.click(screen.getByText("Unrated recruiters"));
+
+    expect(submissionsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ recruiterKind: "unrated" }),
     );
   });
 
   it("shows rating with review count, and the new-recruiter fallback", () => {
     renderWithProviders(<CompanySubmissionsQueue />);
 
-    // Rated recruiter: value + review count. (Desktop table and mobile cards
-    // both render in jsdom, so text queries match twice.)
     expect(screen.getAllByText("5.0").length).toBeGreaterThan(0);
     expect(screen.getAllByText("(24)").length).toBeGreaterThan(0);
-    // Unrated recruiter: named fallback, never a zero.
     expect(screen.getAllByText(/no reviews yet/i).length).toBeGreaterThan(0);
+  });
+
+  it("links the job cell to the job detail page", () => {
+    renderWithProviders(<CompanySubmissionsQueue />);
+
+    const jobLinks = screen.getAllByRole("link", { name: /Product Designer/ });
+    expect(jobLinks[0]).toHaveAttribute("href", "/jobs/product-designer-job-1");
   });
 
   it("opens the conversation from the row and the View link", async () => {
@@ -148,19 +177,5 @@ describe("CompanySubmissionsQueue", () => {
 
     const viewLinks = screen.getAllByRole("link", { name: "View" });
     expect(viewLinks[0]).toHaveAttribute("href", "/company/inbox/cand-1");
-  });
-
-  it("passes the recruiter-kind filter through", async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<CompanySubmissionsQueue />);
-
-    await user.selectOptions(
-      screen.getByLabelText("Filter by recruiter rating"),
-      "unrated",
-    );
-
-    expect(submissionsMock).toHaveBeenLastCalledWith(
-      expect.objectContaining({ recruiterKind: "unrated" }),
-    );
   });
 });
