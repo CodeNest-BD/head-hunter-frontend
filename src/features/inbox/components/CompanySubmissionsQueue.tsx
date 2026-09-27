@@ -5,10 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
+  Briefcase,
   CalendarClock,
+  Check,
   Eye,
   FileText,
   Inbox,
+  ListFilter,
   Search,
   Sparkles,
   UserCheck,
@@ -20,12 +23,17 @@ import {
   type CandidateStatus,
 } from "@/features/candidates/schemas";
 import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
+import { jobPath } from "@/features/jobs/utils/jobPath";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatTimeAgo, formatDateTime } from "@/shared/utils/formatDate";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
-import { SearchableSelect } from "@/shared/ui-components/controls/SearchableSelect";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/ui-components/controls/popover";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -76,6 +84,21 @@ const QUEUE_STATUS_LABELS: Record<CandidateStatus, string> = {
   passed: "Passed",
 };
 
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+const STATUS_OPTIONS: FilterOption[] = CANDIDATE_STATUSES.map((value) => ({
+  value,
+  label: QUEUE_STATUS_LABELS[value],
+}));
+
+const RECRUITER_OPTIONS: FilterOption[] = [
+  { value: "rated", label: "Rated recruiters" },
+  { value: "unrated", label: "Unrated recruiters" },
+];
+
 interface StatCardDef {
   key: CandidateStatus | "total";
   label: string;
@@ -108,6 +131,156 @@ const STAT_CARDS: StatCardDef[] = [
   { key: "passed", label: "Passed", icon: BadgeCheck, value: (s) => s.passed },
 ];
 
+/** A display-only metric card — one per candidate status, plus the total. */
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: number | undefined;
+  icon: LucideIcon;
+}) {
+  return (
+    <div className="rounded-md border border-brand-line bg-card p-4 shadow-card">
+      <span className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#616676]">
+          {label}
+        </span>
+        <Icon className="h-4 w-4 shrink-0 text-primary" />
+      </span>
+      <span className="mt-2 block text-2xl font-extrabold tabular-nums text-navy">
+        {value ?? "—"}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * A column-header filter: the ListFilter icon opens a single-select value list
+ * (searchable when there are many options, e.g. jobs). Empty selection means
+ * "all"; the icon reads as active once a value is picked. Server-backed —
+ * selecting sets a query param, so it filters the whole result set, not just
+ * the current page. Mirrors the recruiter submissions table's column filters.
+ */
+function HeaderFilter({
+  label,
+  options,
+  value,
+  onChange,
+  searchable = false,
+}: {
+  label: string;
+  options: FilterOption[];
+  value: string | null;
+  onChange: (next: string | null) => void;
+  searchable?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const active = value !== null;
+  const shown = searchable
+    ? options.filter((option) =>
+        option.label.toLowerCase().includes(search.trim().toLowerCase()),
+      )
+    : options;
+
+  const select = (next: string | null) => {
+    onChange(next);
+    setOpen(false);
+    setSearch("");
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Filter by ${label}`}
+          className={cn(
+            "inline-flex h-5 w-5 items-center justify-center rounded transition-colors",
+            active
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground/50 hover:text-foreground",
+          )}
+        >
+          <ListFilter className="h-3.5 w-3.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-56 p-0">
+        {searchable && (
+          <div className="border-b border-border p-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                autoFocus
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={`Search ${label.toLowerCase()}…`}
+                className="h-8 w-full rounded-md border border-input bg-card pl-7 pr-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </div>
+          </div>
+        )}
+        <div className="max-h-56 overflow-y-auto p-1">
+          {shown.length === 0 ? (
+            <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+              No matches
+            </p>
+          ) : (
+            shown.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => select(option.value)}
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs transition-colors hover:bg-secondary"
+              >
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                  {value === option.value && (
+                    <Check className="h-3.5 w-3.5 text-primary" />
+                  )}
+                </span>
+                <span className="truncate">{option.label}</span>
+              </button>
+            ))
+          )}
+        </div>
+        {active && (
+          <div className="border-t border-border p-1">
+            <button
+              type="button"
+              onClick={() => select(null)}
+              className="w-full rounded-sm px-2 py-1.5 text-left text-xs font-medium text-primary transition-colors hover:bg-secondary"
+            >
+              Clear
+            </button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** A header cell carrying its label and an inline column filter. */
+function FilterableHead({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <th className={cn(TABLE_TH, className)}>
+      <span className="inline-flex items-center gap-1.5">
+        {label}
+        {children}
+      </span>
+    </th>
+  );
+}
+
 function RecruiterCell({ row }: { row: InboxSubmissionRow }) {
   if (!row.recruiter) {
     return <span className="text-muted-foreground">—</span>;
@@ -126,14 +299,17 @@ function RecruiterCell({ row }: { row: InboxSubmissionRow }) {
   );
 }
 
-function SubmittedCell({ row }: { row: InboxSubmissionRow }) {
+/** The job cell — a link to the job's detail page. */
+function JobLink({ row }: { row: InboxSubmissionRow }) {
   return (
-    <span
-      className="whitespace-nowrap text-muted-foreground"
-      title={formatDateTime(row.submittedAt)}
+    <Link
+      href={jobPath({ id: row.jobId, title: row.jobTitle })}
+      onClick={(event) => event.stopPropagation()}
+      className="inline-flex max-w-[220px] items-center gap-1 rounded-[5px] border border-[#D7E0EF] bg-[#F1F5FC] px-1.5 py-0.5 text-[12px] font-medium text-[#24457A] transition-colors hover:bg-[#E7EEFA]"
     >
-      {formatTimeAgo(row.submittedAt)}
-    </span>
+      <Briefcase className="h-3 w-3 shrink-0" />
+      <span className="truncate">{row.jobTitle}</span>
+    </Link>
   );
 }
 
@@ -141,7 +317,8 @@ function SubmittedCell({ row }: { row: InboxSubmissionRow }) {
  * The company inbox as the requirements doc frames it — a Job-based Candidate
  * Submission Queue. Job scopes the list, Status filters it, recruiter Rating
  * sets the default priority and submission Time breaks ties; a row opens its
- * conversation thread. Stat cards double as status filters.
+ * conversation thread. Stat cards are read-only; filtering lives in the
+ * column headers (like the recruiter submissions table).
  */
 export function CompanySubmissionsQueue() {
   const router = useRouter();
@@ -149,15 +326,15 @@ export function CompanySubmissionsQueue() {
   const [qInput, setQInput] = useState("");
   const [q, setQ] = useState("");
   const [jobId, setJobId] = useState<string | null>(null);
-  const [status, setStatus] = useState("");
-  const [recruiterKind, setRecruiterKind] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [recruiterKind, setRecruiterKind] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SubmissionSort>("priority");
 
   useEffect(() => {
     const timer = setTimeout(() => {
       const trimmed = qInput.trim();
-      // Only react when the effective query actually changes — typing then
-      // deleting a trailing space must not silently bounce the user to page 1.
+      // Only react when the effective query changes — typing then deleting a
+      // trailing space must not silently bounce the user to page 1.
       setQ((current) => {
         if (current !== trimmed) setPage(1);
         return trimmed;
@@ -167,8 +344,8 @@ export function CompanySubmissionsQueue() {
   }, [qInput]);
 
   const stats = useCompanySubmissionStats();
-  // The dropdown needs every job with its new-submission count; 100 covers a
-  // company's open listings comfortably (server caps larger asks anyway).
+  // The Job filter needs every job with its new-submission count; 100 covers a
+  // company's open listings comfortably (the endpoint caps larger asks anyway).
   const jobs = useInboxJobs("company", { page: 1, limit: 100 });
   const submissions = useCompanySubmissions({
     page,
@@ -180,33 +357,41 @@ export function CompanySubmissionsQueue() {
     sortBy,
   });
 
-  const jobOptions = useMemo(
+  const jobOptions = useMemo<FilterOption[]>(
     () =>
       (jobs.data?.data ?? []).map((job) => ({
         value: job.jobId,
         label:
           job.newCandidateCount > 0
-            ? `${job.jobTitle} — ${job.newCandidateCount} new`
+            ? `${job.jobTitle} (${job.newCandidateCount} new)`
             : job.jobTitle,
       })),
     [jobs.data],
   );
 
+  const setFilter =
+    (setter: (next: string | null) => void) => (next: string | null) => {
+      setter(next);
+      setPage(1);
+    };
+  const changeJob = setFilter(setJobId);
+  const changeStatus = setFilter(setStatus);
+  const changeRecruiter = setFilter(setRecruiterKind);
+
   const hasFilters =
-    q !== "" || jobId !== null || status !== "" || recruiterKind !== "";
+    q !== "" ||
+    jobId !== null ||
+    status !== null ||
+    recruiterKind !== null ||
+    sortBy !== "priority";
 
   const resetFilters = () => {
     setQInput("");
     setQ("");
     setJobId(null);
-    setStatus("");
-    setRecruiterKind("");
+    setStatus(null);
+    setRecruiterKind(null);
     setSortBy("priority");
-    setPage(1);
-  };
-
-  const changeStatus = (next: string) => {
-    setStatus(next);
     setPage(1);
   };
 
@@ -225,116 +410,62 @@ export function CompanySubmissionsQueue() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
-        {STAT_CARDS.map(({ key, label, icon: Icon, value }) => {
-          const active = key === "total" ? status === "" : status === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => changeStatus(key === "total" ? "" : key)}
-              aria-pressed={active}
-              className={cn(
-                "rounded-md border bg-card p-4 text-left shadow-card transition-colors hover:border-primary/50",
-                active
-                  ? "border-primary ring-1 ring-primary"
-                  : "border-brand-line",
-              )}
-            >
-              <span className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#616676]">
-                  {label}
-                </span>
-                <Icon className="h-4 w-4 shrink-0 text-primary" />
-              </span>
-              <span className="mt-2 block text-2xl font-extrabold tabular-nums text-navy">
-                {stats.data ? value(stats.data) : "—"}
-              </span>
-            </button>
-          );
-        })}
+        {STAT_CARDS.map(({ key, label, icon, value }) => (
+          <StatCard
+            key={key}
+            label={label}
+            icon={icon}
+            value={stats.data ? value(stats.data) : undefined}
+          />
+        ))}
       </div>
 
-      <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <div className="relative xl:col-span-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={qInput}
-              onChange={(event) => setQInput(event.target.value)}
-              placeholder="Search candidate, recruiter or job…"
-              className="pl-9"
-              aria-label="Search submissions"
-            />
-          </div>
-          <SearchableSelect
-            options={jobOptions}
-            value={jobId}
-            onChange={(next) => {
-              setJobId(next);
-              setPage(1);
-            }}
-            placeholder="All Jobs"
-            clearLabel="All Jobs"
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative min-w-[240px] flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={qInput}
+            onChange={(event) => setQInput(event.target.value)}
+            placeholder="Search candidate, recruiter or job…"
+            className="pl-9"
+            aria-label="Search submissions"
           />
-          <NativeSelect
-            aria-label="Filter by status"
-            value={status}
-            onChange={(event) => changeStatus(event.target.value)}
-          >
-            <option value="">All Statuses</option>
-            {CANDIDATE_STATUSES.map((value) => (
-              <option key={value} value={value}>
-                {QUEUE_STATUS_LABELS[value]}
-              </option>
-            ))}
-          </NativeSelect>
-          <NativeSelect
-            aria-label="Filter by recruiter rating"
-            value={recruiterKind}
-            onChange={(event) => {
-              setRecruiterKind(event.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">All Recruiters</option>
-            <option value="rated">Rated Recruiters</option>
-            <option value="unrated">Unrated Recruiters</option>
-          </NativeSelect>
-          <NativeSelect
-            aria-label="Sort submissions"
-            value={sortBy}
-            onChange={(event) => {
-              setSortBy(sortValue(event.target.value));
-              setPage(1);
-            }}
-          >
-            {SUBMISSION_SORTS.map((value) => (
-              <option key={value} value={value}>
-                Sort: {SUBMISSION_SORT_LABELS[value]}
-              </option>
-            ))}
-          </NativeSelect>
         </div>
+        <NativeSelect
+          aria-label="Sort submissions"
+          value={sortBy}
+          onChange={(event) => {
+            setSortBy(sortValue(event.target.value));
+            setPage(1);
+          }}
+          className="sm:w-64"
+        >
+          {SUBMISSION_SORTS.map((value) => (
+            <option key={value} value={value}>
+              Sort: {SUBMISSION_SORT_LABELS[value]}
+            </option>
+          ))}
+        </NativeSelect>
+      </div>
 
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">
-            {submissions.data
-              ? `${submissions.data.meta.total.toLocaleString()} submission${
-                  submissions.data.meta.total === 1 ? "" : "s"
-                } found`
-              : "Loading submissions…"}
-          </span>
-          {hasFilters && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={resetFilters}
-            >
-              Reset filters
-            </Button>
-          )}
-        </div>
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">
+          {submissions.data
+            ? `${submissions.data.meta.total.toLocaleString()} submission${
+                submissions.data.meta.total === 1 ? "" : "s"
+              } found`
+            : "Loading submissions…"}
+        </span>
+        {hasFilters && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={resetFilters}
+          >
+            Reset filters
+          </Button>
+        )}
       </div>
 
       {submissions.isPending ? (
@@ -362,11 +493,33 @@ export function CompanySubmissionsQueue() {
               <thead className={TABLE_HEAD}>
                 <tr className={TABLE_HEAD_ROW}>
                   <th className={TABLE_TH}>Candidate</th>
-                  <th className={TABLE_TH}>Job</th>
-                  <th className={TABLE_TH}>Recruiter</th>
+                  <FilterableHead label="Job">
+                    <HeaderFilter
+                      label="Job"
+                      options={jobOptions}
+                      value={jobId}
+                      onChange={changeJob}
+                      searchable
+                    />
+                  </FilterableHead>
+                  <FilterableHead label="Recruiter">
+                    <HeaderFilter
+                      label="Recruiter"
+                      options={RECRUITER_OPTIONS}
+                      value={recruiterKind}
+                      onChange={changeRecruiter}
+                    />
+                  </FilterableHead>
                   <th className={TABLE_TH}>Rating</th>
                   <th className={TABLE_TH}>Submitted</th>
-                  <th className={TABLE_TH}>Status</th>
+                  <FilterableHead label="Status">
+                    <HeaderFilter
+                      label="Status"
+                      options={STATUS_OPTIONS}
+                      value={status}
+                      onChange={changeStatus}
+                    />
+                  </FilterableHead>
                   <th className={cn(TABLE_TH, "text-right")}>Actions</th>
                 </tr>
               </thead>
@@ -396,10 +549,8 @@ export function CompanySubmissionsQueue() {
                           </span>
                         </span>
                       </td>
-                      <td className={cn(TABLE_TD, "text-muted-foreground")}>
-                        <span className="block max-w-[220px] truncate">
-                          {row.jobTitle}
-                        </span>
+                      <td className={TABLE_TD}>
+                        <JobLink row={row} />
                       </td>
                       <td className={TABLE_TD}>
                         <RecruiterCell row={row} />
@@ -411,7 +562,12 @@ export function CompanySubmissionsQueue() {
                         />
                       </td>
                       <td className={TABLE_TD}>
-                        <SubmittedCell row={row} />
+                        <span
+                          className="whitespace-nowrap text-muted-foreground"
+                          title={formatDateTime(row.submittedAt)}
+                        >
+                          {formatTimeAgo(row.submittedAt)}
+                        </span>
                       </td>
                       <td className={TABLE_TD}>
                         <StatusBadge
@@ -451,6 +607,17 @@ export function CompanySubmissionsQueue() {
                   candidateNeedsAttention(row) && "bg-primary/[0.04]",
                 )}
                 fields={[
+                  {
+                    label: "Job",
+                    value: (
+                      <Link
+                        href={jobPath({ id: row.jobId, title: row.jobTitle })}
+                        className="text-primary hover:underline"
+                      >
+                        {row.jobTitle}
+                      </Link>
+                    ),
+                  },
                   {
                     label: "Recruiter",
                     value: row.recruiter
@@ -493,13 +660,13 @@ export function CompanySubmissionsQueue() {
   );
 }
 
-/** Narrow a select's free string back into the typed filter params. */
-function statusFilter(value: string): CandidateStatus | undefined {
+/** Narrow a filter's free string back into the typed query params. */
+function statusFilter(value: string | null): CandidateStatus | undefined {
   return CANDIDATE_STATUSES.find((status) => status === value);
 }
 
 function recruiterKindFilter(
-  value: string,
+  value: string | null,
 ): SubmissionRecruiterKind | undefined {
   return value === "rated" || value === "unrated" ? value : undefined;
 }
