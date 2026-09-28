@@ -14,7 +14,7 @@ export default function DisputesPage() {
           { label: "Disputes" },
         ]}
       >
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           <PageHeader
             title="Disputes"
             subtitle="Open a dispute on a placement held in escrow, and message support privately about it."

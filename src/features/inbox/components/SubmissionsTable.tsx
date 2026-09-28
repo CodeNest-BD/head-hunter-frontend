@@ -22,8 +22,13 @@ import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate, formatRelativeDay } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
+import { Avatar } from "@/shared/ui-components/badges/Avatar";
+import { RefChip } from "@/shared/ui-components/badges/RefChip";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
+import { Alert } from "@/shared/ui-components/feedback/Alert";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import {
   Popover,
   PopoverContent,
@@ -41,13 +46,18 @@ import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   TABLE_BODY,
   TABLE_CARD,
+  TABLE_CELL_MAIN,
+  TABLE_CELL_SUB,
   TABLE_EL,
   TABLE_HEAD,
   TABLE_HEAD_ROW,
   TABLE_ROW,
+  TABLE_ROW_UNREAD,
   TABLE_SCROLL,
   TABLE_TD,
+  TABLE_TD_STACKED,
   TABLE_TH,
+  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 import {
   MobileRecordCard,
@@ -74,6 +84,10 @@ const SORT_OPTIONS: { value: Sort; label: string }[] = [
   { value: "fee-asc", label: "Lowest fee" },
 ];
 
+/** Narrows the select's plain string back to a sort this table understands. */
+const isSort = (value: string): value is Sort =>
+  SORT_OPTIONS.some((option) => option.value === value);
+
 /** Distinct values of one field across the rows, as {value,label} options. */
 function distinct(
   rows: InboxConversationRow[],
@@ -87,27 +101,6 @@ function distinct(
   return [...seen]
     .sort((a, b) => a.localeCompare(b))
     .map((value) => ({ value, label: value }));
-}
-
-const AVATAR_PALETTE = [
-  "bg-[#E8EDFB] text-[#3F5BA9]",
-  "bg-[#FBF1DC] text-[#8A6D3B]",
-  "bg-[#E7F0E9] text-[#3F7A5A]",
-  "bg-[#F2E9F3] text-[#7A4F86]",
-  "bg-[#FBE9E6] text-[#9B4A3F]",
-];
-function avatarTint(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i += 1) {
-    hash = (hash * 31 + name.charCodeAt(i)) | 0;
-  }
-  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
-}
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 /**
@@ -146,31 +139,34 @@ function ColumnFilter({
           type="button"
           aria-label={`Filter by ${label}`}
           className={cn(
-            "inline-flex h-5 w-5 items-center justify-center rounded transition-colors",
+            "inline-flex size-5 items-center justify-center rounded-xs transition-colors",
             active
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground/50 hover:text-foreground",
+              ? "bg-tint text-blue"
+              : "text-ink-faint hover:bg-surface-sunken hover:text-ink",
           )}
         >
-          <ListFilter className="h-3.5 w-3.5" />
+          <ListFilter className="size-3.5" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-60 p-0">
-        <div className="border-b border-border p-2">
+        <div className="border-b border-line p-2">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
+            />
             <input
               autoFocus
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={`Search ${label.toLowerCase()}…`}
-              className="h-8 w-full rounded-md border border-input bg-card pl-7 pr-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="h-7.5 w-full rounded-sm border border-line-strong bg-surface pl-7 pr-2 text-meta text-ink outline-none transition-colors placeholder:text-ink-faint focus-visible:border-blue focus-visible:shadow-focus"
             />
           </div>
         </div>
         <div className="max-h-56 overflow-y-auto p-1">
           {shown.length === 0 ? (
-            <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+            <p className="px-2 py-3 text-center text-meta text-ink-muted">
               No matches
             </p>
           ) : (
@@ -181,17 +177,17 @@ function ColumnFilter({
                   key={option.value}
                   type="button"
                   onClick={() => toggle(option.value)}
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs transition-colors hover:bg-secondary"
+                  className="flex w-full items-center gap-2 rounded-xs px-2 py-1.5 text-left text-meta text-ink-body transition-colors hover:bg-surface-sub"
                 >
                   <span
                     className={cn(
-                      "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                      "flex size-4 shrink-0 items-center justify-center rounded-[4px] border",
                       checked
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input",
+                        ? "border-blue bg-blue text-white"
+                        : "border-line-strong",
                     )}
                   >
-                    {checked && <Check className="h-3 w-3" />}
+                    {checked && <Check className="size-3" strokeWidth={3} />}
                   </span>
                   <span className="truncate">{option.label}</span>
                 </button>
@@ -200,11 +196,11 @@ function ColumnFilter({
           )}
         </div>
         {active && (
-          <div className="border-t border-border p-1">
+          <div className="border-t border-line p-1">
             <button
               type="button"
               onClick={() => onChange(new Set())}
-              className="w-full rounded-sm px-2 py-1.5 text-left text-xs font-medium text-primary transition-colors hover:bg-secondary"
+              className="w-full rounded-xs px-2 py-1.5 text-left text-meta font-[550] text-blue-ink transition-colors hover:bg-surface-sub"
             >
               Clear ({selected.size})
             </button>
@@ -237,10 +233,12 @@ function JobLink({ jobId, title }: { jobId: string; title: string }) {
   return (
     <Link
       href={jobPath({ id: jobId, title })}
-      className="inline-flex max-w-full items-center gap-1 rounded-[5px] border border-[#D7E0EF] bg-[#F1F5FC] px-1.5 py-0.5 text-[12px] font-medium text-[#24457A] transition-colors hover:bg-[#E7EEFA]"
+      className="inline-flex min-w-0 max-w-full"
     >
-      <Briefcase className="h-3 w-3 shrink-0" />
-      <span className="truncate">{title}</span>
+      <RefChip className="transition-colors hover:bg-info-line">
+        <Briefcase aria-hidden="true" />
+        <span className="truncate">{title}</span>
+      </RefChip>
     </Link>
   );
 }
@@ -249,10 +247,10 @@ function OpenConversationLink({ candidateId }: { candidateId: string }) {
   return (
     <Link
       href={`/recruiter/inbox/${candidateId}`}
-      className="inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+      className="inline-flex items-center gap-1.5 whitespace-nowrap text-sub font-[550] text-blue-ink underline-offset-2 transition-colors hover:underline"
     >
       Open conversation
-      <ArrowRight className="h-3.5 w-3.5" />
+      <ArrowRight aria-hidden="true" className="size-3.5" />
     </Link>
   );
 }
@@ -263,25 +261,20 @@ function ThreadCell({ row }: { row: InboxConversationRow }) {
     <Link
       href={`/recruiter/inbox/${row.candidateId}`}
       aria-label="Open conversation"
-      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+      className="inline-flex size-7 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
     >
-      <ArrowRight className="h-3.5 w-3.5" />
+      <ArrowRight aria-hidden="true" className="size-[15px]" />
     </Link>
   );
 }
 
-/** A pill with a leading dot in the stage's own hue (`bg-current`). */
+/** A pill with a leading dot in the stage's own hue. */
 function StatusPill({ row }: { row: InboxConversationRow }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold",
-        CANDIDATE_STATUS_TONES[row.status],
-      )}
-    >
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
-      {CANDIDATE_STATUS_LABELS[row.status]}
-    </span>
+    <StatusBadge
+      label={CANDIDATE_STATUS_LABELS[row.status]}
+      tone={CANDIDATE_STATUS_TONES[row.status]}
+    />
   );
 }
 
@@ -379,19 +372,27 @@ export function SubmissionsTable({
   const pageRows = visible.slice((page - 1) * limit, page * limit);
 
   const searchBox = (
-    <div className="flex flex-wrap items-center gap-3">
-      <div className="relative min-w-[240px] max-w-[480px] flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className={TABLE_TOOLBAR}>
+      <div className="relative min-w-[220px] flex-1 sm:max-w-[360px]">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
+        />
         <Input
           value={searchInput}
           onChange={(event) => setSearchInput(event.target.value)}
           placeholder="Search by candidate, company or job title…"
-          className="h-11 rounded-lg bg-card pl-9"
+          className="pl-8 text-sub"
         />
       </div>
-      <Select value={sort} onValueChange={(next) => setSort(next as Sort)}>
+      <Select
+        value={sort}
+        onValueChange={(next) => {
+          if (isSort(next)) setSort(next);
+        }}
+      >
         <SelectTrigger
-          className="h-11 w-[168px] rounded-lg bg-card"
+          className="w-full sm:w-[168px]"
           aria-label="Sort"
         >
           <SelectValue />
@@ -411,21 +412,19 @@ export function SubmissionsTable({
     return (
       <div className="flex flex-col gap-4">
         {searchBox}
-        <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-          <div className="flex items-center gap-2 font-medium">
-            <AlertCircle className="h-[18px] w-[18px]" />
-            Could not load your submissions.
+        <Alert tone="bad" icon={AlertCircle}>
+          <div className="flex flex-col items-start gap-2.5">
+            <span className="font-[650]">Could not load your submissions.</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void refetch()}
+            >
+              Retry
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="self-start"
-            onClick={() => void refetch()}
-          >
-            Retry
-          </Button>
-        </div>
+        </Alert>
       </div>
     );
   }
@@ -437,21 +436,21 @@ export function SubmissionsTable({
       {isPending ? (
         <TableSkeleton />
       ) : total === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-input bg-card px-6 py-14 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Users className="h-6 w-6" />
-          </span>
-          <p className="font-heading text-base font-semibold text-foreground">
-            {rows.length === 0
-              ? "No submissions yet"
-              : "No submissions match these filters"}
-          </p>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            {rows.length === 0
-              ? "Candidates you submit to jobs appear here, each with its own conversation."
-              : "Try clearing a column filter or a different search."}
-          </p>
-          {rows.length === 0 ? emptyAction : null}
+        <div className={TABLE_CARD}>
+          <EmptyState
+            icon={Users}
+            title={
+              rows.length === 0
+                ? "No submissions yet"
+                : "No submissions match these filters"
+            }
+            description={
+              rows.length === 0
+                ? "Candidates you submit to jobs appear here, each with its own conversation."
+                : "Try clearing a column filter or a different search."
+            }
+            action={rows.length === 0 ? emptyAction : null}
+          />
         </div>
       ) : (
         <div className={TABLE_CARD}>
@@ -498,39 +497,45 @@ export function SubmissionsTable({
               </thead>
               <tbody className={TABLE_BODY}>
                 {pageRows.map((row) => (
-                  <tr key={row.candidateId} className={TABLE_ROW}>
+                  <tr
+                    key={row.candidateId}
+                    className={cn(
+                      TABLE_ROW,
+                      row.unreadMessages > 0 && TABLE_ROW_UNREAD,
+                    )}
+                  >
                     <td className={TABLE_TD}>
-                      <span className="flex items-center gap-2.5">
+                      <span className="flex items-center gap-2">
+                        <Avatar name={row.candidateName} size="sm" />
                         <span
                           className={cn(
-                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold",
-                            avatarTint(row.candidateName),
+                            "flex items-center gap-2",
+                            TABLE_CELL_MAIN,
                           )}
                         >
-                          {initials(row.candidateName)}
-                        </span>
-                        <span className="flex items-center gap-1.5 font-semibold text-navy">
                           {row.candidateName}
                           {row.unreadMessages > 0 && (
                             <span
-                              className="h-1.5 w-1.5 rounded-full bg-primary"
+                              className="size-[7px] rounded-full bg-blue"
                               aria-label="Unread messages"
                             />
                           )}
                         </span>
                       </span>
                     </td>
-                    <td className={`${TABLE_TD} text-navy`}>
+                    <td className={`${TABLE_TD} text-ink-body`}>
                       {row.counterpartyName}
                     </td>
                     <td className={TABLE_TD}>
                       <JobLink jobId={row.jobId} title={row.jobTitle} />
                     </td>
-                    <td className={`${TABLE_TD} whitespace-nowrap`}>
-                      <span className="block tabular-nums text-navy">
+                    <td
+                      className={cn(TABLE_TD_STACKED, "whitespace-nowrap")}
+                    >
+                      <span className="block tabular-nums text-ink">
                         {formatDate(submittedOf(row))}
                       </span>
-                      <span className="block text-xs text-muted-foreground">
+                      <span className={cn("block", TABLE_CELL_SUB)}>
                         {formatRelativeDay(submittedOf(row))}
                       </span>
                     </td>
@@ -538,7 +543,7 @@ export function SubmissionsTable({
                       <StatusPill row={row} />
                     </td>
                     <td
-                      className={`${TABLE_TD} whitespace-nowrap text-right tabular-nums font-medium text-navy`}
+                      className={`${TABLE_TD} whitespace-nowrap text-right font-[650] tabular-nums text-ink`}
                     >
                       {row.recruiterFeeMinor != null
                         ? formatMinor(row.recruiterFeeMinor)
@@ -562,7 +567,7 @@ export function SubmissionsTable({
                   <div className="flex flex-col items-end gap-1.5">
                     <StatusPill row={row} />
                     {row.unreadMessages > 0 && (
-                      <span className="text-[11px] font-medium text-primary">
+                      <span className="text-[11px] font-[550] text-blue-ink">
                         {row.unreadMessages} unread
                       </span>
                     )}
@@ -598,7 +603,7 @@ export function SubmissionsTable({
             onPageSize={setLimit}
           />
           {data && data.meta.total > fetched.length ? (
-            <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+            <p className="border-t border-line px-4 py-2 text-meta text-ink-muted">
               Showing your {fetched.length} most recent submissions of{" "}
               {data.meta.total}.
             </p>

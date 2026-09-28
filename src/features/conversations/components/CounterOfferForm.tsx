@@ -76,15 +76,18 @@ export function CounterOfferForm({
   });
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-2.5">
-      <div className="flex flex-col gap-1">
+    <form onSubmit={submit} className="flex flex-col gap-3">
+      {/* `.field` */}
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="offer-counter-salary">New salary (USD/yr)</Label>
         <NumericInput id="offer-counter-salary" {...register("salary")} />
         {errors.salary && (
-          <p className="text-xs text-destructive">{errors.salary.message}</p>
+          <p className="text-meta font-medium text-bad">
+            {errors.salary.message}
+          </p>
         )}
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="offer-counter-start-date">Start date</Label>
         <DayPickerField
           id="offer-counter-start-date"
@@ -96,15 +99,15 @@ export function CounterOfferForm({
           ariaLabel="Start date"
         />
         {errors.startDate && (
-          <p className="text-xs text-destructive">{errors.startDate.message}</p>
+          <p className="text-meta font-medium text-bad">
+            {errors.startDate.message}
+          </p>
         )}
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="offer-counter-notes">
           Notes
-          <span className="ml-1 font-normal text-muted-foreground">
-            Optional
-          </span>
+          <span className="ml-1 font-[450] text-ink-faint">Optional</span>
         </Label>
         <Textarea id="offer-counter-notes" {...register("notes")} />
       </div>

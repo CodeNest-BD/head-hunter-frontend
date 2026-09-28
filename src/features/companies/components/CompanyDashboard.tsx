@@ -28,6 +28,7 @@ import {
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
 import { ListRow } from "@/shared/ui-components/list/ListRow";
+import { activityGlyph } from "@/features/notifications/utils/activityGlyph";
 import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
@@ -41,25 +42,6 @@ const MIN_DESCRIPTION = 40;
  * keeps the tile meaningful as the backend adds types — an unrecognised event
  * still reads as a neutral notice rather than mislabelling itself.
  */
-function activityGlyph(type: string): { icon: LucideIcon; tone: TileTone } {
-  const t = type.toLowerCase();
-  if (t.includes("offer") || t.includes("hire") || t.includes("placement")) {
-    return { icon: Award, tone: "violet" };
-  }
-  if (t.includes("interview")) return { icon: CalendarCheck, tone: "ok" };
-  if (t.includes("wallet") || t.includes("payout") || t.includes("payment")) {
-    return { icon: DollarSign, tone: "ok" };
-  }
-  if (t.includes("message") || t.includes("chat")) {
-    return { icon: MessageSquare, tone: "blue" };
-  }
-  if (t.includes("candidate") || t.includes("submission")) {
-    return { icon: UserPlus, tone: "blue" };
-  }
-  if (t.includes("job")) return { icon: Briefcase, tone: "neutral" };
-  return { icon: Bell, tone: "neutral" };
-}
-
 export function CompanyDashboard({ firstName }: { firstName: string }) {
   const profile = useMyCompanyProfile();
   const wallet = useWallet();

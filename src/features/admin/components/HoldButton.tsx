@@ -62,26 +62,22 @@ export function HoldButton({
           size={size === "sm" ? "sm" : "default"}
           variant={isHeld ? "outline" : "destructive"}
         >
-          {isHeld ? (
-            <ShieldCheck className="h-[18px] w-[18px]" />
-          ) : (
-            <Ban className="h-[18px] w-[18px]" />
-          )}
+          {isHeld ? <ShieldCheck /> : <Ban />}
           {isHeld ? "Reinstate" : "Suspend"}
         </Button>
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
-        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95">
-          <AlertDialog.Title className="font-heading text-lg font-bold text-navy">
+        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface p-5 shadow-pop data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95">
+          <AlertDialog.Title className="text-card font-[650] text-ink">
             {isHeld ? `Reinstate ${subjectName}?` : `Suspend ${subjectName}?`}
           </AlertDialog.Title>
-          <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
+          <AlertDialog.Description className="mt-1.5 text-sub text-ink-muted">
             {isHeld
               ? "They will be able to sign in and use the platform again."
               : "They will be signed out immediately and blocked from signing in until reinstated."}
           </AlertDialog.Description>
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="mt-4 flex justify-end gap-2">
             <AlertDialog.Cancel asChild>
               <Button type="button" variant="outline" disabled={pending}>
                 Cancel

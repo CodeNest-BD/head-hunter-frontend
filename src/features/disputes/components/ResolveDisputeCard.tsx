@@ -5,8 +5,12 @@ import { toast } from "sonner";
 
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { formatMinor } from "@/shared/utils/money";
-import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 
@@ -26,6 +30,17 @@ const CONFIRM_LABEL: Record<DisputeResolution, string> = {
   resume: "Resume Countdown",
   close: "Close Dispute",
 };
+
+/** The order the two outcomes are offered in — resume first, since keeping the
+ * escrow running is the reversible one. */
+const OUTCOMES: readonly DisputeResolution[] = ["resume", "close"];
+
+/**
+ * `.choice` — a full-width outcome block. Picking one swaps the pair for the
+ * confirmation panel, so the recipe's selected state has nothing to mark here.
+ */
+const CHOICE =
+  "flex w-full items-center gap-3 rounded-md border border-line-strong bg-surface p-3.5 text-left transition-colors hover:border-blue hover:shadow-e2";
 
 /**
  * How the admin closes a dispute: resume the countdown, or close it and settle
@@ -72,18 +87,16 @@ export function ResolveDisputeCard({
 
   return (
     <Card>
-      <CardContent className="flex flex-col gap-4 p-5">
-        <div>
-          <h2 className="font-heading text-base font-bold text-navy">
-            Resolve
-          </h2>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
-            Raised by the {dispute.raisedBy} —{" "}
-            <span className="font-semibold text-navy">{raisedByName}</span> ·{" "}
-            {DISPUTE_SUBJECT_LABELS[dispute.subject]}. Resume the release
-            countdown, or close the dispute and settle the {fee} by hand.
-          </p>
-        </div>
+      <CardHeader>
+        <CardTitle>Resolve</CardTitle>
+        <p className="w-full text-sub text-ink-muted">
+          Raised by the {dispute.raisedBy} —{" "}
+          <span className="font-[650] text-ink">{raisedByName}</span> ·{" "}
+          {DISPUTE_SUBJECT_LABELS[dispute.subject]}. Resume the release
+          countdown, or close the dispute and settle the {fee} by hand.
+        </p>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
         <Textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -101,17 +114,19 @@ export function ResolveDisputeCard({
             onCancel={() => setConfirming(null)}
           />
         ) : (
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={() => setConfirming("resume")}>
-              Resume Countdown
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setConfirming("close")}
-            >
-              Close Dispute
-            </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {OUTCOMES.map((outcome) => (
+              <button
+                key={outcome}
+                type="button"
+                onClick={() => setConfirming(outcome)}
+                className={CHOICE}
+              >
+                <span className="text-block font-[650] text-ink">
+                  {CONFIRM_LABEL[outcome]}
+                </span>
+              </button>
+            ))}
           </div>
         )}
       </CardContent>

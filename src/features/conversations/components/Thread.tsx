@@ -9,7 +9,10 @@ import { CANDIDATE_STATUS_LABELS } from "@/features/candidates/schemas";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { Avatar } from "@/shared/ui-components/badges/Avatar";
+import { RefChip } from "@/shared/ui-components/badges/RefChip";
 import { Button } from "@/shared/ui-components/controls/button";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import {
   useConversationThread,
   useMarkThreadRead,
@@ -32,27 +35,6 @@ export interface ThreadProps {
   candidateId: string;
 }
 
-const AVATAR_PALETTE = [
-  "bg-[#E8EDFB] text-[#3F5BA9]",
-  "bg-[#FBF1DC] text-[#8A6D3B]",
-  "bg-[#E7F0E9] text-[#3F7A5A]",
-  "bg-[#F2E9F3] text-[#7A4F86]",
-  "bg-[#FBE9E6] text-[#9B4A3F]",
-];
-function avatarTint(name: string): string {
-  let h = 0;
-  for (let i = 0; i < name.length; i += 1) {
-    h = (h * 31 + name.charCodeAt(i)) | 0;
-  }
-  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
-}
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 /**
  * Fixed-height card so the thread scrolls independently of whatever sits
  * beside or above it, instead of growing with every message and pushing the
@@ -65,26 +47,28 @@ function initials(name: string): string {
  * sitting beside the left column.
  */
 const THREAD_PANEL_CLASSNAME =
-  "flex h-[32rem] flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm lg:h-full";
+  "flex h-[32rem] flex-col overflow-hidden rounded-md border border-line bg-surface shadow-e1 lg:h-full";
 
 function ThreadSkeleton() {
   return (
     <div className={THREAD_PANEL_CLASSNAME}>
-      <div className="h-5 w-2/3 animate-pulse rounded bg-muted" />
-      <div className="flex gap-2">
-        <div className="h-6 w-12 animate-pulse rounded-full bg-muted" />
-        <div className="h-6 w-20 animate-pulse rounded-full bg-muted" />
-        <div className="h-6 w-16 animate-pulse rounded-full bg-muted" />
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        <div className="h-5 w-2/3 animate-pulse rounded-xs bg-surface-sunken" />
+        <div className="flex gap-2">
+          <div className="h-6 w-12 animate-pulse rounded-full bg-surface-sunken" />
+          <div className="h-6 w-20 animate-pulse rounded-full bg-surface-sunken" />
+          <div className="h-6 w-16 animate-pulse rounded-full bg-surface-sunken" />
+        </div>
+        <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-16 w-2/3 animate-pulse rounded-md bg-surface-sunken"
+            />
+          ))}
+        </div>
+        <div className="h-20 w-full animate-pulse rounded-md bg-surface-sunken" />
       </div>
-      <div className="flex flex-1 flex-col gap-3 overflow-hidden">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-16 w-2/3 animate-pulse rounded-md bg-muted"
-          />
-        ))}
-      </div>
-      <div className="h-20 w-full animate-pulse rounded-md bg-muted" />
     </div>
   );
 }
@@ -256,12 +240,12 @@ export function Thread({ candidateId }: ThreadProps) {
       <div
         className={cn(
           THREAD_PANEL_CLASSNAME,
-          "items-center justify-center border-destructive/40 bg-destructive/10 text-sm text-destructive",
+          "items-center justify-center border-bad-line bg-bad-bg text-sub text-bad",
         )}
       >
         <div className="flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2 font-medium">
-            <AlertCircle className="h-[18px] w-[18px]" />
+          <div className="flex items-center gap-2 font-[550]">
+            <AlertCircle className="size-[18px]" />
             Could not load this conversation.
           </div>
           <Button
@@ -307,35 +291,26 @@ export function Thread({ candidateId }: ThreadProps) {
        * own the candidate rail beside this thread, so repeating them here was
        * the duplication this header now avoids. */}
       {threadHeader && (
-        <div className="flex items-center gap-3 border-b border-border pb-3">
-          <span
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
-              avatarTint(counterpartyHeading),
-            )}
-          >
-            {initials(counterpartyHeading)}
-          </span>
+        // `.card__head` — who the viewer is talking to, and about which role.
+        <div className="flex shrink-0 items-center gap-2.5 border-b border-line px-4 py-3">
+          <Avatar name={counterpartyHeading} size="md" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="truncate font-heading text-[15px] font-bold text-navy">
+              <h2 className="truncate text-block font-[650] text-ink">
                 {counterpartyHeading}
               </h2>
-              <span
-                className={cn(
-                  "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                  CANDIDATE_STATUS_TONES[threadHeader.candidate.status],
-                )}
-              >
-                {CANDIDATE_STATUS_LABELS[threadHeader.candidate.status]}
-              </span>
+              <StatusBadge
+                label={
+                  CANDIDATE_STATUS_LABELS[threadHeader.candidate.status]
+                }
+                tone={CANDIDATE_STATUS_TONES[threadHeader.candidate.status]}
+              />
             </div>
-            <Link
-              href={jobHref}
-              className="mt-1 inline-flex max-w-full items-center gap-1 rounded-[5px] border border-[#D7E0EF] bg-[#F1F5FC] px-1.5 py-0.5 text-[12px] font-medium text-[#24457A] transition-colors hover:bg-[#E7EEFA]"
-            >
-              <Briefcase className="h-3 w-3 shrink-0" />
-              <span className="truncate">{threadHeader.job.title}</span>
+            <Link href={jobHref} className="mt-1 inline-flex min-w-0 max-w-full">
+              <RefChip className="transition-colors hover:bg-info-line">
+                <Briefcase aria-hidden="true" />
+                <span className="truncate">{threadHeader.job.title}</span>
+              </RefChip>
             </Link>
           </div>
         </div>
@@ -359,7 +334,7 @@ export function Thread({ candidateId }: ThreadProps) {
           // `overflow-hidden` (the offer card) clip to a sliver when a
           // proposal below expands. Block children keep their natural height
           // and the box scrolls instead.
-          "min-h-0 flex-1 space-y-3 overflow-y-auto scrollbar-navy pr-1 [overflow-anchor:none]",
+          "min-h-0 flex-1 space-y-3 overflow-y-auto scrollbar-navy p-4 [overflow-anchor:none]",
           isPlaceholderData && "opacity-60 transition-opacity",
         )}
       >
@@ -377,7 +352,7 @@ export function Thread({ candidateId }: ThreadProps) {
           </div>
         )}
         {events.length === 0 && (
-          <p className="py-6 text-center text-sm text-muted-foreground">
+          <p className="py-6 text-center text-sub text-ink-muted">
             No messages yet — start the conversation about this role. You
             don&apos;t need to submit a candidate first.
           </p>
@@ -436,12 +411,15 @@ export function Thread({ candidateId }: ThreadProps) {
         })}
       </div>
 
-      <MessageComposer
-        candidateId={candidateId}
-        senderParty={viewerParty}
-        replyToName={counterpartyHeading}
-        acceptsMessages={threadHeader?.acceptsMessages ?? true}
-      />
+      {/* `.card__foot` — the composer sits below a hairline, outside the scroll. */}
+      <div className="shrink-0 border-t border-line p-3">
+        <MessageComposer
+          candidateId={candidateId}
+          senderParty={viewerParty}
+          replyToName={counterpartyHeading}
+          acceptsMessages={threadHeader?.acceptsMessages ?? true}
+        />
+      </div>
     </div>
   );
 }

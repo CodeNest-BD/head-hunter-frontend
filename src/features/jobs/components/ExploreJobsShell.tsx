@@ -18,10 +18,10 @@ function CompanyNotAvailable() {
   return (
     <PublicShell>
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 py-20 text-center sm:px-5">
-        <h1 className="font-heading text-2xl font-extrabold text-navy">
+        <h1 className="text-display font-bold text-navy">
           The live map is for recruiters
         </h1>
-        <p className="max-w-md text-sm text-muted-foreground">
+        <p className="max-w-md text-body text-ink-body">
           Exploring open roles on the live map is a recruiter feature. As a
           company you post jobs and review the candidates recruiters submit.
         </p>
@@ -49,8 +49,8 @@ export function ExploreJobsShell() {
 
   if (status === "booting") {
     return (
-      <div className="flex min-h-screen items-center justify-center gap-2 bg-background text-sm text-muted-foreground">
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
+      <div className="flex min-h-screen items-center justify-center gap-2 bg-canvas text-sub text-ink-muted">
+        <span className="size-4 animate-spin rounded-full border-2 border-line-strong border-t-blue" />
         Loading…
       </div>
     );

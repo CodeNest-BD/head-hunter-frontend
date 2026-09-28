@@ -1,17 +1,13 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
 import { PageHeader } from "@/shared/ui-components/brand";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
 import {
   AttentionRow,
   Panel,
@@ -27,16 +23,21 @@ import {
   useAdminStats,
 } from "../hooks/useAdmin";
 
-const RECRUITER_COLOR = "#034AEF";
-const COMPANY_COLOR = "#0A1738";
-const ACTIVE_COLOR = "#17734E";
-const HELD_COLOR = "#9B3535";
-
 function shortMonth(ym: string): string {
   const [year, month] = ym.split("-").map(Number);
   return new Date(Date.UTC(year, (month ?? 1) - 1, 1)).toLocaleDateString(
     "en-US",
     { month: "short" },
+  );
+}
+
+/** A legend key: the mark the series is drawn with, then its name. */
+function LegendKey({ swatch, label }: { swatch: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span aria-hidden="true" className={swatch} />
+      {label}
+    </span>
   );
 }
 
@@ -52,20 +53,21 @@ function StatusBar({
 }) {
   const total = active + held || 1;
   return (
-    <div>
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-semibold text-navy">{label}</span>
-        <span className="text-muted-foreground">
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between">
+        <span className="text-block font-[550] text-ink">{label}</span>
+        <span className="text-meta tabular-nums text-ink-muted">
           {active} active · {held} suspended
         </span>
       </div>
-      <div className="mt-1.5 flex h-2.5 overflow-hidden rounded-full bg-muted">
+      {/* `.splitbar` — one 8px rail split by share, never two bars. */}
+      <div className="flex h-2 overflow-hidden rounded-full bg-surface-sunken">
         <span
-          className="bg-[#17734E]"
+          className="bg-ok"
           style={{ width: `${(active / total) * 100}%` }}
         />
         <span
-          className="bg-[#9B3535]"
+          className="bg-bad"
           style={{ width: `${(held / total) * 100}%` }}
         />
       </div>
@@ -103,13 +105,13 @@ export function AdminOverview() {
 
   if (stats.isPending) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         {banner}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
           {[0, 1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-24 animate-pulse rounded-md border border-border bg-card"
+              className="h-24 animate-pulse rounded-md border border-line bg-surface"
             />
           ))}
         </div>
@@ -119,9 +121,9 @@ export function AdminOverview() {
 
   if (stats.isError) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         {banner}
-        <div className="rounded-md border border-border bg-card p-6 text-sm text-muted-foreground shadow-card">
+        <div className="rounded-md border border-line bg-surface p-4 text-sub text-ink-muted shadow-e1">
           Analytics are unavailable right now.
         </div>
       </div>
@@ -134,11 +136,17 @@ export function AdminOverview() {
     (best, entry) => (entry.companies > best.companies ? entry : best),
     data.signups[0] ?? { month: "", recruiters: 0, companies: 0 },
   );
-  const signupData = data.signups.map((s) => ({
-    month: shortMonth(s.month),
-    Recruiters: s.recruiters,
-    Companies: s.companies,
+  const signupData = data.signups.map((entry) => ({
+    month: shortMonth(entry.month),
+    recruiters: entry.recruiters,
+    companies: entry.companies,
   }));
+  // Bars are drawn as a share of the tallest month, so a quiet six months still
+  // fills the plot. The floor of 1 keeps an all-zero history from dividing by 0.
+  const signupPeak = signupData.reduce(
+    (tallest, entry) => Math.max(tallest, entry.companies, entry.recruiters),
+    1,
+  );
 
   const pending = pendingRecruiters.data?.meta.total ?? 0;
   const pendingCompanyCount = pendingCompanies.data?.meta.total ?? 0;
@@ -190,10 +198,10 @@ export function AdminOverview() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {banner}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
         <StatCard
           className="col-span-2 sm:col-span-1"
           label="Wallet total"
@@ -223,7 +231,7 @@ export function AdminOverview() {
       </div>
 
       <PanelGroup
-        gridClassName="gap-y-6 lg:grid-cols-3"
+        gridClassName="lg:grid-cols-3"
         primaryId="decisions"
         panels={[
           {
@@ -231,76 +239,76 @@ export function AdminOverview() {
             label: "Sign-ups",
             className: "lg:col-span-2",
             content: (
-              <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-                <h2 className="font-heading text-base font-bold text-navy">
-                  Sign-ups
-                </h2>
-                <p className="mt-1 text-[13px] text-muted-foreground">
-                  {peak.companies > 0
-                    ? `Last 6 months · ${peak.companies} of ${data.companies.total} companies joined in ${shortMonth(peak.month)}`
-                    : "Last 6 months"}
-                </p>
-                <div className="mt-4 h-[260px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={signupData}
-                      margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
-                    >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke="#E3E6EC"
-                        vertical={false}
-                      />
-                      <XAxis
-                        dataKey="month"
-                        tick={{ fontSize: 12, fill: "#68707E" }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        allowDecimals={false}
-                        tick={{ fontSize: 12, fill: "#68707E" }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: 12,
-                          border: "1px solid #E3E6EC",
-                          fontSize: 13,
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: 13 }} />
-                      <Bar
-                        dataKey="Companies"
-                        fill={COMPANY_COLOR}
-                        radius={[4, 4, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="Recruiters"
-                        fill={RECRUITER_COLOR}
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
+              <Card className="flex h-full flex-col">
+                <CardHeader>
+                  <div className="min-w-0">
+                    <CardTitle>Sign-ups</CardTitle>
+                    <CardDescription className="mt-[3px]">
+                      {peak.companies > 0
+                        ? `Last 6 months · ${peak.companies} of ${data.companies.total} companies joined in ${shortMonth(peak.month)}`
+                        : "Last 6 months"}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-3 text-meta text-ink-muted sm:ml-auto">
+                    <LegendKey
+                      swatch="size-2 rounded-[2px] bg-navy"
+                      label="Companies"
+                    />
+                    <LegendKey
+                      swatch="size-2 rounded-[2px] bg-blue/85"
+                      label="Recruiters"
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="pb-3">
+                  {/* `.barchart` — paired bars per month, drawn in CSS so the
+                      page carries no charting runtime. */}
+                  <div className="flex h-[190px] items-end gap-[18px] px-1.5 pt-2">
+                    {signupData.map((entry) => (
+                      <div
+                        key={entry.month}
+                        className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
+                      >
+                        <div className="flex h-full items-end gap-1">
+                          <div
+                            title={`Companies: ${entry.companies}`}
+                            className="w-4 rounded-t-[3px] bg-navy"
+                            style={{
+                              height: `${(entry.companies / signupPeak) * 100}%`,
+                            }}
+                          />
+                          <div
+                            title={`Recruiters: ${entry.recruiters}`}
+                            className="w-4 rounded-t-[3px] bg-blue/85"
+                            style={{
+                              height: `${(entry.recruiters / signupPeak) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-label text-ink-faint">
+                          {entry.month}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             ),
           },
           {
             id: "status",
             label: "Account Status",
             content: (
-              <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-                <h2 className="font-heading text-base font-bold text-navy">
-                  Account Status
-                </h2>
-                <p className="mt-1 text-[13px] text-muted-foreground">
-                  {heldAccounts} of{" "}
-                  {data.recruiters.total + data.companies.total} accounts are
-                  suspended.
-                </p>
-                <div className="mt-5 flex flex-col gap-4">
+              <Card className="flex h-full flex-col">
+                <CardHeader>
+                  <CardTitle>Account Status</CardTitle>
+                  <CardDescription>
+                    {heldAccounts} of{" "}
+                    {data.recruiters.total + data.companies.total} accounts are
+                    suspended.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col gap-4">
                   <StatusBar
                     label="Companies"
                     active={data.companies.active}
@@ -311,24 +319,18 @@ export function AdminOverview() {
                     active={data.recruiters.active}
                     held={data.recruiters.held}
                   />
-                </div>
-                <div className="mt-5 flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: ACTIVE_COLOR }}
+                  <div className="mt-auto flex items-center gap-3 pt-2 text-meta text-ink-muted">
+                    <LegendKey
+                      swatch="size-2 rounded-full bg-ok"
+                      label="Active"
                     />
-                    Active
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: HELD_COLOR }}
+                    <LegendKey
+                      swatch="size-2 rounded-full bg-bad"
+                      label="Suspended"
                     />
-                    Suspended
-                  </span>
-                </div>
-              </section>
+                  </div>
+                </CardContent>
+              </Card>
             ),
           },
           {
@@ -344,7 +346,7 @@ export function AdminOverview() {
                     ))}
                   </div>
                 ) : (
-                  <p className="py-6 text-sm text-muted-foreground">
+                  <p className="px-4 py-6 text-sub text-ink-muted">
                     Nothing waiting on a decision right now.
                   </p>
                 )}

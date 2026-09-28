@@ -4,7 +4,6 @@ import { useState } from "react";
 import { HttpStatusCode } from "axios";
 import { AlertCircle, FileText, Info } from "lucide-react";
 
-import { cn } from "@/shared/libs/shadCnConfig";
 import { useSendMessage } from "../hooks/useConversation";
 import {
   useAcceptOffer,
@@ -14,8 +13,10 @@ import {
 } from "@/features/offers";
 import { ReviewCta } from "@/features/reviews";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
+import type { PillTone } from "@/shared/ui-components/badges/Pill";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import type { ConversationEvent } from "../schemas";
@@ -56,15 +57,15 @@ const OFFER_EVENT_STATUS_LABELS: Record<OfferEventData["offerStatus"], string> =
     unknown: "Status unknown",
   };
 
-/** Status-pill tint, matched to the stage the offer is at. */
-const OFFER_STATUS_TONES: Record<OfferEventData["offerStatus"], string> = {
-  sent: "border-[#F0DFC3] bg-[#FBF1E3] text-[#85570F]",
-  accepted: "border-[#CFE5D9] bg-[#E7F2EC] text-[#1F6444]",
-  declined: "border-destructive/30 bg-destructive/10 text-destructive",
-  countered: "border-primary/25 bg-primary/10 text-primary",
-  superseded: "border-border bg-secondary text-muted-foreground",
-  withdrawn: "border-border bg-secondary text-muted-foreground",
-  unknown: "border-border bg-secondary text-muted-foreground",
+/** The semantic tone each offer stage wears — never a colour of its own. */
+const OFFER_STATUS_TONES: Record<OfferEventData["offerStatus"], PillTone> = {
+  sent: "warn",
+  accepted: "ok",
+  declined: "bad",
+  countered: "info",
+  superseded: "neutral",
+  withdrawn: "neutral",
+  unknown: "neutral",
 };
 
 /**
@@ -173,52 +174,46 @@ export function OfferCard({
       : "The recruiter's fee is fixed and not part of this negotiation.";
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-      {/* Header bar */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-border bg-primary/5 px-4 py-3">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
-        </span>
-        <span className="text-sm font-semibold text-navy">Offer</span>
-        <span
-          className={cn(
-            "rounded-full border px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide",
-            OFFER_STATUS_TONES[offerStatus],
-          )}
-        >
-          {OFFER_EVENT_STATUS_LABELS[offerStatus]}
-        </span>
+    // `.eventcard` — a 420px structured moment inside the thread.
+    <div className="mx-auto max-w-[420px] overflow-hidden rounded-md border border-line bg-surface shadow-e1">
+      {/* `.eventcard__head` */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface-sub px-3 py-2.5 text-meta font-[650] text-ink">
+        <FileText className="size-3.5 shrink-0" aria-hidden="true" />
+        <span>Offer</span>
+        <StatusBadge
+          label={OFFER_EVENT_STATUS_LABELS[offerStatus]}
+          tone={OFFER_STATUS_TONES[offerStatus]}
+        />
         {sentAt ? (
-          <span className="ml-auto text-[11px] text-muted-foreground">
+          <span className="ml-auto text-[11px] font-[450] tabular-nums text-ink-faint">
             Sent {formatDate(sentAt)}
           </span>
         ) : null}
       </div>
 
-      {/* Body */}
-      <div className="flex flex-col gap-4 p-4">
+      {/* `.eventcard__body` */}
+      <div className="flex flex-col gap-3 px-3 py-3 text-[12.5px]">
         {previousOfferId && (
-          <p className="text-xs text-muted-foreground">
-            Counters a previous offer.
-          </p>
+          <p className="text-meta text-ink-muted">Counters a previous offer.</p>
         )}
 
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex flex-col gap-0.5">
-            <span className="text-3xl font-bold tracking-tight text-navy">
+            <span className="text-stat font-bold tabular-nums text-ink">
               {formatMinor(salaryMinor)}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-meta text-ink-faint">
               base salary / year
             </span>
           </div>
-          <div className="grid flex-1 gap-2 sm:min-w-[240px] sm:grid-cols-2">
+          <div className="grid flex-1 gap-2 sm:min-w-[220px] sm:grid-cols-2">
             {startDate && (
-              <div className="rounded-xl border border-border bg-secondary/40 px-3 py-2">
-                <p className="text-[10.5px] font-semibold text-muted-foreground">
+              // `.well`
+              <div className="rounded-sm border border-line bg-surface-sub px-3 py-2">
+                <p className="text-label font-[650] uppercase text-ink-muted">
                   Start date
                 </p>
-                <p className="text-[13px] font-semibold text-navy">
+                <p className="mt-[3px] text-sub font-[550] tabular-nums text-ink">
                   {formatDate(startDate)}
                 </p>
               </div>
@@ -226,13 +221,13 @@ export function OfferCard({
             {/* The commission is fixed by the job's advertised fee and
                 read-only — shown, never editable, and kept apart from the
                 salary so it can't be mistaken for part of the negotiation. */}
-            <div className="rounded-xl border border-border bg-secondary/40 px-3 py-2">
-              <p className="text-[10.5px] font-semibold text-muted-foreground">
+            <div className="rounded-sm border border-line bg-surface-sub px-3 py-2">
+              <p className="text-label font-[650] uppercase text-ink-muted">
                 {feeLabel}
               </p>
-              <p className="flex items-baseline gap-1.5 text-[13px] font-semibold text-navy">
+              <p className="mt-[3px] flex items-baseline gap-1.5 text-sub font-[650] tabular-nums text-ink">
                 {formatMinor(amountMinor)}
-                <span className="text-[11px] font-normal text-muted-foreground">
+                <span className="text-[11px] font-[450] text-ink-faint">
                   fixed
                 </span>
               </p>
@@ -240,8 +235,8 @@ export function OfferCard({
           </div>
         </div>
 
-        <div className="flex items-start gap-2 border-t border-border/60 pt-3 text-[11.5px] text-muted-foreground">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <div className="flex items-start gap-2 border-t border-line pt-3 text-[11.5px] text-ink-faint">
+          <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
           <span>{feeNote}</span>
         </div>
 
@@ -252,8 +247,8 @@ export function OfferCard({
         )}
 
         {companyCannotFund && (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2">
-            <p className="text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 rounded-sm border border-line bg-surface-sub px-3 py-2">
+            <p className="text-meta text-ink-muted">
               The company has not enough balance to proceed.
             </p>
             <Button
@@ -273,7 +268,7 @@ export function OfferCard({
         )}
 
         {offerStatus === "sent" && isCandidatePassed && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-meta text-ink-muted">
             This candidate was passed on, so this offer can no longer be
             answered.
           </p>
@@ -344,8 +339,8 @@ export function OfferCard({
         )}
 
         {mutationIsError && (
-          <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          <div className="flex items-center gap-2 rounded-sm border border-bad-line bg-bad-bg px-3 py-2 text-meta text-bad">
+            <AlertCircle className="size-3.5 shrink-0" />
             {negotiationErrorMessage(mutationError)}
           </div>
         )}

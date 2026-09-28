@@ -5,19 +5,31 @@ import { AlertCircle, MessagesSquare } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminConversations } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
 import { CANDIDATE_LABELS, type ConversationListItem } from "../schemas";
 import { ListPager } from "./ListPager";
-import { ListToolbar } from "./ListToolbar";
 import { CANDIDATE_STATUS_TONES } from "./statusStyles";
-import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
+import {
+  TABLE_BODY,
+  TABLE_CARD,
+  TABLE_CELL_MAIN,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_HEAD_ROW,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TH,
+} from "@/shared/ui-components/data/tableStyles";
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -105,112 +117,113 @@ export function ConversationsTable() {
       {isPending ? (
         <TableSkeleton />
       ) : isError ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-            <AlertCircle className="h-6 w-6" />
+        <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+          <div className="flex items-center gap-2.5 font-[550]">
+            <AlertCircle className="size-[15px] shrink-0" />
             Could not load conversations.
+          </div>
+          <div>
             <Button variant="outline" size="sm" onClick={() => void refetch()}>
               Retry
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : data.data.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
-              <MessagesSquare className="h-6 w-6" />
-            </span>
-            <p className="text-sm font-semibold text-navy">
-              No conversations found
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Conversations appear once a recruiter submits candidates to a job.
-            </p>
-          </CardContent>
-        </Card>
+        <div className={TABLE_CARD}>
+          <EmptyState
+            icon={MessagesSquare}
+            title="No conversations found"
+            description="Conversations appear once a recruiter submits candidates to a job."
+          />
+        </div>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="hidden w-full overflow-x-auto sm:block">
-              <table className={TABLE_CLASS}>
-                <thead>
-                  <tr className={THEAD_ROW_CLASS}>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Company
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Recruiter
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Job
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-center font-semibold"
+        <div className={TABLE_CARD}>
+          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+            <table className={TABLE_EL}>
+              <thead className={TABLE_HEAD}>
+                <tr className={TABLE_HEAD_ROW}>
+                  <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
+                    Company
+                  </th>
+                  <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
+                    Recruiter
+                  </th>
+                  <th scope="col" className={cn(TABLE_TH, "w-[24%]")}>
+                    Job
+                  </th>
+                  <th scope="col" className={cn(TABLE_TH, "text-center")}>
+                    Messages
+                  </th>
+                  <th scope="col" className={TABLE_TH}>
+                    Status
+                  </th>
+                  <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                    Last activity
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={TABLE_BODY}>
+                {data.data.map((c) => (
+                  <tr key={c.candidateId} className={cn("relative", TABLE_ROW)}>
+                    <td className={TABLE_TD}>
+                      <Link
+                        href={`/admin/conversations/${c.candidateId}`}
+                        className={cn(
+                          TABLE_CELL_MAIN,
+                          "transition-colors after:absolute after:inset-0 hover:text-blue focus-visible:underline focus-visible:outline-none",
+                        )}
+                      >
+                        {c.companyName}
+                      </Link>
+                    </td>
+                    <td className={cn(TABLE_TD, "text-ink-body")}>
+                      <span className="block max-w-[200px] truncate">
+                        {c.recruiterName}
+                      </span>
+                    </td>
+                    <td className={cn(TABLE_TD, "text-ink-muted")}>
+                      <span className="block max-w-[220px] truncate">
+                        {c.jobTitle}
+                      </span>
+                    </td>
+                    <td
+                      className={cn(
+                        TABLE_TD,
+                        "text-center tabular-nums text-ink",
+                      )}
                     >
-                      Messages
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Status
-                    </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
-                      Last activity
-                    </th>
+                      {c.messageCount}
+                    </td>
+                    <td className={TABLE_TD}>
+                      <ConversationStatus conversation={c} />
+                    </td>
+                    <td
+                      className={cn(
+                        TABLE_TD,
+                        "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                      )}
+                    >
+                      {formatDateTime(c.lastActivityAt)}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {data.data.map((c) => (
-                    <tr
-                      key={c.candidateId}
-                      className={`relative ${BODY_ROW_CLASS}`}
-                    >
-                      <td className="px-5 py-3">
-                        <Link
-                          href={`/admin/conversations/${c.candidateId}`}
-                          className="font-medium text-navy after:absolute after:inset-0 hover:text-primary focus-visible:underline focus-visible:outline-none"
-                        >
-                          {c.companyName}
-                        </Link>
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        <span className="block max-w-[200px] truncate">
-                          {c.recruiterName}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        <span className="block max-w-[220px] truncate">
-                          {c.jobTitle}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-center tabular-nums text-navy">
-                        {c.messageCount}
-                      </td>
-                      <td className="px-5 py-3">
-                        <ConversationStatus conversation={c} />
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                        {formatDateTime(c.lastActivityAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <MobileRecordList className="sm:hidden">
-              {data.data.map((c) => (
-                <ConversationCard key={c.candidateId} conversation={c} />
-              ))}
-            </MobileRecordList>
-            <ListPager
-              page={page}
-              totalPages={data.meta.totalPages}
-              total={data.meta.total}
-              onPage={setPage}
-              pageSize={limit}
-              onPageSize={changeLimit}
-            />
-          </CardContent>
-        </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <MobileRecordList className="sm:hidden">
+            {data.data.map((c) => (
+              <ConversationCard key={c.candidateId} conversation={c} />
+            ))}
+          </MobileRecordList>
+          <ListPager
+            page={page}
+            totalPages={data.meta.totalPages}
+            total={data.meta.total}
+            onPage={setPage}
+            pageSize={limit}
+            onPageSize={changeLimit}
+          />
+        </div>
       )}
     </div>
   );

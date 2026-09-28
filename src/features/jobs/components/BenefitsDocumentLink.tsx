@@ -44,9 +44,9 @@ export function BenefitsDocumentLink({
       type="button"
       onClick={() => void open()}
       disabled={isOpening}
-      className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80 disabled:opacity-60"
+      className="inline-flex max-w-full items-center gap-1.5 text-sub font-[550] text-blue-ink underline-offset-2 transition-colors hover:underline disabled:opacity-60"
     >
-      <Download className="h-3.5 w-3.5 shrink-0" />
+      <Download className="size-3.5 shrink-0" />
       <span className="truncate">{attachment.fileName}</span>
     </button>
   );

@@ -13,6 +13,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
@@ -28,7 +29,13 @@ import {
   type RecruiterDetail as RecruiterDetailData,
 } from "../schemas";
 import { HoldButton } from "./HoldButton";
-import { DetailField, DetailSkeleton, initials } from "./DetailPrimitives";
+import {
+  DetailField,
+  DetailSkeleton,
+  FACTS_GRID,
+  FACT_FULL,
+  initials,
+} from "./DetailPrimitives";
 import { RecruiterSubmissions } from "./RecruiterSubmissions";
 import {
   ACCOUNT_STATUS_LABELS,
@@ -64,15 +71,16 @@ function VerificationCard({ data }: { data: RecruiterDetailData }) {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base">Verification</CardTitle>
+      <CardHeader>
+        <CardTitle>Verification</CardTitle>
         <StatusBadge
+          className="ml-auto"
           label={VERIFICATION_LABELS[data.verificationStatus]}
           tone={VERIFICATION_STATUS_TONES[data.verificationStatus] ?? "neutral"}
         />
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <p className="text-sm text-muted-foreground">
+      <CardContent className="flex flex-col gap-2.5">
+        <p className="text-sub text-ink-muted">
           {data.verificationStatus === "verified"
             ? "This recruiter can use the live job map and submit candidates."
             : data.verificationStatus === "rejected"
@@ -80,8 +88,9 @@ function VerificationCard({ data }: { data: RecruiterDetailData }) {
               : "Review the profile and references, then approve or reject. Only verified recruiters can use the live map and submit candidates."}
         </p>
         {data.verificationNote && (
-          <p className="rounded-md border border-border bg-secondary/60 px-3 py-2 text-sm text-navy">
-            <span className="font-semibold">Last note:</span>{" "}
+          /* `.well` — the previous decision, kept as context beside the new one. */
+          <p className="rounded-sm border border-line bg-surface-sub px-3 py-2.5 text-body text-ink-body">
+            <span className="font-[650] text-ink">Last note:</span>{" "}
             {data.verificationNote}
           </p>
         )}
@@ -92,31 +101,30 @@ function VerificationCard({ data }: { data: RecruiterDetailData }) {
           placeholder="Optional note — sent to the recruiter with the decision."
           aria-label="Verification note"
         />
-        <div className="flex flex-wrap gap-2">
-          {data.verificationStatus !== "verified" && (
-            <Button
-              type="button"
-              disabled={decide.isPending}
-              onClick={() => submit("verified")}
-            >
-              <BadgeCheck className="h-4 w-4" />
-              Approve
-            </Button>
-          )}
-          {data.verificationStatus !== "rejected" && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={decide.isPending}
-              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => submit("rejected")}
-            >
-              <BadgeX className="h-4 w-4" />
-              Reject
-            </Button>
-          )}
-        </div>
       </CardContent>
+      <CardFooter className="flex-wrap">
+        {data.verificationStatus !== "verified" && (
+          <Button
+            type="button"
+            disabled={decide.isPending}
+            onClick={() => submit("verified")}
+          >
+            <BadgeCheck />
+            Approve
+          </Button>
+        )}
+        {data.verificationStatus !== "rejected" && (
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={decide.isPending}
+            onClick={() => submit("rejected")}
+          >
+            <BadgeX />
+            Reject
+          </Button>
+        )}
+      </CardFooter>
     </Card>
   );
 }
@@ -136,27 +144,22 @@ function DeleteRecruiterButton({
   return (
     <AlertDialog.Root open={open} onOpenChange={setOpen}>
       <AlertDialog.Trigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
+        <Button type="button" variant="destructive" size="sm">
+          <Trash2 />
           Delete
         </Button>
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
-          <AlertDialog.Title className="font-heading text-lg font-extrabold text-foreground">
+        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface p-5 shadow-pop focus:outline-none">
+          <AlertDialog.Title className="text-card font-[650] text-ink">
             Delete {name}?
           </AlertDialog.Title>
-          <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
+          <AlertDialog.Description className="mt-1.5 text-sub text-ink-muted">
             The recruiter account is removed and its sessions revoked. This is
             recoverable by support.
           </AlertDialog.Description>
-          <div className="mt-5 flex justify-end gap-2">
+          <div className="mt-4 flex justify-end gap-2">
             <AlertDialog.Cancel asChild>
               <Button type="button" variant="outline">
                 Cancel
@@ -190,15 +193,17 @@ export function RecruiterDetail({ userId }: { userId: string }) {
   if (isPending) return <DetailSkeleton />;
   if (isError) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-          <AlertCircle className="h-6 w-6" />
+      <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+        <div className="flex items-center gap-2.5 font-[550]">
+          <AlertCircle className="size-[15px] shrink-0" />
           Could not load this recruiter.
+        </div>
+        <div>
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
             Retry
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -207,18 +212,16 @@ export function RecruiterDetail({ userId }: { userId: string }) {
   const location = [cityState, data.zip].filter(Boolean).join(" ") || "—";
 
   return (
-    <div className="flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex w-full max-w-5xl flex-col gap-3">
       <Card>
-        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent text-lg font-bold text-primary">
+        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 items-center gap-4">
+            <span className="flex size-13 shrink-0 items-center justify-center rounded-full bg-tint text-block font-bold text-blue-ink">
               {initials(data.firstName, data.lastName)}
             </span>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="font-heading text-xl font-bold text-navy">
-                  {name}
-                </h2>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h2 className="text-page font-bold text-ink">{name}</h2>
                 <StatusBadge
                   label={ACCOUNT_STATUS_LABELS[data.status]}
                   tone={ACCOUNT_STATUS_TONES[data.status]}
@@ -226,7 +229,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:ml-auto sm:shrink-0">
             <HoldButton
               userId={data.userId}
               status={data.status}
@@ -237,14 +240,14 @@ export function RecruiterDetail({ userId }: { userId: string }) {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2">
         <VerificationCard data={data} />
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Contact</CardTitle>
+            <CardTitle>Contact</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <CardContent className={FACTS_GRID}>
             <DetailField label="Phone" value={data.phone} />
             <DetailField
               label="Phone confirmed"
@@ -257,42 +260,49 @@ export function RecruiterDetail({ userId }: { userId: string }) {
             />
             <DetailField label="Address" value={data.addressLine} />
             <DetailField label="Location" value={location} />
-            <div className="flex flex-col gap-1 sm:col-span-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <div className={FACT_FULL}>
+              <div className="text-label font-[650] uppercase text-ink-muted">
                 LinkedIn
-              </span>
-              {data.linkedinUrl ? (
-                <a
-                  href={data.linkedinUrl}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="w-fit break-all text-sm font-medium text-primary hover:underline"
-                >
-                  {data.linkedinUrl.replace(/^https?:\/\//, "")}
-                </a>
-              ) : (
-                <span className="text-sm text-navy">—</span>
-              )}
+              </div>
+              <div className="mt-[3px] text-body font-[550] text-ink">
+                {data.linkedinUrl ? (
+                  <a
+                    href={data.linkedinUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="break-all text-blue-ink hover:underline"
+                  >
+                    {data.linkedinUrl.replace(/^https?:\/\//, "")}
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Marketplace</CardTitle>
+            <CardTitle>Marketplace</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <CardContent className={FACTS_GRID}>
+            <div>
+              <div className="text-label font-[650] uppercase text-ink-muted">
                 Subscription
-              </span>
-              <StatusBadge
-                label={
-                  SUBSCRIPTION_LABELS[data.subscriptionStatus] ??
-                  data.subscriptionStatus
-                }
-                tone={SUBSCRIPTION_STATUS_TONES[data.subscriptionStatus] ?? "neutral"}
-              />
+              </div>
+              <div className="mt-[3px]">
+                <StatusBadge
+                  label={
+                    SUBSCRIPTION_LABELS[data.subscriptionStatus] ??
+                    data.subscriptionStatus
+                  }
+                  tone={
+                    SUBSCRIPTION_STATUS_TONES[data.subscriptionStatus] ??
+                    "neutral"
+                  }
+                />
+              </div>
             </div>
             <DetailField
               label="Renews"
@@ -314,30 +324,32 @@ export function RecruiterDetail({ userId }: { userId: string }) {
                   : null
               }
             />
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <div>
+              <div className="text-label font-[650] uppercase text-ink-muted">
                 Rating
-              </span>
-              <RatingStars value={data.ratingAvg} count={data.ratingCount} />
+              </div>
+              <div className="mt-[3px]">
+                <RatingStars value={data.ratingAvg} count={data.ratingCount} />
+              </div>
             </div>
-            <div className="col-span-2 flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <div className={FACT_FULL}>
+              <div className="text-label font-[650] uppercase text-ink-muted">
                 Specializations
-              </span>
-              <span className="text-sm text-navy">
+              </div>
+              <div className="mt-[3px] text-body font-[550] text-ink">
                 {data.specializations && data.specializations.length > 0
                   ? data.specializations.map(getSpecializationLabel).join(", ")
                   : "—"}
-              </span>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Account</CardTitle>
+            <CardTitle>Account</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <CardContent className={FACTS_GRID}>
             <DetailField label="Joined" value={formatDate(data.joinedAt)} />
             <DetailField
               label="Last login"
@@ -348,33 +360,31 @@ export function RecruiterDetail({ userId }: { userId: string }) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              Recruiting History ({data.experiences.length})
-            </CardTitle>
+            <CardTitle>Recruiting History ({data.experiences.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {data.experiences.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No companies listed.
-              </p>
+              <p className="text-sub text-ink-muted">No companies listed.</p>
             ) : (
+              /* Compact `.well` rows rather than a table — the list never runs
+                 past a handful of firms. */
               <ul className="flex flex-col gap-2">
                 {data.experiences.map((experience) => (
                   <li
                     key={experience.id}
-                    className="flex flex-col gap-1 rounded-md border border-border px-3 py-2"
+                    className="rounded-sm border border-line bg-surface-sub px-3 py-2.5"
                   >
-                    <span className="flex flex-wrap items-baseline gap-2 text-sm font-semibold text-navy">
+                    <span className="flex flex-wrap items-baseline gap-2 text-block font-[650] text-ink">
                       {experience.firmName}
                       {experience.years !== null && (
-                        <span className="text-xs font-normal text-muted-foreground">
+                        <span className="text-meta font-[450] tabular-nums text-ink-muted">
                           {experience.years} yr
                           {experience.years === 1 ? "" : "s"}
                         </span>
                       )}
                     </span>
                     {experience.specializations.length > 0 && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="mt-0.5 block text-meta text-ink-muted">
                         {experience.specializations
                           .map(getSpecializationLabel)
                           .join(" · ")}
@@ -389,26 +399,22 @@ export function RecruiterDetail({ userId }: { userId: string }) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              References ({data.references.length})
-            </CardTitle>
+            <CardTitle>References ({data.references.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {data.references.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No references on file.
-              </p>
+              <p className="text-sub text-ink-muted">No references on file.</p>
             ) : (
               <ul className="flex flex-col gap-2.5">
                 {data.references.map((ref) => (
                   <li
                     key={ref.id}
-                    className="flex items-center gap-2 text-sm text-navy"
+                    className="flex items-center gap-2 text-body font-[550] text-ink"
                   >
                     {ref.verified ? (
-                      <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+                      <BadgeCheck className="size-4 shrink-0 text-ok" />
                     ) : (
-                      <BadgeX className="h-4 w-4 shrink-0 text-destructive" />
+                      <BadgeX className="size-4 shrink-0 text-bad" />
                     )}
                     <span>
                       {ref.name}

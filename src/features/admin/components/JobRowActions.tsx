@@ -5,6 +5,7 @@ import Link from "next/link";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { MoreVertical, Pencil, RotateCcw, Trash2 } from "lucide-react";
 
+import { cn } from "@/shared/libs/shadCnConfig";
 import { ConfirmActionDialog } from "@/shared/ui-components/controls/ConfirmActionDialog";
 
 import { useDeleteAdminJob, useRepostAdminJob } from "../hooks/useAdmin";
@@ -12,6 +13,13 @@ import type { JobStatus } from "../schemas";
 
 /** Which confirmation is open — the actions are mutually exclusive. */
 type PendingAction = "delete" | "repost" | null;
+
+/** The reference's `.kebab` — a 28px quiet trigger sized for a 44px row. */
+const KEBAB_CLASS =
+  "inline-flex size-7 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+const ITEM_CLASS =
+  "flex cursor-pointer items-center gap-2.5 rounded-xs px-2.5 py-1.5 text-sub text-ink-body outline-none transition-colors hover:bg-surface-sub focus:bg-surface-sub [&_svg]:size-[15px] [&_svg]:shrink-0";
 
 /**
  * Per-row admin actions on a job: a 3-dot menu with Edit (→ the admin job
@@ -39,23 +47,20 @@ export function JobRowActions({
           <button
             type="button"
             aria-label={`Actions for ${jobTitle}`}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className={KEBAB_CLASS}
           >
-            <MoreVertical className="h-4 w-4" />
+            <MoreVertical className="size-[17px]" />
           </button>
         </Dropdown.Trigger>
         <Dropdown.Portal>
           <Dropdown.Content
             align="end"
             sideOffset={4}
-            className="z-50 min-w-[160px] rounded-md border border-border bg-popover p-1 shadow-card-lg"
+            className="z-50 min-w-[160px] rounded-sm border border-line bg-surface p-1 shadow-pop"
           >
             <Dropdown.Item asChild>
-              <Link
-                href={`/admin/jobs/${jobId}/edit`}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none hover:bg-accent focus:bg-accent"
-              >
-                <Pencil className="h-4 w-4" />
+              <Link href={`/admin/jobs/${jobId}/edit`} className={ITEM_CLASS}>
+                <Pencil className="text-ink-faint" />
                 Edit job
               </Link>
             </Dropdown.Item>
@@ -65,9 +70,9 @@ export function JobRowActions({
                   event.preventDefault();
                   setPending("repost");
                 }}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none hover:bg-accent focus:bg-accent"
+                className={ITEM_CLASS}
               >
-                <RotateCcw className="h-4 w-4" />
+                <RotateCcw className="text-ink-faint" />
                 Re-post job
               </Dropdown.Item>
             )}
@@ -76,9 +81,12 @@ export function JobRowActions({
                 event.preventDefault();
                 setPending("delete");
               }}
-              className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none hover:bg-destructive/10 focus:bg-destructive/10"
+              className={cn(
+                ITEM_CLASS,
+                "text-bad hover:bg-bad-bg focus:bg-bad-bg",
+              )}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 />
               Delete job
             </Dropdown.Item>
           </Dropdown.Content>

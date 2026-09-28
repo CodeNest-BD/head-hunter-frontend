@@ -12,6 +12,8 @@ import {
 } from "@/features/candidates/schemas";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { Button } from "@/shared/ui-components/controls/button";
+import { Alert } from "@/shared/ui-components/feedback/Alert";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
@@ -27,9 +29,12 @@ import {
   TABLE_EL,
   TABLE_HEAD,
   TABLE_HEAD_ROW,
+  TABLE_CELL_MAIN,
   TABLE_ROW,
+  TABLE_ROW_UNREAD,
   TABLE_SCROLL,
   TABLE_TD,
+  TABLE_TD_STACKED,
   TABLE_TH,
   TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
@@ -69,11 +74,7 @@ const SORT_LABELS: Record<InboxCandidateSort, string> = {
 // Every cell below is rendered by the desktop table and the mobile card.
 
 function NewPill() {
-  return (
-    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
-      New
-    </span>
-  );
+  return <StatusBadge label="New" tone="info" />;
 }
 
 function CandidateStatusBadge({ status }: { status: CandidateStatus }) {
@@ -89,10 +90,10 @@ function OpenConversationLink({ href }: { href: string }) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+      className="inline-flex items-center gap-1.5 whitespace-nowrap text-sub font-[550] text-blue-ink underline-offset-2 transition-colors hover:underline"
     >
       Open conversation
-      <ArrowRight className="h-3.5 w-3.5" />
+      <ArrowRight aria-hidden="true" className="size-3.5" />
     </Link>
   );
 }
@@ -205,21 +206,21 @@ export function InboxCandidatesTable({
     return (
       <div className="flex flex-col gap-4">
         {toolbar}
-        <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-          <div className="flex items-center gap-2 font-medium">
-            <AlertCircle className="h-[18px] w-[18px]" />
-            Could not load the candidates for this job.
+        <Alert tone="bad" icon={AlertCircle}>
+          <div className="flex flex-col items-start gap-2.5">
+            <span className="font-[650]">
+              Could not load the candidates for this job.
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void refetch()}
+            >
+              Retry
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="self-start"
-            onClick={() => void refetch()}
-          >
-            Retry
-          </Button>
-        </div>
+        </Alert>
       </div>
     );
   }
@@ -231,19 +232,17 @@ export function InboxCandidatesTable({
       {isPending ? (
         <TableSkeleton />
       ) : data.data.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-input bg-card px-6 py-14 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Users className="h-6 w-6" />
-          </span>
-          <p className="font-heading text-base font-semibold text-foreground">
-            No candidates found
-          </p>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            {isCompany
-              ? "When a recruiter sends someone to this job, they appear here — newest first."
-              : "Candidates you send to this job appear here, each with its own conversation."}
-          </p>
-          {emptyAction}
+        <div className={TABLE_CARD}>
+          <EmptyState
+            icon={Users}
+            title="No candidates found"
+            description={
+              isCompany
+                ? "When a recruiter sends someone to this job, they appear here — newest first."
+                : "Candidates you send to this job appear here, each with its own conversation."
+            }
+            action={emptyAction}
+          />
         </div>
       ) : (
         <div className={TABLE_CARD}>
@@ -275,17 +274,16 @@ export function InboxCandidatesTable({
                       TABLE_ROW,
                       // The same tint level 1 gives a job with new candidates,
                       // so the row the sidebar count refers to is findable.
-                      candidateNeedsAttention(row) && "bg-primary/[0.04]",
+                      candidateNeedsAttention(row) && TABLE_ROW_UNREAD,
                     )}
                   >
                     <td
                       className={cn(
                         TABLE_TD,
-                        "font-semibold text-navy",
+                        TABLE_CELL_MAIN,
                         // The inbox's accent bar — on the cell, since an inset
                         // shadow on a `<tr>` doesn't render reliably.
-                        candidateNeedsAttention(row) &&
-                          "shadow-[inset_3px_0_0_0_hsl(var(--primary))]",
+                        candidateNeedsAttention(row) && "shadow-rail",
                       )}
                     >
                       <span className="flex items-center gap-2">
@@ -295,29 +293,31 @@ export function InboxCandidatesTable({
                       </span>
                     </td>
                     {isCompany && cols.isVisible("recruiter") && (
-                      <td className={`${TABLE_TD} text-navy`}>
-                        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <td className={TABLE_TD_STACKED}>
+                        <div className="font-[550] text-ink">
                           {recruiterDisplayName(row.recruiter)}
-                          {row.recruiter?.yearsExperience != null && (
-                            <span className="text-xs font-normal text-brand-gray">
-                              {row.recruiter.yearsExperience} yrs
-                            </span>
-                          )}
+                        </div>
+                        <div className="mt-px flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                           <RatingStars
                             value={row.recruiter?.ratingAvg ?? null}
                             count={row.recruiter?.ratingCount}
                           />
-                        </span>
+                          {row.recruiter?.yearsExperience != null && (
+                            <span className="text-[11.5px] tabular-nums text-ink-faint">
+                              {row.recruiter.yearsExperience} yrs
+                            </span>
+                          )}
+                        </div>
                       </td>
                     )}
                     {!isCompany && cols.isVisible("company") && (
-                      <td className={`${TABLE_TD} text-navy`}>
+                      <td className={`${TABLE_TD} text-ink`}>
                         {row.companyName ?? "—"}
                       </td>
                     )}
                     {cols.isVisible("submitted") && (
                       <td
-                        className={`${TABLE_TD} whitespace-nowrap tabular-nums text-brand-gray`}
+                        className={`${TABLE_TD} whitespace-nowrap tabular-nums text-ink-muted`}
                       >
                         {formatDate(row.submittedAt)}
                       </td>
@@ -341,9 +341,7 @@ export function InboxCandidatesTable({
             {data.data.map((row) => (
               <MobileRecordCard
                 key={row.candidateId}
-                className={cn(
-                  candidateNeedsAttention(row) && "bg-primary/[0.04]",
-                )}
+                className={cn(candidateNeedsAttention(row) && TABLE_ROW_UNREAD)}
                 title={row.candidateName}
                 subtitle={
                   isCompany

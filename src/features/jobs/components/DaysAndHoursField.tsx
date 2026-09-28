@@ -41,7 +41,7 @@ function HourSelect({
 }) {
   return (
     <Select value={value === "" ? undefined : value} onValueChange={onChange}>
-      <SelectTrigger id={id} aria-label={ariaLabel} className="h-10 w-full">
+      <SelectTrigger id={id} aria-label={ariaLabel} className="h-9 w-full">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -84,7 +84,7 @@ export function DaysAndHoursField({ value, onChange }: DaysAndHoursFieldProps) {
       <div
         role="group"
         aria-label="Days of the week"
-        className="inline-flex flex-wrap gap-1 self-start rounded-lg border border-border bg-secondary/60 p-1"
+        className="inline-flex flex-wrap gap-0.5 self-start rounded-sm border border-line bg-surface-sunken p-0.5"
       >
         {WEEK_DAYS.map((day) => {
           const active = selected.has(day);
@@ -95,10 +95,10 @@ export function DaysAndHoursField({ value, onChange }: DaysAndHoursFieldProps) {
               aria-pressed={active}
               onClick={() => toggleDay(day)}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                "inline-flex h-7 items-center rounded-xs px-3 text-[12.5px] font-semibold transition-colors",
                 active
-                  ? "bg-card text-navy shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "bg-surface text-ink shadow-e1"
+                  : "text-ink-muted hover:text-ink",
               )}
             >
               {WEEK_DAY_LABELS[day]}
@@ -127,7 +127,7 @@ export function DaysAndHoursField({ value, onChange }: DaysAndHoursFieldProps) {
             })
           }
         />
-        <span className="shrink-0 text-muted-foreground">–</span>
+        <span className="shrink-0 text-ink-faint">–</span>
         <HourSelect
           ariaLabel="End time"
           placeholder="End"

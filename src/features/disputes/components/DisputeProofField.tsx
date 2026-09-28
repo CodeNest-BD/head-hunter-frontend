@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { FileText, X } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
+import { Tile } from "@/shared/ui-components/list/Tile";
 import { formatSize } from "@/shared/utils/formatSize";
 
 /** Wider than `DOCUMENT_ACCEPT`: proof is whatever the party actually has — a
@@ -61,7 +62,9 @@ export function DisputeProofField({
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    // `.well` — the picked files and their control read as one framed field
+    // rather than as loose rows against the form's surface.
+    <div className="flex flex-col gap-2.5 rounded-sm border border-line bg-surface-sub px-3 py-2.5">
       <input
         ref={inputRef}
         id="dispute-proof"
@@ -79,13 +82,13 @@ export function DisputeProofField({
           {files.map((file, index) => (
             <li
               key={`${file.name}-${file.lastModified}`}
-              className="flex items-center gap-2.5 rounded-md border border-border bg-card px-3 py-2"
+              className="flex items-center gap-2.5 rounded-sm border border-line bg-surface px-2.5 py-2"
             >
-              <FileText className="h-4 w-4 shrink-0 text-primary" />
-              <span className="min-w-0 flex-1 truncate text-sm text-navy">
+              <Tile icon={FileText} tone="neutral" className="size-7" />
+              <span className="min-w-0 flex-1 truncate text-sub font-[550] text-ink">
                 {file.name}
               </span>
-              <span className="shrink-0 text-xs text-muted-foreground">
+              <span className="shrink-0 tabular-nums text-meta text-ink-faint">
                 {formatSize(file.size)}
               </span>
               <button
@@ -93,9 +96,9 @@ export function DisputeProofField({
                 aria-label={`Remove ${file.name}`}
                 disabled={disabled}
                 onClick={() => onChange(files.filter((_, at) => at !== index))}
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink disabled:opacity-50"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="size-[15px]" />
               </button>
             </li>
           ))}
@@ -114,9 +117,9 @@ export function DisputeProofField({
       </Button>
 
       {error ? (
-        <p className="text-xs text-destructive">{error}</p>
+        <p className="text-meta font-medium text-bad">{error}</p>
       ) : (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-meta text-ink-faint">
           Attach anything that backs up your side — up to {MAX_PROOF_FILES}{" "}
           files, {MAX_PROOF_MB}MB each. The admin reviewing this sees them.
         </p>

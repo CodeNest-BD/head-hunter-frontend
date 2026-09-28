@@ -21,16 +21,16 @@ export function SystemEvent({ event }: SystemEventProps) {
     <div className="flex justify-center py-1.5">
       <span
         className={cn(
-          "inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-medium",
+          "inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-meta font-[550]",
           positive
-            ? "border-[#CFE5D9] bg-[#E7F4EC] text-[#1F6444]"
-            : "border-border bg-secondary text-muted-foreground",
+            ? "border-ok-line bg-ok-bg text-ok"
+            : "border-line bg-surface-sub text-ink-muted",
         )}
       >
         {positive ? (
-          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <CheckCircle2 className="size-[15px] shrink-0" aria-hidden="true" />
         ) : (
-          <Info className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <Info className="size-[15px] shrink-0" aria-hidden="true" />
         )}
         <span className="truncate">
           {event.title}
@@ -40,8 +40,8 @@ export function SystemEvent({ event }: SystemEventProps) {
         </span>
         <span
           className={cn(
-            "shrink-0 pl-0.5 text-[11px]",
-            positive ? "text-[#4f7d64]" : "text-muted-foreground/70",
+            "shrink-0 pl-0.5 text-[11px] tabular-nums",
+            positive ? "text-ok/80" : "text-ink-faint",
           )}
         >
           {formatDateTime(event.at)}

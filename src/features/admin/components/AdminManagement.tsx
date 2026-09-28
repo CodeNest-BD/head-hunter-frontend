@@ -4,6 +4,8 @@ import { useState } from "react";
 import { AlertCircle, KeyRound, Pencil, Trash2, UserPlus } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { cn } from "@/shared/libs/shadCnConfig";
+import { CountChip } from "@/shared/ui-components/badges/CountChip";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -19,6 +21,18 @@ import {
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import {
+  TABLE_BODY,
+  TABLE_CELL_MAIN,
+  TABLE_CELL_SUB,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TD_STACKED,
+  TABLE_TH,
+} from "@/shared/ui-components/data/tableStyles";
+import {
   useAdmins,
   useChangeAdminPassword,
   useCreateAdmin,
@@ -26,9 +40,14 @@ import {
   useUpdateAdmin,
 } from "../hooks/useAdmin";
 import type { AdminUser } from "../schemas";
-import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
 const MIN_PASSWORD = 8;
+
+/** `.field` — label over control, with an optional hint beneath. */
+const FIELD_CLASS = "flex flex-col gap-1.5";
+
+/** `.well` — the inline panel a row opens below itself. */
+const PANEL_CLASS = "rounded-sm border border-line bg-surface-sub p-3";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -73,9 +92,9 @@ function CreateAdminForm() {
   };
 
   return (
-    <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
+    <form onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className={FIELD_CLASS}>
           <Label htmlFor="new-admin-first">First name</Label>
           <Input
             id="new-admin-first"
@@ -83,7 +102,7 @@ function CreateAdminForm() {
             onChange={(event) => setFirstName(event.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className={FIELD_CLASS}>
           <Label htmlFor="new-admin-last">Last name</Label>
           <Input
             id="new-admin-last"
@@ -91,7 +110,7 @@ function CreateAdminForm() {
             onChange={(event) => setLastName(event.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className={FIELD_CLASS}>
           <Label htmlFor="new-admin-email">Email</Label>
           <Input
             id="new-admin-email"
@@ -100,7 +119,7 @@ function CreateAdminForm() {
             onChange={(event) => setEmail(event.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className={FIELD_CLASS}>
           <Label htmlFor="new-admin-password">Initial password</Label>
           <Input
             id="new-admin-password"
@@ -108,24 +127,24 @@ function CreateAdminForm() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-meta text-ink-faint">
             At least {MIN_PASSWORD} characters.
           </p>
         </div>
       </div>
 
       {create.isError && (
-        <p className="text-sm text-destructive">
+        <p className="text-meta font-medium text-bad">
           Could not create the admin. The email may already be in use.
         </p>
       )}
       {create.isSuccess && !create.isPending && (
-        <p className="text-sm text-[#17734E]">Admin created.</p>
+        <p className="text-meta font-medium text-ok">Admin created.</p>
       )}
 
       <div>
         <Button type="submit" disabled={!valid || create.isPending}>
-          <UserPlus className="mr-2 h-4 w-4" />
+          <UserPlus />
           {create.isPending ? "Creating…" : "Create admin"}
         </Button>
       </div>
@@ -153,9 +172,9 @@ function ChangePasswordForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 p-3 sm:flex-row sm:items-end"
+      className={cn(PANEL_CLASS, "flex flex-col gap-2 sm:flex-row sm:items-end")}
     >
-      <div className="flex flex-1 flex-col gap-1.5">
+      <div className={cn(FIELD_CLASS, "flex-1")}>
         <Label htmlFor={`pw-${userId}`}>New password</Label>
         <Input
           id={`pw-${userId}`}
@@ -201,24 +220,24 @@ function EditAdminForm({
           { onSuccess: onDone },
         );
       }}
-      className="flex flex-wrap items-end gap-3 rounded-md border border-border bg-secondary/50 p-3"
+      className={cn(PANEL_CLASS, "flex flex-wrap items-end gap-3")}
     >
-      <div className="flex flex-col gap-1">
+      <div className={FIELD_CLASS}>
         <Label htmlFor={`first-${admin.userId}`}>First name</Label>
         <Input
           id={`first-${admin.userId}`}
           value={firstName}
           onChange={(event) => setFirstName(event.target.value)}
-          className="h-9 w-40"
+          className="w-40"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className={FIELD_CLASS}>
         <Label htmlFor={`last-${admin.userId}`}>Last name</Label>
         <Input
           id={`last-${admin.userId}`}
           value={lastName}
           onChange={(event) => setLastName(event.target.value)}
-          className="h-9 w-40"
+          className="w-40"
         />
       </div>
       <div className="flex gap-2">
@@ -237,11 +256,7 @@ function AdminName({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
   return (
     <>
       {admin.firstName} {admin.lastName}
-      {isSelf && (
-        <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-primary">
-          You
-        </span>
-      )}
+      {isSelf && <CountChip className="ml-2">You</CountChip>}
     </>
   );
 }
@@ -264,7 +279,7 @@ function useAdminRowControls(admin: AdminUser, isSelf: boolean) {
         size="sm"
         onClick={() => setEditing((v) => !v)}
       >
-        <Pencil className="mr-1.5 h-3.5 w-3.5" />
+        <Pencil />
         Edit
       </Button>
       <Button
@@ -273,7 +288,7 @@ function useAdminRowControls(admin: AdminUser, isSelf: boolean) {
         size="sm"
         onClick={() => setChanging((v) => !v)}
       >
-        <KeyRound className="mr-1.5 h-3.5 w-3.5" />
+        <KeyRound />
         Password
       </Button>
       {!isSelf && (
@@ -283,7 +298,7 @@ function useAdminRowControls(admin: AdminUser, isSelf: boolean) {
           size="sm"
           onClick={() => setConfirming(true)}
         >
-          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+          <Trash2 />
           Remove
         </Button>
       )}
@@ -326,23 +341,28 @@ function AdminRow({ admin, isSelf }: { admin: AdminUser; isSelf: boolean }) {
 
   return (
     <>
-      <tr className={BODY_ROW_CLASS}>
-        <td className="px-5 py-3">
-          <span className="font-medium text-navy">
+      <tr className={TABLE_ROW}>
+        <td className={TABLE_TD_STACKED}>
+          <span className={cn(TABLE_CELL_MAIN, "flex items-center")}>
             <AdminName admin={admin} isSelf={isSelf} />
           </span>
-          <p className="text-xs text-muted-foreground">{admin.email}</p>
+          <p className={TABLE_CELL_SUB}>{admin.email}</p>
         </td>
-        <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
+        <td
+          className={cn(
+            TABLE_TD,
+            "whitespace-nowrap tabular-nums text-ink-muted",
+          )}
+        >
           {formatDate(admin.createdAt)}
         </td>
-        <td className="px-5 py-3">
+        <td className={TABLE_TD}>
           <div className="flex items-center justify-end gap-2">{actions}</div>
         </td>
       </tr>
       {panel && (
         <tr>
-          <td colSpan={3} className="px-5 py-3">
+          <td colSpan={3} className="border-b border-line px-3.5 py-3">
             {panel}
           </td>
         </tr>
@@ -374,10 +394,10 @@ export function AdminManagement() {
   const { data, isPending, isError, refetch } = useAdmins();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-3">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Create admin</CardTitle>
+          <CardTitle>Create admin</CardTitle>
         </CardHeader>
         <CardContent>
           <CreateAdminForm />
@@ -385,45 +405,48 @@ export function AdminManagement() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Admins</CardTitle>
+        {/* The roster's title sits on an unruled head — the table's own header
+            band is the rule beneath it. */}
+        <CardHeader className="border-b-0">
+          <CardTitle>Admins</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isPending ? (
             <div className="h-32 animate-pulse" />
           ) : isError ? (
-            <div className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-              <AlertCircle className="h-6 w-6" />
-              Could not load admins.
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void refetch()}
-              >
-                Retry
-              </Button>
+            <div className="m-4 flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+              <div className="flex items-center gap-2.5 font-[550]">
+                <AlertCircle className="size-[15px] shrink-0" />
+                Could not load admins.
+              </div>
+              <div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void refetch()}
+                >
+                  Retry
+                </Button>
+              </div>
             </div>
           ) : (
             <>
-              <div className="hidden w-full overflow-x-auto sm:block">
-                <table className={TABLE_CLASS}>
-                  <thead>
-                    <tr className={THEAD_ROW_CLASS}>
-                      <th scope="col" className="px-5 py-3 font-semibold">
+              <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+                <table className={TABLE_EL}>
+                  <thead className={TABLE_HEAD}>
+                    <tr>
+                      <th scope="col" className={cn(TABLE_TH, "w-[46%]")}>
                         Admin
                       </th>
-                      <th scope="col" className="px-5 py-3 font-semibold">
+                      <th scope="col" className={TABLE_TH}>
                         Created
                       </th>
-                      <th
-                        scope="col"
-                        className="px-5 py-3 text-right font-semibold"
-                      >
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className={TABLE_BODY}>
                     {data.map((admin) => (
                       <AdminRow
                         key={admin.userId}

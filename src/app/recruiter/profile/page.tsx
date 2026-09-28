@@ -8,8 +8,8 @@ import {
   VerificationBanner,
   type VerificationStatus,
 } from "@/features/recruiters";
+import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
 import { PageHeader } from "@/shared/ui-components/brand";
-import { cn } from "@/shared/libs/shadCnConfig";
 import {
   Tabs,
   TabsContent,
@@ -21,28 +21,23 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 const VERIFICATION_PILL: Record<
   VerificationStatus,
-  { dot: string; label: string }
+  { tone: PillTone; label: string }
 > = {
-  verified: { dot: "bg-emerald-400", label: "Verified Recruiter" },
-  pending: { dot: "bg-amber-400", label: "Pending Verification" },
-  rejected: { dot: "bg-red-400", label: "Verification Declined" },
+  verified: { tone: "ok", label: "Verified Recruiter" },
+  pending: { tone: "warn", label: "Pending Verification" },
+  rejected: { tone: "bad", label: "Verification Declined" },
 };
 
 function VerificationPill({ status }: { status: VerificationStatus }) {
-  const { dot, label } = VERIFICATION_PILL[status];
-  return (
-    <span className="inline-flex items-center gap-2 text-sm font-medium text-navy/70">
-      <span className={cn("h-2 w-2 rounded-full", dot)} />
-      {label}
-    </span>
-  );
+  const { tone, label } = VERIFICATION_PILL[status];
+  return <Pill tone={tone}>{label}</Pill>;
 }
 
 function ProfileSkeleton() {
   return (
-    <div className="flex flex-col gap-5">
-      <div className="h-56 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
-      <div className="h-40 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
+    <div className="flex flex-col gap-4">
+      <div className="h-56 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
+      <div className="h-40 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
     </div>
   );
 }
@@ -51,7 +46,7 @@ function RecruiterProfileContent() {
   const { data, isPending, isError, refetch } = useMyRecruiterProfile();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Recruiter profile"
         subtitle="Your details, specializations and references."
@@ -76,7 +71,7 @@ function RecruiterProfileContent() {
             <TabsTrigger value="password">Password Change</TabsTrigger>
           </TabsList>
           <TabsContent value="info">
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
               <RecruiterProfileForm profile={data} />
               <ReferencesSection references={data.references} />
             </div>

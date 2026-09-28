@@ -13,8 +13,16 @@ import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import * as T from "@/shared/ui-components/data/tableStyles";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
+import { StatCard } from "@/shared/ui-components/dashboard/DashboardParts";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   MobileRecordCard,
   MobileRecordList,
@@ -30,7 +38,7 @@ import {
   type RecruiterWalletSummary,
 } from "../schemas";
 import { PLACEMENT_STATUS_TONES } from "../statusTones";
-import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./BillingTable";
+import { BillingTableFooter } from "./BillingTable";
 import { PayoutsCard } from "./PayoutsCard";
 import { PayoutsTable } from "./PayoutsTable";
 
@@ -60,54 +68,6 @@ const COMMISSION_STEPS: readonly { title: string; detail: string }[] = [
       ]
     : []),
 ];
-
-/** A single balance card: navy for the headline total, white for the rest. */
-function BalanceCard({
-  label,
-  valueMinor,
-  hint,
-  tone = "white",
-}: {
-  label: string;
-  valueMinor: number | undefined;
-  hint: string;
-  tone?: "navy" | "white";
-}) {
-  const navy = tone === "navy";
-  return (
-    <div
-      className={cn(
-        "rounded-md p-6 shadow-card",
-        navy ? "bg-navy" : "border border-border bg-card",
-      )}
-    >
-      <p
-        className={cn(
-          "text-[11px] font-semibold uppercase tracking-[0.12em]",
-          navy ? "text-white/55" : "text-muted-foreground",
-        )}
-      >
-        {label}
-      </p>
-      <p
-        className={cn(
-          "mt-2 font-heading text-3xl font-extrabold leading-none tabular-nums",
-          navy ? "text-white" : "text-navy",
-        )}
-      >
-        {valueMinor === undefined ? "—" : formatMinor(valueMinor)}
-      </p>
-      <p
-        className={cn(
-          "mt-2 text-xs",
-          navy ? "text-white/60" : "text-muted-foreground",
-        )}
-      >
-        {hint}
-      </p>
-    </div>
-  );
-}
 
 function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
   const pendingPayoutMinor = data?.pendingPayoutMinor ?? 0;
@@ -163,14 +123,21 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
   return (
     <div
       className={cn(
-        "grid gap-4",
+        "grid gap-3",
         ENABLE_RECRUITER_PAYOUTS
           ? "sm:grid-cols-2 lg:grid-cols-4"
           : "sm:grid-cols-3",
       )}
     >
       {cards.map((card) => (
-        <BalanceCard key={card.label} {...card} />
+        <StatCard
+          key={card.label}
+          label={card.label}
+          value={
+            card.valueMinor === undefined ? "—" : formatMinor(card.valueMinor)
+          }
+          hint={card.hint}
+        />
       ))}
     </div>
   );
@@ -178,48 +145,48 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
 
 function HowCommissionPaid() {
   return (
-    <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <h2 className="font-heading text-base font-bold text-navy">
-        How a commission is paid
-      </h2>
-      <ol className="mt-4 flex flex-col gap-4">
-        {COMMISSION_STEPS.map((step, index) => (
-          <li key={step.title} className="flex items-start gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-primary">
-              {index + 1}
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-navy">{step.title}</p>
-              <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-                {step.detail}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </section>
+    <Card>
+      <CardHeader>
+        <CardTitle>How a commission is paid</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* `.steps` — the escrow clock explained once, so a row reading
+            "In Escrow · Oct 16" needs no further explanation. */}
+        <ol className="flex flex-col gap-3">
+          {COMMISSION_STEPS.map((step, index) => (
+            <li key={step.title} className="flex items-start gap-[11px]">
+              <span className="mt-px flex size-[22px] shrink-0 items-center justify-center rounded-full bg-tint text-[11.5px] font-bold text-blue">
+                {index + 1}
+              </span>
+              <div className="min-w-0">
+                <p className="text-block font-[550] text-ink">{step.title}</p>
+                <p className="text-sub text-ink-muted">{step.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+    </Card>
   );
 }
 
 function PlacementsEmpty() {
   return (
-    <section className="flex flex-col rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <h2 className="font-heading text-base font-bold text-navy">Placements</h2>
-      <div className="mt-4 flex flex-1 flex-col items-start gap-3 rounded-md border border-dashed border-input bg-secondary/40 p-5">
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-accent text-primary">
-          <Wallet2 className="h-5 w-5" />
-        </span>
-        <div>
-          <p className="text-sm font-semibold text-navy">No placements yet</p>
-          <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-            Your commission appears here once a candidate you placed is hired.
-          </p>
-        </div>
-        <Button asChild size="sm" className="mt-1">
-          <Link href="/explore-jobs">Browse jobs</Link>
-        </Button>
-      </div>
-    </section>
+    <Card>
+      <CardHeader>
+        <CardTitle>Placements</CardTitle>
+      </CardHeader>
+      <EmptyState
+        icon={Wallet2}
+        title="No placements yet"
+        description="Your commission appears here once a candidate you placed is hired."
+        action={
+          <Button asChild size="sm">
+            <Link href="/explore-jobs">Browse jobs</Link>
+          </Button>
+        }
+      />
+    </Card>
   );
 }
 
@@ -258,132 +225,136 @@ function PlacementsTable({
     : undefined;
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="font-heading text-base font-bold text-navy">
-            Placements
-          </h2>
+    <div className={T.TABLE_CARD}>
+      <CardHeader>
+        <CardTitle>Placements</CardTitle>
+      </CardHeader>
+      {disputing ? (
+        <div className="border-b border-line p-4">
+          <RaiseDisputeForm
+            placementId={disputing.placementId}
+            party="recruiter"
+            onCancel={() => setDisputingId(null)}
+            onRaised={(id) => {
+              setDisputingId(null);
+              router.push(`/disputes/${id}`);
+            }}
+          />
         </div>
-        {disputing ? (
-          <div className="border-b border-border p-4">
-            <RaiseDisputeForm
-              placementId={disputing.placementId}
-              party="recruiter"
-              onCancel={() => setDisputingId(null)}
-              onRaised={(id) => {
-                setDisputingId(null);
-                router.push(`/disputes/${id}`);
-              }}
-            />
-          </div>
-        ) : null}
-        <div className="hidden overflow-x-auto sm:block">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className={HEAD_ROW}>
-                <th scope="col" className={TH}>
-                  Company
-                </th>
-                <th scope="col" className={TH}>
-                  Role
-                </th>
-                <th scope="col" className={TH}>
-                  Candidate
-                </th>
-                <th scope="col" className={cn(TH, "text-right")}>
-                  Commission
-                </th>
-                <th scope="col" className={TH}>
-                  Status
-                </th>
-                <th scope="col" className={TH}>
-                  Released / Hold Ends
-                </th>
-                <th scope="col" className={TH} />
+      ) : null}
+      <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
+        <table className={T.TABLE_EL}>
+          <thead className={T.TABLE_HEAD}>
+            <tr>
+              <th scope="col" className={cn(T.TABLE_TH, "w-[22%]")}>
+                Company
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Role
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Candidate
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Commission
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Status
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Released / Hold Ends
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "w-[110px]")} />
+            </tr>
+          </thead>
+          <tbody className={T.TABLE_BODY}>
+            {data.data.map((p) => (
+              <tr key={p.placementId} className={T.TABLE_ROW}>
+                <td className={cn(T.TABLE_TD, T.TABLE_CELL_MAIN)}>
+                  {p.companyName}
+                </td>
+                <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                  <span className="block max-w-[200px] truncate">
+                    {p.jobTitle}
+                  </span>
+                </td>
+                <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                  {p.candidateName}
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                  )}
+                >
+                  {formatMinor(p.amountMinor)}
+                </td>
+                <td className={T.TABLE_TD}>
+                  <PlacementStatusBadge status={p.status} />
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap tabular-nums text-ink-body",
+                  )}
+                >
+                  {releaseLabel(p)}
+                </td>
+                <td className={cn(T.TABLE_TD, "text-right")}>
+                  {p.status === "held" ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDisputingId(p.placementId)}
+                    >
+                      Dispute
+                    </Button>
+                  ) : p.status === "disputed" ? (
+                    <span className="text-meta text-ink-faint">In dispute</span>
+                  ) : (
+                    <span className="text-meta text-ink-faint">—</span>
+                  )}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {data.data.map((p) => (
-                <tr key={p.placementId} className={BODY_ROW}>
-                  <td className="px-5 py-3 font-medium text-navy">
-                    {p.companyName}
-                  </td>
-                  <td className="px-5 py-3 text-muted-foreground">
-                    <span className="block max-w-[200px] truncate">
-                      {p.jobTitle}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-muted-foreground">
-                    {p.candidateName}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
-                    {formatMinor(p.amountMinor)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <PlacementStatusBadge status={p.status} />
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                    {releaseLabel(p)}
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    {p.status === "held" ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDisputingId(p.placementId)}
-                      >
-                        Dispute
-                      </Button>
-                    ) : p.status === "disputed" ? (
-                      <span className="text-xs text-muted-foreground">
-                        In dispute
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <MobileRecordList className="sm:hidden">
-          {data.data.map((p) => (
-            <MobileRecordCard
-              key={p.placementId}
-              title={p.candidateName}
-              subtitle={`${p.companyName} · ${p.jobTitle}`}
-              trailing={<PlacementStatusBadge status={p.status} />}
-              fields={[
-                { label: "Commission", value: formatMinor(p.amountMinor) },
-                { label: "Released / Hold Ends", value: releaseLabel(p) },
-              ]}
-              actions={
-                p.status === "held" ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setDisputingId(p.placementId)}
-                  >
-                    Open a dispute
-                  </Button>
-                ) : undefined
-              }
-            />
-          ))}
-        </MobileRecordList>
-        <BillingTableFooter
-          total={data.meta.total}
-          page={page}
-          totalPages={data.meta.totalPages}
-          onPage={onPage}
-        />
-      </CardContent>
-    </Card>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <MobileRecordList className="sm:hidden">
+        {data.data.map((p) => (
+          <MobileRecordCard
+            key={p.placementId}
+            title={p.candidateName}
+            subtitle={`${p.companyName} · ${p.jobTitle}`}
+            trailing={<PlacementStatusBadge status={p.status} />}
+            fields={[
+              { label: "Commission", value: formatMinor(p.amountMinor) },
+              { label: "Released / Hold Ends", value: releaseLabel(p) },
+            ]}
+            actions={
+              p.status === "held" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setDisputingId(p.placementId)}
+                >
+                  Open a dispute
+                </Button>
+              ) : undefined
+            }
+          />
+        ))}
+      </MobileRecordList>
+      <BillingTableFooter
+        total={data.meta.total}
+        page={page}
+        totalPages={data.meta.totalPages}
+        onPage={onPage}
+      />
+    </div>
   );
 }
 
@@ -396,7 +367,7 @@ export function RecruiterWalletPanel() {
   const hasPlacements = (placements.data?.data.length ?? 0) > 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Wallet"
         subtitle="Commissions paid out, held in escrow, and under dispute."
@@ -404,8 +375,8 @@ export function RecruiterWalletPanel() {
 
       {wallet.isError ? (
         <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-            <AlertCircle className="h-6 w-6" />
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sub text-bad">
+            <AlertCircle className="size-[17px]" />
             Could not load your earnings.
             <Button
               variant="outline"
@@ -429,8 +400,8 @@ export function RecruiterWalletPanel() {
 
       {placements.isError ? (
         <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-            <AlertCircle className="h-6 w-6" />
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sub text-bad">
+            <AlertCircle className="size-[17px]" />
             Could not load your placements.
             <Button
               variant="outline"
@@ -444,12 +415,12 @@ export function RecruiterWalletPanel() {
       ) : placements.isPending ? (
         <TableSkeleton />
       ) : hasPlacements ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           <PlacementsTable page={page} onPage={setPage} />
           <HowCommissionPaid />
         </div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           <PlacementsEmpty />
           <HowCommissionPaid />
         </div>

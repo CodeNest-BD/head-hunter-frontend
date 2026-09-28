@@ -3,6 +3,8 @@ import { ChevronRight, Wallet } from "lucide-react";
 
 import { US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
+import { Tag } from "@/shared/ui-components/badges/Tag";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
 
@@ -31,24 +33,19 @@ interface JobLivePreviewProps {
   onCollapse: () => void;
 }
 
-/** Badge tone + label for the status shown in the preview header. */
-const STATUS_BADGE: Record<JobStatus, { label: string; className: string }> = {
-  draft: { label: "Draft", className: "bg-amber-50 text-amber-700" },
-  published: {
-    label: "Published",
-    className: "bg-emerald-50 text-emerald-700",
-  },
-  paused: { label: "Paused", className: "bg-amber-50 text-amber-700" },
-  filled: { label: "Filled", className: "bg-primary/10 text-primary" },
-  closed: { label: "Closed", className: "bg-muted text-muted-foreground" },
-  expired: { label: "Expired", className: "bg-red-50 text-red-700" },
+/** Label + semantic tone for the status pill in the preview header. */
+const STATUS_BADGE: Record<JobStatus, { label: string; tone: PillTone }> = {
+  draft: { label: "Draft", tone: "warn" },
+  published: { label: "Published", tone: "ok" },
+  paused: { label: "Paused", tone: "warn" },
+  filled: { label: "Filled", tone: "info" },
+  closed: { label: "Closed", tone: "neutral" },
+  expired: { label: "Expired", tone: "bad" },
 };
 
 function BlockLabel({ children }: { children: ReactNode }) {
   return (
-    <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-      {children}
-    </p>
+    <p className="text-label font-[650] uppercase text-ink-muted">{children}</p>
   );
 }
 
@@ -56,15 +53,12 @@ function BlockLabel({ children }: { children: ReactNode }) {
 function PillRow({ label, entries }: { label: string; entries: string[] }) {
   if (entries.length === 0) return null;
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <BlockLabel>{label}</BlockLabel>
-      <ul className="flex flex-wrap gap-2">
+      <ul className="flex flex-wrap gap-1.5">
         {entries.map((entry) => (
-          <li
-            key={entry}
-            className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-          >
-            {entry}
+          <li key={entry}>
+            <Tag>{entry}</Tag>
           </li>
         ))}
       </ul>
@@ -212,36 +206,30 @@ export function JobLivePreview({
   );
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-md border border-border bg-card shadow-card">
-      <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+    <div className="flex flex-col overflow-hidden rounded-md border border-line bg-surface shadow-e1">
+      <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          <p className="text-label font-[650] uppercase text-ink-muted">
             Recruiter view preview
           </p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[11px] text-ink-faint">
             How this role appears to recruiters
           </p>
         </div>
-        <span
-          className={cn(
-            "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
-            badge.className,
-          )}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+        <Pill tone={badge.tone} className="shrink-0">
           {badge.label}
-        </span>
+        </Pill>
         <button
           type="button"
           onClick={onCollapse}
           aria-label="Collapse preview"
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="size-4" />
         </button>
       </div>
 
-      <div className="flex flex-col gap-5 bg-muted/30 p-4 sm:p-5">
+      <div className="flex flex-col gap-4 p-4">
         <div className="flex flex-col gap-3">
           {values.companyName !== "" && (
             <div className="flex items-center gap-2.5">
@@ -253,7 +241,7 @@ export function JobLivePreview({
                 name={values.companyName}
                 size="sm"
               />
-              <p className="min-w-0 truncate font-heading text-sm font-bold text-navy">
+              <p className="min-w-0 truncate text-sub font-semibold text-ink">
                 {values.companyName}
               </p>
             </div>
@@ -261,51 +249,53 @@ export function JobLivePreview({
           <div>
             <h2
               className={cn(
-                "font-heading text-xl font-extrabold tracking-tight",
-                title === "" ? "text-muted-foreground/60" : "text-navy",
+                "text-card font-[650]",
+                title === "" ? "text-ink-faint" : "text-ink",
               )}
             >
               {title === "" ? "Untitled role" : title}
             </h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">{where}</p>
+            <p className="mt-0.5 text-sub text-ink-muted">{where}</p>
             {facts.length > 0 && (
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-meta text-ink-faint">
                 {facts.join(" · ")}
               </p>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col divide-y divide-border overflow-hidden rounded-md border border-border bg-card">
-          <div className="flex items-center gap-3 bg-accent/40 p-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-card text-primary shadow-sm">
-              <Wallet className="h-5 w-5" />
+        {/* The reference leads the preview with a cobalt-tinted `.well`: the
+            fee is the one figure a recruiter reads before anything else. */}
+        <div className="flex flex-col divide-y divide-line overflow-hidden rounded-sm border border-tint-strong">
+          <div className="flex items-center gap-3 bg-tint p-3.5">
+            <span className="flex size-8.5 shrink-0 items-center justify-center rounded-sm bg-surface text-blue">
+              <Wallet className="size-[17px]" />
             </span>
             <div className="min-w-0">
               <BlockLabel>Recruiter fee</BlockLabel>
-              <p className="font-heading text-2xl font-extrabold tabular-nums text-navy">
+              <p className="text-stat font-bold tabular-nums text-ink">
                 {formatMinor(majorInputToMinor(values.recruiterFee) ?? 0)}
               </p>
-              <p className="text-xs text-muted-foreground">
-                on a successful hire
-              </p>
+              <p className="text-meta text-ink-muted">on a successful hire</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 bg-surface p-3.5">
             <div className="min-w-0">
               <BlockLabel>Pay range</BlockLabel>
-              <p className="mt-1 font-heading text-lg font-bold text-primary">
+              <p className="mt-[3px] text-block font-[650] tabular-nums text-ink">
                 {salary ?? "—"}
               </p>
             </div>
             <div className="min-w-0">
               <BlockLabel>Timeline to hire</BlockLabel>
               {values.timelineToHire === "" ? (
-                <p className="mt-1 font-medium text-muted-foreground">—</p>
+                <p className="mt-[3px] text-body font-[550] text-ink-muted">—</p>
               ) : (
-                <span className="mt-1.5 inline-flex w-fit items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
-                  {OFFER_TIMELINE_LABELS[values.timelineToHire]}
-                </span>
+                <div className="mt-1.5">
+                  <Pill tone="warn" plain>
+                    {OFFER_TIMELINE_LABELS[values.timelineToHire]}
+                  </Pill>
+                </div>
               )}
             </div>
           </div>
@@ -315,12 +305,15 @@ export function JobLivePreview({
         <PillRow label="Nice-to-Haves" entries={values.niceToHave} />
 
         {selectionKeys.length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <BlockLabel>Hiring decision keys</BlockLabel>
             <ol className="flex flex-col gap-1">
               {selectionKeys.map((entry, index) => (
-                <li key={entry} className="text-sm text-navy">
-                  <span className="font-medium">{index + 1}.</span> {entry}
+                <li key={entry} className="text-sub text-ink-body">
+                  <span className="font-[550] tabular-nums text-ink">
+                    {index + 1}.
+                  </span>{" "}
+                  {entry}
                 </li>
               ))}
             </ol>
@@ -328,23 +321,25 @@ export function JobLivePreview({
         )}
 
         {values.benefitsSummary.trim() !== "" && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <BlockLabel>Benefits summary</BlockLabel>
-            <p className="whitespace-pre-line text-sm text-navy">
+            <p className="whitespace-pre-line text-sub text-ink-body">
               {values.benefitsSummary}
             </p>
           </div>
         )}
 
         {values.interviewRounds.length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <BlockLabel>Interview process</BlockLabel>
             <ol className="flex flex-col gap-1.5">
               {values.interviewRounds.map((round, index) => (
-                <li key={index} className="text-sm text-navy">
-                  <span className="font-medium">{index + 1}.</span>{" "}
+                <li key={index} className="text-sub text-ink-body">
+                  <span className="font-[550] tabular-nums text-ink">
+                    {index + 1}.
+                  </span>{" "}
                   {INTERVIEW_TYPE_LABELS[round.type]}
-                  <span className="text-muted-foreground">
+                  <span className="text-ink-muted">
                     {" · "}
                     {interviewDurationLabel(Number(round.durationMinutes))}
                   </span>
@@ -355,13 +350,15 @@ export function JobLivePreview({
         )}
 
         {details.length > 0 && (
-          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 border-t border-border pt-4 sm:grid-cols-2">
+          <dl className="grid grid-cols-2 gap-x-5 gap-y-3.5 border-t border-line pt-4">
             {details.map((detail) => (
               <div key={detail.label} className="min-w-0">
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                <dt className="text-label font-[650] uppercase text-ink-muted">
                   {detail.label}
                 </dt>
-                <dd className="mt-0.5 text-sm text-navy">{detail.value}</dd>
+                <dd className="mt-[3px] text-body font-[550] text-ink">
+                  {detail.value}
+                </dd>
               </div>
             ))}
           </dl>

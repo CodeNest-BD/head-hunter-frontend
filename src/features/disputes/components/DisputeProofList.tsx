@@ -3,6 +3,8 @@
 import { Download, FileText } from "lucide-react";
 
 import { formatSize } from "@/shared/utils/formatSize";
+import { ListRow } from "@/shared/ui-components/list/ListRow";
+import { Tile } from "@/shared/ui-components/list/Tile";
 
 import type { DisputeAttachment } from "../schemas";
 
@@ -25,39 +27,39 @@ export function DisputeProofList({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-        Proof
-      </p>
-      <ul className="flex flex-col gap-1.5">
+      <p className="text-label font-[650] uppercase text-ink-muted">Proof</p>
+      <ul className="overflow-hidden rounded-sm border border-line bg-surface">
         {attachments.map((file) => (
-          <li
-            key={file.id}
-            className="flex items-center gap-2.5 rounded-md border border-border bg-card px-3 py-2"
-          >
-            <FileText className="h-4 w-4 shrink-0 text-primary" />
-            <a
-              href={file.previewUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="min-w-0 flex-1 truncate text-sm text-primary underline-offset-2 hover:underline"
-            >
-              {file.fileName}
-            </a>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {FILED_BY_LABEL[file.uploadedBy]}
-            </span>
-            {file.sizeBytes !== null && (
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {formatSize(file.sizeBytes)}
+          // The row's own hairline sits on the `<li>`: `ListRow`'s `last:`
+          // rule can never fire while each row is an only child.
+          <li key={file.id} className="border-b border-line last:border-b-0">
+            {/* `.listrow` — each document is one evidence row led by a tile. */}
+            <ListRow className="items-center gap-2.5">
+              <Tile icon={FileText} tone="neutral" />
+              <a
+                href={file.previewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-w-0 flex-1 truncate text-sub font-[550] text-blue-ink underline-offset-2 hover:underline"
+              >
+                {file.fileName}
+              </a>
+              <span className="shrink-0 text-meta text-ink-faint">
+                {FILED_BY_LABEL[file.uploadedBy]}
               </span>
-            )}
-            <a
-              href={file.downloadUrl}
-              aria-label={`Download ${file.fileName}`}
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              <Download className="h-3.5 w-3.5" />
-            </a>
+              {file.sizeBytes !== null && (
+                <span className="shrink-0 tabular-nums text-meta text-ink-faint">
+                  {formatSize(file.sizeBytes)}
+                </span>
+              )}
+              <a
+                href={file.downloadUrl}
+                aria-label={`Download ${file.fileName}`}
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
+              >
+                <Download className="size-[15px]" />
+              </a>
+            </ListRow>
           </li>
         ))}
       </ul>

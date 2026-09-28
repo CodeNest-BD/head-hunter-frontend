@@ -45,33 +45,41 @@ export function DisputeChannelThread({
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-3">
-      <div className="flex flex-1 flex-col gap-2">
+    <div className="flex flex-1 flex-col gap-4">
+      <div className="flex flex-1 flex-col gap-2.5">
         {messages.length === 0 ? (
-          <p className="rounded-md border border-dashed border-input bg-secondary/40 p-3 text-[13px] text-muted-foreground">
+          // `.well`, dashed: an empty channel is a placeholder, not a record.
+          <p className="rounded-sm border border-dashed border-line-strong bg-surface-sub px-3 py-2.5 text-sub text-ink-muted">
             {emptyLabel}
           </p>
         ) : (
           messages.map((m) => {
             const fromAdmin = m.senderRole === "admin";
             return (
+              // `.msg` — the counterparty reads as the plain bubble, the party
+              // whose side this channel is on as the reference's `.msg--own`.
               <div
                 key={m.id}
                 className={cn(
-                  "max-w-[85%] rounded-md border px-3 py-2 text-sm",
-                  fromAdmin
-                    ? "self-start border-border bg-card"
-                    : "self-end border-primary/20 bg-accent/60",
+                  "flex max-w-[78%] flex-col",
+                  fromAdmin ? "self-start" : "items-end self-end",
                 )}
               >
-                <div className="mb-0.5 flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
+                <div
+                  className={cn(
+                    "rounded-[12px] border px-3 py-2 text-sub",
+                    fromAdmin
+                      ? "rounded-tl-[4px] border-line bg-surface-sub text-ink-body"
+                      : "rounded-tr-[4px] border-blue bg-blue text-white",
+                  )}
+                >
+                  <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                </div>
+                <div className="mt-[3px] flex items-center gap-1.5 text-[11px] text-ink-faint">
                   <span>{SENDER_LABELS[m.senderRole]}</span>
                   <span>·</span>
                   <span>{formatDate(m.createdAt)}</span>
                 </div>
-                <p className="whitespace-pre-wrap break-words text-navy">
-                  {m.body}
-                </p>
               </div>
             );
           })
@@ -79,18 +87,21 @@ export function DisputeChannelThread({
       </div>
 
       {onSend && !disabled ? (
-        <div className="flex flex-col gap-2">
+        // `.composer` — one framed unit: a borderless textarea over a ruled bar.
+        <div className="rounded-md border border-line-strong bg-surface transition-colors focus-within:border-blue focus-within:shadow-focus">
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder={placeholder}
             rows={3}
             maxLength={4000}
+            className="min-h-16 resize-none rounded-none border-0 bg-transparent px-3 py-2.5 text-sub focus-visible:shadow-none"
           />
-          <div className="flex justify-end">
+          <div className="flex items-center gap-2 border-t border-line px-2.5 py-[7px]">
             <Button
               type="button"
               size="sm"
+              className="ml-auto"
               disabled={sending || body.trim().length === 0}
               onClick={send}
             >

@@ -18,6 +18,7 @@ import {
 } from "react-hook-form";
 import { Info, PanelRightOpen, X } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { Pill } from "@/shared/ui-components/badges/Pill";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
@@ -94,8 +95,8 @@ import { JobLivePreview } from "./JobLivePreview";
 /** Persists the live-preview open/closed choice across navigations and reloads. */
 const PREVIEW_OPEN_KEY = "hh-job-preview-open";
 
-/** Consistent control height across the form's dense single-card layout. */
-const CONTROL_HEIGHT = "h-10";
+/** The reference's 36px control height, across the form's single-card layout. */
+const CONTROL_HEIGHT = "h-9";
 
 /** Shared by the live message under the fee field and the submit-time error, so
  * a company reads the same sentence either way. */
@@ -153,19 +154,17 @@ function Field({
 }) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <Label htmlFor={htmlFor} className="text-[13px] font-semibold text-navy">
+      <Label htmlFor={htmlFor}>
         {label}
         {optional && (
-          <span className="ml-1 font-normal text-muted-foreground">
-            Optional
-          </span>
+          <span className="ml-1 font-[450] text-ink-faint">Optional</span>
         )}
       </Label>
       {children}
       {error ? (
-        <p className="text-xs text-destructive">{error}</p>
+        <p className="text-meta font-medium text-bad">{error}</p>
       ) : (
-        hint && <p className="text-xs text-muted-foreground">{hint}</p>
+        hint && <p className="text-meta text-ink-faint">{hint}</p>
       )}
     </div>
   );
@@ -183,10 +182,8 @@ function Block({
 }) {
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-[13px] font-bold text-navy">{title}</h2>
-      {intro && (
-        <p className="text-xs leading-relaxed text-muted-foreground">{intro}</p>
-      )}
+      <h2 className="text-block font-[650] text-ink">{title}</h2>
+      {intro && <p className="text-meta text-ink-muted">{intro}</p>}
       {children}
     </section>
   );
@@ -201,7 +198,7 @@ function WorkModelControl({
   onChange: (next: WorkModel) => void;
 }) {
   return (
-    <div className="inline-flex rounded-lg border border-border bg-secondary/60 p-1">
+    <div className="inline-flex rounded-sm border border-line bg-surface-sunken p-0.5">
       {WORK_MODELS.map((model) => {
         const active = value === model;
         return (
@@ -211,10 +208,10 @@ function WorkModelControl({
             aria-pressed={active}
             onClick={() => onChange(model)}
             className={cn(
-              "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+              "inline-flex h-7 items-center gap-1.5 rounded-xs px-3 text-[12.5px] font-semibold transition-colors",
               active
-                ? "bg-card text-navy shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
+                ? "bg-surface text-ink shadow-e1"
+                : "text-ink-muted hover:text-ink",
             )}
           >
             {WORK_MODEL_LABELS[model]}
@@ -246,7 +243,7 @@ function RadioRow({
       {options.map((option) => (
         <label
           key={option.value}
-          className="flex items-center gap-2 text-sm text-foreground"
+          className="flex items-center gap-2 text-sub text-ink-body"
         >
           <input
             type="radio"
@@ -254,7 +251,7 @@ function RadioRow({
             value={option.value}
             checked={value === option.value}
             onChange={() => onChange(option.value)}
-            className="h-4 w-4 accent-primary"
+            className="size-[15px] accent-blue"
           />
           {option.label}
         </label>
@@ -267,7 +264,7 @@ function RadioRow({
 function Question({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[13px] font-semibold text-navy">{label}</span>
+      <span className="text-[12.5px] font-semibold text-ink">{label}</span>
       {children}
     </div>
   );
@@ -282,13 +279,13 @@ const MoneyInput = forwardRef<
   React.ComponentProps<typeof NumericInput>
 >(({ className, decimal = true, ...props }, ref) => (
   <div className="relative">
-    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+    <span className="pointer-events-none absolute left-[11px] top-1/2 -translate-y-1/2 text-sub text-ink-faint">
       $
     </span>
     <NumericInput
       decimal={decimal}
       ref={ref}
-      className={cn(CONTROL_HEIGHT, "pl-7", className)}
+      className={cn(CONTROL_HEIGHT, "pl-6 tabular-nums", className)}
       {...props}
     />
   </div>
@@ -615,7 +612,7 @@ export function JobForm({
       control={control}
       name={`benefits.${key}`}
       render={({ field }) => (
-        <label className="flex items-center gap-2.5 text-sm text-foreground">
+        <label className="flex items-center gap-2 text-sub text-ink-body">
           <Checkbox
             checked={field.value}
             onCheckedChange={(checked) => field.onChange(checked === true)}
@@ -627,14 +624,22 @@ export function JobForm({
   );
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      {/* The form takes ~70% and the preview ~30% of the row (flex 7:3). */}
+    <div
+      className={cn(
+        // The reference's two-track form page: the card, then a 340px preview
+        // rail that collapses to its own width once the panel is shut.
+        "grid gap-4 lg:items-start",
+        previewOpen
+          ? "lg:grid-cols-[minmax(0,1fr)_340px]"
+          : "lg:grid-cols-[minmax(0,1fr)_auto]",
+      )}
+    >
       <form
         id={JOB_FORM_ID}
         onSubmit={(event) => emit(submitIntent(event))(event)}
-        className="flex min-w-0 flex-col gap-4 lg:flex-[7]"
+        className="flex min-w-0 flex-col gap-4"
       >
-        <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
+        <div className="rounded-md border border-line bg-surface shadow-e1">
           <FormSection
             title="Basics"
             hint="What the role is and basic details."
@@ -650,7 +655,7 @@ export function JobForm({
                   tabIndex={-1}
                   className={cn(
                     CONTROL_HEIGHT,
-                    "cursor-default bg-secondary/60 text-muted-foreground focus-visible:ring-0",
+                    "cursor-default bg-surface-sunken text-ink-muted focus-visible:ring-0",
                   )}
                   {...register("companyName")}
                 />
@@ -753,7 +758,7 @@ export function JobForm({
                   control={control}
                   name="confidentialSearch"
                   render={({ field }) => (
-                    <label className="mt-1 flex items-center gap-2.5 text-sm text-foreground">
+                    <label className="mt-1 flex items-center gap-2 text-sub text-ink-body">
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={(checked) =>
@@ -881,14 +886,14 @@ export function JobForm({
                       className="h-9 w-14"
                       {...register("onsiteDaysPerWeek")}
                     />
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sub text-ink-muted">
                       days on site / week
                     </span>
                   </div>
                 )}
               </div>
               {errors.onsiteDaysPerWeek && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.onsiteDaysPerWeek.message}
                 </p>
               )}
@@ -999,9 +1004,7 @@ export function JobForm({
           >
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
-                <Label className="text-[13px] font-semibold text-navy">
-                  Pay Range
-                </Label>
+                <Label>Pay Range</Label>
                 <Controller
                   control={control}
                   name="salaryRatePeriod"
@@ -1020,7 +1023,7 @@ export function JobForm({
                     >
                       <SelectTrigger
                         aria-label="Pay Type"
-                        className="h-7 w-auto gap-1 border-none bg-secondary/60 px-2 text-xs shadow-none"
+                        className="h-7 w-auto gap-1 border-none bg-surface-sunken px-2 text-meta shadow-none"
                       >
                         <SelectValue />
                       </SelectTrigger>
@@ -1055,7 +1058,7 @@ export function JobForm({
                     placeholder="Min"
                     {...register("salaryMin")}
                   />
-                  <span className="text-muted-foreground">–</span>
+                  <span className="text-ink-faint">–</span>
                   <MoneyInput
                     decimal={false}
                     aria-label="Pay maximum"
@@ -1065,7 +1068,7 @@ export function JobForm({
                 </div>
               </PayRangeField>
               {(errors.salaryMin || errors.salaryMax) && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.salaryMin?.message ?? errors.salaryMax?.message}
                 </p>
               )}
@@ -1085,7 +1088,7 @@ export function JobForm({
                     control={control}
                     name="benefits.retirement401k"
                     render={({ field }) => (
-                      <label className="flex items-center gap-2.5 text-sm text-foreground">
+                      <label className="flex items-center gap-2 text-sub text-ink-body">
                         <Checkbox
                           checked={field.value}
                           onCheckedChange={(checked) =>
@@ -1109,7 +1112,7 @@ export function JobForm({
                     }
                     {...register("benefits.retirement401kMatch")}
                   />
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sub text-ink-muted">
                     (% Match)
                   </span>
                 </div>
@@ -1125,7 +1128,7 @@ export function JobForm({
                     }
                     {...register("benefits.sickDays")}
                   />
-                  <span className="text-sm text-muted-foreground">days</span>
+                  <span className="text-sub text-ink-muted">days</span>
                 </div>
                 <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                   {benefitToggle("vacation")}
@@ -1137,14 +1140,14 @@ export function JobForm({
                     }
                     {...register("benefits.vacationDays")}
                   />
-                  <span className="text-sm text-muted-foreground">days</span>
+                  <span className="text-sub text-ink-muted">days</span>
                 </div>
 
                 <Controller
                   control={control}
                   name="benefits.educationReimbursement"
                   render={({ field }) => (
-                    <label className="flex items-center gap-2.5 text-sm text-foreground">
+                    <label className="flex items-center gap-2 text-sub text-ink-body">
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={(checked) =>
@@ -1159,7 +1162,7 @@ export function JobForm({
                   control={control}
                   name="benefits.ancillary"
                   render={({ field }) => (
-                    <label className="flex items-center gap-2.5 text-sm text-foreground">
+                    <label className="flex items-center gap-2 text-sub text-ink-body">
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={(checked) =>
@@ -1172,7 +1175,7 @@ export function JobForm({
                 />
               </div>
               {benefitsError && (
-                <p className="text-xs text-destructive">{benefitsError}</p>
+                <p className="text-meta font-medium text-bad">{benefitsError}</p>
               )}
 
               {values.benefits.ancillary && (
@@ -1184,7 +1187,7 @@ export function JobForm({
                     {...register("benefits.ancillaryDetails")}
                   />
                   {errors.benefits?.ancillaryDetails && (
-                    <p className="text-xs text-destructive">
+                    <p className="text-meta font-medium text-bad">
                       {errors.benefits.ancillaryDetails.message}
                     </p>
                   )}
@@ -1212,23 +1215,18 @@ export function JobForm({
 
             {/* The recruiter fee is the money that drives the marketplace, so it
               gets its own emphasized panel. */}
-            <div className="rounded-lg bg-secondary/50 p-4">
+            <div className="rounded-sm border border-tint-strong bg-tint px-3.5 py-3">
               <div className="flex items-center gap-1.5">
-                <Label
-                  htmlFor="recruiterFee"
-                  className="text-[13px] font-semibold text-navy"
-                >
-                  Recruiter Fee
-                </Label>
+                <Label htmlFor="recruiterFee">Recruiter Fee</Label>
                 <TooltipProvider delayDuration={150}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
                         aria-label="Why the fee is fixed"
-                        className="text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="text-ink-muted transition-colors hover:text-blue focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
-                        <Info className="h-4 w-4" />
+                        <Info className="size-[15px]" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -1244,31 +1242,26 @@ export function JobForm({
                   decimal={false}
                   id="recruiterFee"
                   placeholder="10000"
-                  className="max-w-[12rem] bg-card"
+                  className="max-w-[12rem] bg-surface"
                   {...register("recruiterFee")}
                 />
                 {/* One slot, two states: the fee either clears the floor or
                     says by how much it misses, in the same pill shape. */}
                 {feeError !== null ? (
-                  <span
-                    role="alert"
-                    className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700"
-                  >
-                    {feeError}
+                  <span role="alert">
+                    <Pill tone="bad">{feeError}</Pill>
                   </span>
                 ) : (
                   feeMeetsMinimum && (
-                    <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                      Meets the publishing minimum
-                    </span>
+                    <Pill tone="ok">Meets the publishing minimum</Pill>
                   )
                 )}
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-[7px] text-meta text-ink-muted">
                 {minFee ? (
                   <>
                     A minimum recruiter fee of{" "}
-                    <span className="font-semibold text-navy">
+                    <span className="font-[650] text-ink">
                       {formatMinor(minFee.amountMinor)}
                     </span>{" "}
                     is required to publish any role. The higher the fee, the
@@ -1312,13 +1305,13 @@ export function JobForm({
                 />
               )}
             />
-            <div className="flex items-center justify-end text-xs text-muted-foreground">
+            <div className="flex items-center justify-end text-meta text-ink-faint">
               <span className="shrink-0 tabular-nums">
                 {wordCount} {wordCount === 1 ? "word" : "words"}
               </span>
             </div>
             {errors.description && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.description.message}
               </p>
             )}
@@ -1371,7 +1364,7 @@ export function JobForm({
                   <div className="grid gap-2.5">
                     {Array.from({ length: MAX_SELECTION_KEYS }, (_, index) => (
                       <div key={index} className="flex items-center gap-2.5">
-                        <span className="w-4 shrink-0 text-sm font-medium text-navy">
+                        <span className="w-4 shrink-0 text-sub font-[550] tabular-nums text-ink">
                           {index + 1}.
                         </span>
                         <Input
@@ -1409,13 +1402,13 @@ export function JobForm({
                     name="interviewingAsap"
                     render={({ field }) => (
                       <>
-                        <label className="flex items-center gap-2 text-sm text-foreground">
+                        <label className="flex items-center gap-2 text-sub text-ink-body">
                           <input
                             type="radio"
                             name="interviewingAsap"
                             checked={field.value}
                             onChange={() => field.onChange(true)}
-                            className="h-4 w-4 accent-primary"
+                            className="size-[15px] accent-blue"
                           />
                           ASAP
                         </label>
@@ -1433,7 +1426,7 @@ export function JobForm({
                             aria-label="A date range"
                             checked={!field.value}
                             onChange={() => field.onChange(false)}
-                            className="h-4 w-4 accent-primary"
+                            className="size-[15px] accent-blue"
                           />
                           <DayPickerField
                             id="interviewing-from"
@@ -1447,7 +1440,7 @@ export function JobForm({
                             ariaLabel="Interviewing from"
                             className="h-8 w-auto"
                           />
-                          <span className="text-muted-foreground">–</span>
+                          <span className="text-ink-faint">–</span>
                           <DayPickerField
                             id="interviewing-until"
                             value={values.interviewingTo}
@@ -1471,7 +1464,7 @@ export function JobForm({
                   />
                 </div>
                 {errors.interviewingTo && (
-                  <p className="text-xs text-destructive">
+                  <p className="text-meta font-medium text-bad">
                     {errors.interviewingTo.message}
                   </p>
                 )}
@@ -1504,9 +1497,9 @@ export function JobForm({
                       {field.value.map((round, index) => (
                         <div
                           key={index}
-                          className="flex items-center gap-0.5 rounded-md border border-border bg-secondary/40 py-1 pl-2.5 pr-1"
+                          className="flex items-center gap-0.5 rounded-sm border border-line bg-surface-sub py-1 pl-2.5 pr-1"
                         >
-                          <span className="text-sm font-medium text-navy">
+                          <span className="text-sub font-[550] tabular-nums text-ink">
                             {index + 1}.
                           </span>
                           <Select
@@ -1523,7 +1516,7 @@ export function JobForm({
                           >
                             <SelectTrigger
                               aria-label={`Round ${index + 1} type`}
-                              className="h-7 w-auto gap-1 border-none bg-transparent px-1.5 text-sm shadow-none"
+                              className="h-7 w-auto gap-1 border-none bg-transparent px-1.5 text-sub shadow-none"
                             >
                               <SelectValue />
                             </SelectTrigger>
@@ -1549,7 +1542,7 @@ export function JobForm({
                           >
                             <SelectTrigger
                               aria-label={`Round ${index + 1} length`}
-                              className="h-7 w-auto gap-1 border-none bg-transparent px-1.5 text-sm shadow-none"
+                              className="h-7 w-auto gap-1 border-none bg-transparent px-1.5 text-sub shadow-none"
                             >
                               <SelectValue />
                             </SelectTrigger>
@@ -1574,9 +1567,9 @@ export function JobForm({
                                 ),
                               )
                             }
-                            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+                            className="flex size-6 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
                           >
-                            <X className="h-3.5 w-3.5" />
+                            <X className="size-3.5" />
                           </button>
                         </div>
                       ))}
@@ -1640,19 +1633,17 @@ export function JobForm({
         </div>
 
         {/* Sticky action bar so Save is always reachable in a long form. */}
-        <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-card-lg backdrop-blur sm:px-5">
-          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="sticky bottom-3 z-20 flex items-center gap-2.5 rounded-md border border-line bg-surface/90 px-3.5 py-2.5 shadow-pop backdrop-blur-[6px]">
+          <span className="flex items-center gap-[7px] text-[12.5px] text-ink-muted">
             <span
               className={cn(
-                "h-2 w-2 shrink-0 rounded-full",
-                !allowsPartialSave || remaining === 0
-                  ? "bg-emerald-500"
-                  : "bg-amber-400",
+                "size-2 shrink-0 rounded-full",
+                !allowsPartialSave || remaining === 0 ? "bg-ok" : "bg-warn",
               )}
             />
             <span className="hidden sm:inline">{statusText}</span>
           </span>
-          <div className="flex gap-2">
+          <div className="ml-auto flex gap-2">
             {onCancel && (
               <Button
                 type="button"
@@ -1697,7 +1688,7 @@ export function JobForm({
             panel; collapsed, it shrinks to a thin rail on the right edge that
             reopens it. On narrow screens it drops below the form. */}
       {previewOpen ? (
-        <aside className="w-full min-w-0 lg:sticky lg:top-24 lg:flex-[3]">
+        <aside className="w-full min-w-0 lg:sticky lg:top-[72px]">
           <JobLivePreview
             values={values}
             status={job?.status ?? "draft"}
@@ -1705,14 +1696,14 @@ export function JobForm({
           />
         </aside>
       ) : (
-        <aside className="shrink-0 lg:sticky lg:top-24">
+        <aside className="lg:sticky lg:top-[72px]">
           <button
             type="button"
             onClick={togglePreview}
             aria-label="Show preview"
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-3 py-2.5 text-sm font-medium text-navy shadow-sm transition-colors hover:bg-accent lg:w-auto lg:flex-col lg:gap-3 lg:px-2.5 lg:py-4"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-line bg-surface px-3 py-2.5 text-sub font-semibold text-ink shadow-e1 transition-colors hover:bg-surface-sub lg:w-auto lg:flex-col lg:gap-3 lg:px-2.5 lg:py-4"
           >
-            <PanelRightOpen className="h-4 w-4 shrink-0 text-primary" />
+            <PanelRightOpen className="size-4 shrink-0 text-blue" />
             <span className="lg:[writing-mode:vertical-rl]">Preview</span>
           </button>
         </aside>

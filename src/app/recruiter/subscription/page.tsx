@@ -22,7 +22,7 @@ export default function RecruiterSubscriptionPage() {
   return (
     <RequireRole role="recruiter">
       <DashboardLayout>
-        <div className="flex max-w-3xl flex-col gap-6">
+        <div className="flex max-w-page-narrow flex-col gap-4">
           <PageHeader
             title="Subscription"
             subtitle="A monthly subscription unlocks the job map, job list and candidate submissions."

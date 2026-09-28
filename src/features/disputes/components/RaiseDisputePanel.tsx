@@ -7,8 +7,15 @@ import { Plus, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
+import { Label } from "@/shared/ui-components/controls/label";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
+import { Tile } from "@/shared/ui-components/list/Tile";
 
 import { useEligiblePlacements } from "../hooks/useDisputes";
 import { RaiseDisputeForm } from "./RaiseDisputeForm";
@@ -32,24 +39,27 @@ export function RaiseDisputePanel() {
   const options = eligible ?? [];
 
   if (!open) {
+    // The reference's calm banner card: an amber tile, the offer, and the
+    // action pushed to the right edge. A dispute is an escrow safety valve,
+    // not an alarm.
     return (
       <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
-          <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
-              <ShieldAlert className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-navy">
-                Something wrong with a placement?
-              </p>
-              <p className="mt-0.5 text-[13px] text-muted-foreground">
-                Open a dispute on a fee held in escrow and support will step in.
-              </p>
-            </div>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <Tile icon={ShieldAlert} tone="warn" />
+          <div className="min-w-0">
+            <p className="text-block font-[650] text-ink">
+              Something wrong with a placement?
+            </p>
+            <p className="mt-[2px] text-sub text-ink-muted">
+              Open a dispute on a fee held in escrow and support will step in.
+            </p>
           </div>
-          <Button type="button" onClick={() => setOpen(true)}>
-            <Plus className="mr-1.5 h-4 w-4" /> Raise a Dispute
+          <Button
+            type="button"
+            className="ml-auto"
+            onClick={() => setOpen(true)}
+          >
+            <Plus /> Raise a Dispute
           </Button>
         </CardContent>
       </Card>
@@ -60,43 +70,35 @@ export function RaiseDisputePanel() {
 
   return (
     <Card>
-      <CardContent className="flex flex-col gap-4 p-5">
-        <div className="flex items-center justify-between gap-3">
-          <p className="font-heading text-base font-bold text-navy">
-            Raise a Dispute
-          </p>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setOpen(false);
-              setPlacementId("");
-            }}
-          >
-            Close
-          </Button>
-        </div>
-
+      <CardHeader>
+        <CardTitle>Raise a Dispute</CardTitle>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="ml-auto"
+          onClick={() => {
+            setOpen(false);
+            setPlacementId("");
+          }}
+        >
+          Close
+        </Button>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
         {isPending ? (
-          <p className="text-sm text-muted-foreground">
-            Loading your placements…
-          </p>
+          <p className="text-sub text-ink-muted">Loading your placements…</p>
         ) : options.length === 0 ? (
-          <p className="rounded-md border border-dashed border-input bg-secondary/40 p-4 text-[13px] text-muted-foreground">
+          <p className="rounded-sm border border-dashed border-line-strong bg-surface-sub px-3 py-2.5 text-sub text-ink-muted">
             You have no placements held in escrow right now, so there is nothing
             to dispute. A placement appears once an offer is accepted and its
             fee is held.
           </p>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="dispute-placement"
-                className="text-[13px] font-semibold text-navy"
-              >
-                Which placement?
-              </label>
+            {/* `.field` */}
+            <div className="flex max-w-lg flex-col gap-1.5">
+              <Label htmlFor="dispute-placement">Which placement?</Label>
               <NativeSelect
                 id="dispute-placement"
                 value={placementId}

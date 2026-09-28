@@ -1,19 +1,21 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { useSpecializationsField } from "@/shared/hooks/useSpecializationsField";
 import { useStateCities } from "@/shared/hooks/useStateCities";
+import { Tag } from "@/shared/ui-components/badges/Tag";
 import { Button } from "@/shared/ui-components/controls/button";
+import { Card } from "@/shared/ui-components/controls/card";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
+import { FormSection } from "@/shared/ui-components/layout/FormSection";
 import { useUpdateMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 import { RecruiterPhotoUploader } from "./RecruiterPhotoUploader";
 import {
@@ -22,29 +24,6 @@ import {
   type RecruiterProfile,
   type RecruiterProfileFormValues,
 } from "../schemas";
-
-/** A labelled form section: title + description on the left, fields on the right. */
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="grid gap-x-8 gap-y-4 p-5 sm:p-6 md:grid-cols-[minmax(0,15rem)_1fr]">
-      <div>
-        <h3 className="text-sm font-bold text-navy">{title}</h3>
-        <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-          {description}
-        </p>
-      </div>
-      <div className="flex flex-col gap-4">{children}</div>
-    </div>
-  );
-}
 
 interface SpecializationsChipsProps {
   value: string[];
@@ -74,31 +53,24 @@ function SpecializationsChips({
 
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="flex flex-wrap items-center gap-2">
-        {chips.map((chip) => {
-          const checked = value.includes(chip.value);
-          return (
-            <button
-              key={chip.value}
-              type="button"
-              aria-pressed={checked}
-              onClick={() => toggle(chip.value)}
-              className={cn(
-                "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
-                checked
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "border-border text-muted-foreground hover:border-input hover:text-navy",
-              )}
-            >
-              {chip.label}
-            </button>
-          );
-        })}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {chips.map((chip) => (
+          <Tag
+            key={chip.value}
+            selected={value.includes(chip.value)}
+            onClick={() => toggle(chip.value)}
+          >
+            {chip.label}
+          </Tag>
+        ))}
         {!isAdding && (
+          // The reference's `.tag--add`, written out rather than taken from
+          // `Tag`: a clickable `Tag` is a toggle and announces `aria-pressed`,
+          // which this "open the draft field" affordance is not.
           <button
             type="button"
             onClick={openAdd}
-            className="rounded-full border border-dashed border-border px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-input hover:text-navy"
+            className="inline-flex h-6.5 items-center gap-[5px] rounded-full border border-dashed border-line-strong bg-surface px-2.5 text-meta font-[550] text-ink-muted transition-colors hover:border-blue hover:text-blue-ink"
           >
             + Add
           </button>
@@ -130,7 +102,7 @@ function SpecializationsChips({
         </div>
       )}
       {(error ?? formError) && (
-        <p className="text-xs text-destructive">{error ?? formError}</p>
+        <p className="text-meta font-medium text-bad">{error ?? formError}</p>
       )}
     </div>
   );
@@ -200,25 +172,25 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
-        <Section
+      <Card>
+        <FormSection
           title="Photo"
-          description="Shown on your profile and in the top-right menu."
+          hint="Shown on your profile and in the top-right menu."
         >
           <RecruiterPhotoUploader profile={profile} />
-        </Section>
-        <Section title="Location" description="Where you're based.">
-          <div className="flex flex-col gap-2">
+        </FormSection>
+        <FormSection title="Location" hint="Where you're based.">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="addressLine">Address</Label>
             <Input id="addressLine" {...register("addressLine")} />
             {errors.addressLine && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.addressLine.message}
               </p>
             )}
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="state">State</Label>
               <Controller
                 control={control}
@@ -232,12 +204,12 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
                 )}
               />
               {errors.state && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.state.message}
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="city">City</Label>
               <Controller
                 control={control}
@@ -252,27 +224,34 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
                 )}
               />
               {errors.city && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.city.message}
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="zip">ZIP</Label>
-              <NumericInput id="zip" placeholder="94103" {...register("zip")} />
+              <NumericInput
+                id="zip"
+                className="tabular-nums"
+                placeholder="94103"
+                {...register("zip")}
+              />
               {errors.zip && (
-                <p className="text-xs text-destructive">{errors.zip.message}</p>
+                <p className="text-meta font-medium text-bad">
+                  {errors.zip.message}
+                </p>
               )}
             </div>
           </div>
-        </Section>
+        </FormSection>
 
-        <Section
+        <FormSection
           title="Recruiting Experience"
-          description="The organizations you have recruited for. Your total years at each and your specialties!"
+          hint="The organizations you have recruited for. Your total years at each and your specialties!"
         >
           {firms.fields.length === 0 && (
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-meta text-ink-faint">
               No companies listed yet. Add one so companies can see your track
               record.
             </p>
@@ -281,10 +260,10 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
           {firms.fields.map((field, index) => (
             <div
               key={field.id}
-              className="flex flex-col gap-4 rounded-md border border-border p-4"
+              className="flex flex-col gap-2.5 rounded-sm border border-line bg-surface-sub p-3.5"
             >
               <div className="flex items-start justify-between gap-4">
-                <span className="text-sm font-semibold text-navy">
+                <span className="text-sub font-[650] text-ink">
                   Company {index + 1}
                 </span>
                 <Button
@@ -297,8 +276,8 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
                 </Button>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">
-                <div className="flex flex-col gap-2">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
+                <div className="flex flex-col gap-1.5">
                   <Label htmlFor={`experiences.${index}.firmName`}>
                     Company Name
                   </Label>
@@ -308,30 +287,31 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
                     {...register(`experiences.${index}.firmName`)}
                   />
                   {errors.experiences?.[index]?.firmName && (
-                    <p className="text-xs text-destructive">
+                    <p className="text-meta font-medium text-bad">
                       {errors.experiences[index]?.firmName?.message}
                     </p>
                   )}
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   <Label htmlFor={`experiences.${index}.years`}>Years</Label>
                   <NumericInput
                     id={`experiences.${index}.years`}
+                    className="tabular-nums"
                     placeholder="5"
                     {...register(`experiences.${index}.years`)}
                   />
                   {errors.experiences?.[index]?.years && (
-                    <p className="text-xs text-destructive">
+                    <p className="text-meta font-medium text-bad">
                       {errors.experiences[index]?.years?.message}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <Label>
                   Specializations{" "}
-                  <span className="font-normal text-muted-foreground">
+                  <span className="font-[450] text-ink-faint">
                     (At Least 1)
                   </span>
                 </Label>
@@ -371,17 +351,17 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
             </div>
           )}
           {firms.fields.length >= MAX_EXPERIENCES && (
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-meta text-ink-faint">
               You can list up to {MAX_EXPERIENCES} companies.
             </p>
           )}
-        </Section>
+        </FormSection>
 
-        <Section
+        <FormSection
           title="Contact"
-          description="Your phone is never shown to companies — they reach you through the platform."
+          hint="Your phone is never shown to companies — they reach you through the platform."
         >
-          <div className="flex flex-col gap-2 sm:max-w-sm">
+          <div className="flex flex-col gap-1.5 sm:max-w-sm">
             <Label htmlFor="phone">Phone</Label>
             <Controller
               control={control}
@@ -397,10 +377,12 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
               )}
             />
             {errors.phone && (
-              <p className="text-xs text-destructive">{errors.phone.message}</p>
+              <p className="text-meta font-medium text-bad">
+                {errors.phone.message}
+              </p>
             )}
           </div>
-          <div className="flex flex-col gap-2 sm:max-w-sm">
+          <div className="flex flex-col gap-1.5 sm:max-w-sm">
             <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
             <Input
               id="linkedinUrl"
@@ -408,21 +390,29 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
               {...register("linkedinUrl")}
             />
             {errors.linkedinUrl && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.linkedinUrl.message}
               </p>
             )}
           </div>
-        </Section>
-      </div>
+        </FormSection>
+      </Card>
 
-      {/* Save bar sticks to the viewport bottom while the form is in view, so
-          Save is always reachable and never looks disabled at a card's edge. */}
-      <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-card-lg backdrop-blur sm:px-5">
-        <span className="text-sm text-muted-foreground">
+      {/* The reference's `.savebar`: it sticks to the viewport bottom while the
+          form is in view, so Save is always reachable and never looks disabled
+          at a card's edge. */}
+      <div className="sticky bottom-3 z-20 flex items-center gap-2.5 rounded-md border border-line bg-surface/90 px-3.5 py-2.5 shadow-pop backdrop-blur-[6px]">
+        <span className="flex items-center gap-[7px] text-[12.5px] text-ink-muted">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "size-2 shrink-0 rounded-full",
+              isDirty ? "bg-[#e8a23b]" : "bg-ok",
+            )}
+          />
           {isDirty ? "Unsaved changes" : "All changes saved"}
         </span>
-        <div className="flex gap-2">
+        <div className="ml-auto flex gap-2">
           <Button
             type="button"
             variant="outline"

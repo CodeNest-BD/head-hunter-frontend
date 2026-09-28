@@ -158,9 +158,7 @@ export function LedgerTable() {
                 >
                   {formatMinor(entry.reservedAfterMinor)}
                 </td>
-                <td
-                  className={cn(T.TABLE_TD, "whitespace-nowrap text-right")}
-                >
+                <td className={cn(T.TABLE_TD, "whitespace-nowrap text-right")}>
                   <LedgerDocument entry={entry} accountName={accountName} />
                 </td>
               </tr>

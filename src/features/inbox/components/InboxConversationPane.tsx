@@ -7,33 +7,18 @@ import { Briefcase, Search } from "lucide-react";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
+import { Avatar } from "@/shared/ui-components/badges/Avatar";
+import { RefChip } from "@/shared/ui-components/badges/RefChip";
 import { Input } from "@/shared/ui-components/controls/input";
+import { ListRow } from "@/shared/ui-components/list/ListRow";
 
 import type { InboxSide } from "../api/inbox";
 import { useInboxConversations } from "../hooks/useInbox";
 
-const AVATAR_PALETTE = [
-  "bg-[#E8EDFB] text-[#3F5BA9]",
-  "bg-[#FBF1DC] text-[#8A6D3B]",
-  "bg-[#E7F0E9] text-[#3F7A5A]",
-  "bg-[#F2E9F3] text-[#7A4F86]",
-  "bg-[#FBE9E6] text-[#9B4A3F]",
-];
-function avatarTint(name: string): string {
-  let h = 0;
-  for (let i = 0; i < name.length; i += 1) {
-    h = (h * 31 + name.charCodeAt(i)) | 0;
-  }
-  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
-}
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 type Filter = "all" | "unread";
+
+/** The two positions of the reference's `.seg` control in the pane's head. */
+const FILTERS: readonly Filter[] = ["all", "unread"];
 
 /**
  * The compact conversation list that sits to the left of an open thread — the
@@ -60,20 +45,21 @@ export function InboxConversationPane({
   const rows = data?.data ?? [];
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-        <h2 className="font-heading text-base font-bold text-navy">Inbox</h2>
-        <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5 text-xs">
-          {(["all", "unread"] as const).map((key) => (
+    <div className="flex h-full flex-col overflow-hidden rounded-md border border-line bg-surface shadow-e1">
+      <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+        <h2 className="text-block font-[650] text-ink">Inbox</h2>
+        {/* `.seg` — the compact All/Unread switch. */}
+        <div className="inline-flex rounded-sm border border-line bg-surface-sunken p-0.5">
+          {FILTERS.map((key) => (
             <button
               key={key}
               type="button"
               onClick={() => setFilter(key)}
               className={cn(
-                "rounded-md px-2.5 py-1 font-semibold capitalize transition-colors",
+                "inline-flex h-6 items-center rounded-xs px-2.5 text-[11.5px] font-semibold capitalize transition-colors",
                 filter === key
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "bg-surface text-ink shadow-e1"
+                  : "text-ink-muted hover:text-ink",
               )}
             >
               {key}
@@ -81,19 +67,22 @@ export function InboxConversationPane({
           ))}
         </div>
       </div>
-      <div className="border-b border-border p-3">
+      <div className="border-b border-line p-3">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
+          />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search conversations"
-            className="h-9 rounded-lg pl-8 text-sm"
+            className="pl-8 text-sub"
           />
         </div>
       </div>
 
-      <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto scrollbar-navy">
+      <ul className="min-h-0 flex-1 overflow-y-auto scrollbar-navy">
         {rows.map((row) => {
           const selected = row.candidateId === selectedId;
           const unread = row.unreadMessages > 0;
@@ -101,83 +90,70 @@ export function InboxConversationPane({
           // unseen offer, interview or status change marks the row too.
           const needsYou = unread || row.needsReview;
           return (
-            <li key={row.candidateId} className="relative">
-              {selected ? (
-                <span
-                  aria-hidden="true"
-                  className="absolute left-0 top-0 h-full w-[3px] bg-primary"
-                />
-              ) : null}
+            // The separator lives on the list item so `ListRow`'s own `last:`
+            // rule keeps working inside the link wrapper.
+            <li
+              key={row.candidateId}
+              className="border-b border-line last:border-b-0"
+            >
               <Link
                 href={`/${side}/inbox/${row.candidateId}`}
-                className={cn(
-                  "flex items-start gap-2.5 px-4 py-3 transition-colors",
-                  selected
-                    ? "bg-secondary/60"
-                    : needsYou
-                      ? "bg-primary/[0.04] hover:bg-primary/[0.08]"
-                      : "hover:bg-secondary/40",
-                )}
+                className="block"
               >
-                <span className="flex w-1.5 shrink-0 justify-center pt-2">
-                  {needsYou && !selected ? (
-                    <span className="block h-2 w-2 shrink-0 rounded-full bg-primary" />
-                  ) : null}
-                </span>
-                <span
-                  className={cn(
-                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold",
-                    avatarTint(row.counterpartyName),
-                  )}
+                <ListRow
+                  unread={needsYou}
+                  selected={selected}
+                  interactive
+                  className="gap-2.5 border-b-0 px-3 py-2.5"
                 >
-                  {initials(row.counterpartyName)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span
+                  <span className="flex w-[7px] shrink-0 justify-center pt-[7px]">
+                    {needsYou && !selected ? (
+                      <span className="block size-[7px] shrink-0 rounded-full bg-blue" />
+                    ) : null}
+                  </span>
+                  <Avatar name={row.counterpartyName} size="sm" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={cn(
+                          "truncate text-[12.5px] text-ink",
+                          needsYou ? "font-[650]" : "font-semibold",
+                        )}
+                      >
+                        {row.counterpartyName}
+                      </span>
+                      <span className="shrink-0 text-[11px] tabular-nums text-ink-faint">
+                        {formatDate(row.lastActivityAt)}
+                      </span>
+                    </div>
+                    <div className="mt-[2px] flex min-w-0 items-center gap-1.5">
+                      <span className="shrink-0 truncate text-[11.5px] text-ink-muted">
+                        {row.candidateName}
+                      </span>
+                      <span aria-hidden="true" className="text-ink-faint">
+                        ·
+                      </span>
+                      <RefChip className="min-w-0">
+                        <Briefcase aria-hidden="true" />
+                        <span className="truncate">{row.jobTitle}</span>
+                      </RefChip>
+                    </div>
+                    <p
                       className={cn(
-                        "truncate text-[13px]",
-                        needsYou
-                          ? "font-bold text-navy"
-                          : "font-semibold text-navy",
+                        "mt-[2px] truncate text-meta",
+                        unread ? "font-[550] text-ink-body" : "text-ink-faint",
                       )}
                     >
-                      {row.counterpartyName}
-                    </span>
-                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
-                      {formatDate(row.lastActivityAt)}
-                    </span>
+                      {row.lastMessagePreview ?? "No messages yet"}
+                    </p>
                   </div>
-                  <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-                    <span className="shrink-0 truncate text-[11.5px] text-foreground/70">
-                      {row.candidateName}
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className="text-muted-foreground/60"
-                    >
-                      ·
-                    </span>
-                    <span className="inline-flex min-w-0 items-center gap-1 rounded-[5px] border border-[#D7E0EF] bg-[#F1F5FC] px-1.5 py-0.5 text-[11px] font-medium text-[#24457A]">
-                      <Briefcase className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{row.jobTitle}</span>
-                    </span>
-                  </div>
-                  <p
-                    className={cn(
-                      "mt-0.5 truncate text-[12px]",
-                      unread ? "text-navy" : "text-muted-foreground",
-                    )}
-                  >
-                    {row.lastMessagePreview ?? "No messages yet"}
-                  </p>
-                </div>
+                </ListRow>
               </Link>
             </li>
           );
         })}
         {rows.length === 0 ? (
-          <li className="px-4 py-6 text-center text-[13px] text-muted-foreground">
+          <li className="px-4 py-6 text-center text-sub text-ink-muted">
             No conversations
           </li>
         ) : null}

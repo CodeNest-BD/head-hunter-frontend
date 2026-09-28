@@ -2,6 +2,13 @@ import type { ReactNode } from "react";
 import { CircleDollarSign, Gift } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+import { Tag } from "@/shared/ui-components/badges/Tag";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { MoneyBag } from "@/shared/ui-components/icons/MoneyBag";
 import { RichTextView } from "@/shared/ui-components/data/RichTextView";
@@ -84,14 +91,19 @@ export interface JobView {
   companyDetails?: CompanyDetails;
 }
 
+/**
+ * The reference's `.card` for a detail section: a ruled head carrying the
+ * heading, a 16px body beneath. `<section>` rather than the `Card` div so each
+ * block stays a landmark a screen reader can jump between.
+ */
+const SECTION_CARD = "rounded-md border border-line bg-surface shadow-e1";
+
 /** One label/value fact in the header card. */
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-0.5 truncate font-medium text-navy">{value}</p>
+      <p className="text-label font-[650] uppercase text-ink-muted">{label}</p>
+      <p className="mt-[3px] truncate text-body font-[550] text-ink">{value}</p>
     </div>
   );
 }
@@ -175,37 +187,34 @@ function FactsCard({ job, compact }: { job: JobView; compact?: boolean }) {
   ];
 
   return (
-    <div
-      className={cn(
-        "flex flex-col divide-y divide-border rounded-md border border-border bg-card shadow-card",
-        !compact && "md:flex-row md:divide-x md:divide-y-0",
-      )}
-    >
-      <div
-        className={cn(
-          "flex items-center gap-3 p-5 sm:p-6",
-          !compact && "md:w-72",
-        )}
-      >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <MoneyBag className="h-6 w-6" />
+    // The reference leads this card with the money: a tinted glyph tile and a
+    // 26px figure in a band of their own, the facts grid ruled off beneath.
+    <Card className="flex flex-col">
+      <div className="flex items-center gap-3 border-b border-line p-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-tint text-blue">
+          <MoneyBag className="size-[19px]" />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          <p className="text-label font-[650] uppercase text-ink-muted">
             Recruiter Fee
           </p>
-          <p className="font-heading text-2xl font-extrabold tabular-nums text-navy">
+          <p className="text-display font-bold tabular-nums text-ink">
             {formatMinor(job.recruiterFeeMinor)}
           </p>
-          <p className="text-xs text-muted-foreground">on a successful hire</p>
+          <p className="text-sub text-ink-muted">on a successful hire</p>
         </div>
       </div>
-      <div className="grid flex-1 grid-cols-1 gap-x-6 gap-y-4 p-5 sm:grid-cols-2 sm:p-6">
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-x-5 gap-y-3.5 p-4",
+          !compact && "sm:grid-cols-3",
+        )}
+      >
         {facts.map((fact) => (
           <Fact key={fact.label} label={fact.label} value={fact.value || "—"} />
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -228,55 +237,52 @@ function PayBenefitsBox({ job }: { job: JobView }) {
   if (!hasSalary && benefits.length === 0 && !downloadableDocument) return null;
 
   return (
-    <div className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:flex-row sm:items-stretch sm:gap-6 sm:p-6">
+    <div className="flex flex-col gap-5 rounded-md border border-line bg-surface p-4 shadow-e1 sm:flex-row sm:items-stretch sm:gap-6">
       <div className="flex shrink-0 items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <CircleDollarSign className="h-[18px] w-[18px]" />
+        <span className="flex size-8.5 shrink-0 items-center justify-center rounded-sm bg-tint text-blue">
+          <CircleDollarSign className="size-[17px]" />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          <p className="text-label font-[650] uppercase text-ink-muted">
             Pay Range
           </p>
           {hasSalary ? (
-            <p className="mt-1 whitespace-nowrap font-heading text-lg font-bold leading-snug text-navy">
+            <p className="mt-1 whitespace-nowrap text-section font-[650] leading-snug text-ink">
               <span className="tabular-nums">{salaryRange}</span>
               {salaryPeriod && (
-                <span className="ml-1 text-xs font-medium text-muted-foreground">
+                <span className="ml-1 text-meta font-[450] text-ink-muted">
                   {salaryPeriod}
                 </span>
               )}
             </p>
           ) : (
-            <p className="mt-1 text-sm text-navy">—</p>
+            <p className="mt-1 text-body text-ink">—</p>
           )}
         </div>
       </div>
 
       {/* Divider between the two facts so the wide box doesn't read as two items
           stranded at opposite edges. */}
-      <div className="hidden w-px shrink-0 self-stretch bg-border sm:block" />
+      <div className="hidden w-px shrink-0 self-stretch bg-line sm:block" />
 
       <div className="flex min-w-0 flex-1 items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Gift className="h-[18px] w-[18px]" />
+        <span className="flex size-8.5 shrink-0 items-center justify-center rounded-sm bg-tint text-blue">
+          <Gift className="size-[17px]" />
         </span>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          <p className="text-label font-[650] uppercase text-ink-muted">
             Benefits
           </p>
           {benefits.length > 0 ? (
-            <ul className="mt-1.5 flex flex-wrap gap-2">
+            <ul className="mt-1.5 flex flex-wrap gap-1.5">
               {benefits.map((benefit) => (
-                <li
-                  key={benefit}
-                  className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-                >
-                  {benefit}
+                <li key={benefit}>
+                  <Tag>{benefit}</Tag>
                 </li>
               ))}
             </ul>
           ) : (
-            !downloadableDocument && <p className="mt-1 text-sm text-navy">—</p>
+            !downloadableDocument && <p className="mt-1 text-body text-ink">—</p>
           )}
           {downloadableDocument && (
             <div className="mt-2">
@@ -303,17 +309,12 @@ function RequirementRow({
 }) {
   if (entries.length === 0) return null;
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-        {label}
-      </p>
-      <ul className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-1.5">
+      <p className="text-label font-[650] uppercase text-ink-muted">{label}</p>
+      <ul className="flex flex-wrap gap-1.5">
         {entries.map((entry) => (
-          <li
-            key={entry}
-            className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-          >
-            {entry}
+          <li key={entry}>
+            <Tag>{entry}</Tag>
           </li>
         ))}
       </ul>
@@ -390,11 +391,7 @@ function companyInfoItems(
 
 /** A card heading, matching the Job Duties card so every block reads as a peer. */
 function CardHeading({ children }: { children: ReactNode }) {
-  return (
-    <h2 className="font-heading text-lg font-bold tracking-tight text-navy">
-      {children}
-    </h2>
-  );
+  return <h2 className="text-card font-[650] text-ink">{children}</h2>;
 }
 
 /** What the role demands: must/nice-to-haves and the company's selection keys.
@@ -414,11 +411,15 @@ function QualificationsCard({ job }: { job: JobView }) {
   }
 
   return (
-    <section className="flex flex-col gap-5 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <CardHeading>Qualifications</CardHeading>
-      <RequirementRow label="Must-Haves" entries={mustHave} />
-      <RequirementRow label="Nice-to-Haves" entries={niceToHave} />
-      <RequirementRow label="Top 3 Keys" entries={topKeys} />
+    <section className={SECTION_CARD}>
+      <CardHeader>
+        <CardHeading>Qualifications</CardHeading>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <RequirementRow label="Must-Haves" entries={mustHave} />
+        <RequirementRow label="Nice-to-Haves" entries={niceToHave} />
+        <RequirementRow label="Top 3 Keys" entries={topKeys} />
+      </CardContent>
     </section>
   );
 }
@@ -432,40 +433,48 @@ function CompanyInfoCard({ job }: { job: JobView }) {
   if (items.length === 0 && whatTheyDo === "") return null;
 
   return (
-    <section className="flex flex-col gap-4 rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <CardHeading>Company Info</CardHeading>
-      {whatTheyDo !== "" && (
-        <p className="text-sm leading-relaxed text-navy">{whatTheyDo}</p>
-      )}
-      {items.length > 0 && (
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-          {items.map((item) => (
-            <div key={item.label} className="min-w-0">
-              <dt className="text-xs text-muted-foreground">{item.label}</dt>
-              <dd className="mt-0.5 text-sm font-medium text-navy">
-                {item.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      )}
+    <section className={SECTION_CARD}>
+      <CardHeader>
+        <CardHeading>Company Info</CardHeading>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {whatTheyDo !== "" && (
+          <p className="text-body text-ink-body">{whatTheyDo}</p>
+        )}
+        {items.length > 0 && (
+          <dl className="grid grid-cols-2 gap-x-5 gap-y-3.5 sm:grid-cols-4">
+            {items.map((item) => (
+              <div key={item.label} className="min-w-0">
+                <dt className="text-label font-[650] uppercase text-ink-muted">
+                  {item.label}
+                </dt>
+                <dd className="mt-[3px] text-body font-[550] text-ink">
+                  {item.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </CardContent>
     </section>
   );
 }
 
 function DescriptionCard({ description }: { description: string | null }) {
   return (
-    <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <div className="mb-3">
+    <section className={SECTION_CARD}>
+      <CardHeader>
         <CardHeading>Job Duties</CardHeading>
-      </div>
-      {description ? (
-        <RichTextView value={description} />
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          No description provided for this role.
-        </p>
-      )}
+      </CardHeader>
+      <CardContent>
+        {description ? (
+          <RichTextView value={description} />
+        ) : (
+          <p className="text-body text-ink-muted">
+            No description provided for this role.
+          </p>
+        )}
+      </CardContent>
     </section>
   );
 }
@@ -489,9 +498,9 @@ export function JobDetailBody({
   hideDescription?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {job.companyName ? (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <CompanyLogo
             companyProfileId={job.companyProfileId ?? ""}
             hasLogo={job.hasLogo ?? false}
@@ -499,10 +508,10 @@ export function JobDetailBody({
             size="md"
           />
           <div className="min-w-0">
-            <p className="truncate font-heading text-base font-bold text-navy">
+            <p className="truncate text-block font-semibold text-ink">
               {job.companyName}
             </p>
-            <p className="text-xs text-muted-foreground">Hiring company</p>
+            <p className="text-meta text-ink-muted">Hiring company</p>
           </div>
         </div>
       ) : null}
@@ -515,21 +524,23 @@ export function JobDetailBody({
           className={
             hideDescription
               ? undefined
-              : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
+              : "grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]"
           }
         >
           {!hideDescription && (
             <DescriptionCard description={job.description} />
           )}
-          <aside className="h-fit lg:sticky lg:top-24">
-            <div className="rounded-md border border-border bg-card p-5 shadow-card">
-              <h2 className="font-heading text-base font-bold text-navy">
-                Ready to submit?
-              </h2>
-              <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-                Open the workspace to add candidates and message the company.
-              </p>
-              <div className="mt-4">{cta}</div>
+          <aside className="h-fit lg:sticky lg:top-[72px]">
+            <div className={SECTION_CARD}>
+              <CardContent className="flex flex-col gap-2.5">
+                <h2 className="text-card font-[650] text-ink">
+                  Ready to submit?
+                </h2>
+                <p className="text-sub text-ink-muted">
+                  Open the workspace to add candidates and message the company.
+                </p>
+                {cta}
+              </CardContent>
             </div>
           </aside>
         </div>

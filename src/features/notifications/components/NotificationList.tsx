@@ -18,7 +18,12 @@ import {
 
 import { useAuth } from "@/features/auth";
 import { PageHeader } from "@/shared/ui-components/brand";
+import { Button } from "@/shared/ui-components/controls/button";
+import { Card } from "@/shared/ui-components/controls/card";
 import { FilterChip } from "@/shared/ui-components/controls/filter-chip";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
+import { ListRow } from "@/shared/ui-components/list/ListRow";
+import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatTime } from "@/shared/utils/formatDate";
 import type { Notification } from "../schemas";
@@ -66,24 +71,24 @@ function categoryOf(type: string): Category {
   return "other";
 }
 
-/** Icon + tint for a notification, derived from its type. */
-function iconFor(type: string): { Icon: LucideIcon; tone: string } {
+/** Icon + tile tone for a notification, derived from its type. */
+function iconFor(type: string): { Icon: LucideIcon; tone: TileTone } {
   const t = type.toLowerCase();
   if (t.includes("verif")) {
     return t.includes("reject") || t.includes("declin")
-      ? { Icon: ShieldX, tone: "bg-destructive/10 text-destructive" }
-      : { Icon: ShieldCheck, tone: "bg-emerald-50 text-emerald-600" };
+      ? { Icon: ShieldX, tone: "bad" }
+      : { Icon: ShieldCheck, tone: "ok" };
   }
   if (t.includes("message") || t.includes("chat")) {
-    return { Icon: MessageSquare, tone: "bg-accent text-primary" };
+    return { Icon: MessageSquare, tone: "blue" };
   }
   if (categoryOf(type) === "candidates") {
-    return { Icon: UserCheck, tone: "bg-accent text-primary" };
+    return { Icon: UserCheck, tone: "blue" };
   }
   if (t.includes("job")) {
-    return { Icon: Briefcase, tone: "bg-accent text-primary" };
+    return { Icon: Briefcase, tone: "blue" };
   }
-  return { Icon: Bell, tone: "bg-secondary text-brand-gray" };
+  return { Icon: Bell, tone: "neutral" };
 }
 
 /** "Today" / "Yesterday" / "Aug 19" — the day-header label for a date. */
@@ -133,49 +138,31 @@ function NotificationRow({
   const unread = item.readAt === null;
   const { Icon, tone } = iconFor(item.type);
 
-  const rowClassName = cn(
-    "relative flex items-start transition-colors",
-    unread ? "bg-primary/[0.04]" : "hover:bg-secondary/50",
-  );
   // The link and the mark-read button are siblings, never nested: a <button>
   // inside an <a> is invalid markup and clicking it would navigate the row.
-  const bodyClassName = "flex min-w-0 flex-1 items-start gap-3 py-3.5 pl-4";
+  const bodyClassName = "flex min-w-0 flex-1 items-start gap-[11px]";
 
   const content = (
     <>
-      <span
-        aria-hidden="true"
-        className={cn(
-          "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md",
-          tone,
-        )}
-      >
-        <Icon className="h-[18px] w-[18px]" />
-      </span>
+      <Tile icon={Icon} tone={tone} />
       <div className="min-w-0 flex-1">
         <p
           className={cn(
-            "flex h-5 items-center text-sm text-navy",
-            unread ? "font-semibold" : "font-medium",
+            "flex h-5 items-center text-body text-ink",
+            unread ? "font-[650]" : "font-[550]",
           )}
         >
           {item.title}
         </p>
         {item.body && (
-          <p className="mt-0.5 text-sm text-muted-foreground">{item.body}</p>
+          <p className="mt-[2px] text-sub text-ink-muted">{item.body}</p>
         )}
       </div>
     </>
   );
 
   return (
-    <div className={rowClassName}>
-      {unread && (
-        <span
-          aria-hidden="true"
-          className="absolute left-0 top-0 h-full w-[3px] bg-primary"
-        />
-      )}
+    <ListRow unread={unread} interactive={href !== null}>
       {href ? (
         <Link
           href={href}
@@ -190,16 +177,13 @@ function NotificationRow({
       {/* Time, unread dot and the mark-read control share one cluster on the
           first text line. Every slot keeps its width when empty, so the
           timestamps stay in a column whether a row is read or unread. */}
-      <div className="flex shrink-0 items-start gap-2 py-3.5 pr-4">
-        <span className="flex h-5 items-center text-xs tabular-nums text-muted-foreground">
+      <div className="flex shrink-0 items-start gap-2">
+        <span className="flex h-5 items-center text-meta tabular-nums text-ink-faint">
           {formatTime(item.createdAt)}
         </span>
         <span className="flex h-5 w-2 items-center justify-center">
           {unread && (
-            <span
-              aria-label="Unread"
-              className="h-2 w-2 rounded-full bg-primary"
-            />
+            <span aria-label="Unread" className="size-2 rounded-full bg-blue" />
           )}
         </span>
         {unread ? (
@@ -209,15 +193,15 @@ function NotificationRow({
             aria-label={`Mark "${item.title}" as read`}
             disabled={isMarkingRead}
             onClick={() => onMarkRead(item.id)}
-            className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground transition-colors hover:text-primary disabled:opacity-40"
+            className="flex size-5 items-center justify-center rounded-xs text-ink-faint transition-colors hover:text-blue disabled:opacity-40"
           >
-            <Check className="h-4 w-4" />
+            <Check className="size-[15px]" />
           </button>
         ) : (
-          <span aria-hidden="true" className="h-5 w-5" />
+          <span aria-hidden="true" className="size-5" />
         )}
       </div>
-    </div>
+    </ListRow>
   );
 }
 
@@ -227,7 +211,7 @@ function ListSkeleton() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="h-16 w-full animate-pulse rounded-md border border-border/70 bg-muted"
+          className="h-16 w-full animate-pulse rounded-md border border-line bg-surface-sub"
         />
       ))}
     </div>
@@ -264,25 +248,25 @@ export function NotificationList() {
   const groups = groupByDay(visible, new Date());
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Notifications"
         subtitle="Updates on your jobs, candidates and conversations."
         actions={
-          <button
+          <Button
             type="button"
+            variant="outline"
             disabled={markAllRead.isPending || unreadCount === 0}
             onClick={() => markAllRead.mutate()}
-            className="inline-flex items-center gap-2 rounded-md border border-input px-3.5 py-2 text-sm font-semibold text-navy transition-colors hover:border-primary hover:text-primary disabled:opacity-40"
           >
-            <CheckCheck className="h-4 w-4" />
+            <CheckCheck />
             Mark all read
-          </button>
+          </Button>
         }
       />
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {chips.map((chip) => (
             <FilterChip
               key={chip.key}
@@ -297,14 +281,14 @@ export function NotificationList() {
         {isPending && <ListSkeleton />}
 
         {isError && (
-          <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-            <div className="flex items-center gap-2 font-medium">
-              <AlertCircle className="h-[18px] w-[18px]" />
+          <div className="flex flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg px-3.5 py-[11px] text-sub text-bad">
+            <div className="flex items-center gap-2.5 font-[550]">
+              <AlertCircle className="size-[15px]" />
               Could not load notifications.
             </div>
             <button
               type="button"
-              className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
+              className="self-start rounded-xs border border-bad-line px-2.5 py-1 text-meta font-[550] transition-colors hover:bg-bad-bg"
               onClick={() => void refetch()}
             >
               Retry
@@ -313,33 +297,35 @@ export function NotificationList() {
         )}
 
         {data && visible.length === 0 && (
-          <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-input bg-card px-6 py-14 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-              <BellOff className="h-6 w-6" />
-            </span>
-            <div className="flex flex-col gap-1">
-              <p className="font-heading text-base font-semibold text-navy">
-                {filter === "all" ? "Nothing yet" : "Nothing here"}
-              </p>
-              <p className="max-w-sm text-sm text-muted-foreground">
-                {filter === "all"
+          <Card>
+            <EmptyState
+              icon={BellOff}
+              title={filter === "all" ? "Nothing yet" : "Nothing here"}
+              description={
+                filter === "all"
                   ? "You will hear here as your jobs and candidates move."
-                  : "No notifications match this filter."}
-              </p>
-            </div>
-          </div>
+                  : "No notifications match this filter."
+              }
+            />
+          </Card>
         )}
 
         {data &&
           groups.map((group) => (
             <section key={group.label} className="flex flex-col gap-2">
-              <h2 className="px-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <h2 className="px-1 text-label font-[650] uppercase text-ink-muted">
                 {group.label}
               </h2>
-              <div className="overflow-hidden rounded-md border border-border bg-card shadow-card">
-                <ul className="divide-y divide-border">
+              <Card className="overflow-hidden">
+                <ul className="flex flex-col">
                   {group.items.map((item) => (
-                    <li key={item.id}>
+                    // The row's own hairline sits on the `<li>`: `ListRow`'s
+                    // `last:` rule can never fire while each row is an only
+                    // child.
+                    <li
+                      key={item.id}
+                      className="border-b border-line last:border-b-0"
+                    >
                       <NotificationRow
                         item={item}
                         onOpen={(id) => markRead.mutate(id)}
@@ -349,7 +335,7 @@ export function NotificationList() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Card>
             </section>
           ))}
       </div>
