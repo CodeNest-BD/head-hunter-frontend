@@ -23,7 +23,7 @@ function isPdf(file: {
 }
 
 const ACTION_CLASS =
-  "flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-primary";
+  "inline-flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink";
 
 interface CandidateAttachmentsProps {
   candidateId: string;
@@ -40,10 +40,10 @@ export function CandidateAttachments({
   const attachments = useAttachments(candidateId, true);
 
   if (attachments.isPending) {
-    return <p className="text-sm text-muted-foreground">Loading files…</p>;
+    return <p className="text-sub text-ink-muted">Loading files…</p>;
   }
   if (attachments.isError) {
-    return <p className="text-sm text-destructive">Could not load files.</p>;
+    return <p className="text-sub text-bad">Could not load files.</p>;
   }
   if (!attachments.data?.length) {
     return null;
@@ -54,12 +54,12 @@ export function CandidateAttachments({
       {attachments.data.map((file) => (
         <li
           key={file.id}
-          className="flex items-center gap-2 rounded-md border border-border/60 bg-background/50 px-3 py-2 text-sm"
+          className="flex items-center gap-2 rounded-sm border border-line bg-surface-sub px-3 py-2 text-sub"
         >
-          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="min-w-0 flex-1 truncate text-foreground">
+          <FileText className="size-[15px] shrink-0 text-ink-faint" />
+          <span className="min-w-0 flex-1 truncate font-[550] text-ink">
             {file.fileName}
-            <span className="ml-2 text-xs tabular-nums text-muted-foreground">
+            <span className="ml-2 text-meta font-[450] tabular-nums text-ink-faint">
               {formatSize(file.sizeBytes)}
             </span>
           </span>
@@ -77,7 +77,7 @@ export function CandidateAttachments({
                 aria-label={`View ${file.fileName}`}
                 className={ACTION_CLASS}
               >
-                <Eye className="h-4 w-4" />
+                <Eye className="size-[15px]" />
               </button>
             </FilePreviewDialog>
           )}
@@ -88,7 +88,7 @@ export function CandidateAttachments({
             aria-label={`Download ${file.fileName}`}
             className={ACTION_CLASS}
           >
-            <Download className="h-4 w-4" />
+            <Download className="size-[15px]" />
           </a>
         </li>
       ))}

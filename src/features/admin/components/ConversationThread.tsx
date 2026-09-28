@@ -130,7 +130,9 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
                 CANDIDATE_LABELS[header.candidate.status] ??
                 header.candidate.status
               }
-              tone={CANDIDATE_STATUS_TONES[header.candidate.status] ?? "neutral"}
+              tone={
+                CANDIDATE_STATUS_TONES[header.candidate.status] ?? "neutral"
+              }
             />
           </div>
           <p className="text-sub text-ink-body">

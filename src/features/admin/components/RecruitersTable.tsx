@@ -86,7 +86,9 @@ function RecruiterVerification({
   return (
     <StatusBadge
       label={VERIFICATION_LABELS[recruiter.verificationStatus]}
-      tone={VERIFICATION_STATUS_TONES[recruiter.verificationStatus] ?? "neutral"}
+      tone={
+        VERIFICATION_STATUS_TONES[recruiter.verificationStatus] ?? "neutral"
+      }
     />
   );
 }
@@ -325,7 +327,10 @@ export function RecruitersTable() {
                     )}
                     {cols.isVisible("rating") && (
                       <td className={cn(TABLE_TD, "whitespace-nowrap")}>
-                        <RatingStars value={r.ratingAvg} count={r.ratingCount} />
+                        <RatingStars
+                          value={r.ratingAvg}
+                          count={r.ratingCount}
+                        />
                       </td>
                     )}
                     {cols.isVisible("location") && (

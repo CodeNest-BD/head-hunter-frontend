@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import {
@@ -13,9 +12,10 @@ import {
   useUpdateJob,
   type JobWriteInput,
 } from "@/features/jobs";
-import { PageHeader } from "@/shared/ui-components/brand";
+import { BackLink, PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import type { PillTone } from "@/shared/ui-components/badges/Pill";
+import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -33,8 +33,8 @@ const STATUS_TONES: Record<string, PillTone> = {
 function FormSkeleton() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="h-72 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
-      <div className="h-48 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
+      <div className="h-72 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
+      <div className="h-48 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
     </div>
   );
 }
@@ -48,9 +48,9 @@ function EditJobContent({ jobId }: { jobId: string }) {
   }
   if (isError) {
     return (
-      <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-        <div className="flex items-center gap-2 font-medium">
-          <AlertCircle className="h-[18px] w-[18px]" />
+      <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+        <div className="flex items-center gap-2.5 font-[550]">
+          <AlertCircle className="size-[15px] shrink-0" />
           Could not load this job.
         </div>
         <div>
@@ -98,7 +98,7 @@ function EditJobContent({ jobId }: { jobId: string }) {
     );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title={
           <span className="flex flex-wrap items-center gap-3">
@@ -121,8 +121,8 @@ function EditJobContent({ jobId }: { jobId: string }) {
                   : "Publish"}
             </JobFormPublishButton>
           ) : (
-            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <CheckCircle2 className="h-4 w-4 text-[#17734E]" />
+            <span className="flex items-center gap-1.5 text-sub text-ink-muted">
+              <CheckCircle2 className="size-[15px] text-ok" />
               Published
               {job.publishedAt
                 ? ` on ${job.publishedAt.toLocaleDateString()}`
@@ -133,10 +133,10 @@ function EditJobContent({ jobId }: { jobId: string }) {
       />
 
       {isExpired && (
-        <p className="rounded-md border border-[#F0E2B8] bg-[#FBF3DF] px-4 py-3 text-sm text-[#7A5109]">
+        <Alert tone="warn">
           This listing lapsed after 30 days; republishing reserves the fee
           again.
-        </p>
+        </Alert>
       )}
 
       <JobForm
@@ -172,14 +172,8 @@ export default function EditJobPage() {
     <RequireRole role="company">
       <DashboardLayout>
         <RequireApprovedCompany>
-          <div className="flex w-full flex-col gap-4">
-            <Link
-              href="/company/jobs"
-              className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to jobs
-            </Link>
+          <div className="flex w-full flex-col">
+            <BackLink href="/company/jobs">Back to jobs</BackLink>
             <EditJobContent jobId={params.id} />
           </div>
         </RequireApprovedCompany>

@@ -12,48 +12,48 @@ export function CandidateRailSkeleton({ className }: { className?: string }) {
     <div
       aria-hidden="true"
       className={cn(
-        "flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm lg:h-full",
+        "flex flex-col gap-4 rounded-md border border-line bg-surface p-4 shadow-e1 lg:h-full",
         className,
       )}
     >
       {/* Name + contact line, with the status pill to the right. */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-2">
-          <div className="h-5 w-40 animate-pulse rounded bg-muted" />
-          <div className="h-4 w-52 animate-pulse rounded bg-muted" />
+          <div className="h-5 w-40 animate-pulse rounded-xs bg-surface-sunken" />
+          <div className="h-4 w-52 animate-pulse rounded-xs bg-surface-sunken" />
         </div>
-        <div className="h-6 w-20 shrink-0 animate-pulse rounded-full bg-muted" />
+        <div className="h-6 w-20 shrink-0 animate-pulse rounded-full bg-surface-sunken" />
       </div>
 
       {/* Interview + offer state badges. */}
       <div className="flex flex-col gap-2">
-        <div className="h-7 w-full animate-pulse rounded-lg bg-muted" />
-        <div className="h-7 w-2/3 animate-pulse rounded-lg bg-muted" />
+        <div className="h-7 w-full animate-pulse rounded-sm bg-surface-sunken" />
+        <div className="h-7 w-2/3 animate-pulse rounded-sm bg-surface-sunken" />
       </div>
 
       {/* Fields grid: a label above a value, repeated. */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
         {Array.from({ length: 5 }).map((_, index) => (
           <div key={index} className="flex flex-col gap-1.5">
-            <div className="h-3 w-16 animate-pulse rounded bg-muted" />
-            <div className="h-4 w-20 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-16 animate-pulse rounded-xs bg-surface-sunken" />
+            <div className="h-4 w-20 animate-pulse rounded-xs bg-surface-sunken" />
           </div>
         ))}
       </div>
 
       {/* Overview paragraph. */}
       <div className="flex flex-col gap-2">
-        <div className="h-3.5 w-full animate-pulse rounded bg-muted" />
-        <div className="h-3.5 w-4/5 animate-pulse rounded bg-muted" />
+        <div className="h-3.5 w-full animate-pulse rounded-xs bg-surface-sunken" />
+        <div className="h-3.5 w-4/5 animate-pulse rounded-xs bg-surface-sunken" />
       </div>
 
       {/* One attachment row. */}
-      <div className="h-12 w-full animate-pulse rounded-lg bg-muted" />
+      <div className="h-12 w-full animate-pulse rounded-sm bg-surface-sunken" />
 
       {/* Action buttons. */}
-      <div className="flex gap-2 border-t border-border/60 pt-3">
-        <div className="h-8 w-16 animate-pulse rounded-md bg-muted" />
-        <div className="h-8 w-20 animate-pulse rounded-md bg-muted" />
+      <div className="flex gap-2 border-t border-line pt-3">
+        <div className="h-8 w-16 animate-pulse rounded-md bg-surface-sunken" />
+        <div className="h-8 w-20 animate-pulse rounded-md bg-surface-sunken" />
       </div>
     </div>
   );

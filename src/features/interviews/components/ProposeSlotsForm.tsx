@@ -222,7 +222,7 @@ export function ProposeSlotsForm({
       className="flex flex-col gap-4"
     >
       {target.kind === "new" && (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="propose-interview-type">Interview type</Label>
           <NativeSelect
             id="propose-interview-type"
@@ -252,17 +252,17 @@ export function ProposeSlotsForm({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <p
             id={stagedHeadingId}
-            className="text-sm font-medium text-foreground"
+            className="text-sub font-[650] text-ink"
           >
             Times you&apos;ll propose
           </p>
-          <span className="tabular-nums text-xs text-muted-foreground">
+          <span className="text-meta tabular-nums text-ink-muted">
             {fields.length} of {MAX_PROPOSAL_SLOTS} times added
           </span>
         </div>
 
         {fields.length === 0 ? (
-          <p className="rounded-md border border-dashed border-border/70 px-3 py-2 text-xs text-muted-foreground">
+          <p className="rounded-sm border border-dashed border-line-strong px-3 py-2 text-meta text-ink-muted">
             No times added yet — pick a day and time below.
           </p>
         ) : (
@@ -278,13 +278,13 @@ export function ProposeSlotsForm({
               return (
                 <li
                   key={field.id}
-                  className="flex items-center gap-2 rounded-md border border-border/60 bg-background/50 py-1.5 pl-3 pr-1.5 text-sm"
+                  className="flex items-center gap-2 rounded-sm border border-line bg-surface-sub py-1.5 pl-3 pr-1.5 text-sub"
                 >
                   <Check
-                    className="h-4 w-4 shrink-0 text-muted-foreground"
+                    className="size-[15px] shrink-0 text-ink-faint"
                     aria-hidden="true"
                   />
-                  <span className="min-w-0 flex-1 truncate text-foreground">
+                  <span className="min-w-0 flex-1 truncate tabular-nums text-ink">
                     {slotWindow}
                   </span>
                   {/* The word carries the meaning — the bare glyph did not read
@@ -296,9 +296,9 @@ export function ProposeSlotsForm({
                     size="sm"
                     aria-label={`Remove ${slotWindow}`}
                     onClick={() => remove(index)}
-                    className="h-7 shrink-0 gap-1 px-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:text-destructive"
+                    className="h-7 shrink-0 gap-1 px-2 hover:bg-bad-bg hover:text-bad focus-visible:text-bad"
                   >
-                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                    <X aria-hidden="true" />
                     Remove
                   </Button>
                 </li>
@@ -314,7 +314,7 @@ export function ProposeSlotsForm({
           anything already added. */}
       <div className="flex flex-col gap-1.5">
         <div className="flex flex-wrap items-end gap-2">
-          <div className="flex min-w-[11rem] flex-1 flex-col gap-1">
+          <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5">
             <Label htmlFor="propose-day">Day</Label>
             <DayPickerField
               id="propose-day"
@@ -325,7 +325,7 @@ export function ProposeSlotsForm({
             />
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="propose-start-time">Start time</Label>
             <NativeSelect
               id="propose-start-time"
@@ -342,7 +342,7 @@ export function ProposeSlotsForm({
             </NativeSelect>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="propose-duration">Length</Label>
             <NativeSelect
               id="propose-duration"
@@ -366,12 +366,12 @@ export function ProposeSlotsForm({
             disabled={!canAdd}
             onClick={addTime}
           >
-            <Plus className="h-4 w-4" />
+            <Plus aria-hidden="true" />
             Add to proposal
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-3 text-meta text-ink-faint">
           {addState.kind !== "ready" && <span>{addState.hint}</span>}
           {/* Says out loud that the button is a convenience: the submit already
               includes whatever is picked here. Users reading the old
@@ -384,7 +384,7 @@ export function ProposeSlotsForm({
       </div>
 
       {slotsErrorMessage && (
-        <p className="text-xs text-destructive">{slotsErrorMessage}</p>
+        <p className="text-meta font-medium text-bad">{slotsErrorMessage}</p>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
@@ -403,8 +403,8 @@ export function ProposeSlotsForm({
       </div>
 
       {proposeSlots.isError && (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+        <div className="flex items-center gap-2 rounded-sm border border-bad-line bg-bad-bg px-3 py-2 text-meta text-bad">
+          <AlertCircle className="size-3.5 shrink-0" />
           {submitErrorMessage(proposeSlots.error)}
         </div>
       )}

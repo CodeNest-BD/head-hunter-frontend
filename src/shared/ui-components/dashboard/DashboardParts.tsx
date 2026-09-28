@@ -178,7 +178,7 @@ export interface AttentionItem {
 
 const DOT_TONE: Record<AttentionTone, string> = {
   blue: "bg-blue",
-  amber: "bg-[#e8a23b]",
+  amber: "bg-pending",
   muted: "bg-ink-faint",
 };
 

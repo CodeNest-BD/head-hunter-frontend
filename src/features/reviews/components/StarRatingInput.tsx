@@ -50,7 +50,7 @@ export function StarRatingInput({ value, onChange }: StarRatingInputProps) {
               className={cn(
                 "size-7 transition-colors",
                 star <= shown
-                  ? "fill-[#e8b93b] text-[#e8b93b]"
+                  ? "fill-star text-star"
                   : "fill-surface-sunken text-line-strong",
               )}
             />

@@ -172,7 +172,10 @@ function ChangePasswordForm({
   return (
     <form
       onSubmit={onSubmit}
-      className={cn(PANEL_CLASS, "flex flex-col gap-2 sm:flex-row sm:items-end")}
+      className={cn(
+        PANEL_CLASS,
+        "flex flex-col gap-2 sm:flex-row sm:items-end",
+      )}
     >
       <div className={cn(FIELD_CLASS, "flex-1")}>
         <Label htmlFor={`pw-${userId}`}>New password</Label>

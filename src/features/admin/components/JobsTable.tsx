@@ -479,10 +479,7 @@ export function JobsTable({
                     )}
                     {cols.isVisible("fee") && (
                       <td
-                        className={cn(
-                          TABLE_TD,
-                          "whitespace-nowrap text-right",
-                        )}
+                        className={cn(TABLE_TD, "whitespace-nowrap text-right")}
                       >
                         <JobFee job={job} minFeeMinor={minFeeMinor} />
                       </td>

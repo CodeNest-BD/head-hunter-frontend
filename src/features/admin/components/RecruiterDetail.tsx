@@ -360,7 +360,9 @@ export function RecruiterDetail({ userId }: { userId: string }) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recruiting History ({data.experiences.length})</CardTitle>
+            <CardTitle>
+              Recruiting History ({data.experiences.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {data.experiences.length === 0 ? (

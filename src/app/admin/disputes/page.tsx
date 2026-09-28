@@ -15,7 +15,7 @@ export default function AdminDisputesPage() {
           { label: "Disputes" },
         ]}
       >
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           <PageHeader
             title="Disputes"
             subtitle="Company↔recruiter escrow disputes. Mediate each side privately, then refund the company or pay the recruiter."

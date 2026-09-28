@@ -22,7 +22,7 @@ export function ProposedSlotList({ slots }: ProposedSlotListProps) {
       {slots.map((slot) => (
         <li
           key={slot.id}
-          className="rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-2 text-sm text-muted-foreground"
+          className="rounded-sm border border-dashed border-line-strong bg-surface-sub px-3 py-2 text-sub tabular-nums text-ink-muted"
         >
           {formatDateTime(slot.startAt)} – {formatDateTime(slot.endAt)}
         </li>

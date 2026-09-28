@@ -26,7 +26,7 @@ export default function AdminSettingsPage() {
           { label: "Settings" },
         ]}
       >
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           <PageHeader
             title="Settings"
             subtitle="Marketplace policy and admin accounts."
@@ -36,7 +36,7 @@ export default function AdminSettingsPage() {
               <TabsTrigger value="policy">Marketplace policy</TabsTrigger>
               <TabsTrigger value="admins">Admin accounts</TabsTrigger>
             </TabsList>
-            <TabsContent value="policy" className="flex flex-col gap-6">
+            <TabsContent value="policy" className="flex flex-col gap-3">
               <MinFeeCard />
               {/* Subscription pricing returns when the phase-1 free period ends. */}
               {!PHASE1_FREE && <RecruiterPricingCard />}
