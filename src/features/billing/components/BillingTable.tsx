@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/shared/ui-components/controls/button";
+import { TablePager } from "@/shared/ui-components/data/TablePager";
 
 interface BillingTableFooterProps {
   total: number;
@@ -10,9 +10,15 @@ interface BillingTableFooterProps {
 }
 
 /**
- * The "N total · page X of Y" + Previous/Next footer under a billing table —
- * the reference's `.pager`: a hairline-ruled 12.5px strip whose tabular count
- * sits at the left and whose page controls are pushed to the right edge.
+ * Every billing list is fetched twenty a page, and none offers a page-size
+ * choice, so the size is fixed here rather than threaded through four callers.
+ */
+const BILLING_PAGE_SIZE = 20;
+
+/**
+ * The footer under a billing table. Delegates to the app's one `TablePager`, so
+ * a wallet page pages exactly like every other table, rather than offering bare
+ * Previous/Next where the rest of the app offers numbered pages.
  */
 export function BillingTableFooter({
   total,
@@ -21,31 +27,12 @@ export function BillingTableFooter({
   onPage,
 }: BillingTableFooterProps) {
   return (
-    <div className="flex flex-col gap-2 border-t border-line px-3.5 py-2.5 text-[12.5px] text-ink-muted sm:flex-row sm:items-center">
-      <span className="tabular-nums">
-        {total.toLocaleString()} total · page {page} of{" "}
-        {Math.max(totalPages, 1)}
-      </span>
-      <div className="flex items-center gap-1 sm:ml-auto">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => onPage(page - 1)}
-        >
-          Previous
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => onPage(page + 1)}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
+    <TablePager
+      page={page}
+      totalPages={totalPages}
+      total={total}
+      onPage={onPage}
+      pageSize={BILLING_PAGE_SIZE}
+    />
   );
 }

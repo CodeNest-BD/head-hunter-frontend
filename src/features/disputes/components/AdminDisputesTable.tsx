@@ -23,6 +23,7 @@ import {
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
 import { MobileFilters } from "@/shared/ui-components/data/MobileFilters";
+import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   TABLE_BODY,
@@ -98,6 +99,10 @@ const RAISED_BY_OPTIONS: { label: string; value: DisputeChannel }[] = [
  * `undefined` is the unfiltered list. */
 const toRaisedBy = (value: string | null): DisputeChannel | undefined =>
   RAISED_BY_OPTIONS.find((option) => option.value === value)?.value;
+
+/** `fetchAdminDisputes` asks for 25 a page; the pager's range readout has to
+ * agree with it. */
+const ADMIN_DISPUTES_PAGE_SIZE = 25;
 
 /** The admin dispute inbox. */
 export function AdminDisputesTable() {
@@ -363,33 +368,13 @@ export function AdminDisputesTable() {
             ))}
           </MobileRecordList>
 
-          {/* `.pager` — the reference's footer rule above the page controls. */}
-          <div className="flex items-center justify-between gap-2 border-t border-line px-3.5 py-2.5 text-[12.5px] text-ink-muted">
-            <span className="tabular-nums">
-              {data.meta.total.toLocaleString()} total · page {page} of{" "}
-              {Math.max(data.meta.totalPages, 1)}
-            </span>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage(page - 1)}
-              >
-                Previous
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={page >= data.meta.totalPages}
-                onClick={() => setPage(page + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <TablePager
+            page={page}
+            totalPages={data.meta.totalPages}
+            total={data.meta.total}
+            onPage={setPage}
+            pageSize={ADMIN_DISPUTES_PAGE_SIZE}
+          />
         </>
       )}
     </Card>

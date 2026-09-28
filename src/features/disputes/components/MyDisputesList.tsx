@@ -10,6 +10,12 @@ import { formatMinor } from "@/shared/utils/money";
 import { Pill } from "@/shared/ui-components/badges/Pill";
 import { Button } from "@/shared/ui-components/controls/button";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
+import {
+  ColumnsToggle,
+  useVisibleColumns,
+  type ColumnDef,
+} from "@/shared/ui-components/data/Columns";
+import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   TABLE_BODY,
@@ -32,6 +38,18 @@ import { useMyDisputes } from "../hooks/useDisputes";
 import { DISPUTE_SUBJECT_LABELS, isDisputeOpen } from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
+const COLUMNS: ColumnDef[] = [
+  // Role carries the update rail and the Pending pill, so the row loses its
+  // "needs you" cue without it; Actions holds the only way into the dispute.
+  { key: "role", label: "Role", required: true },
+  { key: "subject", label: "Subject" },
+  { key: "counterparty", label: "Counterparty" },
+  { key: "fee", label: "Fee" },
+  { key: "status", label: "Status" },
+  { key: "opened", label: "Opened" },
+  { key: "actions", label: "Actions", required: true },
+];
+
 /** Same pill as the inbox's "New": a row still waiting on somebody. An open
  * dispute is an admin decision outstanding, which the status badge alone does
  * not read as at a glance. */
@@ -53,8 +71,13 @@ function UpdateDot() {
 }
 
 /** The caller's disputes, most recently active first. */
+/** `fetchMyDisputes` asks for 20 a page; the pager's range readout has to
+ * agree with it. */
+const MY_DISPUTES_PAGE_SIZE = 20;
+
 export function MyDisputesList() {
   const [page, setPage] = useState(1);
+  const cols = useVisibleColumns("disputes.mine.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useMyDisputes(page);
 
   if (isError) {
@@ -70,8 +93,10 @@ export function MyDisputesList() {
       </div>
     );
   }
-  // Role · Subject · Counterparty · Fee · Status · Opened · (open).
-  if (isPending) return <TableSkeleton columns={7} />;
+  if (isPending)
+    return (
+      <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
+    );
 
   if (data.data.length === 0) {
     return (
@@ -87,6 +112,19 @@ export function MyDisputesList() {
 
   return (
     <div className={TABLE_CARD}>
+      {/* The list has neither a toolbar nor a card title, so the picker gets a
+          header strip of its own — desktop only, since the phone card list
+          renders a fixed field set the picker could not change. */}
+      <div className="hidden items-center border-b border-line px-4 py-2.5 sm:flex">
+        <div className="ml-auto">
+          <ColumnsToggle
+            columns={cols.columns}
+            isVisible={cols.isVisible}
+            onToggle={cols.toggle}
+          />
+        </div>
+      </div>
+
       <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
         <table className={TABLE_EL}>
           <thead className={TABLE_HEAD}>
@@ -94,21 +132,31 @@ export function MyDisputesList() {
               <th scope="col" className={TABLE_TH}>
                 Role
               </th>
-              <th scope="col" className={TABLE_TH}>
-                Subject
-              </th>
-              <th scope="col" className={TABLE_TH}>
-                Counterparty
-              </th>
-              <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                Fee
-              </th>
-              <th scope="col" className={TABLE_TH}>
-                Status
-              </th>
-              <th scope="col" className={TABLE_TH}>
-                Opened
-              </th>
+              {cols.isVisible("subject") && (
+                <th scope="col" className={TABLE_TH}>
+                  Subject
+                </th>
+              )}
+              {cols.isVisible("counterparty") && (
+                <th scope="col" className={TABLE_TH}>
+                  Counterparty
+                </th>
+              )}
+              {cols.isVisible("fee") && (
+                <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                  Fee
+                </th>
+              )}
+              {cols.isVisible("status") && (
+                <th scope="col" className={TABLE_TH}>
+                  Status
+                </th>
+              )}
+              {cols.isVisible("opened") && (
+                <th scope="col" className={TABLE_TH}>
+                  Opened
+                </th>
+              )}
               <th scope="col" className={TABLE_TH} />
             </tr>
           </thead>
@@ -133,31 +181,41 @@ export function MyDisputesList() {
                     {isDisputeOpen(d.status) && <PendingPill />}
                   </span>
                 </td>
-                <td className={cn(TABLE_TD, "text-ink-body")}>
-                  {DISPUTE_SUBJECT_LABELS[d.subject]}
-                </td>
-                <td className={cn(TABLE_TD, "text-ink-muted")}>
-                  {d.counterpartyName}
-                </td>
-                <td
-                  className={cn(
-                    TABLE_TD,
-                    "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
-                  )}
-                >
-                  {formatMinor(d.amountMinor)}
-                </td>
-                <td className={TABLE_TD}>
-                  <DisputeStatusBadge status={d.status} />
-                </td>
-                <td
-                  className={cn(
-                    TABLE_TD,
-                    "whitespace-nowrap tabular-nums text-ink-muted",
-                  )}
-                >
-                  {formatDate(d.createdAt)}
-                </td>
+                {cols.isVisible("subject") && (
+                  <td className={cn(TABLE_TD, "text-ink-body")}>
+                    {DISPUTE_SUBJECT_LABELS[d.subject]}
+                  </td>
+                )}
+                {cols.isVisible("counterparty") && (
+                  <td className={cn(TABLE_TD, "text-ink-muted")}>
+                    {d.counterpartyName}
+                  </td>
+                )}
+                {cols.isVisible("fee") && (
+                  <td
+                    className={cn(
+                      TABLE_TD,
+                      "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                    )}
+                  >
+                    {formatMinor(d.amountMinor)}
+                  </td>
+                )}
+                {cols.isVisible("status") && (
+                  <td className={TABLE_TD}>
+                    <DisputeStatusBadge status={d.status} />
+                  </td>
+                )}
+                {cols.isVisible("opened") && (
+                  <td
+                    className={cn(
+                      TABLE_TD,
+                      "whitespace-nowrap tabular-nums text-ink-muted",
+                    )}
+                  >
+                    {formatDate(d.createdAt)}
+                  </td>
+                )}
                 <td className={cn(TABLE_TD, "text-right")}>
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/disputes/${d.id}`}>View</Link>
@@ -192,33 +250,13 @@ export function MyDisputesList() {
         ))}
       </MobileRecordList>
 
-      {/* `.pager` — the reference's footer rule above the page controls. */}
-      <div className="flex items-center justify-between gap-2 border-t border-line px-3.5 py-2.5 text-[12.5px] text-ink-muted">
-        <span className="tabular-nums">
-          {data.meta.total.toLocaleString()} total · page {page} of{" "}
-          {Math.max(data.meta.totalPages, 1)}
-        </span>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage(page - 1)}
-          >
-            Previous
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={page >= data.meta.totalPages}
-            onClick={() => setPage(page + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+      <TablePager
+        page={page}
+        totalPages={data.meta.totalPages}
+        total={data.meta.total}
+        onPage={setPage}
+        pageSize={MY_DISPUTES_PAGE_SIZE}
+      />
     </div>
   );
 }

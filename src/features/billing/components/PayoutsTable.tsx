@@ -8,6 +8,11 @@ import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { CardHeader, CardTitle } from "@/shared/ui-components/controls/card";
+import {
+  ColumnsToggle,
+  useVisibleColumns,
+  type ColumnDef,
+} from "@/shared/ui-components/data/Columns";
 import * as T from "@/shared/ui-components/data/tableStyles";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import {
@@ -23,6 +28,16 @@ import {
   PayoutTrackingDialog,
 } from "./PayoutTrackingDialog";
 
+const COLUMNS: ColumnDef[] = [
+  // A withdrawal is its amount, and the trailing cell is the keyboard and
+  // screen-reader way into the tracking timeline — both stay.
+  { key: "requested", label: "Requested" },
+  { key: "amount", label: "Amount", required: true },
+  { key: "status", label: "Status" },
+  { key: "detail", label: "Detail" },
+  { key: "track", label: "Track", required: true },
+];
+
 /**
  * Withdrawal history. Renders nothing until the first withdrawal exists, so
  * recruiters who haven't set up payouts don't see an empty shell — but a fetch
@@ -33,6 +48,7 @@ export function PayoutsTable() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Payout | null>(null);
   const payouts = usePayouts(page);
+  const cols = useVisibleColumns("recruiter.payouts.columns", COLUMNS);
 
   if (payouts.isError) {
     return (
@@ -50,23 +66,36 @@ export function PayoutsTable() {
     <div className={T.TABLE_CARD}>
       <CardHeader>
         <CardTitle>Withdrawals</CardTitle>
+        <div className="ml-auto">
+          <ColumnsToggle
+            columns={cols.columns}
+            isVisible={cols.isVisible}
+            onToggle={cols.toggle}
+          />
+        </div>
       </CardHeader>
       <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
         <table className={T.TABLE_EL}>
           <thead className={T.TABLE_HEAD}>
             <tr>
-              <th scope="col" className={T.TABLE_TH}>
-                Requested
-              </th>
+              {cols.isVisible("requested") && (
+                <th scope="col" className={T.TABLE_TH}>
+                  Requested
+                </th>
+              )}
               <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
                 Amount
               </th>
-              <th scope="col" className={T.TABLE_TH}>
-                Status
-              </th>
-              <th scope="col" className={T.TABLE_TH}>
-                Detail
-              </th>
+              {cols.isVisible("status") && (
+                <th scope="col" className={T.TABLE_TH}>
+                  Status
+                </th>
+              )}
+              {cols.isVisible("detail") && (
+                <th scope="col" className={T.TABLE_TH}>
+                  Detail
+                </th>
+              )}
               <th scope="col" className={cn(T.TABLE_TH, "w-11")}>
                 <span className="sr-only">Track</span>
               </th>
@@ -79,14 +108,16 @@ export function PayoutsTable() {
                 className={cn(T.TABLE_ROW, "cursor-pointer")}
                 onClick={() => setSelected(payout)}
               >
-                <td
-                  className={cn(
-                    T.TABLE_TD,
-                    "whitespace-nowrap tabular-nums text-ink-body",
-                  )}
-                >
-                  {formatDate(payout.createdAt)}
-                </td>
+                {cols.isVisible("requested") && (
+                  <td
+                    className={cn(
+                      T.TABLE_TD,
+                      "whitespace-nowrap tabular-nums text-ink-body",
+                    )}
+                  >
+                    {formatDate(payout.createdAt)}
+                  </td>
+                )}
                 <td
                   className={cn(
                     T.TABLE_TD,
@@ -95,12 +126,16 @@ export function PayoutsTable() {
                 >
                   {formatMinor(payout.amountMinor)}
                 </td>
-                <td className={T.TABLE_TD}>
-                  <PayoutStatusBadge status={payout.status} />
-                </td>
-                <td className={cn(T.TABLE_TD, "text-ink-body")}>
-                  {payoutDetail(payout)}
-                </td>
+                {cols.isVisible("status") && (
+                  <td className={T.TABLE_TD}>
+                    <PayoutStatusBadge status={payout.status} />
+                  </td>
+                )}
+                {cols.isVisible("detail") && (
+                  <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                    {payoutDetail(payout)}
+                  </td>
+                )}
                 <td className={cn(T.TABLE_TD, "text-right")}>
                   <button
                     type="button"

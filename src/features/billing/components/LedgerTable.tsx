@@ -8,7 +8,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card } from "@/shared/ui-components/controls/card";
+import { Card, CardHeader } from "@/shared/ui-components/controls/card";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import * as T from "@/shared/ui-components/data/tableStyles";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
@@ -20,14 +20,31 @@ import {
   ColumnFilter,
   FilterableHead,
 } from "@/shared/ui-components/data/ColumnFilter";
+import {
+  ColumnsToggle,
+  useVisibleColumns,
+  type ColumnDef,
+} from "@/shared/ui-components/data/Columns";
 import { useLedger } from "../hooks/useBilling";
+import { BillingTableFooter } from "./BillingTable";
+import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
+import { PurchaseReceiptDialog } from "./PurchaseReceiptDialog";
 
 /** Each kind of wallet movement, labelled as the Activity cell labels it. */
 const LEDGER_TYPE_OPTIONS = (
   Object.entries(LEDGER_TYPE_LABELS) as [LedgerEntry["entryType"], string][]
 ).map(([value, label]) => ({ value, label }));
-import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
-import { PurchaseReceiptDialog } from "./PurchaseReceiptDialog";
+
+const COLUMNS: ColumnDef[] = [
+  // When it happened and what it was are what a history row is; the running
+  // figures and the receipt beside them are the reader's to choose.
+  { key: "when", label: "When", required: true },
+  { key: "activity", label: "Activity", required: true },
+  { key: "amount", label: "Amount" },
+  { key: "balance", label: "Balance" },
+  { key: "reserved", label: "Reserved" },
+  { key: "document", label: "Document" },
+];
 
 /** Credits grow the spendable pot; reserves/holds shrink it. */
 const isInflow = (type: LedgerEntry["entryType"]): boolean =>
@@ -77,10 +94,16 @@ export function LedgerTable() {
   };
   const { user } = useAuth();
   const accountName = user ? `${user.firstName} ${user.lastName}`.trim() : "";
+  const cols = useVisibleColumns("company.ledger.columns", COLUMNS);
 
   if (isLoading) {
-    // When · Activity · Amount · Balance · Reserved · Document.
-    return <TableSkeleton rows={6} columns={6} />;
+    // Match whatever columns this reader has left switched on.
+    return (
+      <TableSkeleton
+        rows={6}
+        columns={cols.allKeys.filter(cols.isVisible).length}
+      />
+    );
   }
 
   const entries = data?.data ?? [];
@@ -100,6 +123,15 @@ export function LedgerTable() {
 
   return (
     <div className={T.TABLE_CARD}>
+      {/* The "History" heading belongs to the page, so the card head carries
+          only the picker — and only where there are columns to pick. */}
+      <CardHeader className="hidden justify-end py-2 sm:flex">
+        <ColumnsToggle
+          columns={cols.columns}
+          isVisible={cols.isVisible}
+          onToggle={cols.toggle}
+        />
+      </CardHeader>
       <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
         <table className={T.TABLE_EL}>
           <thead className={T.TABLE_HEAD}>
@@ -115,18 +147,26 @@ export function LedgerTable() {
                   onChange={changeEntryType}
                 />
               </FilterableHead>
-              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                Amount
-              </th>
-              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                Balance
-              </th>
-              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                Reserved
-              </th>
-              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                Document
-              </th>
+              {cols.isVisible("amount") && (
+                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                  Amount
+                </th>
+              )}
+              {cols.isVisible("balance") && (
+                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                  Balance
+                </th>
+              )}
+              {cols.isVisible("reserved") && (
+                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                  Reserved
+                </th>
+              )}
+              {cols.isVisible("document") && (
+                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                  Document
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className={T.TABLE_BODY}>
@@ -148,34 +188,44 @@ export function LedgerTable() {
                     <p className={T.TABLE_CELL_SUB}>{entry.description}</p>
                   )}
                 </td>
-                <td
-                  className={cn(
-                    T.TABLE_TD,
-                    "whitespace-nowrap text-right font-[650] tabular-nums",
-                    amountToneClass(entry),
-                  )}
-                >
-                  {amountLabel(entry)}
-                </td>
-                <td
-                  className={cn(
-                    T.TABLE_TD,
-                    "whitespace-nowrap text-right tabular-nums text-ink-muted",
-                  )}
-                >
-                  {formatMinor(entry.balanceAfterMinor)}
-                </td>
-                <td
-                  className={cn(
-                    T.TABLE_TD,
-                    "whitespace-nowrap text-right tabular-nums text-ink-muted",
-                  )}
-                >
-                  {formatMinor(entry.reservedAfterMinor)}
-                </td>
-                <td className={cn(T.TABLE_TD, "whitespace-nowrap text-right")}>
-                  <LedgerDocument entry={entry} accountName={accountName} />
-                </td>
+                {cols.isVisible("amount") && (
+                  <td
+                    className={cn(
+                      T.TABLE_TD,
+                      "whitespace-nowrap text-right font-[650] tabular-nums",
+                      amountToneClass(entry),
+                    )}
+                  >
+                    {amountLabel(entry)}
+                  </td>
+                )}
+                {cols.isVisible("balance") && (
+                  <td
+                    className={cn(
+                      T.TABLE_TD,
+                      "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                    )}
+                  >
+                    {formatMinor(entry.balanceAfterMinor)}
+                  </td>
+                )}
+                {cols.isVisible("reserved") && (
+                  <td
+                    className={cn(
+                      T.TABLE_TD,
+                      "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                    )}
+                  >
+                    {formatMinor(entry.reservedAfterMinor)}
+                  </td>
+                )}
+                {cols.isVisible("document") && (
+                  <td
+                    className={cn(T.TABLE_TD, "whitespace-nowrap text-right")}
+                  >
+                    <LedgerDocument entry={entry} accountName={accountName} />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -217,33 +267,12 @@ export function LedgerTable() {
           />
         ))}
       </MobileRecordList>
-      {totalPages > 1 && (
-        <div className="flex flex-col gap-2 border-t border-line px-3.5 py-2.5 text-[12.5px] text-ink-muted sm:flex-row sm:items-center">
-          <span className="tabular-nums">
-            Page {page} of {totalPages}
-          </span>
-          <div className="flex items-center gap-1 sm:ml-auto">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
+      <BillingTableFooter
+        total={data?.meta.total ?? 0}
+        page={page}
+        totalPages={totalPages}
+        onPage={setPage}
+      />
     </div>
   );
 }
