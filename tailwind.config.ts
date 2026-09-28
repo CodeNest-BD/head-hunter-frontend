@@ -47,6 +47,9 @@ const config: Config = {
           strong: "rgb(var(--tint-strong-rgb) / <alpha-value>)",
         },
         sky: "rgb(var(--sky-rgb) / <alpha-value>)",
+        // Two accents hh.css hard-codes: the rating gold and the "unsaved" dot.
+        star: "rgb(var(--star-rgb) / <alpha-value>)",
+        pending: "rgb(var(--pending-rgb) / <alpha-value>)",
         navy: {
           DEFAULT: "rgb(var(--navy-rgb) / <alpha-value>)",
           2: "rgb(var(--navy-2-rgb) / <alpha-value>)",

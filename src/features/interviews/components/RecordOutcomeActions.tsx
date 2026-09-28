@@ -39,8 +39,8 @@ export function RecordOutcomeActions({ interview }: RecordOutcomeActionsProps) {
   const recordOutcome = useRecordOutcome(interview.id);
 
   const error = recordOutcome.isError && (
-    <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+    <div className="flex items-center gap-2 rounded-sm border border-bad-line bg-bad-bg px-3 py-2 text-meta text-bad">
+      <AlertCircle className="size-3.5 shrink-0" />
       {recordOutcomeErrorMessage(recordOutcome.error)}
     </div>
   );
@@ -49,7 +49,7 @@ export function RecordOutcomeActions({ interview }: RecordOutcomeActionsProps) {
     const feedback = panel.feedback.trim();
     return (
       <div className="flex flex-col gap-2">
-        <p id={feedbackHintId} className="text-xs text-muted-foreground">
+        <p id={feedbackHintId} className="text-meta text-ink-muted">
           The recruiter sees this — it is the only word they get that their
           candidate is out.
         </p>
@@ -92,7 +92,7 @@ export function RecordOutcomeActions({ interview }: RecordOutcomeActionsProps) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="text-xs font-medium text-muted-foreground">
+      <p className="text-label font-[650] uppercase text-ink-muted">
         Record Outcome
       </p>
       <div className="flex flex-wrap items-center gap-2">

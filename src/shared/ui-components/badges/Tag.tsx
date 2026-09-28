@@ -39,7 +39,9 @@ export function Tag({
     <button
       type="button"
       onClick={onClick}
-      aria-pressed={selected}
+      // `add` opens a draft field rather than toggling a value, so it must not
+      // announce a pressed state it does not have.
+      aria-pressed={variant === "add" ? undefined : selected}
       className={cn(classes, "hover:border-blue hover:text-blue-ink")}
     >
       {children}

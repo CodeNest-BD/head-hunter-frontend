@@ -31,14 +31,14 @@ function ScheduledInterview({ interview }: { interview: Interview }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-medium text-muted-foreground">
+        <p className="text-label font-[650] uppercase text-ink-muted">
           {INTERVIEW_TYPE_LABELS[interview.interviewType]} interview · round{" "}
           {interview.round} · scheduled
         </p>
         {interview.confirmedSlotStart && interview.confirmedSlotEnd && (
-          <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+          <p className="flex items-center gap-1.5 text-sub font-[550] tabular-nums text-ink">
             <CalendarClock
-              className="h-4 w-4 text-primary"
+              className="size-[15px] shrink-0 text-blue"
               aria-hidden="true"
             />
             {formatDateTime(interview.confirmedSlotStart)} –{" "}
@@ -84,10 +84,8 @@ export function OpenInterviewActions({ interview }: OpenInterviewActionsProps) {
 
   if (panel === "proposing") {
     return (
-      <div className="flex flex-col gap-2 rounded-md border border-border/60 p-3">
-        <p className="text-sm font-medium text-foreground">
-          Propose interview times
-        </p>
+      <div className="flex flex-col gap-2 rounded-sm border border-line bg-surface-sub p-3">
+        <p className="text-sub font-[650] text-ink">Propose interview times</p>
         <ProposeSlotsForm
           target={{ kind: "existing", interviewId: interview.id }}
           onDone={() => setPanel("none")}
@@ -99,7 +97,7 @@ export function OpenInterviewActions({ interview }: OpenInterviewActionsProps) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="text-xs text-muted-foreground">
+      <p className="text-label font-[650] uppercase text-ink-muted">
         {INTERVIEW_TYPE_LABELS[interview.interviewType]} interview · round{" "}
         {interview.round} ·{" "}
         {liveProposal ? "times proposed" : "awaiting a time"}
@@ -146,8 +144,8 @@ export function OpenInterviewActions({ interview }: OpenInterviewActionsProps) {
         </div>
       )}
       {cancelInterview.isError && (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+        <div className="flex items-center gap-2 rounded-sm border border-bad-line bg-bad-bg px-3 py-2 text-meta text-bad">
+          <AlertCircle className="size-3.5 shrink-0" />
           {withdrawInterviewErrorMessage(cancelInterview.error)}
         </div>
       )}

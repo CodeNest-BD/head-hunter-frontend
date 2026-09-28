@@ -48,7 +48,7 @@ export function RatingStars({
             className={cn(
               starClass,
               star <= Math.round(value)
-                ? "fill-[#e8b93b] text-[#e8b93b]"
+                ? "fill-star text-star"
                 : "fill-line-strong text-line-strong",
             )}
           />

@@ -170,25 +170,27 @@ function BubblePopup({
       <div
         onMouseEnter={onEnter}
         onMouseLeave={onLeave}
-        className="pointer-events-auto w-max min-w-[180px] max-w-[200px] rounded-lg border border-brand-line bg-white px-4 py-3 shadow-card-lg sm:max-w-none"
+        className="pointer-events-auto w-max min-w-[190px] max-w-[200px] rounded-md border border-line bg-surface p-3 shadow-pop sm:max-w-none"
       >
-        <p className="font-heading text-[15px] font-bold text-navy">
-          {info.title}
-        </p>
-        <p className="mt-1 text-[13px] text-navy">
-          <span className="font-bold">{info.openRoles.toLocaleString()}</span>{" "}
+        <p className="text-block font-[650] text-ink">{info.title}</p>
+        <p className="mt-1 text-sub text-ink-muted">
+          <span className="font-[650] tabular-nums text-ink">
+            {info.openRoles.toLocaleString()}
+          </span>{" "}
           Open Roles
         </p>
-        <p className="text-[13px] text-navy">
+        <p className="text-sub text-ink-muted">
           Available Fees:{" "}
-          <span className="font-bold">{formatMinor(info.totalFeeMinor)}</span>
+          <span className="font-[650] tabular-nums text-ink">
+            {formatMinor(info.totalFeeMinor)}
+          </span>
         </p>
         <button
           type="button"
           onClick={() => onViewJobs(info)}
-          className="mt-1.5 inline-flex items-center gap-0.5 text-[13px] font-semibold text-primary hover:underline"
+          className="mt-1.5 inline-flex items-center gap-0.5 text-[12.5px] font-[550] text-blue-ink hover:underline"
         >
-          View Jobs <ArrowUpRight className="h-3.5 w-3.5" />
+          View Jobs <ArrowUpRight className="size-3.5" />
         </button>
       </div>
     </div>
@@ -471,19 +473,20 @@ export function UsJobMap({
       {/* The map's header bar: the card's title on the left, and the current
           selection (with a text Clear) plus the zoom controls on the right. */}
       {embedded && (
-        <div className="flex flex-col gap-3 border-b border-brand-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
+        <div className="flex flex-col gap-2.5 border-b border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">{header}</div>
           <div className="flex flex-wrap items-center gap-2">
             {selection.kind !== "none" && (
               <>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-navy">
-                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                {/* `.chip.is-active` — the state the map is currently drilled into. */}
+                <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-blue bg-blue px-[11px] text-[12.5px] font-[550] text-white">
+                  <MapPin className="size-3" />
                   {selectionLabel}
                 </span>
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="text-xs font-semibold text-primary transition-colors hover:underline"
+                  className="text-[12.5px] font-[550] text-blue-ink transition-colors hover:underline"
                 >
                   Clear
                 </button>
@@ -497,7 +500,7 @@ export function UsJobMap({
                 }
                 disabled={zoom >= MAX_ZOOM}
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4" />
               </MapControlButton>
               <MapControlButton
                 label="Zoom out"
@@ -506,7 +509,7 @@ export function UsJobMap({
                 }
                 disabled={zoom <= MIN_ZOOM}
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="size-4" />
               </MapControlButton>
               {/* Reset is redundant once Clear is shown — Clear already resets
                   the zoom — so it only appears when nothing is selected. */}
@@ -519,7 +522,7 @@ export function UsJobMap({
                   }}
                   disabled={zoom <= MIN_ZOOM}
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="size-4" />
                 </MapControlButton>
               )}
             </div>
@@ -545,16 +548,16 @@ export function UsJobMap({
           />
 
           {selection.kind !== "none" && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
-              <MapPin className="h-3.5 w-3.5" />
+            <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-line-strong bg-surface px-[11px] text-[12.5px] font-[550] text-ink-muted">
+              <MapPin className="size-3" />
               {selectionLabel}
               <button
                 type="button"
                 aria-label="Clear selection"
                 onClick={() => onSelect({ kind: "none" })}
-                className="rounded-full p-0.5 transition-colors hover:bg-primary/20"
+                className="rounded-full p-0.5 font-bold opacity-70 transition-colors hover:bg-surface-sunken"
               >
-                <X className="h-3 w-3" />
+                <X className="size-3" />
               </button>
             </span>
           )}
@@ -575,10 +578,12 @@ export function UsJobMap({
       <div
         ref={wrapRef}
         className={cn(
-          "relative overflow-hidden",
+          // `.mapbox` — the map's own canvas: a cool vertical wash so the
+          // bubbles read against it, whether it is embedded in a card or not.
+          "relative overflow-hidden bg-gradient-to-b from-[#f8fbff] to-[#eef4fd]",
           embedded
             ? "h-64 sm:h-[420px] md:h-[500px]"
-            : "rounded-md border border-border bg-card shadow-card",
+            : "rounded-md border border-line shadow-e1",
         )}
       >
         {/* Faint blue tint behind the map — keeps the canvas light. */}
@@ -595,7 +600,7 @@ export function UsJobMap({
             yields to the richer city card when a bubble is hovered. */}
         {hoveredState && !hoveredBubble && pointer && (
           <div
-            className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-brand-line bg-white px-2.5 py-1 text-[13px] font-semibold text-navy shadow-card-lg"
+            className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-xs border border-line bg-surface px-2 py-1 text-[12.5px] font-[550] text-ink shadow-pop"
             style={{ left: pointer.x, top: pointer.y - 12 }}
           >
             {US_STATE_NAME_BY_CODE[hoveredState] ?? hoveredState}
@@ -834,18 +839,22 @@ export function UsJobMap({
 
         {/* Legend */}
         {!embedded && (
-          <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 py-3 text-xs text-muted-foreground">
-            <span className="font-medium text-navy">Open roles</span>
+          <div className="flex flex-wrap items-center gap-4 border-t border-line px-4 py-2.5 text-meta text-ink-muted">
+            <span className="text-label font-[650] uppercase text-ink-muted">
+              Open roles
+            </span>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-[3px] border border-border bg-[#EEF4FD]" />
+              {/* The swatches repeat the map's own state fills, so they stay
+                  the SVG's colors rather than palette tokens. */}
+              <span className="size-3 rounded-[3px] border border-line bg-[#EEF4FD]" />
               None
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-[3px] border border-border bg-[#E0E8F3]" />
+              <span className="size-3 rounded-[3px] border border-line bg-[#E0E8F3]" />
               Has roles
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-[3px] border border-[#034AEF] bg-[#B4DBFD]" />
+              <span className="size-3 rounded-[3px] border border-[#034AEF] bg-[#B4DBFD]" />
               Selected
             </div>
           </div>
@@ -883,7 +892,7 @@ function MapControlButton({
               aria-label={label}
               onClick={onClick}
               disabled={disabled}
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-border/70 bg-background/80 text-muted-foreground backdrop-blur transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+              className="flex size-7 items-center justify-center rounded-xs border border-line-strong bg-surface text-ink-body transition-colors hover:bg-surface-sub focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-45"
             >
               {children}
             </button>
@@ -924,15 +933,13 @@ function CityCombobox({
           aria-expanded={open}
           aria-controls={listId}
           aria-haspopup="listbox"
-          className="inline-flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-64"
+          className="inline-flex h-9 w-full items-center justify-between gap-2 rounded-sm border border-line-strong bg-surface px-[11px] text-body text-ink transition-colors hover:bg-surface-sub focus-visible:border-blue focus-visible:shadow-focus focus-visible:outline-none sm:w-64"
         >
           <span className="flex items-center gap-2 truncate">
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="truncate text-muted-foreground">
-              Search a city…
-            </span>
+            <Search className="size-3.5 shrink-0 text-ink-faint" />
+            <span className="truncate text-ink-faint">Search a city…</span>
           </span>
-          <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronsUpDown className="size-3.5 shrink-0 text-ink-faint" />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
@@ -940,23 +947,23 @@ function CityCombobox({
           id={listId}
           align="start"
           sideOffset={6}
-          className="z-50 w-64 overflow-hidden rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-card outline-none"
+          className="z-50 w-64 overflow-hidden rounded-sm border border-line bg-surface p-0 text-ink shadow-pop outline-none"
         >
-          <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 border-b border-line px-3 py-2">
+            <Search className="size-3.5 text-ink-faint" />
             {/* Native input so radix Popover keeps focus management simple. */}
             <input
               autoFocus
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
               placeholder="Type a city name…"
-              className="h-6 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              className="h-6 w-full bg-transparent text-sub text-ink outline-none placeholder:text-ink-faint"
             />
           </div>
           <ScrollArea.Root className="h-64">
             <ScrollArea.Viewport className="h-full w-full">
               {cities.length === 0 ? (
-                <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                <p className="px-3 py-6 text-center text-sub text-ink-muted">
                   No cities match “{query}”.
                 </p>
               ) : (
@@ -971,18 +978,18 @@ function CityCombobox({
                           type="button"
                           onClick={() => onPick(city)}
                           className={cn(
-                            "flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent",
-                            active && "bg-accent",
+                            "flex w-full items-center justify-between gap-2 rounded-xs px-2 py-1.5 text-left text-sub text-ink-body transition-colors hover:bg-surface-sub",
+                            active && "bg-tint text-blue-ink",
                           )}
                         >
                           <span className="truncate">
                             {city.name}
-                            <span className="ml-1 text-xs text-muted-foreground">
+                            <span className="ml-1 text-meta text-ink-faint">
                               {city.state}
                             </span>
                           </span>
                           {active && (
-                            <Check className="h-4 w-4 shrink-0 text-primary" />
+                            <Check className="size-3.5 shrink-0 text-blue" />
                           )}
                         </button>
                       </li>
@@ -995,7 +1002,7 @@ function CityCombobox({
               orientation="vertical"
               className="flex w-2 touch-none select-none p-0.5"
             >
-              <ScrollArea.Thumb className="flex-1 rounded-full bg-border" />
+              <ScrollArea.Thumb className="flex-1 rounded-full bg-line-strong" />
             </ScrollArea.Scrollbar>
           </ScrollArea.Root>
         </Popover.Content>

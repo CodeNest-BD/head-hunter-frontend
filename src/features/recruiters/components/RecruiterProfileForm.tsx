@@ -407,7 +407,7 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
             aria-hidden="true"
             className={cn(
               "size-2 shrink-0 rounded-full",
-              isDirty ? "bg-[#e8a23b]" : "bg-ok",
+              isDirty ? "bg-pending" : "bg-ok",
             )}
           />
           {isDirty ? "Unsaved changes" : "All changes saved"}

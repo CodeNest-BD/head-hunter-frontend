@@ -108,6 +108,12 @@
     --neutral-line-rgb: 219 225 234;
     --neutral-line: rgb(var(--neutral-line-rgb));
 
+    /* ── Accents ── */
+    --star-rgb: 232 185 59; /* rating gold */
+    --star: rgb(var(--star-rgb));
+    --pending-rgb: 232 162 59; /* attention + save-bar "unsaved" dot */
+    --pending: rgb(var(--pending-rgb));
+
     /* ── Shell metrics ── */
     --topbar-h: 56px;
     --rail-w: 232px;

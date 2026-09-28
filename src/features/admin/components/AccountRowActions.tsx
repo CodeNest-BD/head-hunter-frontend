@@ -95,11 +95,7 @@ export function AccountRowActions({
             </button>
           </Dropdown.Trigger>
           <Dropdown.Portal>
-            <Dropdown.Content
-              align="end"
-              sideOffset={4}
-              className={MENU_CLASS}
-            >
+            <Dropdown.Content align="end" sideOffset={4} className={MENU_CLASS}>
               <Dropdown.Item asChild>
                 <Link href={viewHref} className={ITEM_CLASS}>
                   <Eye className="text-ink-faint" />

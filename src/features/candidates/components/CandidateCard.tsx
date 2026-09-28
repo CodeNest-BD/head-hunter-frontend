@@ -36,24 +36,19 @@ export function CandidateCard({
 }: CandidateCardProps) {
   return (
     <Card
-      className={cn(
-        "border-border/70 transition-colors hover:border-border",
-        className,
-      )}
+      className={cn("transition-colors hover:border-line-strong", className)}
     >
       {/* Only the status badge sits beside the name. The interview and offer
           actions moved into the body: both expand into full-width panels, so
           stacking them here made a tall right column next to a two-line left
           one — the empty band this card used to carry. */}
-      <CardHeader className="flex-col items-start justify-between gap-2 space-y-0 p-4 sm:flex-row sm:items-center sm:gap-4">
+      <CardHeader className="flex-nowrap items-start justify-between gap-2.5 sm:items-center">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <CardTitle className="font-heading tracking-tight">
-            {candidate.fullName}
-          </CardTitle>
+          <CardTitle>{candidate.fullName}</CardTitle>
           <CardDescription>
             <a
               href={`mailto:${candidate.email}`}
-              className="text-primary underline-offset-2 hover:underline"
+              className="text-blue-ink underline-offset-2 hover:underline"
             >
               {candidate.email}
             </a>
@@ -70,7 +65,7 @@ export function CandidateCard({
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-3 p-4 pt-0">
+      <CardContent className="flex flex-col gap-4">
         {/* Read-only status only. Responding to a live offer or interview
             proposal happens on the actionable cards in the conversation
             thread beside this rail — one place to act, not two. Creating a
@@ -82,7 +77,7 @@ export function CandidateCard({
         />
 
         {candidate.status === "passed" ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-meta text-ink-muted">
             This candidate was passed on, so no more interviews or offers can be
             sent.
           </p>
