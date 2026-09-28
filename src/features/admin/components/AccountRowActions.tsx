@@ -7,6 +7,7 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { Ban, Eye, MoreVertical, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   useDeleteRecruiter,
@@ -24,8 +25,19 @@ interface AccountRowActionsProps {
   kind: "company" | "recruiter";
 }
 
+/** The reference's `.kebab` — a 28px quiet trigger sized for a 44px row. */
+const KEBAB_CLASS =
+  "inline-flex size-7 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+const MENU_CLASS =
+  "z-50 min-w-[170px] rounded-sm border border-line bg-surface p-1 shadow-pop";
+
 const ITEM_CLASS =
-  "flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-foreground outline-none hover:bg-accent focus:bg-accent";
+  "flex cursor-pointer items-center gap-2.5 rounded-xs px-2.5 py-1.5 text-sub text-ink-body outline-none transition-colors hover:bg-surface-sub focus:bg-surface-sub [&_svg]:size-[15px] [&_svg]:shrink-0";
+
+/** The alert dialog shell, matching `ConfirmActionDialog`'s popover recipe. */
+const DIALOG_CLASS =
+  "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface p-5 shadow-pop focus:outline-none";
 
 /**
  * The single 3-dot row menu for account tables (companies, recruiters):
@@ -77,20 +89,20 @@ export function AccountRowActions({
             <button
               type="button"
               aria-label={`Actions for ${subjectName}`}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={KEBAB_CLASS}
             >
-              <MoreVertical className="h-4 w-4" />
+              <MoreVertical className="size-[17px]" />
             </button>
           </Dropdown.Trigger>
           <Dropdown.Portal>
             <Dropdown.Content
               align="end"
               sideOffset={4}
-              className="z-50 min-w-[170px] rounded-md border border-border bg-popover p-1 shadow-card-lg"
+              className={MENU_CLASS}
             >
               <Dropdown.Item asChild>
                 <Link href={viewHref} className={ITEM_CLASS}>
-                  <Eye className="h-4 w-4" />
+                  <Eye className="text-ink-faint" />
                   View
                 </Link>
               </Dropdown.Item>
@@ -102,9 +114,9 @@ export function AccountRowActions({
                 className={ITEM_CLASS}
               >
                 {isHeld ? (
-                  <ShieldCheck className="h-4 w-4" />
+                  <ShieldCheck className="text-ink-faint" />
                 ) : (
-                  <Ban className="h-4 w-4" />
+                  <Ban className="text-ink-faint" />
                 )}
                 {isHeld ? "Reinstate" : holdLabel}
               </Dropdown.Item>
@@ -114,9 +126,12 @@ export function AccountRowActions({
                     event.preventDefault();
                     setDeleteOpen(true);
                   }}
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-destructive outline-none hover:bg-destructive/10 focus:bg-destructive/10"
+                  className={cn(
+                    ITEM_CLASS,
+                    "text-bad hover:bg-bad-bg focus:bg-bad-bg",
+                  )}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 />
                   Delete
                 </Dropdown.Item>
               )}
@@ -129,18 +144,18 @@ export function AccountRowActions({
       <AlertDialog.Root open={holdOpen} onOpenChange={setHoldOpen}>
         <AlertDialog.Portal>
           <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
-            <AlertDialog.Title className="font-heading text-lg font-extrabold text-navy">
+          <AlertDialog.Content className={DIALOG_CLASS}>
+            <AlertDialog.Title className="text-card font-[650] text-ink">
               {isHeld
                 ? `Reinstate ${subjectName}?`
                 : `${holdLabel} ${subjectName}?`}
             </AlertDialog.Title>
-            <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
+            <AlertDialog.Description className="mt-1.5 text-sub text-ink-muted">
               {isHeld
                 ? "They will be able to sign in and use the platform again."
                 : "They will be signed out immediately and blocked until reinstated."}
             </AlertDialog.Description>
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-4 flex justify-end gap-2">
               <AlertDialog.Cancel asChild>
                 <Button type="button" variant="outline" disabled={holdPending}>
                   Cancel
@@ -168,15 +183,15 @@ export function AccountRowActions({
         <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
           <AlertDialog.Portal>
             <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-            <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
-              <AlertDialog.Title className="font-heading text-lg font-extrabold text-foreground">
+            <AlertDialog.Content className={DIALOG_CLASS}>
+              <AlertDialog.Title className="text-card font-[650] text-ink">
                 Delete {subjectName}?
               </AlertDialog.Title>
-              <AlertDialog.Description className="mt-2 text-sm text-muted-foreground">
+              <AlertDialog.Description className="mt-1.5 text-sub text-ink-muted">
                 The recruiter account is removed and its sessions revoked. This
                 is recoverable by support.
               </AlertDialog.Description>
-              <div className="mt-6 flex justify-end gap-3">
+              <div className="mt-4 flex justify-end gap-2">
                 <AlertDialog.Cancel asChild>
                   <Button type="button" variant="outline">
                     Cancel

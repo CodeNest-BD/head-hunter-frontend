@@ -29,34 +29,34 @@ export function PayoutStatusBadge({ status }: { status: PayoutStatus }) {
   );
 }
 
-const MARKER = "flex h-5 w-5 shrink-0 items-center justify-center rounded-full";
+const MARKER = "flex size-5 shrink-0 items-center justify-center rounded-full";
 
 function StepMarker({ state }: { state: PayoutTimelineState }) {
   switch (state) {
     case "done":
       return (
-        <span className={cn(MARKER, "bg-primary text-primary-foreground")}>
-          <Check className="h-3 w-3" strokeWidth={3} />
+        <span className={cn(MARKER, "bg-blue text-white")}>
+          <Check className="size-3" strokeWidth={3} />
         </span>
       );
     case "current":
       return (
-        <span className={cn(MARKER, "border-2 border-primary bg-card")}>
-          <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+        <span className={cn(MARKER, "border-2 border-blue bg-surface")}>
+          <span className="size-2 animate-pulse rounded-full bg-blue" />
         </span>
       );
     case "upcoming":
-      return <span className={cn(MARKER, "border-2 border-border bg-card")} />;
+      return <span className={cn(MARKER, "border-2 border-line bg-surface")} />;
     case "failed":
       return (
-        <span className={cn(MARKER, "bg-[#9B3535] text-white")}>
-          <X className="h-3 w-3" strokeWidth={3} />
+        <span className={cn(MARKER, "bg-bad text-white")}>
+          <X className="size-3" strokeWidth={3} />
         </span>
       );
     case "canceled":
       return (
-        <span className={cn(MARKER, "bg-muted text-muted-foreground")}>
-          <X className="h-3 w-3" strokeWidth={3} />
+        <span className={cn(MARKER, "bg-neutral-bg text-neutral")}>
+          <X className="size-3" strokeWidth={3} />
         </span>
       );
   }
@@ -87,18 +87,18 @@ export function PayoutTrackingDialog({
     <Dialog.Root open onOpenChange={(next) => next || onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card shadow-card-lg focus:outline-none">
-          <div className="flex items-center justify-between border-b border-border px-5 py-3">
-            <Dialog.Title className="text-sm font-semibold text-foreground">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface shadow-pop focus:outline-none">
+          <div className="flex items-center justify-between gap-2.5 border-b border-line px-4 py-3">
+            <Dialog.Title className="text-card font-[650] text-ink">
               Withdrawal Details
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
                 type="button"
                 aria-label="Close"
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
               >
-                <X className="h-4 w-4" />
+                <X className="size-[15px]" />
               </button>
             </Dialog.Close>
           </div>
@@ -106,13 +106,13 @@ export function PayoutTrackingDialog({
             Track the progress of this withdrawal.
           </Dialog.Description>
 
-          <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+          <div className="flex items-start justify-between gap-3 border-b border-line p-4">
             <div className="min-w-0">
-              <p className="text-2xl font-bold tracking-tight text-navy">
+              <p className="text-stat font-bold tabular-nums text-ink">
                 {formatMinor(payout.amountMinor)}
               </p>
               {destination && (
-                <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                <p className="mt-1 truncate text-sub text-ink-muted">
                   to {destination}
                 </p>
               )}
@@ -120,7 +120,7 @@ export function PayoutTrackingDialog({
             <PayoutStatusBadge status={payout.status} />
           </div>
 
-          <ol className="flex flex-col px-5 py-4">
+          <ol className="flex flex-col p-4">
             {steps.map((step, index) => (
               <li key={step.title} className="flex gap-3">
                 <div className="flex flex-col items-center">
@@ -128,38 +128,36 @@ export function PayoutTrackingDialog({
                   {index < steps.length - 1 && (
                     <span
                       className={cn(
-                        "my-1 w-px flex-1",
-                        step.state === "done" ? "bg-primary" : "bg-border",
+                        "my-1 w-[1.5px] flex-1",
+                        step.state === "done" ? "bg-blue" : "bg-line",
                       )}
                     />
                   )}
                 </div>
                 <div
                   className={cn(
-                    "min-w-0 pb-5",
+                    "min-w-0 pb-[18px]",
                     index === steps.length - 1 && "pb-0",
                   )}
                 >
                   <p
                     className={cn(
-                      "text-sm font-semibold",
-                      step.state === "failed" ? "text-[#9B3535]" : "text-navy",
-                      step.state === "upcoming" && "text-muted-foreground",
+                      "text-block font-[550]",
+                      step.state === "failed" ? "text-bad" : "text-ink",
+                      step.state === "upcoming" && "text-ink-muted",
                     )}
                   >
                     {step.title}
                   </p>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-                    {step.detail}
-                  </p>
+                  <p className="text-sub text-ink-muted">{step.detail}</p>
                 </div>
               </li>
             ))}
           </ol>
 
-          <div className="flex items-center justify-between border-t border-border px-5 py-3 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2.5 text-meta text-ink-muted">
             <span>Reference</span>
-            <span className="font-mono tracking-wide">
+            <span className="font-mono tabular-nums tracking-wide">
               {payoutReference(payout.id)}
             </span>
           </div>

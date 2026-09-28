@@ -13,6 +13,13 @@ import {
   useBillingRefreshBurst,
 } from "@/features/billing";
 import { PageHeader } from "@/shared/ui-components/brand";
+import { Button } from "@/shared/ui-components/controls/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 const RESERVE_STEPS: readonly { title: string; detail: string }[] = [
@@ -34,26 +41,28 @@ const RESERVE_STEPS: readonly { title: string; detail: string }[] = [
 
 function HowReservedFeesWork() {
   return (
-    <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <h2 className="font-heading text-base font-bold text-navy">
-        How Held Fees Work
-      </h2>
-      <ol className="mt-4 flex flex-col gap-4">
-        {RESERVE_STEPS.map((step, index) => (
-          <li key={step.title} className="flex items-start gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-primary">
-              {index + 1}
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-navy">{step.title}</p>
-              <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-                {step.detail}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </section>
+    <Card>
+      <CardHeader>
+        <CardTitle>How Held Fees Work</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* `.steps` — the hold mechanic explained in plain language, right
+            where money enters the wallet. */}
+        <ol className="flex flex-col gap-3">
+          {RESERVE_STEPS.map((step, index) => (
+            <li key={step.title} className="flex items-start gap-[11px]">
+              <span className="mt-px flex size-[22px] shrink-0 items-center justify-center rounded-full bg-tint text-[11.5px] font-bold text-blue">
+                {index + 1}
+              </span>
+              <div className="min-w-0">
+                <p className="text-block font-[550] text-ink">{step.title}</p>
+                <p className="text-sub text-ink-muted">{step.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -72,17 +81,14 @@ function WalletContent() {
   );
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex w-full flex-col gap-4">
       <PageHeader
         title="Wallet"
         subtitle="Load funds once, then post jobs and make offers against your balance. A recruiter fee is held in escrow only when a candidate accepts your offer."
         actions={
-          <Link
-            href="#load-funds"
-            className="inline-flex items-center rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Load funds
-          </Link>
+          <Button asChild>
+            <Link href="#load-funds">Load funds</Link>
+          </Button>
         }
       />
       <CheckoutResultBanner
@@ -92,13 +98,13 @@ function WalletContent() {
         onResult={onCheckoutResult}
       />
       <WalletSummary />
-      <div id="load-funds" className="grid gap-4 lg:grid-cols-2">
+      <div id="load-funds" className="grid gap-3 lg:grid-cols-2">
         <TopUpCard />
         <HowReservedFeesWork />
       </div>
       <CompanyPlacementsPanel />
       <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-lg font-bold text-navy">History</h2>
+        <h2 className="text-section font-bold text-ink">History</h2>
         <LedgerTable />
       </section>
     </div>

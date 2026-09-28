@@ -14,26 +14,40 @@ import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableAvatar } from "@/shared/ui-components/data/TableAvatar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
 import {
   ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminRecruiters, useAdminStats } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
 import { VERIFICATION_LABELS, type RecruiterListItem } from "../schemas";
 import { AccountRowActions } from "./AccountRowActions";
 import { ListPager } from "./ListPager";
-import { ListToolbar } from "./ListToolbar";
 import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_STATUS_TONES,
   VERIFICATION_STATUS_TONES,
 } from "./statusStyles";
-import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
-import { TABLE_TOOLBAR } from "@/shared/ui-components/data/tableStyles";
+import {
+  TABLE_BODY,
+  TABLE_CARD,
+  TABLE_CELL_MAIN,
+  TABLE_CELL_SUB,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_HEAD_ROW,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TD_STACKED,
+  TABLE_TH,
+  TABLE_TOOLBAR,
+} from "@/shared/ui-components/data/tableStyles";
 import { formatMinor } from "@/shared/utils/money";
 
 function formatDate(iso: string): string {
@@ -155,7 +169,7 @@ export function RecruitersTable() {
       .data?.meta.total ?? 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Recruiters"
         subtitle="Every recruiter on the platform. Open a profile or suspend an account."
@@ -166,224 +180,223 @@ export function RecruitersTable() {
         ]}
       />
 
-      <div className="flex flex-col gap-4">
-        <div className={TABLE_TOOLBAR}>
-          <div className="flex-1">
-            <ListToolbar
-              query={qInput}
-              onQueryChange={setQInput}
-              placeholder="Search recruiters by name or email…"
-              filter={{
-                value: status,
-                onChange: changeStatus,
-                allLabel: "All statuses",
-                options: [
-                  { value: "active", label: "Active" },
-                  { value: "suspended", label: "Suspended" },
-                ],
-              }}
-              extraFilter={{
-                value: verificationFilter,
-                onChange: (next) => {
-                  setVerificationFilter(next);
-                  setPage(1);
-                },
-                allLabel: "All verification",
-                options: [
-                  { value: "pending", label: "Pending" },
-                  { value: "verified", label: "Verified" },
-                  { value: "rejected", label: "Rejected" },
-                ],
-              }}
-            />
-          </div>
+      <div className={TABLE_TOOLBAR}>
+        <div className="flex-1">
+          <ListToolbar
+            query={qInput}
+            onQueryChange={setQInput}
+            placeholder="Search recruiters by name or email…"
+            filter={{
+              value: status,
+              onChange: changeStatus,
+              allLabel: "All statuses",
+              options: [
+                { value: "active", label: "Active" },
+                { value: "suspended", label: "Suspended" },
+              ],
+            }}
+            extraFilter={{
+              value: verificationFilter,
+              onChange: (next) => {
+                setVerificationFilter(next);
+                setPage(1);
+              },
+              allLabel: "All verification",
+              options: [
+                { value: "pending", label: "Pending" },
+                { value: "verified", label: "Verified" },
+                { value: "rejected", label: "Rejected" },
+              ],
+            }}
+          />
+        </div>
+        <div className="sm:ml-auto">
           <ColumnsToggle
             columns={cols.columns}
             isVisible={cols.isVisible}
             onToggle={cols.toggle}
           />
         </div>
-
-        {isPending ? (
-          <TableSkeleton />
-        ) : isError ? (
-          <Card>
-            <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-              <AlertCircle className="h-6 w-6" />
-              Could not load recruiters.
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void refetch()}
-              >
-                Retry
-              </Button>
-            </CardContent>
-          </Card>
-        ) : data.data.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
-                <Users className="h-6 w-6" />
-              </span>
-              <p className="text-sm font-semibold text-navy">
-                No recruiters found
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Try a different search or filter.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              <div className="hidden w-full overflow-x-auto sm:block">
-                <table className={TABLE_CLASS}>
-                  <thead>
-                    <tr className={THEAD_ROW_CLASS}>
-                      <th scope="col" className="px-5 py-3 font-semibold">
-                        Recruiter
-                      </th>
-                      {cols.isVisible("verification") && (
-                        <th scope="col" className="px-5 py-3 font-semibold">
-                          Verification
-                        </th>
-                      )}
-                      {cols.isVisible("rating") && (
-                        <th scope="col" className="px-5 py-3 font-semibold">
-                          Rating
-                        </th>
-                      )}
-                      {cols.isVisible("location") && (
-                        <th scope="col" className="px-5 py-3 font-semibold">
-                          Location
-                        </th>
-                      )}
-                      {cols.isVisible("joined") && (
-                        <th scope="col" className="px-5 py-3 font-semibold">
-                          Joined
-                        </th>
-                      )}
-                      {cols.isVisible("status") && (
-                        <th scope="col" className="px-5 py-3 font-semibold">
-                          Status
-                        </th>
-                      )}
-                      {cols.isVisible("placements") && (
-                        <th
-                          scope="col"
-                          className="px-5 py-3 text-right font-semibold"
-                        >
-                          Placements
-                        </th>
-                      )}
-                      {cols.isVisible("commissions") && (
-                        <th
-                          scope="col"
-                          className="px-5 py-3 text-right font-semibold"
-                        >
-                          Commissions
-                        </th>
-                      )}
-                      <th
-                        scope="col"
-                        className="px-5 py-3 text-right font-semibold"
-                      >
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.data.map((r) => (
-                      <tr key={r.userId} className={BODY_ROW_CLASS}>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <TableAvatar name={recruiterName(r)} />
-                            <div className="min-w-0">
-                              <Link
-                                href={`/admin/recruiters/${r.userId}`}
-                                className="font-semibold text-navy hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
-                              >
-                                {r.firstName} {r.lastName}
-                              </Link>
-                              <p
-                                className="max-w-[240px] truncate text-xs text-muted-foreground"
-                                title={r.email}
-                              >
-                                {r.email}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        {cols.isVisible("verification") && (
-                          <td className="px-5 py-3">
-                            <RecruiterVerification recruiter={r} />
-                          </td>
-                        )}
-                        {cols.isVisible("rating") && (
-                          <td className="whitespace-nowrap px-5 py-3">
-                            <RatingStars
-                              value={r.ratingAvg}
-                              count={r.ratingCount}
-                            />
-                          </td>
-                        )}
-                        {cols.isVisible("location") && (
-                          <td className="px-5 py-3 text-muted-foreground">
-                            {recruiterLocation(r)}
-                          </td>
-                        )}
-                        {cols.isVisible("joined") && (
-                          <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                            {formatDate(r.joinedAt)}
-                          </td>
-                        )}
-                        {cols.isVisible("status") && (
-                          <td className="px-5 py-3">
-                            <RecruiterStatus recruiter={r} />
-                          </td>
-                        )}
-                        {cols.isVisible("placements") && (
-                          <td className="whitespace-nowrap px-5 py-3 text-right font-semibold tabular-nums text-navy">
-                            {r.placementCount}
-                          </td>
-                        )}
-                        {cols.isVisible("commissions") && (
-                          <td className="whitespace-nowrap px-5 py-3 text-right font-semibold tabular-nums text-navy">
-                            {formatMinor(r.commissionMinor)}
-                          </td>
-                        )}
-                        <td className="px-5 py-3">
-                          <AccountRowActions
-                            userId={r.userId}
-                            status={r.status}
-                            subjectName={recruiterName(r)}
-                            viewHref={`/admin/recruiters/${r.userId}`}
-                            kind="recruiter"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <MobileRecordList className="sm:hidden">
-                {data.data.map((r) => (
-                  <RecruiterCard key={r.userId} recruiter={r} />
-                ))}
-              </MobileRecordList>
-              <ListPager
-                page={page}
-                totalPages={data.meta.totalPages}
-                total={data.meta.total}
-                onPage={setPage}
-                pageSize={limit}
-                onPageSize={changeLimit}
-              />
-            </CardContent>
-          </Card>
-        )}
       </div>
+
+      {isPending ? (
+        <TableSkeleton />
+      ) : isError ? (
+        <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+          <div className="flex items-center gap-2.5 font-[550]">
+            <AlertCircle className="size-[15px] shrink-0" />
+            Could not load recruiters.
+          </div>
+          <div>
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      ) : data.data.length === 0 ? (
+        <div className={TABLE_CARD}>
+          <EmptyState
+            icon={Users}
+            title="No recruiters found"
+            description="Try a different search or filter."
+          />
+        </div>
+      ) : (
+        <div className={TABLE_CARD}>
+          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+            <table className={TABLE_EL}>
+              <thead className={TABLE_HEAD}>
+                <tr className={TABLE_HEAD_ROW}>
+                  <th scope="col" className={cn(TABLE_TH, "w-[22%]")}>
+                    Recruiter
+                  </th>
+                  {cols.isVisible("verification") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Verification
+                    </th>
+                  )}
+                  {cols.isVisible("rating") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Rating
+                    </th>
+                  )}
+                  {cols.isVisible("location") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Location
+                    </th>
+                  )}
+                  {cols.isVisible("joined") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Joined
+                    </th>
+                  )}
+                  {cols.isVisible("status") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
+                  )}
+                  {cols.isVisible("placements") && (
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Placements
+                    </th>
+                  )}
+                  {cols.isVisible("commissions") && (
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Commissions
+                    </th>
+                  )}
+                  <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={TABLE_BODY}>
+                {data.data.map((r) => (
+                  <tr key={r.userId} className={TABLE_ROW}>
+                    <td className={TABLE_TD_STACKED}>
+                      <div className="flex items-center gap-2.5">
+                        <TableAvatar name={recruiterName(r)} />
+                        <div className="min-w-0">
+                          <Link
+                            href={`/admin/recruiters/${r.userId}`}
+                            className={cn(
+                              TABLE_CELL_MAIN,
+                              "transition-colors hover:text-blue focus-visible:underline focus-visible:outline-none",
+                            )}
+                          >
+                            {r.firstName} {r.lastName}
+                          </Link>
+                          <p
+                            className={cn(
+                              TABLE_CELL_SUB,
+                              "max-w-[240px] truncate",
+                            )}
+                            title={r.email}
+                          >
+                            {r.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    {cols.isVisible("verification") && (
+                      <td className={TABLE_TD}>
+                        <RecruiterVerification recruiter={r} />
+                      </td>
+                    )}
+                    {cols.isVisible("rating") && (
+                      <td className={cn(TABLE_TD, "whitespace-nowrap")}>
+                        <RatingStars value={r.ratingAvg} count={r.ratingCount} />
+                      </td>
+                    )}
+                    {cols.isVisible("location") && (
+                      <td className={cn(TABLE_TD, "text-ink-muted")}>
+                        {recruiterLocation(r)}
+                      </td>
+                    )}
+                    {cols.isVisible("joined") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap tabular-nums text-ink-muted",
+                        )}
+                      >
+                        {formatDate(r.joinedAt)}
+                      </td>
+                    )}
+                    {cols.isVisible("status") && (
+                      <td className={TABLE_TD}>
+                        <RecruiterStatus recruiter={r} />
+                      </td>
+                    )}
+                    {cols.isVisible("placements") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right tabular-nums text-ink",
+                        )}
+                      >
+                        {r.placementCount}
+                      </td>
+                    )}
+                    {cols.isVisible("commissions") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                        )}
+                      >
+                        {formatMinor(r.commissionMinor)}
+                      </td>
+                    )}
+                    <td className={cn(TABLE_TD, "text-right")}>
+                      <AccountRowActions
+                        userId={r.userId}
+                        status={r.status}
+                        subjectName={recruiterName(r)}
+                        viewHref={`/admin/recruiters/${r.userId}`}
+                        kind="recruiter"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <MobileRecordList className="sm:hidden">
+            {data.data.map((r) => (
+              <RecruiterCard key={r.userId} recruiter={r} />
+            ))}
+          </MobileRecordList>
+          <ListPager
+            page={page}
+            totalPages={data.meta.totalPages}
+            total={data.meta.total}
+            onPage={setPage}
+            pageSize={limit}
+            onPageSize={changeLimit}
+          />
+        </div>
+      )}
     </div>
   );
 }

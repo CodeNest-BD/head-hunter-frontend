@@ -128,7 +128,7 @@ describe("MessageGroup", () => {
     expect(screen.getByText("Company")).toBeInTheDocument();
   });
 
-  it("colours and aligns the viewer's own messages using bg-primary, never by actor", () => {
+  it("colours and aligns the viewer's own messages in cobalt, never by actor", () => {
     const { container } = render(
       <MessageGroup
         actor="company"
@@ -145,7 +145,7 @@ describe("MessageGroup", () => {
     );
 
     const bubble = screen.getByText("Own message");
-    expect(bubble).toHaveClass("bg-primary", "text-primary-foreground");
+    expect(bubble).toHaveClass("bg-blue", "text-white");
     expect(bubble.parentElement).toHaveClass("items-end");
     expect(container.querySelector(".items-end")).not.toBeNull();
   });
@@ -167,7 +167,7 @@ describe("MessageGroup", () => {
     );
 
     const bubble = screen.getByText("Their message");
-    expect(bubble).toHaveClass("bg-card", "text-foreground");
+    expect(bubble).toHaveClass("bg-surface-sub", "text-ink-body");
     expect(bubble.parentElement).toHaveClass("items-start");
     expect(container.querySelector(".items-start")).not.toBeNull();
   });

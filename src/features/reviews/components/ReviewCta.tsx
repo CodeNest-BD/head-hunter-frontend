@@ -65,19 +65,19 @@ export function ReviewCta({ offerId }: ReviewCtaProps) {
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Trigger asChild>
           <Button type="button" variant="outline" size="sm">
-            <Star className="h-4 w-4" />
+            <Star />
             {existing ? "Edit your review" : "Rate this recruiter"}
           </Button>
         </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card p-6 shadow-card-lg focus:outline-none">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-line bg-surface p-4 shadow-pop focus:outline-none">
             <div className="flex items-start justify-between">
               <div>
-                <Dialog.Title className="font-heading text-lg font-extrabold text-foreground">
+                <Dialog.Title className="text-section font-bold text-ink">
                   {existing ? "Edit your review" : "Rate this recruiter"}
                 </Dialog.Title>
-                <Dialog.Description className="mt-1 text-sm text-muted-foreground">
+                <Dialog.Description className="mt-[3px] text-sub text-ink-muted">
                   Your rating helps other companies pick the right recruiter.
                 </Dialog.Description>
               </div>
@@ -85,16 +85,16 @@ export function ReviewCta({ offerId }: ReviewCtaProps) {
                 <button
                   type="button"
                   aria-label="Close"
-                  className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                  className="inline-flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="size-[15px]" />
                 </button>
               </Dialog.Close>
             </div>
 
-            <div className="mt-5 flex flex-col gap-4">
+            <div className="mt-4 flex flex-col gap-4">
               <StarRatingInput value={rating} onChange={setRating} />
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor={`review-comment-${offerId}`}>
                   Comment (optional)
                 </Label>

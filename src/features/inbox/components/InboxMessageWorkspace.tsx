@@ -42,14 +42,14 @@ export function InboxMessageWorkspace({
       <div className="flex shrink-0 items-center gap-3 lg:hidden">
         <Link
           href={backHref}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1.5 text-[12.5px] font-[550] text-ink-muted transition-colors hover:text-ink"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft aria-hidden="true" className="size-3.5" />
           Inbox
         </Link>
         <div
           role="tablist"
-          className="ml-auto flex gap-1 rounded-md border border-border bg-card p-1"
+          className="ml-auto inline-flex rounded-sm border border-line bg-surface-sunken p-0.5"
         >
           <WorkspaceTab
             active={tab === "conversation"}
@@ -111,20 +111,17 @@ function WorkspaceTab({
       aria-selected={active}
       onClick={onSelect}
       className={cn(
-        "flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-sm font-semibold transition-colors",
+        "inline-flex h-7 items-center gap-1.5 rounded-xs px-3 text-[12.5px] font-semibold transition-colors",
         active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:text-foreground",
+          ? "bg-surface text-ink shadow-e1"
+          : "text-ink-muted hover:text-ink",
       )}
     >
       {label}
       {unread && (
         <span
           aria-label="Unread messages"
-          className={cn(
-            "h-1.5 w-1.5 rounded-full",
-            active ? "bg-primary-foreground" : "bg-primary",
-          )}
+          className="size-1.5 rounded-full bg-blue"
         />
       )}
     </button>

@@ -22,6 +22,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
+import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import type { ConversationEvent } from "../schemas";
 
@@ -40,16 +41,13 @@ export type ProposalEventData = Extract<
  */
 const PROPOSAL_TONES: Record<
   ProposalEventData["proposalStatus"],
-  { tile: string; Icon: typeof CalendarClock }
+  { tone: TileTone; Icon: typeof CalendarClock }
 > = {
-  proposed: { tile: "bg-primary/10 text-primary", Icon: CalendarClock },
-  counter_requested: {
-    tile: "bg-[#FBF3DF] text-[#7A5109]",
-    Icon: CalendarClock,
-  },
-  confirmed: { tile: "bg-[#E7F4EC] text-[#17734E]", Icon: CalendarCheck },
-  expired: { tile: "bg-secondary text-muted-foreground", Icon: CalendarX2 },
-  unknown: { tile: "bg-secondary text-muted-foreground", Icon: CalendarClock },
+  proposed: { tone: "blue", Icon: CalendarClock },
+  counter_requested: { tone: "warn", Icon: CalendarClock },
+  confirmed: { tone: "ok", Icon: CalendarCheck },
+  expired: { tone: "neutral", Icon: CalendarX2 },
+  unknown: { tone: "neutral", Icon: CalendarClock },
 };
 
 export interface ProposalCardProps {
@@ -148,8 +146,8 @@ function availableActions(
  * a second request. */
 function ConfirmedTime({ start, end }: { start: string; end: string }) {
   return (
-    <p className="flex items-center gap-2 rounded-lg bg-[#E7F4EC] px-3 py-2 text-sm font-semibold text-[#17734E]">
-      <CalendarCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+    <p className="flex items-center gap-2 rounded-sm border border-ok-line bg-ok-bg px-3 py-2 text-sub font-[650] text-ok">
+      <CalendarCheck className="size-[15px] shrink-0" aria-hidden="true" />
       <span>
         {formatDateTime(start)} – {formatDateTime(end)}
       </span>
@@ -175,7 +173,7 @@ function SlotRadioGroup({
   const groupName = useId();
   return (
     <fieldset className="flex flex-col gap-1.5">
-      <legend className="mb-0.5 text-xs font-medium text-muted-foreground">
+      <legend className="mb-0.5 text-label font-[650] uppercase text-ink-muted">
         Choose a time
       </legend>
       {slots.map((slot) => {
@@ -184,10 +182,10 @@ function SlotRadioGroup({
           <label
             key={slot.id}
             className={cn(
-              "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition-all",
+              "flex cursor-pointer items-center gap-2.5 rounded-sm border px-3 py-2 text-sub transition-colors",
               selectedSlotId === slot.id
-                ? "border-primary bg-primary/5 font-medium text-navy ring-1 ring-primary/25"
-                : "border-input text-foreground hover:border-primary/40 hover:bg-secondary/40",
+                ? "border-blue bg-tint font-[550] text-ink shadow-[inset_0_0_0_1px_var(--blue)]"
+                : "border-line-strong text-ink-body hover:border-blue-ink hover:bg-surface-sub",
             )}
           >
             <input
@@ -197,7 +195,7 @@ function SlotRadioGroup({
               value={slot.id}
               checked={selectedSlotId === slot.id}
               onChange={() => onSelect(slot.id)}
-              className="h-4 w-4 shrink-0 accent-primary"
+              className="size-4 shrink-0 accent-[color:var(--blue)]"
             />
             {formatDateTime(slot.startAt)} – {formatDateTime(slot.endAt)}
           </label>
@@ -255,16 +253,14 @@ export function ProposalCard({
   const companyCanManage = actions === "company-manage";
 
   const tone = PROPOSAL_TONES[proposalStatus];
-  const ToneIcon = tone.Icon;
 
   if (showProposeForm) {
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-sm">
+      // `.eventcard`
+      <div className="mx-auto flex max-w-[420px] flex-col gap-3 overflow-hidden rounded-md border border-line bg-surface p-3 shadow-e1">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <CalendarClock className="h-4 w-4" aria-hidden="true" />
-          </span>
-          <p className="text-sm font-semibold text-navy">Propose new times</p>
+          <Tile icon={CalendarClock} tone="blue" />
+          <p className="text-sub font-[650] text-ink">Propose new times</p>
         </div>
         <ProposeSlotsForm
           target={{ kind: "existing", interviewId }}
@@ -276,22 +272,14 @@ export function ProposalCard({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-sm">
+    // `.eventcard` — a 420px structured moment inside the thread.
+    <div className="mx-auto flex max-w-[420px] flex-col gap-3 overflow-hidden rounded-md border border-line bg-surface p-3 text-[12.5px] shadow-e1">
       <div className="flex items-start gap-2.5">
-        <span
-          className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-            tone.tile,
-          )}
-        >
-          <ToneIcon className="h-4 w-4" aria-hidden="true" />
-        </span>
+        <Tile icon={tone.Icon} tone={tone.tone} />
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="text-sm font-semibold text-navy">{title}</p>
+          <p className="text-sub font-[650] text-ink">{title}</p>
           {note && (
-            <p className="text-[13px] leading-snug text-muted-foreground">
-              {note}
-            </p>
+            <p className="text-meta leading-snug text-ink-muted">{note}</p>
           )}
         </div>
       </div>
@@ -335,7 +323,7 @@ export function ProposalCard({
 
       {recruiterCanRespond && showCounterForm && (
         <div className="flex flex-col gap-2">
-          <p id={counterNoteHintId} className="text-xs text-muted-foreground">
+          <p id={counterNoteHintId} className="text-meta text-ink-muted">
             Tells the company what would work better instead.
           </p>
           <Textarea
@@ -402,8 +390,8 @@ export function ProposalCard({
       {(confirmSlot.isError ||
         counterRequest.isError ||
         cancelInterview.isError) && (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+        <div className="flex items-center gap-2 rounded-sm border border-bad-line bg-bad-bg px-3 py-2 text-meta text-bad">
+          <AlertCircle className="size-3.5 shrink-0" />
           {cancelInterview.isError
             ? withdrawInterviewErrorMessage(cancelInterview.error)
             : schedulingErrorMessage(confirmSlot.error ?? counterRequest.error)}

@@ -86,18 +86,19 @@ export function BenefitsAttachmentField({
         }}
       />
       {named ? (
-        <div className="flex items-center gap-2.5 rounded-md border border-border bg-secondary/40 px-3 py-2">
-          <FileText className="h-4 w-4 shrink-0 text-primary" />
-          <span className="min-w-0 flex-1 truncate text-sm text-navy">
+        // `.well` — the reference's quiet tinted strip for an attached file.
+        <div className="flex items-center gap-2.5 rounded-sm border border-line bg-surface-sub px-3 py-2.5">
+          <FileText className="size-4 shrink-0 text-blue" />
+          <span className="min-w-0 flex-1 truncate text-sub text-ink">
             {named.name}
           </span>
           {named.bytes !== undefined && (
-            <span className="shrink-0 text-xs text-muted-foreground">
+            <span className="shrink-0 text-meta tabular-nums text-ink-muted">
               {formatSize(named.bytes)}
             </span>
           )}
           {value.status === "selected" && (
-            <span className="shrink-0 text-xs text-muted-foreground">
+            <span className="shrink-0 text-meta text-ink-muted">
               Uploads when you save
             </span>
           )}
@@ -105,9 +106,9 @@ export function BenefitsAttachmentField({
             type="button"
             aria-label="Remove the benefits document"
             onClick={clear}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+            className="flex size-6 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="size-3.5" />
           </button>
         </div>
       ) : (
@@ -124,10 +125,10 @@ export function BenefitsAttachmentField({
         )
       )}
       {error ? (
-        <p className="text-xs text-destructive">{error}</p>
+        <p className="text-meta font-medium text-bad">{error}</p>
       ) : (
         canAttach && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-meta text-ink-faint">
             PDF or Word, up to {MAX_DOCUMENT_MB}MB.
           </p>
         )

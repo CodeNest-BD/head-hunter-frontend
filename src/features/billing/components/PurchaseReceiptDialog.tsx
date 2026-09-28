@@ -6,6 +6,7 @@ import { jsPDF } from "jspdf";
 import { Download, X } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
+import { Pill } from "@/shared/ui-components/badges/Pill";
 import { Logo } from "@/shared/ui-components/layout/Logo";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
@@ -132,9 +133,9 @@ async function downloadReceiptPdf(
 /** A row in the on-screen receipt. */
 function ReceiptRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium text-navy">{value}</span>
+    <div className="flex items-center justify-between gap-4 text-sub">
+      <span className="text-ink-muted">{label}</span>
+      <span className="text-right font-[550] text-ink">{value}</span>
     </div>
   );
 }
@@ -168,36 +169,37 @@ export function PurchaseReceiptDialog({
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-x-hidden overflow-y-auto rounded-md border border-border bg-card shadow-card-lg focus:outline-none">
-          <div className="flex items-center justify-between border-b border-border px-5 py-3">
-            <Dialog.Title className="text-sm font-semibold text-foreground">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-x-hidden overflow-y-auto rounded-lg border border-line bg-surface shadow-pop focus:outline-none">
+          <div className="flex items-center justify-between gap-2.5 border-b border-line px-4 py-3">
+            <Dialog.Title className="text-card font-[650] text-ink">
               Payment receipt
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
                 type="button"
                 aria-label="Close"
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
               >
-                <X className="h-4 w-4" />
+                <X className="size-[15px]" />
               </button>
             </Dialog.Close>
           </div>
 
-          <div className="flex flex-col gap-5 p-5">
+          <div className="flex flex-col gap-4 p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <Logo className="h-7" />
-                <p className="mt-1.5 text-xs text-muted-foreground">
+                <p className="mt-1.5 text-meta tabular-nums text-ink-faint">
                   Receipt #{number}
                 </p>
               </div>
-              <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+              <Pill tone="ok" plain>
                 Paid
-              </span>
+              </Pill>
             </div>
 
-            <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 p-4">
+            {/* `.well` — the receipt's facts on the sunken sub-surface. */}
+            <div className="flex flex-col gap-2 rounded-sm border border-line bg-surface-sub px-3 py-2.5">
               <ReceiptRow
                 label="Date"
                 value={formatDateTime(entry.createdAt)}
@@ -206,16 +208,14 @@ export function PurchaseReceiptDialog({
               <ReceiptRow label="Description" value={lineItemLabel(entry)} />
             </div>
 
-            <div className="flex items-center justify-between border-t border-border pt-4">
-              <span className="text-sm font-semibold text-navy">
-                Total paid
-              </span>
-              <span className="font-heading text-lg font-extrabold tabular-nums text-navy">
+            <div className="flex items-center justify-between border-t border-line pt-3.5">
+              <span className="text-block font-[650] text-ink">Total paid</span>
+              <span className="text-section font-extrabold tabular-nums text-ink">
                 {amount}
               </span>
             </div>
 
-            <Dialog.Description className="text-xs text-muted-foreground">
+            <Dialog.Description className="text-meta text-ink-faint">
               This receipt confirms a payment processed on the Head-Hunters
               marketplace.
             </Dialog.Description>
@@ -226,7 +226,7 @@ export function PurchaseReceiptDialog({
               disabled={downloading}
               onClick={() => void onDownload()}
             >
-              <Download className="h-4 w-4" />
+              <Download />
               {downloading ? "Preparing…" : "Download PDF"}
             </Button>
           </div>

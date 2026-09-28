@@ -34,6 +34,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/ui-components/controls/popover";
+import { Avatar } from "@/shared/ui-components/badges/Avatar";
+import { RefChip } from "@/shared/ui-components/badges/RefChip";
+import { PageHeader } from "@/shared/ui-components/brand";
+import { StatCard } from "@/shared/ui-components/dashboard/DashboardParts";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -42,13 +47,18 @@ import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   TABLE_BODY,
   TABLE_CARD,
+  TABLE_CELL_MAIN,
+  TABLE_CELL_SUB,
   TABLE_EL,
   TABLE_HEAD,
   TABLE_HEAD_ROW,
   TABLE_ROW,
+  TABLE_ROW_UNREAD,
   TABLE_SCROLL,
   TABLE_TD,
+  TABLE_TD_STACKED,
   TABLE_TH,
+  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 import {
   MobileRecordCard,
@@ -131,31 +141,6 @@ const STAT_CARDS: StatCardDef[] = [
   { key: "passed", label: "Passed", icon: BadgeCheck, value: (s) => s.passed },
 ];
 
-/** A display-only metric card — one per candidate status, plus the total. */
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: number | undefined;
-  icon: LucideIcon;
-}) {
-  return (
-    <div className="rounded-md border border-brand-line bg-card p-4 shadow-card">
-      <span className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#616676]">
-          {label}
-        </span>
-        <Icon className="h-4 w-4 shrink-0 text-primary" />
-      </span>
-      <span className="mt-2 block text-2xl font-extrabold tabular-nums text-navy">
-        {value ?? "—"}
-      </span>
-    </div>
-  );
-}
-
 /**
  * A column-header filter: the ListFilter icon opens a single-select value list
  * (searchable when there are many options, e.g. jobs). Empty selection means
@@ -198,33 +183,36 @@ function HeaderFilter({
           type="button"
           aria-label={`Filter by ${label}`}
           className={cn(
-            "inline-flex h-5 w-5 items-center justify-center rounded transition-colors",
+            "inline-flex size-5 items-center justify-center rounded-xs transition-colors",
             active
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground/50 hover:text-foreground",
+              ? "bg-tint text-blue"
+              : "text-ink-faint hover:bg-surface-sunken hover:text-ink",
           )}
         >
-          <ListFilter className="h-3.5 w-3.5" />
+          <ListFilter className="size-3.5" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-56 p-0">
         {searchable && (
-          <div className="border-b border-border p-2">
+          <div className="border-b border-line p-2">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Search
+                aria-hidden="true"
+                className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
+              />
               <input
                 autoFocus
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={`Search ${label.toLowerCase()}…`}
-                className="h-8 w-full rounded-md border border-input bg-card pl-7 pr-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-7.5 w-full rounded-sm border border-line-strong bg-surface pl-7 pr-2 text-meta text-ink outline-none transition-colors placeholder:text-ink-faint focus-visible:border-blue focus-visible:shadow-focus"
               />
             </div>
           </div>
         )}
         <div className="max-h-56 overflow-y-auto p-1">
           {shown.length === 0 ? (
-            <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+            <p className="px-2 py-3 text-center text-meta text-ink-muted">
               No matches
             </p>
           ) : (
@@ -233,11 +221,11 @@ function HeaderFilter({
                 key={option.value}
                 type="button"
                 onClick={() => select(option.value)}
-                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs transition-colors hover:bg-secondary"
+                className="flex w-full items-center gap-2 rounded-xs px-2 py-1.5 text-left text-meta text-ink-body transition-colors hover:bg-surface-sub"
               >
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                <span className="flex size-4 shrink-0 items-center justify-center">
                   {value === option.value && (
-                    <Check className="h-3.5 w-3.5 text-primary" />
+                    <Check className="size-3.5 text-blue" />
                   )}
                 </span>
                 <span className="truncate">{option.label}</span>
@@ -246,11 +234,11 @@ function HeaderFilter({
           )}
         </div>
         {active && (
-          <div className="border-t border-border p-1">
+          <div className="border-t border-line p-1">
             <button
               type="button"
               onClick={() => select(null)}
-              className="w-full rounded-sm px-2 py-1.5 text-left text-xs font-medium text-primary transition-colors hover:bg-secondary"
+              className="w-full rounded-xs px-2 py-1.5 text-left text-meta font-[550] text-blue-ink transition-colors hover:bg-surface-sub"
             >
               Clear
             </button>
@@ -283,15 +271,15 @@ function FilterableHead({
 
 function RecruiterCell({ row }: { row: InboxSubmissionRow }) {
   if (!row.recruiter) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-ink-faint">—</span>;
   }
   return (
     <div className="min-w-0">
-      <p className="truncate font-medium text-navy">
+      <p className="truncate font-[550] text-ink">
         {row.recruiter.firstName} {row.recruiter.lastName}
       </p>
       {row.recruiter.yearsExperience !== null && (
-        <p className="text-xs text-muted-foreground">
+        <p className={cn(TABLE_CELL_SUB, "tabular-nums")}>
           {row.recruiter.yearsExperience} yrs experience
         </p>
       )}
@@ -305,10 +293,12 @@ function JobLink({ row }: { row: InboxSubmissionRow }) {
     <Link
       href={jobPath({ id: row.jobId, title: row.jobTitle })}
       onClick={(event) => event.stopPropagation()}
-      className="inline-flex max-w-[220px] items-center gap-1 rounded-[5px] border border-[#D7E0EF] bg-[#F1F5FC] px-1.5 py-0.5 text-[12px] font-medium text-[#24457A] transition-colors hover:bg-[#E7EEFA]"
+      className="inline-flex min-w-0 max-w-[220px]"
     >
-      <Briefcase className="h-3 w-3 shrink-0" />
-      <span className="truncate">{row.jobTitle}</span>
+      <RefChip className="transition-colors hover:bg-info-line">
+        <Briefcase aria-hidden="true" />
+        <span className="truncate">{row.jobTitle}</span>
+      </RefChip>
     </Link>
   );
 }
@@ -400,14 +390,10 @@ export function CompanySubmissionsQueue() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-navy">
-          Candidate Submissions
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Review and manage candidate submissions from recruiters.
-        </p>
-      </div>
+      <PageHeader
+        title="Candidate Submissions"
+        subtitle="Review and manage candidate submissions from recruiters."
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
         {STAT_CARDS.map(({ key, label, icon, value }) => (
@@ -415,19 +401,22 @@ export function CompanySubmissionsQueue() {
             key={key}
             label={label}
             icon={icon}
-            value={stats.data ? value(stats.data) : undefined}
+            value={stats.data ? value(stats.data) : "—"}
           />
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative min-w-[240px] flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className={TABLE_TOOLBAR}>
+        <div className="relative min-w-[220px] flex-1 sm:max-w-[360px]">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
+          />
           <Input
             value={qInput}
             onChange={(event) => setQInput(event.target.value)}
             placeholder="Search candidate, recruiter or job…"
-            className="pl-9"
+            className="pl-8 text-sub"
             aria-label="Search submissions"
           />
         </div>
@@ -438,7 +427,7 @@ export function CompanySubmissionsQueue() {
             setSortBy(sortValue(event.target.value));
             setPage(1);
           }}
-          className="sm:w-64"
+          className="text-sub sm:w-64"
         >
           {SUBMISSION_SORTS.map((value) => (
             <option key={value} value={value}>
@@ -448,8 +437,8 @@ export function CompanySubmissionsQueue() {
         </NativeSelect>
       </div>
 
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">
+      <div className="flex items-center justify-between gap-3 text-sub">
+        <span className="tabular-nums text-ink-muted">
           {submissions.data
             ? `${submissions.data.meta.total.toLocaleString()} submission${
                 submissions.data.meta.total === 1 ? "" : "s"
@@ -476,15 +465,16 @@ export function CompanySubmissionsQueue() {
           onRetry={() => void submissions.refetch()}
         />
       ) : submissions.data.data.length === 0 ? (
-        <div className={cn(TABLE_CARD, "px-6 py-14 text-center")}>
-          <p className="text-sm font-semibold text-navy">
-            No submissions found
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {hasFilters
-              ? "Try a different search or filter."
-              : "Recruiters' candidates will land here as they come in."}
-          </p>
+        <div className={TABLE_CARD}>
+          <EmptyState
+            icon={Inbox}
+            title="No submissions found"
+            description={
+              hasFilters
+                ? "Try a different search or filter."
+                : "Recruiters' candidates will land here as they come in."
+            }
+          />
         </div>
       ) : (
         <div className={TABLE_CARD}>
@@ -532,19 +522,22 @@ export function CompanySubmissionsQueue() {
                       className={cn(
                         TABLE_ROW,
                         "cursor-pointer",
-                        attention && "bg-primary/[0.04]",
+                        attention && TABLE_ROW_UNREAD,
                       )}
                       onClick={() => openThread(row.candidateId)}
                     >
-                      <td className={TABLE_TD}>
+                      <td
+                        className={cn(TABLE_TD, attention && "shadow-rail")}
+                      >
                         <span className="flex items-center gap-2">
                           {attention && (
                             <span
-                              className="h-2 w-2 shrink-0 rounded-full bg-primary"
+                              className="size-[7px] shrink-0 rounded-full bg-blue"
                               aria-label="Has unseen activity"
                             />
                           )}
-                          <span className="font-medium text-navy">
+                          <Avatar name={row.candidateName} size="sm" />
+                          <span className={TABLE_CELL_MAIN}>
                             {row.candidateName}
                           </span>
                         </span>
@@ -552,7 +545,7 @@ export function CompanySubmissionsQueue() {
                       <td className={TABLE_TD}>
                         <JobLink row={row} />
                       </td>
-                      <td className={TABLE_TD}>
+                      <td className={TABLE_TD_STACKED}>
                         <RecruiterCell row={row} />
                       </td>
                       <td className={TABLE_TD}>
@@ -563,7 +556,7 @@ export function CompanySubmissionsQueue() {
                       </td>
                       <td className={TABLE_TD}>
                         <span
-                          className="whitespace-nowrap text-muted-foreground"
+                          className="whitespace-nowrap tabular-nums text-ink-muted"
                           title={formatDateTime(row.submittedAt)}
                         >
                           {formatTimeAgo(row.submittedAt)}
@@ -579,7 +572,7 @@ export function CompanySubmissionsQueue() {
                         <Link
                           href={`/company/inbox/${row.candidateId}`}
                           onClick={(event) => event.stopPropagation()}
-                          className="inline-flex h-8 items-center rounded-md border border-border px-3 text-sm font-medium text-primary transition-colors hover:bg-accent"
+                          className="inline-flex h-7.5 items-center rounded-xs border border-line-strong bg-surface px-2.5 text-[12.5px] font-semibold text-ink transition-colors hover:bg-surface-sub"
                         >
                           View
                         </Link>
@@ -603,16 +596,14 @@ export function CompanySubmissionsQueue() {
                     tone={CANDIDATE_STATUS_TONES[row.status]}
                   />
                 }
-                className={cn(
-                  candidateNeedsAttention(row) && "bg-primary/[0.04]",
-                )}
+                className={cn(candidateNeedsAttention(row) && TABLE_ROW_UNREAD)}
                 fields={[
                   {
                     label: "Job",
                     value: (
                       <Link
                         href={jobPath({ id: row.jobId, title: row.jobTitle })}
-                        className="text-primary hover:underline"
+                        className="font-[550] text-blue-ink underline-offset-2 hover:underline"
                       >
                         {row.jobTitle}
                       </Link>
@@ -639,7 +630,7 @@ export function CompanySubmissionsQueue() {
                 actions={
                   <Link
                     href={`/company/inbox/${row.candidateId}`}
-                    className="text-sm font-medium text-primary hover:underline"
+                    className="text-sub font-[550] text-blue-ink underline-offset-2 hover:underline"
                   >
                     View conversation
                   </Link>

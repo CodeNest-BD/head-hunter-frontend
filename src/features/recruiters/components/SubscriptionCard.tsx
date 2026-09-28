@@ -29,16 +29,14 @@ export function SubscriptionCard({ profile }: SubscriptionCardProps) {
 
   if (profile.hasMarketplaceAccess) {
     return (
-      <Card className="border-[#CDE7D8] bg-[#E7F4EC]">
-        <CardHeader className="flex-row items-center gap-3 space-y-0">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-[#17734E]">
-            <CheckCircle2 className="h-[18px] w-[18px]" />
+      <Card className="border-ok-line bg-ok-bg">
+        <CardHeader className="border-b-0">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-surface text-ok">
+            <CheckCircle2 className="size-[15px]" />
           </span>
-          <div className="flex flex-col gap-1">
-            <CardTitle className="font-heading tracking-tight">
-              Subscription active
-            </CardTitle>
-            <CardDescription>
+          <div className="min-w-0 flex-1">
+            <CardTitle>Subscription active</CardTitle>
+            <CardDescription className="mt-[3px]">
               You have full access to the job map and job list.
             </CardDescription>
           </div>
@@ -48,18 +46,16 @@ export function SubscriptionCard({ profile }: SubscriptionCardProps) {
   }
 
   return (
-    <Card className="border-[#F0E2B8] bg-[#FBF3DF]">
-      <CardHeader className="flex-row items-start gap-3 space-y-0">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-[#92610C]">
-          <Lock className="h-[18px] w-[18px]" />
+    <Card className="border-warn-line bg-warn-bg">
+      <CardHeader className="items-start border-warn-line">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-surface text-warn">
+          <Lock className="size-[15px]" />
         </span>
-        <div className="flex flex-col gap-1">
-          <CardTitle className="font-heading tracking-tight">
-            Subscription required
-          </CardTitle>
-          <CardDescription>
+        <div className="min-w-0 flex-1">
+          <CardTitle>Subscription required</CardTitle>
+          <CardDescription className="mt-[3px]">
             Jobs are only visible to subscribed recruiters. Your status is{" "}
-            <span className="font-medium text-foreground">
+            <span className="font-[550] text-ink">
               {profile.subscriptionStatus}
             </span>
             .
@@ -67,7 +63,7 @@ export function SubscriptionCard({ profile }: SubscriptionCardProps) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sub text-ink-muted">
           Subscribe with a card on the subscription page — access unlocks as
           soon as Stripe confirms the payment.
         </p>

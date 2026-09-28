@@ -15,6 +15,7 @@ import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
+import { Tile } from "@/shared/ui-components/list/Tile";
 import {
   bankFormSchema,
   identityFormSchema,
@@ -34,7 +35,7 @@ function submitErrorMessage(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
-const FIELD_ERROR = "text-xs text-destructive";
+const FIELD_ERROR = "text-meta font-medium text-bad";
 
 /** The dialog's two steps; "identity" is skipped when already on file. */
 type Step = "identity" | "bank";
@@ -60,18 +61,18 @@ function StepBadge({
     <div className="flex items-center gap-2">
       <span
         className={cn(
-          "flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold",
-          state === "active" && "bg-primary text-primary-foreground",
-          state === "done" && "bg-emerald-100 text-emerald-700",
-          state === "todo" && "bg-muted text-muted-foreground",
+          "flex size-5 items-center justify-center rounded-full text-[11px] font-bold",
+          state === "active" && "bg-blue text-white",
+          state === "done" && "bg-ok-bg text-ok",
+          state === "todo" && "bg-neutral-bg text-neutral",
         )}
       >
         {state === "done" ? "✓" : index}
       </span>
       <span
         className={cn(
-          "text-xs font-semibold",
-          state === "active" ? "text-navy" : "text-muted-foreground",
+          "text-meta font-semibold",
+          state === "active" ? "text-ink" : "text-ink-muted",
         )}
       >
         {label}
@@ -204,7 +205,7 @@ function IdentityStep({
         {errors.ssnLast4 ? (
           <p className={FIELD_ERROR}>{errors.ssnLast4.message}</p>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-meta text-ink-faint">
             Required by US banking regulations to verify your identity. Never
             stored on Head-Hunters.
           </p>
@@ -260,10 +261,10 @@ function IdentityStep({
         </div>
       </div>
 
-      <label className="flex items-start gap-2.5 rounded-md border border-border bg-muted/30 p-3 text-[13px] leading-relaxed text-muted-foreground">
+      <label className="flex items-start gap-2.5 rounded-sm border border-line bg-surface-sub px-3 py-2.5 text-sub text-ink-body">
         <input
           type="checkbox"
-          className="mt-0.5 h-4 w-4 accent-primary"
+          className="mt-0.5 size-[15px] accent-blue"
           {...register("tosAccepted")}
         />
         <span>
@@ -272,7 +273,7 @@ function IdentityStep({
             href="https://stripe.com/legal/connect-account"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-primary underline-offset-2 hover:underline"
+            className="font-[550] text-blue-ink underline-offset-2 hover:underline"
           >
             Stripe Connected Account Agreement
           </a>
@@ -284,12 +285,14 @@ function IdentityStep({
       )}
 
       {Boolean(submitError) && (
-        <p className="text-sm text-destructive">
+        <p className="text-sub font-medium text-bad">
           {submitErrorMessage(submitError)}
         </p>
       )}
 
-      <div className="flex justify-end gap-2">
+      {/* The dialog's `.card__foot`: ruled off and bled to the panel edges,
+          while staying inside the form so submit still belongs to it. */}
+      <div className="-mx-4 -mb-4 mt-1 flex items-center justify-end gap-2 border-t border-line px-4 py-2.5">
         <Dialog.Close asChild>
           <Button type="button" variant="ghost">
             Cancel
@@ -353,7 +356,7 @@ function BankStep({
         {errors.routingNumber ? (
           <p className={FIELD_ERROR}>{errors.routingNumber.message}</p>
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-meta text-ink-faint">
             The 9-digit number on the bottom-left of a check.
           </p>
         )}
@@ -386,19 +389,21 @@ function BankStep({
         </div>
       </div>
 
-      <p className="flex items-start gap-2 rounded-md border border-border bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-        <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+      <p className="flex items-start gap-2 rounded-sm border border-line bg-surface-sub px-3 py-2.5 text-meta text-ink-muted">
+        <Lock className="mt-px size-3.5 shrink-0" />
         Your bank details go directly to Stripe over an encrypted connection —
         Head-Hunters never stores them. Withdrawals arrive in 2–3 business days.
       </p>
 
       {Boolean(submitError) && (
-        <p className="text-sm text-destructive">
+        <p className="text-sub font-medium text-bad">
           {submitErrorMessage(submitError)}
         </p>
       )}
 
-      <div className="flex justify-end gap-2">
+      {/* The dialog's `.card__foot`: ruled off and bled to the panel edges,
+          while staying inside the form so submit still belongs to it. */}
+      <div className="-mx-4 -mb-4 mt-1 flex items-center justify-end gap-2 border-t border-line px-4 py-2.5">
         <Dialog.Close asChild>
           <Button type="button" variant="ghost">
             Cancel
@@ -481,13 +486,11 @@ export function AddBankAccountDialog({
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[92vh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-md border border-border bg-card shadow-card-lg focus:outline-none">
-          <div className="flex items-center justify-between border-b border-border px-5 py-3">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-primary">
-                <Landmark className="h-4 w-4" />
-              </span>
-              <Dialog.Title className="text-sm font-semibold text-foreground">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[92vh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-line bg-surface shadow-pop focus:outline-none">
+          <div className="flex items-center justify-between gap-2.5 border-b border-line px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Tile icon={Landmark} tone="blue" />
+              <Dialog.Title className="text-card font-[650] text-ink">
                 {skipIdentity ? "Update Bank Account" : "Set Up Payouts"}
               </Dialog.Title>
             </div>
@@ -495,14 +498,14 @@ export function AddBankAccountDialog({
               <button
                 type="button"
                 aria-label="Close"
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
               >
-                <X className="h-4 w-4" />
+                <X className="size-[15px]" />
               </button>
             </Dialog.Close>
           </div>
 
-          <div className="flex flex-col gap-4 p-5">
+          <div className="flex flex-col gap-4 p-4">
             {!skipIdentity && (
               <div className="flex items-center gap-4">
                 <StepBadge
@@ -510,7 +513,7 @@ export function AddBankAccountDialog({
                   label="Your details"
                   state={step === "identity" ? "active" : "done"}
                 />
-                <span className="h-px flex-1 bg-border" />
+                <span className="h-px flex-1 bg-line" />
                 <StepBadge
                   index={2}
                   label="Bank account"
@@ -519,8 +522,8 @@ export function AddBankAccountDialog({
               </div>
             )}
 
-            <Dialog.Description className="flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <Dialog.Description className="flex items-start gap-2 text-sub text-ink-muted">
+              <ShieldCheck className="mt-px size-[15px] shrink-0 text-blue" />
               {step === "identity"
                 ? "A few details to verify who's getting paid — takes about a minute."
                 : "Where should your commission go? Withdrawals land in this account."}

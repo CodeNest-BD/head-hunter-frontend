@@ -9,6 +9,7 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -20,7 +21,16 @@ import { useAdminConversations } from "../hooks/useAdmin";
 import { CANDIDATE_LABELS, type ConversationListItem } from "../schemas";
 import { ListPager } from "./ListPager";
 import { CANDIDATE_STATUS_TONES } from "./statusStyles";
-import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
+import {
+  TABLE_BODY,
+  TABLE_CELL_MAIN,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TH,
+} from "@/shared/ui-components/data/tableStyles";
 
 const PAGE_SIZE = 10;
 
@@ -82,78 +92,98 @@ export function RecruiterSubmissions({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Submissions</CardTitle>
+      {/* The reference's submissions table carries its title on an unruled head:
+          the table's own header band is the rule. */}
+      <CardHeader className="border-b-0">
+        <CardTitle>Submissions</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         {isPending ? (
           <div className="h-32 animate-pulse" />
         ) : isError ? (
-          <div className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-            <AlertCircle className="h-6 w-6" />
-            Could not load submissions.
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
-              Retry
-            </Button>
+          <div className="m-4 flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+            <div className="flex items-center gap-2.5 font-[550]">
+              <AlertCircle className="size-[15px] shrink-0" />
+              Could not load submissions.
+            </div>
+            <div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refetch()}
+              >
+                Retry
+              </Button>
+            </div>
           </div>
         ) : data.data.length === 0 ? (
-          <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+          <p className="px-5 py-9 text-center text-sub text-ink-muted">
             This recruiter has not submitted any candidates yet.
           </p>
         ) : (
           <>
-            <div className="hidden w-full overflow-x-auto sm:block">
-              <table className={TABLE_CLASS}>
-                <thead>
-                  <tr className={THEAD_ROW_CLASS}>
-                    <th scope="col" className="px-5 py-3 font-semibold">
+            <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr>
+                    <th scope="col" className={TABLE_TH}>
                       Job
                     </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
+                    <th scope="col" className={TABLE_TH}>
                       Company
                     </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-center font-semibold"
-                    >
+                    <th scope="col" className={cn(TABLE_TH, "text-center")}>
                       Messages
                     </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
+                    <th scope="col" className={TABLE_TH}>
                       Status
                     </th>
-                    <th scope="col" className="px-5 py-3 font-semibold">
+                    <th scope="col" className={TABLE_TH}>
                       Last activity
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className={TABLE_BODY}>
                   {data.data.map((c) => (
                     <tr
                       key={c.candidateId}
-                      className={`relative ${BODY_ROW_CLASS}`}
+                      className={cn("relative", TABLE_ROW)}
                     >
-                      <td className="px-5 py-3">
+                      <td className={TABLE_TD}>
                         <Link
                           href={`/admin/conversations/${c.candidateId}`}
-                          className="font-medium text-navy after:absolute after:inset-0 hover:text-primary focus-visible:underline focus-visible:outline-none"
+                          className={cn(
+                            TABLE_CELL_MAIN,
+                            "transition-colors after:absolute after:inset-0 hover:text-blue focus-visible:underline focus-visible:outline-none",
+                          )}
                         >
                           <span className="block max-w-[220px] truncate">
                             {c.jobTitle}
                           </span>
                         </Link>
                       </td>
-                      <td className="px-5 py-3 text-muted-foreground">
+                      <td className={cn(TABLE_TD, "text-ink-muted")}>
                         <span className="block max-w-[180px] truncate">
                           {c.companyName}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-center tabular-nums text-navy">
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "text-center tabular-nums text-ink",
+                        )}
+                      >
                         {c.messageCount}
                       </td>
-                      <td className="px-5 py-3">
+                      <td className={TABLE_TD}>
                         <SubmissionStatus submission={c} />
                       </td>
-                      <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap tabular-nums text-ink-muted",
+                        )}
+                      >
                         {formatDateTime(c.lastActivityAt)}
                       </td>
                     </tr>

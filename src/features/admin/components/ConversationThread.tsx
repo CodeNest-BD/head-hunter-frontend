@@ -45,16 +45,20 @@ const ACTOR_LABEL: Record<string, string> = {
   system: "System",
 };
 
+/**
+ * `.timeline__icon--*` — the actor's color is the only thing distinguishing one
+ * entry from the next, and it matches the legend in the header card.
+ */
 const ACTOR_MARKER: Record<string, string> = {
   company: "bg-navy text-white",
-  recruiter: "bg-primary text-primary-foreground",
-  system: "bg-muted text-muted-foreground",
+  recruiter: "bg-blue text-white",
+  system: "bg-neutral-bg text-neutral",
 };
 
 const ACTOR_TEXT: Record<string, string> = {
-  company: "text-navy",
-  recruiter: "text-primary",
-  system: "text-muted-foreground",
+  company: "text-ink",
+  recruiter: "text-blue",
+  system: "text-ink-muted",
 };
 
 function formatDateTime(iso: string): string {
@@ -91,15 +95,17 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
   if (isPending) return <DetailSkeleton />;
   if (isError) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-          <AlertCircle className="h-6 w-6" />
+      <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+        <div className="flex items-center gap-2.5 font-[550]">
+          <AlertCircle className="size-[15px] shrink-0" />
           Could not load this conversation.
+        </div>
+        <div>
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
             Retry
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -107,18 +113,19 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
   const events = orderedEvents(data.pages);
 
   return (
-    <div className="flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex w-full max-w-5xl flex-col gap-3.5">
       <Card>
-        <CardContent className="flex flex-col gap-4 p-6">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <span className="font-heading text-lg font-bold text-navy">
+        <CardContent className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-card font-[650] text-ink">
               {header.company.name}
             </span>
-            <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
-            <span className="font-heading text-lg font-bold text-navy">
+            <ArrowLeftRight className="size-[15px] text-ink-faint" />
+            <span className="text-card font-[650] text-ink">
               {header.recruiter.name}
             </span>
             <StatusBadge
+              className="ml-auto"
               label={
                 CANDIDATE_LABELS[header.candidate.status] ??
                 header.candidate.status
@@ -126,21 +133,22 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
               tone={CANDIDATE_STATUS_TONES[header.candidate.status] ?? "neutral"}
             />
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sub text-ink-body">
             Candidate:{" "}
-            <span className="font-medium text-navy">
+            <span className="font-[650] text-ink">
               {header.candidate.fullName}
             </span>{" "}
             · Role:{" "}
-            <span className="font-medium text-navy">{header.job.title}</span>
+            <span className="font-[650] text-ink">{header.job.title}</span>
           </p>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          {/* The legend the timeline icons answer to. */}
+          <div className="flex items-center gap-4 text-meta text-ink-muted">
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-navy" />
+              <span className="size-2 rounded-full bg-navy" />
               Company
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+              <span className="size-2 rounded-full bg-blue" />
               Recruiter
             </span>
           </div>
@@ -161,7 +169,9 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
       )}
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent>
+          {/* `.timeline` — a read-only audit trail: a 30px actor-colored icon
+              over a hairline rail, with the entry's body beside it. */}
           <ol className="flex flex-col">
             {events.map((event, index) => {
               // Fall back to the neutral icon rather than throwing on a type
@@ -173,39 +183,46 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
                 event.messageId ??
                 `${event.type}-${event.at}-${event.candidateId ?? "none"}`;
               return (
-                <li key={key} className="flex gap-4">
+                <li key={key} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <span
                       className={cn(
-                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                        "flex size-7.5 shrink-0 items-center justify-center rounded-full",
                         ACTOR_MARKER[actor] ?? ACTOR_MARKER.system,
                       )}
                     >
-                      <Icon className="h-[18px] w-[18px]" />
+                      <Icon className="size-3.5" />
                     </span>
-                    {!isLast && <span className="my-1 w-px flex-1 bg-border" />}
+                    {!isLast && (
+                      <span className="my-1 w-[1.5px] flex-1 bg-line" />
+                    )}
                   </div>
                   <div
-                    className={cn("min-w-0 flex-1", isLast ? "pb-0" : "pb-6")}
+                    className={cn(
+                      "min-w-0 flex-1",
+                      isLast ? "pb-0" : "pb-[18px]",
+                    )}
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-navy">
+                      <p className="text-block font-[650] text-ink">
                         {event.title}
                       </p>
                       <span
                         className={cn(
-                          "text-xs font-semibold uppercase tracking-[0.06em]",
-                          ACTOR_TEXT[actor] ?? "text-muted-foreground",
+                          "text-label font-[650] uppercase",
+                          ACTOR_TEXT[actor] ?? "text-ink-muted",
                         )}
                       >
                         {ACTOR_LABEL[actor] ?? "System"}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-[3px] text-meta tabular-nums text-ink-faint">
                       {formatDateTime(event.at)}
                     </p>
                     {event.body && (
-                      <p className="mt-2 rounded-md bg-muted/60 px-3 py-2 text-sm text-foreground">
+                      /* `.well` — the message itself, quoted rather than
+                         restated in the entry's own voice. */
+                      <p className="mt-1.5 rounded-sm border border-line bg-surface-sub px-3 py-2.5 text-body text-ink-body">
                         {event.body}
                       </p>
                     )}

@@ -17,7 +17,9 @@ import { useAuth } from "@/features/auth";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
+import { Tag } from "@/shared/ui-components/badges/Tag";
 import { Button } from "@/shared/ui-components/controls/button";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
@@ -270,12 +272,12 @@ export function ExploreJobsView() {
   return (
     <div className="w-full">
       {/* Hero band — light, centered */}
-      <header className="relative overflow-hidden bg-gradient-to-b from-white to-secondary px-4 py-5 text-center sm:px-5 sm:py-6 md:px-10 md:py-8">
+      <header className="relative overflow-hidden bg-gradient-to-b from-surface to-canvas px-4 py-5 text-center sm:px-5 sm:py-6 md:px-10 md:py-8">
         <div className="relative mx-auto flex max-w-3xl flex-col items-center">
-          <h1 className="font-heading text-3xl font-extrabold tracking-[-0.02em] text-primary md:text-4xl">
+          <h1 className="text-display font-[750] tracking-[-0.022em] text-navy md:text-[30px]">
             Explore Live Fee-Backed Openings.
           </h1>
-          <p className="mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
+          <p className="mt-3 max-w-2xl text-body text-ink-body md:text-[15.5px]">
             Every job on the map carries a committed recruiter fee, loaded by
             the employer before publishing and ready for secure payment to you.
             Search a specific job type or pick a state to see open roles.
@@ -284,8 +286,8 @@ export function ExploreJobsView() {
       </header>
 
       {/* Body */}
-      <div className="bg-secondary px-3 py-5 sm:px-5 sm:py-8 md:px-10">
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <div className="bg-canvas px-3 py-5 sm:px-5 sm:py-8 md:px-10">
+        <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start">
           <FiltersPanel
             filters={filters}
             onChange={setFilter}
@@ -295,7 +297,7 @@ export function ExploreJobsView() {
             }}
           />
 
-          <div className="flex min-w-0 flex-col gap-4 sm:gap-6">
+          <div className="flex min-w-0 flex-col gap-4">
             <MapCard
               isLoading={isLoading}
               canViewMap={isVerified || canViewLiveMap}
@@ -309,16 +311,16 @@ export function ExploreJobsView() {
 
             <section
               ref={resultsRef}
-              className="scroll-mt-24 rounded-md border border-brand-line bg-white p-4 shadow-card sm:p-5 md:p-6"
+              className="scroll-mt-24 overflow-hidden rounded-md border border-line bg-surface shadow-e1"
             >
-              <div className="flex items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center justify-between gap-2.5 border-b border-line px-4 py-3">
                 {/* `min-w-0` + `truncate` so a long state name shortens rather
                     than pushing the sort control onto its own line. */}
                 <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <h2 className="min-w-0 truncate font-heading text-lg font-extrabold text-navy sm:text-xl">
+                  <h2 className="min-w-0 truncate text-card font-[650] text-ink">
                     {headline}
                   </h2>
-                  <span className="shrink-0 text-sm text-brand-gray">
+                  <span className="shrink-0 text-meta tabular-nums text-ink-muted">
                     {total} roles
                   </span>
                 </div>
@@ -332,12 +334,12 @@ export function ExploreJobsView() {
                         {
                           value: "rows",
                           title: "Rows",
-                          label: <List className="h-4 w-4" />,
+                          label: <List className="size-[13px]" />,
                         },
                         {
                           value: "cards",
                           title: "Cards",
-                          label: <LayoutGrid className="h-4 w-4" />,
+                          label: <LayoutGrid className="size-[13px]" />,
                         },
                       ]}
                       value={view}
@@ -355,7 +357,7 @@ export function ExploreJobsView() {
                       })
                     }
                   >
-                    <SelectTrigger className="w-[132px] sm:w-[150px]">
+                    <SelectTrigger className="h-7.5 w-[132px] text-[12.5px] sm:w-[150px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -368,20 +370,22 @@ export function ExploreJobsView() {
                 </div>
               </div>
 
-              <ResultsBody
-                query={jobs}
-                items={visible}
-                total={total}
-                totalPages={totalPages}
-                view={effectiveView}
-                page={page}
-                pageSize={limit}
-                onPage={setPage}
-                onPageSize={(next) => {
-                  setLimit(next);
-                  setPage(1);
-                }}
-              />
+              <div className="p-4">
+                <ResultsBody
+                  query={jobs}
+                  items={visible}
+                  total={total}
+                  totalPages={totalPages}
+                  view={effectiveView}
+                  page={page}
+                  pageSize={limit}
+                  onPage={setPage}
+                  onPageSize={(next) => {
+                    setLimit(next);
+                    setPage(1);
+                  }}
+                />
+              </div>
             </section>
           </div>
         </div>
@@ -406,10 +410,10 @@ function FilterPill({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+        "inline-flex h-7 items-center rounded-full border px-[11px] text-[12.5px] font-[550] transition-colors",
         active
-          ? "border-primary bg-primary/5 text-primary"
-          : "border-input text-navy hover:border-primary hover:text-primary",
+          ? "border-blue bg-blue text-white"
+          : "border-line-strong bg-surface text-ink-muted hover:border-blue-ink hover:text-blue-ink",
       )}
     >
       {children}
@@ -438,9 +442,9 @@ function FiltersPanel({
   const appliedCount = countAppliedFilters(filters);
 
   return (
-    <aside className="h-fit rounded-md border border-brand-line bg-white p-4 shadow-card sm:p-5 lg:sticky lg:top-24">
-      <div className="flex items-center justify-between">
-        <h2 className="font-heading text-base font-bold text-navy">
+    <aside className="h-fit rounded-md border border-line bg-surface shadow-e1 lg:sticky lg:top-[76px]">
+      <div className="flex items-center justify-between border-b border-line px-4 py-3">
+        <h2 className="text-card font-[650] text-ink">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
@@ -449,13 +453,13 @@ function FiltersPanel({
           >
             Filters
             {appliedCount > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground lg:hidden">
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-blue px-1 text-[10px] font-bold leading-none text-white lg:hidden">
                 {appliedCount}
               </span>
             )}
             <ChevronDown
               className={cn(
-                "h-4 w-4 text-muted-foreground transition-transform lg:hidden",
+                "size-4 text-ink-faint transition-transform lg:hidden",
                 open && "rotate-180",
               )}
             />
@@ -464,21 +468,21 @@ function FiltersPanel({
         <button
           type="button"
           onClick={onClear}
-          className="text-sm font-semibold text-brand-secondary hover:underline"
+          className="text-meta font-[550] text-blue-ink hover:underline"
         >
           Clear all
         </button>
       </div>
 
       <div
-        className={cn("mt-4 flex-col gap-5 lg:flex", open ? "flex" : "hidden")}
+        className={cn("flex-col gap-3 p-4 lg:flex", open ? "flex" : "hidden")}
       >
         <div>
-          <Label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+          <Label className="mb-1.5 block text-label font-[650] uppercase text-ink-muted">
             Search
           </Label>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-ink-faint" />
             <Input
               value={filters.q}
               onChange={(event) => onChange({ q: event.target.value })}
@@ -490,7 +494,7 @@ function FiltersPanel({
         </div>
 
         <div>
-          <Label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+          <Label className="mb-1.5 block text-label font-[650] uppercase text-ink-muted">
             State
           </Label>
           <StateSelect
@@ -511,7 +515,7 @@ function FiltersPanel({
         </div>
 
         <div>
-          <Label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+          <Label className="mb-1.5 block text-label font-[650] uppercase text-ink-muted">
             City
           </Label>
           <CityCombobox
@@ -531,7 +535,7 @@ function FiltersPanel({
         </div>
 
         <div>
-          <Label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+          <Label className="mb-1.5 block text-label font-[650] uppercase text-ink-muted">
             Role category
           </Label>
           <Select
@@ -553,7 +557,7 @@ function FiltersPanel({
         </div>
 
         <div>
-          <Label className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+          <Label className="mb-1.5 block text-label font-[650] uppercase text-ink-muted">
             Recruiter fee
           </Label>
           <Select
@@ -574,10 +578,10 @@ function FiltersPanel({
         </div>
 
         <div>
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+          <p className="mb-1.5 text-label font-[650] uppercase text-ink-muted">
             Employment
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {EMPLOYMENT_TYPES.map((type) => (
               <FilterPill
                 key={type}
@@ -595,10 +599,10 @@ function FiltersPanel({
         </div>
 
         <div>
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+          <p className="mb-1.5 text-label font-[650] uppercase text-ink-muted">
             Work mode
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <FilterPill
               active={filters.workMode === "remote"}
               onClick={() =>
@@ -687,8 +691,12 @@ function MapCard({
   );
 }
 
+/** `.card__head` — the band above the map canvas. */
 const MAP_HEADER =
-  "flex flex-col gap-3 border-b border-brand-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4";
+  "flex flex-col gap-2.5 border-b border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between";
+
+/** `.card` — the white surface the map, its header and its legend sit on. */
+const MAP_CARD = "overflow-hidden rounded-md border border-line bg-surface shadow-e1";
 
 /** A translucent bordered dot echoing the map bubbles, at a legend size. */
 function LegendDot({ size }: { size: number }) {
@@ -704,11 +712,11 @@ function LegendDot({ size }: { size: number }) {
  * bubble (an earlier bottom-right overlay obscured the map on narrow screens). */
 function BubbleSizeLegend() {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-brand-line px-4 py-3 sm:px-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line px-4 py-2.5">
+      <p className="text-label font-[650] uppercase text-ink-muted">
         Available Fees
       </p>
-      <div className="flex items-end gap-4 text-xs text-muted-foreground">
+      <div className="flex items-end gap-4 text-meta text-ink-muted">
         <span className="flex items-center gap-1.5">
           <LegendDot size={8} /> Low
         </span>
@@ -773,15 +781,15 @@ function LiveMapCard({
   }, [cityData]);
 
   return (
-    <section className="overflow-hidden rounded-md border border-brand-line bg-white shadow-card">
+    <section className={MAP_CARD}>
       <UsJobMap
         embedded
         header={
           <div>
-            <span className="font-heading text-base font-bold text-navy">
+            <span className="text-card font-[650] text-ink">
               Current Live Openings
             </span>{" "}
-            <span className="text-sm text-brand-gray">
+            <span className="text-sub text-ink-muted">
               You are now accessing all fee-backed posted jobs
             </span>
           </div>
@@ -800,17 +808,17 @@ function LiveMapCard({
 /** Shown while the session/verification query resolves — no locked flash. */
 function LoadingMapCard() {
   return (
-    <section className="overflow-hidden rounded-md border border-brand-line bg-white shadow-card">
+    <section className={MAP_CARD}>
       <div className={MAP_HEADER}>
         <div>
-          <span className="font-heading text-base font-bold text-navy">
+          <span className="text-card font-[650] text-ink">
             Current Live Openings
           </span>{" "}
-          <span className="text-sm text-brand-gray">Loading your map…</span>
+          <span className="text-sub text-ink-muted">Loading your map…</span>
         </div>
       </div>
-      <div className="flex items-center justify-center px-4 py-24 sm:px-5">
-        <Loader2 className="h-6 w-6 animate-spin text-brand-gray" />
+      <div className="flex items-center justify-center px-4 py-24">
+        <Loader2 className="size-6 animate-spin text-ink-muted" />
       </div>
     </section>
   );
@@ -818,37 +826,37 @@ function LoadingMapCard() {
 
 function LockedMapCard({ pending }: { pending: boolean }) {
   return (
-    <section className="overflow-hidden rounded-md border border-brand-line bg-white shadow-card">
+    <section className={MAP_CARD}>
       <div className={MAP_HEADER}>
         <div>
-          <span className="font-heading text-base font-bold text-navy">
+          <span className="text-card font-[650] text-ink">
             Current Live Openings
           </span>{" "}
-          <span className="text-sm text-brand-gray">
+          <span className="text-sub text-ink-muted">
             The live map is for verified recruiters
           </span>
         </div>
       </div>
-      <div className="relative p-3 sm:p-5">
+      <div className="relative bg-gradient-to-b from-[#f8fbff] to-[#eef4fd] p-3 sm:p-5">
         <div className="pointer-events-none select-none opacity-60 blur-[3px]">
           <DecorativeUsMap />
         </div>
-        <div className="absolute inset-0 flex items-center justify-center bg-white/55">
-          <div className="mx-4 max-w-md rounded-md border border-brand-line bg-white p-6 text-center shadow-card-lg">
-            <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-accent text-primary">
-              <Lock className="h-5 w-5" />
+        <div className="absolute inset-0 flex items-center justify-center bg-surface/55">
+          <div className="mx-4 max-w-md rounded-md border border-line bg-surface p-5 text-center shadow-pop">
+            <span className="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-tint text-blue">
+              <Lock className="size-[18px]" />
             </span>
-            <h3 className="font-heading text-lg font-extrabold text-navy">
+            <h3 className="text-section font-[650] text-ink">
               The live map is for verified recruiters
             </h3>
-            <p className="mt-2 text-sm text-brand-gray">
+            <p className="mt-2 text-sub text-ink-muted">
               Your account is awaiting verification. Once an Admin approves it,
               you will have access to the live job map showing real-world
               openings with companies willing to pay a fee for the right
               candidate.
             </p>
             {!pending && (
-              <Button asChild className="mt-4 font-bold">
+              <Button asChild className="mt-4">
                 <Link href="/signup">Sign Up</Link>
               </Button>
             )}
@@ -870,7 +878,7 @@ function SegmentedToggle<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <div className="inline-flex shrink-0 rounded-md border border-brand-line bg-secondary p-1">
+    <div className="inline-flex shrink-0 rounded-sm border border-line bg-surface-sunken p-0.5">
       {options.map((option) => {
         const active = value === option.value;
         return (
@@ -882,10 +890,10 @@ function SegmentedToggle<T extends string>({
             title={option.title}
             onClick={() => onChange(option.value)}
             className={cn(
-              "inline-flex items-center justify-center rounded-[6px] px-3 py-1.5 text-sm font-semibold transition-colors",
+              "inline-flex h-7 items-center justify-center gap-1.5 rounded-xs px-3 text-[12.5px] font-semibold transition-colors",
               active
-                ? "bg-white text-navy shadow-sm"
-                : "text-brand-gray hover:text-navy",
+                ? "bg-surface text-ink shadow-e1"
+                : "text-ink-muted hover:text-ink",
             )}
           >
             {option.label}
@@ -921,54 +929,50 @@ function ResultsBody({
 
   if (isLoading) {
     return (
-      <div className="mt-8 flex items-center justify-center py-16 text-brand-gray">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading jobs…
+      <div className="flex items-center justify-center py-16 text-sub text-ink-muted">
+        <Loader2 className="mr-2 size-5 animate-spin" /> Loading jobs…
       </div>
     );
   }
   if (isError || !data) {
     return (
-      <div className="mt-8 rounded-md border border-brand-line bg-white p-10 text-center text-brand-gray">
+      <div className="rounded-sm border border-line bg-surface-sub p-10 text-center text-sub text-ink-muted">
         Jobs are unavailable right now — please try again shortly.
       </div>
     );
   }
   if (items.length === 0) {
     return (
-      <div className="mt-8 flex flex-col items-center gap-2 rounded-md border border-dashed border-brand-line bg-white p-12 text-center">
-        <SearchX className="h-7 w-7 text-brand-gray-light" />
-        <p className="font-heading font-extrabold text-navy">
-          No open roles match these filters
-        </p>
-        <p className="text-sm text-brand-gray">
-          Try a different state, category, fee or employment type.
-        </p>
-      </div>
+      <EmptyState
+        icon={SearchX}
+        title="No open roles match these filters"
+        description="Try a different state, category, fee or employment type."
+      />
     );
   }
 
   return (
-    <div className="mt-6 flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {view === "cards" ? (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {items.map((job) => (
             <PublicJobCard key={job.id} job={job} />
           ))}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-md border border-brand-line">
+        <div className="overflow-hidden rounded-sm border border-line">
           {/* Column template is repeated on JobRow below — the two must stay
            * in step. Salary earns its own column only from `xl`: the filters
            * rail leaves the results about 600px at `lg`, which four columns
            * already fill. */}
-          <div className="hidden grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] gap-6 border-b border-brand-line bg-secondary/50 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-gray md:grid xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
+          <div className="hidden grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] gap-6 border-b border-line bg-surface-sub px-3.5 py-2.5 text-label font-[650] uppercase tracking-[0.06em] text-ink-muted md:grid xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
             <span>Role</span>
             <span>Terms</span>
             <span className="hidden xl:block">Pay</span>
             <span>Recruiter fee</span>
             <span className="text-right">Posted</span>
           </div>
-          <ul className="divide-y divide-brand-line">
+          <ul className="divide-y divide-line">
             {items.map((job) => (
               <JobRow key={job.id} job={job} />
             ))}
@@ -976,7 +980,7 @@ function ResultsBody({
         </div>
       )}
 
-      <div className="rounded-md border border-brand-line bg-white shadow-card">
+      <div className="rounded-sm border border-line bg-surface [&>div]:border-t-0">
         <TablePager
           page={page}
           totalPages={totalPages}
@@ -988,14 +992,6 @@ function ResultsBody({
         />
       </div>
     </div>
-  );
-}
-
-function Tag({ children }: { children: ReactNode }) {
-  return (
-    <span className="rounded-full border border-brand-line px-2.5 py-0.5 text-xs font-medium text-brand-gray">
-      {children}
-    </span>
   );
 }
 
@@ -1014,15 +1010,15 @@ function JobRow({ job }: { job: PublicJobCardData }) {
   const salary = formatSalaryRange(job);
 
   return (
-    <li className="grid grid-cols-1 gap-2.5 px-3 py-3.5 sm:gap-3 sm:px-4 sm:py-4 md:grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] md:items-center md:gap-6 xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
+    <li className="grid grid-cols-1 gap-2.5 px-3.5 py-3 sm:gap-3 sm:py-3.5 md:grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] md:items-center md:gap-6 xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
       <div className="min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-primary">
+        <p className="text-[10px] font-[650] uppercase tracking-[0.07em] text-ink-muted">
           {category}
         </p>
-        <p className="mt-0.5 truncate font-heading text-[15px] font-bold text-navy">
+        <p className="mt-px truncate text-sub font-semibold text-ink">
           {job.title}
         </p>
-        <div className="flex items-center gap-1.5 text-sm text-brand-gray">
+        <div className="flex items-center gap-1.5 text-[11.5px] text-ink-faint">
           <CompanyLogo
             companyProfileId={job.companyProfileId}
             hasLogo={job.hasLogo}
@@ -1036,9 +1032,9 @@ function JobRow({ job }: { job: PublicJobCardData }) {
         {/* Below `xl` there is no salary column, so it rides under the role;
          * from `xl` the cell after Terms carries it. */}
         {salary && (
-          <p className="mt-0.5 truncate text-[13px] font-semibold text-navy xl:hidden">
+          <p className="mt-0.5 truncate text-sub font-[650] tabular-nums text-ink xl:hidden">
             {salary}
-            <span className="ml-1.5 text-xs font-medium text-brand-gray">
+            <span className="ml-1.5 text-meta font-[450] text-ink-muted">
               salary
             </span>
           </p>
@@ -1047,20 +1043,20 @@ function JobRow({ job }: { job: PublicJobCardData }) {
       <div className="flex flex-wrap gap-1.5">
         {employment && <Tag>{employment}</Tag>}
       </div>
-      <div className="hidden text-sm font-semibold text-navy xl:block">
-        {salary ?? <span className="font-normal text-brand-gray">—</span>}
+      <div className="hidden text-sub font-[650] tabular-nums text-ink xl:block">
+        {salary ?? <span className="font-[450] text-ink-muted">—</span>}
       </div>
       <div className="whitespace-nowrap">
         <div>
-          <span className="font-heading text-lg font-extrabold text-primary">
+          <span className="text-card font-[650] tabular-nums text-ink">
             {job.recruiterFeeMinor === 0
               ? "Free"
               : formatMinor(job.recruiterFeeMinor)}
           </span>{" "}
-          <span className="text-xs text-brand-gray">on hire</span>
+          <span className="text-meta text-ink-muted">on hire</span>
         </div>
         {/* Mirrors the cards view so a recruiter sees how contested a role is. */}
-        <p className="mt-0.5 text-xs text-brand-gray">
+        <p className="mt-px text-[11.5px] text-ink-faint">
           {job.submittedCandidates}{" "}
           {job.submittedCandidates === 1
             ? "submitted candidate"
@@ -1068,9 +1064,7 @@ function JobRow({ job }: { job: PublicJobCardData }) {
         </p>
       </div>
       <div className="flex items-center justify-between gap-3 md:flex-col md:items-end md:gap-1">
-        <span className="text-xs tabular-nums text-brand-gray-light">
-          {posted}
-        </span>
+        <span className="text-meta tabular-nums text-ink-faint">{posted}</span>
         <Button asChild variant="outline" size="sm">
           <Link href={jobPath(job)}>View</Link>
         </Button>

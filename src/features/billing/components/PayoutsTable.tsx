@@ -7,7 +7,8 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import { CardHeader, CardTitle } from "@/shared/ui-components/controls/card";
+import * as T from "@/shared/ui-components/data/tableStyles";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import {
   MobileRecordCard,
@@ -16,7 +17,7 @@ import {
 import { usePayouts } from "../hooks/useBilling";
 import { payoutDetail } from "../payoutTracking";
 import { type Payout } from "../schemas";
-import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./BillingTable";
+import { BillingTableFooter } from "./BillingTable";
 import {
   PayoutStatusBadge,
   PayoutTrackingDialog,
@@ -46,107 +47,113 @@ export function PayoutsTable() {
   if (!data || (data.meta.total === 0 && page === 1)) return null;
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="font-heading text-base font-bold text-navy">
-            Withdrawals
-          </h2>
-        </div>
-        <div className="hidden overflow-x-auto sm:block">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className={HEAD_ROW}>
-                <th scope="col" className={TH}>
-                  Requested
-                </th>
-                <th scope="col" className={cn(TH, "text-right")}>
-                  Amount
-                </th>
-                <th scope="col" className={TH}>
-                  Status
-                </th>
-                <th scope="col" className={TH}>
-                  Detail
-                </th>
-                <th scope="col" className={TH}>
-                  <span className="sr-only">Track</span>
-                </th>
+    <div className={T.TABLE_CARD}>
+      <CardHeader>
+        <CardTitle>Withdrawals</CardTitle>
+      </CardHeader>
+      <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
+        <table className={T.TABLE_EL}>
+          <thead className={T.TABLE_HEAD}>
+            <tr>
+              <th scope="col" className={T.TABLE_TH}>
+                Requested
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Amount
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Status
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Detail
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "w-11")}>
+                <span className="sr-only">Track</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody className={T.TABLE_BODY}>
+            {data.data.map((payout) => (
+              <tr
+                key={payout.id}
+                className={cn(T.TABLE_ROW, "cursor-pointer")}
+                onClick={() => setSelected(payout)}
+              >
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap tabular-nums text-ink-body",
+                  )}
+                >
+                  {formatDate(payout.createdAt)}
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                  )}
+                >
+                  {formatMinor(payout.amountMinor)}
+                </td>
+                <td className={T.TABLE_TD}>
+                  <PayoutStatusBadge status={payout.status} />
+                </td>
+                <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                  {payoutDetail(payout)}
+                </td>
+                <td className={cn(T.TABLE_TD, "text-right")}>
+                  <button
+                    type="button"
+                    aria-label={`Track withdrawal of ${formatMinor(payout.amountMinor)}`}
+                    className="inline-flex size-7 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
+                    onClick={(event) => {
+                      // The row click already opens the dialog; keep the
+                      // button as the keyboard/screen-reader entry point.
+                      event.stopPropagation();
+                      setSelected(payout);
+                    }}
+                  >
+                    <ChevronRight className="size-[15px]" />
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {data.data.map((payout) => (
-                <tr
-                  key={payout.id}
-                  className={cn(BODY_ROW, "cursor-pointer")}
-                  onClick={() => setSelected(payout)}
-                >
-                  <td className="whitespace-nowrap px-5 py-3 text-navy">
-                    {formatDate(payout.createdAt)}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
-                    {formatMinor(payout.amountMinor)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <PayoutStatusBadge status={payout.status} />
-                  </td>
-                  <td className="px-5 py-3 text-muted-foreground">
-                    {payoutDetail(payout)}
-                  </td>
-                  <td className="px-3 py-3 text-right">
-                    <button
-                      type="button"
-                      aria-label={`Track withdrawal of ${formatMinor(payout.amountMinor)}`}
-                      className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-primary"
-                      onClick={(event) => {
-                        // The row click already opens the dialog; keep the
-                        // button as the keyboard/screen-reader entry point.
-                        event.stopPropagation();
-                        setSelected(payout);
-                      }}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <MobileRecordList className="sm:hidden">
-          {data.data.map((payout) => (
-            <MobileRecordCard
-              key={payout.id}
-              title={formatMinor(payout.amountMinor)}
-              subtitle={payoutDetail(payout)}
-              trailing={<PayoutStatusBadge status={payout.status} />}
-              fields={[
-                { label: "Requested", value: formatDate(payout.createdAt) },
-              ]}
-              actions={
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelected(payout)}
-                >
-                  Track
-                </Button>
-              }
-            />
-          ))}
-        </MobileRecordList>
-        <BillingTableFooter
-          total={data.meta.total}
-          page={page}
-          totalPages={data.meta.totalPages}
-          onPage={setPage}
-        />
-        <PayoutTrackingDialog
-          payout={selected}
-          onClose={() => setSelected(null)}
-        />
-      </CardContent>
-    </Card>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <MobileRecordList className="sm:hidden">
+        {data.data.map((payout) => (
+          <MobileRecordCard
+            key={payout.id}
+            title={formatMinor(payout.amountMinor)}
+            subtitle={payoutDetail(payout)}
+            trailing={<PayoutStatusBadge status={payout.status} />}
+            fields={[
+              { label: "Requested", value: formatDate(payout.createdAt) },
+            ]}
+            actions={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSelected(payout)}
+              >
+                Track
+              </Button>
+            }
+          />
+        ))}
+      </MobileRecordList>
+      <BillingTableFooter
+        total={data.meta.total}
+        page={page}
+        totalPages={data.meta.totalPages}
+        onPage={setPage}
+      />
+      <PayoutTrackingDialog
+        payout={selected}
+        onClose={() => setSelected(null)}
+      />
+    </div>
   );
 }

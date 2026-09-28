@@ -64,7 +64,7 @@ export function PayRangeField({
             onChange({ min: String(nextLow), max: String(nextHigh) })
           }
         />
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center justify-between text-meta tabular-nums text-ink-muted">
           <span>Min {formatMinor(low * 100)}</span>
           <span>
             Max {formatMinor(Math.max(low, high) * 100)}

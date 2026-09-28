@@ -6,11 +6,13 @@ import { AlertCircle, BadgeCheck, BadgeX } from "lucide-react";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
@@ -22,7 +24,12 @@ import {
 import type { CompanyDetail as CompanyDetailData } from "../schemas";
 import { VERIFICATION_LABELS } from "../schemas";
 import { HoldButton } from "./HoldButton";
-import { DetailField, DetailSkeleton } from "./DetailPrimitives";
+import {
+  DetailField,
+  DetailSkeleton,
+  FACTS_GRID,
+  FACT_FULL,
+} from "./DetailPrimitives";
 import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_STATUS_TONES,
@@ -47,15 +54,16 @@ function VerificationCard({ data }: { data: CompanyDetailData }) {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-base">Approval</CardTitle>
+      <CardHeader>
+        <CardTitle>Approval</CardTitle>
         <StatusBadge
+          className="ml-auto"
           label={VERIFICATION_LABELS[data.verificationStatus]}
           tone={VERIFICATION_STATUS_TONES[data.verificationStatus] ?? "neutral"}
         />
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <p className="text-sm text-muted-foreground">
+      <CardContent className="flex flex-col gap-2.5">
+        <p className="text-sub text-ink-muted">
           {data.verificationStatus === "verified"
             ? "This company can post jobs and review candidate submissions."
             : data.verificationStatus === "rejected"
@@ -63,8 +71,9 @@ function VerificationCard({ data }: { data: CompanyDetailData }) {
               : "Review the profile, then approve or decline. A pending company cannot post jobs or review candidates, and is hidden from recruiters."}
         </p>
         {data.verificationNote && (
-          <p className="rounded-md border border-border bg-secondary/60 px-3 py-2 text-sm text-navy">
-            <span className="font-semibold">Last note:</span>{" "}
+          /* `.well` — the previous decision, kept as context beside the new one. */
+          <p className="rounded-sm border border-line bg-surface-sub px-3 py-2.5 text-body text-ink-body">
+            <span className="font-[650] text-ink">Last note:</span>{" "}
             {data.verificationNote}
           </p>
         )}
@@ -75,31 +84,30 @@ function VerificationCard({ data }: { data: CompanyDetailData }) {
           placeholder="Optional note — sent to the company with the decision."
           aria-label="Approval note"
         />
-        <div className="flex flex-wrap gap-2">
-          {data.verificationStatus !== "verified" && (
-            <Button
-              type="button"
-              disabled={decide.isPending}
-              onClick={() => submit("verified")}
-            >
-              <BadgeCheck className="h-4 w-4" />
-              Approve
-            </Button>
-          )}
-          {data.verificationStatus !== "rejected" && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={decide.isPending}
-              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => submit("rejected")}
-            >
-              <BadgeX className="h-4 w-4" />
-              Decline
-            </Button>
-          )}
-        </div>
       </CardContent>
+      <CardFooter className="flex-wrap">
+        {data.verificationStatus !== "verified" && (
+          <Button
+            type="button"
+            disabled={decide.isPending}
+            onClick={() => submit("verified")}
+          >
+            <BadgeCheck />
+            Approve
+          </Button>
+        )}
+        {data.verificationStatus !== "rejected" && (
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={decide.isPending}
+            onClick={() => submit("rejected")}
+          >
+            <BadgeX />
+            Decline
+          </Button>
+        )}
+      </CardFooter>
     </Card>
   );
 }
@@ -115,20 +123,22 @@ function JobCountField({
   href: string;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+    <div>
+      <div className="text-label font-[650] uppercase text-ink-muted">
         {label}
-      </span>
-      {count > 0 ? (
-        <Link
-          href={href}
-          className="w-fit text-sm font-semibold text-navy hover:underline focus-visible:underline focus-visible:outline-none"
-        >
-          {count}
-        </Link>
-      ) : (
-        <span className="text-sm text-navy">0</span>
-      )}
+      </div>
+      <div className="mt-[3px] text-body font-[550] tabular-nums text-ink">
+        {count > 0 ? (
+          <Link
+            href={href}
+            className="text-blue-ink hover:underline focus-visible:underline focus-visible:outline-none"
+          >
+            {count}
+          </Link>
+        ) : (
+          0
+        )}
+      </div>
     </div>
   );
 }
@@ -152,26 +162,27 @@ function formatRevenue(revenue: string): string {
     : `$${revenue}`;
 }
 
+/** One cell of the wallet strip — the reference's `.stat` figure, ruled off
+ * from its neighbour rather than boxed on its own. */
 function WalletStat({
   label,
   minor,
-  primary = false,
+  first = false,
 }: {
   label: string;
   minor: number;
-  primary?: boolean;
+  /** The leading cell owns no divider. */
+  first?: boolean;
 }) {
   return (
-    <div className="flex-1 p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        {label}
-      </p>
-      <p
-        className={
-          "mt-1.5 font-heading font-extrabold leading-none text-navy " +
-          (primary ? "text-3xl" : "text-2xl")
-        }
-      >
+    <div
+      className={cn(
+        "flex-1 px-4 py-3.5",
+        first ? "" : "border-t border-line sm:border-l sm:border-t-0",
+      )}
+    >
+      <p className="text-label font-[650] uppercase text-ink-muted">{label}</p>
+      <p className="mt-[5px] text-stat font-bold tabular-nums text-ink">
         {formatMinor(minor)}
       </p>
     </div>
@@ -184,15 +195,17 @@ export function CompanyDetail({ userId }: { userId: string }) {
   if (isPending) return <DetailSkeleton />;
   if (isError) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-          <AlertCircle className="h-6 w-6" />
+      <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+        <div className="flex items-center gap-2.5 font-[550]">
+          <AlertCircle className="size-[15px] shrink-0" />
           Could not load this company.
+        </div>
+        <div>
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
             Retry
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -220,19 +233,19 @@ export function CompanyDetail({ userId }: { userId: string }) {
         : `${formatMinor(min)} – ${formatMinor(max)}`;
 
   return (
-    <div className="flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex w-full max-w-5xl flex-col gap-3">
       <Card>
-        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
+        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 items-center gap-4">
             <CompanyLogo
               companyProfileId={data.companyProfileId}
               hasLogo={data.hasLogo}
               name={data.companyName}
               size="lg"
             />
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="font-heading text-xl font-bold text-navy">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h2 className="text-page font-bold text-ink">
                   {data.companyName}
                 </h2>
                 <StatusBadge
@@ -241,36 +254,41 @@ export function CompanyDetail({ userId }: { userId: string }) {
                 />
                 <StatusBadge
                   label={VERIFICATION_LABELS[data.verificationStatus]}
-                  tone={VERIFICATION_STATUS_TONES[data.verificationStatus] ?? "neutral"}
+                  tone={
+                    VERIFICATION_STATUS_TONES[data.verificationStatus] ??
+                    "neutral"
+                  }
                 />
               </div>
-              <p className="text-sm text-muted-foreground">{data.email}</p>
+              <p className="mt-0.5 text-sub text-ink-muted">{data.email}</p>
             </div>
           </div>
-          <HoldButton
-            userId={data.userId}
-            status={data.status}
-            subjectName={data.companyName}
-          />
+          <div className="sm:ml-auto sm:shrink-0">
+            <HoldButton
+              userId={data.userId}
+              status={data.status}
+              subjectName={data.companyName}
+            />
+          </div>
         </CardContent>
       </Card>
 
       <VerificationCard data={data} />
 
-      <Card className="overflow-hidden">
-        <CardContent className="flex flex-col divide-y divide-border p-0 sm:flex-row sm:divide-x sm:divide-y-0">
-          <WalletStat label="Available" minor={data.availableMinor} primary />
+      <Card>
+        <div className="flex flex-col sm:flex-row">
+          <WalletStat label="Available" minor={data.availableMinor} first />
           <WalletStat label="Balance" minor={data.balanceMinor} />
           <WalletStat label="Reserved" minor={data.reservedMinor} />
-        </CardContent>
+        </div>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Profile</CardTitle>
+            <CardTitle>Profile</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <CardContent className={FACTS_GRID}>
             <DetailField label="First name" value={data.firstName} />
             <DetailField label="Last name" value={data.lastName} />
             <DetailField label="Phone" value={data.phone} />
@@ -287,13 +305,13 @@ export function CompanyDetail({ userId }: { userId: string }) {
             <DetailField label="Location" value={location} />
             {/* Full width, so the website reads directly under the address it
                 belongs with rather than sharing a row with the joined date. */}
-            <div className="col-span-2">
+            <div className={FACT_FULL}>
               <DetailField label="Website" value={data.website} />
             </div>
-            <div className="col-span-2">
+            <div className={FACT_FULL}>
               <DetailField label="Joined" value={formatDate(data.joinedAt)} />
             </div>
-            <div className="col-span-2">
+            <div className={FACT_FULL}>
               <DetailField label="Description" value={data.description} />
             </div>
           </CardContent>
@@ -304,9 +322,9 @@ export function CompanyDetail({ userId }: { userId: string }) {
             than being buried among the contact fields. */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Business Profile</CardTitle>
+            <CardTitle>Business Profile</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <CardContent className={FACTS_GRID}>
             <DetailField label="Industry" value={data.industry} />
             <DetailField
               label="Founded"
@@ -316,7 +334,7 @@ export function CompanyDetail({ userId }: { userId: string }) {
             />
             <DetailField label="Employees" value={data.employeeSize} />
             <DetailField label="Revenue" value={revenue} />
-            <div className="col-span-2">
+            <div className={FACT_FULL}>
               <DetailField label="Fee range" value={feeRange} />
             </div>
           </CardContent>
@@ -324,9 +342,9 @@ export function CompanyDetail({ userId }: { userId: string }) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Activity</CardTitle>
+            <CardTitle>Activity</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <CardContent className={FACTS_GRID}>
             <JobCountField
               label="Jobs posted"
               count={data.jobCount}

@@ -7,9 +7,22 @@ import { AlertCircle, ShieldAlert } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
+import { Pill } from "@/shared/ui-components/badges/Pill";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import {
+  TABLE_BODY,
+  TABLE_CARD,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_HEAD_ROW,
+  TABLE_ROW,
+  TABLE_ROW_UNREAD,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TH,
+} from "@/shared/ui-components/data/tableStyles";
 import {
   MobileRecordCard,
   MobileRecordList,
@@ -24,30 +37,20 @@ import { DisputeStatusBadge } from "./DisputeStatusBadge";
  * not read as at a glance. */
 function PendingPill() {
   return (
-    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+    <Pill tone="blue" plain className="uppercase tracking-[0.06em]">
       Pending
-    </span>
+    </Pill>
   );
 }
 
-const TH = "px-5 py-3 font-semibold";
-const HEAD_ROW =
-  "border-b border-border bg-muted/40 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground";
-const BODY_ROW =
-  "border-b border-border/60 transition-colors last:border-0 even:bg-muted/20 hover:bg-accent/50";
-
-/** A dispute with news the caller hasn't opened yet — tinted like an unread
- * conversation in the inbox. */
-const UPDATED_ROW =
-  "bg-primary/[0.04] even:bg-primary/[0.04] hover:bg-primary/[0.08]";
 /** The inbox's left accent bar. On the first cell, not the row: an inset
  * shadow on a `<tr>` doesn't render reliably across browsers. */
-const UPDATED_CELL = "shadow-[inset_3px_0_0_0_hsl(var(--primary))]";
+const UPDATED_CELL = "shadow-rail";
 
 function UpdateDot() {
   return (
     <span
-      className="block h-2.5 w-2.5 shrink-0 rounded-full bg-primary"
+      className="block size-2.5 shrink-0 rounded-full bg-blue"
       aria-label="New activity"
     />
   );
@@ -60,160 +63,165 @@ export function MyDisputesList() {
 
   if (isError) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-          <AlertCircle className="h-6 w-6" />
+      <div className={cn(TABLE_CARD, "p-8")}>
+        <div className="flex flex-col items-center gap-3 text-center text-sub text-bad">
+          <AlertCircle className="size-[22px]" />
           Could not load your disputes.
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
             Retry
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
   if (isPending) return <TableSkeleton />;
 
   if (data.data.length === 0) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-start gap-3 p-8">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-accent text-primary">
-            <ShieldAlert className="h-5 w-5" />
-          </span>
-          <p className="text-sm font-semibold text-navy">No disputes</p>
-          <p className="text-[13px] text-muted-foreground">
-            Use “Raise a Dispute” above to open one on a placement held in
-            escrow.
-          </p>
-        </CardContent>
-      </Card>
+      <div className={TABLE_CARD}>
+        <EmptyState
+          icon={ShieldAlert}
+          title="No disputes"
+          description="Use “Raise a Dispute” above to open one on a placement held in escrow."
+        />
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="hidden overflow-x-auto sm:block">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className={HEAD_ROW}>
-                <th scope="col" className={TH}>
-                  Role
-                </th>
-                <th scope="col" className={TH}>
-                  Subject
-                </th>
-                <th scope="col" className={TH}>
-                  Counterparty
-                </th>
-                <th scope="col" className={cn(TH, "text-right")}>
-                  Fee
-                </th>
-                <th scope="col" className={TH}>
-                  Status
-                </th>
-                <th scope="col" className={TH}>
-                  Opened
-                </th>
-                <th scope="col" className={TH} />
-              </tr>
-            </thead>
-            <tbody>
-              {data.data.map((d) => (
-                <tr
-                  key={d.id}
-                  className={cn(BODY_ROW, d.hasUpdate && UPDATED_ROW)}
+    <div className={TABLE_CARD}>
+      <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+        <table className={TABLE_EL}>
+          <thead className={TABLE_HEAD}>
+            <tr className={TABLE_HEAD_ROW}>
+              <th scope="col" className={TABLE_TH}>
+                Role
+              </th>
+              <th scope="col" className={TABLE_TH}>
+                Subject
+              </th>
+              <th scope="col" className={TABLE_TH}>
+                Counterparty
+              </th>
+              <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                Fee
+              </th>
+              <th scope="col" className={TABLE_TH}>
+                Status
+              </th>
+              <th scope="col" className={TABLE_TH}>
+                Opened
+              </th>
+              <th scope="col" className={TABLE_TH} />
+            </tr>
+          </thead>
+          <tbody className={TABLE_BODY}>
+            {data.data.map((d) => (
+              <tr
+                key={d.id}
+                className={d.hasUpdate ? TABLE_ROW_UNREAD : TABLE_ROW}
+              >
+                <td
+                  className={cn(
+                    TABLE_TD,
+                    "text-ink",
+                    d.hasUpdate ? `font-[650] ${UPDATED_CELL}` : "font-[550]",
+                  )}
                 >
-                  <td
-                    className={cn(
-                      "px-5 py-3 text-navy",
-                      d.hasUpdate ? `font-bold ${UPDATED_CELL}` : "font-medium",
-                    )}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="flex w-2.5 shrink-0 justify-center">
-                        {d.hasUpdate && <UpdateDot />}
-                      </span>
-                      {d.jobTitle}
-                      {isDisputeOpen(d.status) && <PendingPill />}
+                  <span className="flex items-center gap-2">
+                    <span className="flex w-2.5 shrink-0 justify-center">
+                      {d.hasUpdate && <UpdateDot />}
                     </span>
-                  </td>
-                  <td className="px-5 py-3 text-navy">
-                    {DISPUTE_SUBJECT_LABELS[d.subject]}
-                  </td>
-                  <td className="px-5 py-3 text-muted-foreground">
-                    {d.counterpartyName}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
-                    {formatMinor(d.amountMinor)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <DisputeStatusBadge status={d.status} />
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                    {formatDate(d.createdAt)}
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/disputes/${d.id}`}>View</Link>
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <MobileRecordList className="sm:hidden">
-          {data.data.map((d) => (
-            <MobileRecordCard
-              key={d.id}
-              title={d.jobTitle}
-              subtitle={d.counterpartyName}
-              trailing={
-                <span className="flex items-center gap-1.5">
-                  {isDisputeOpen(d.status) && <PendingPill />}
+                    {d.jobTitle}
+                    {isDisputeOpen(d.status) && <PendingPill />}
+                  </span>
+                </td>
+                <td className={cn(TABLE_TD, "text-ink-body")}>
+                  {DISPUTE_SUBJECT_LABELS[d.subject]}
+                </td>
+                <td className={cn(TABLE_TD, "text-ink-muted")}>
+                  {d.counterpartyName}
+                </td>
+                <td
+                  className={cn(
+                    TABLE_TD,
+                    "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                  )}
+                >
+                  {formatMinor(d.amountMinor)}
+                </td>
+                <td className={TABLE_TD}>
                   <DisputeStatusBadge status={d.status} />
-                </span>
-              }
-              href={`/disputes/${d.id}`}
-              className={cn(d.hasUpdate && UPDATED_ROW)}
-              fields={[
-                { label: "Subject", value: DISPUTE_SUBJECT_LABELS[d.subject] },
-                { label: "Fee", value: formatMinor(d.amountMinor) },
-                { label: "Opened", value: formatDate(d.createdAt) },
-              ]}
-            />
-          ))}
-        </MobileRecordList>
+                </td>
+                <td
+                  className={cn(
+                    TABLE_TD,
+                    "whitespace-nowrap tabular-nums text-ink-muted",
+                  )}
+                >
+                  {formatDate(d.createdAt)}
+                </td>
+                <td className={cn(TABLE_TD, "text-right")}>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/disputes/${d.id}`}>View</Link>
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        <div className="flex items-center justify-between border-t border-border px-5 py-3 text-sm">
-          <span className="text-muted-foreground">
-            {data.meta.total.toLocaleString()} total · page {page} of{" "}
-            {Math.max(data.meta.totalPages, 1)}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page >= data.meta.totalPages}
-              onClick={() => setPage(page + 1)}
-            >
-              Next
-            </Button>
-          </div>
+      <MobileRecordList className="sm:hidden">
+        {data.data.map((d) => (
+          <MobileRecordCard
+            key={d.id}
+            title={d.jobTitle}
+            subtitle={d.counterpartyName}
+            trailing={
+              <span className="flex items-center gap-1.5">
+                {isDisputeOpen(d.status) && <PendingPill />}
+                <DisputeStatusBadge status={d.status} />
+              </span>
+            }
+            href={`/disputes/${d.id}`}
+            className={cn(d.hasUpdate && "bg-unread shadow-rail")}
+            fields={[
+              { label: "Subject", value: DISPUTE_SUBJECT_LABELS[d.subject] },
+              { label: "Fee", value: formatMinor(d.amountMinor) },
+              { label: "Opened", value: formatDate(d.createdAt) },
+            ]}
+          />
+        ))}
+      </MobileRecordList>
+
+      {/* `.pager` — the reference's footer rule above the page controls. */}
+      <div className="flex items-center justify-between gap-2 border-t border-line px-3.5 py-2.5 text-[12.5px] text-ink-muted">
+        <span className="tabular-nums">
+          {data.meta.total.toLocaleString()} total · page {page} of{" "}
+          {Math.max(data.meta.totalPages, 1)}
+        </span>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage(page - 1)}
+          >
+            Previous
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={page >= data.meta.totalPages}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

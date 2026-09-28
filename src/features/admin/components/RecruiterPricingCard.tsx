@@ -50,43 +50,48 @@ export function RecruiterPricingCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">
-          Recruiter subscription price
-        </CardTitle>
+        <CardTitle>Recruiter subscription price</CardTitle>
       </CardHeader>
       <CardContent>
         {isPending ? (
-          <div className="h-24 animate-pulse rounded-md bg-muted/40" />
+          <div className="h-24 animate-pulse rounded-sm bg-surface-sunken" />
         ) : isError ? (
-          <div className="flex flex-col items-start gap-3 text-sm text-destructive">
-            <span className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
+          <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+            <span className="flex items-center gap-2.5 font-[550]">
+              <AlertCircle className="size-[15px] shrink-0" />
               Could not load the current price.
             </span>
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
-              Retry
-            </Button>
+            <div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refetch()}
+              >
+                Retry
+              </Button>
+            </div>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sub text-ink-muted">
               Current monthly price:{" "}
-              <span className="font-semibold text-navy">
+              <span className="font-[650] tabular-nums text-ink">
                 {data.amountMinor !== null
                   ? formatMinor(data.amountMinor)
                   : "Not set"}
               </span>
               {data.priceId && (
-                <span className="ml-2 text-xs text-muted-foreground">
+                <span className="ml-2 text-meta text-ink-faint">
                   ({data.priceId})
                 </span>
               )}
             </p>
 
+            {/* `.field` — label, control, then the consequence of changing it. */}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="recruiter-price">Monthly price (USD)</Label>
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
+                <span className="text-body text-ink-muted">$</span>
                 <Input
                   id="recruiter-price"
                   type="number"
@@ -95,22 +100,22 @@ export function RecruiterPricingCard() {
                   inputMode="decimal"
                   value={value}
                   onChange={(event) => setValue(event.target.value)}
-                  className="max-w-[160px]"
+                  className="max-w-[160px] tabular-nums"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-meta text-ink-faint">
                 New subscriptions bill at this rate. Existing subscribers keep
                 their current price until they resubscribe.
               </p>
             </div>
 
             {update.isError && (
-              <p className="text-sm text-destructive">
+              <p className="text-meta font-medium text-bad">
                 Could not update the price. Please try again.
               </p>
             )}
             {update.isSuccess && !update.isPending && (
-              <p className="text-sm text-[#17734E]">Price updated.</p>
+              <p className="text-meta font-medium text-ok">Price updated.</p>
             )}
 
             <div>

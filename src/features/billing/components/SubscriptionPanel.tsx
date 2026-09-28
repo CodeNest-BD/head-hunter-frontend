@@ -8,10 +8,12 @@ import {
   Lock,
 } from "lucide-react";
 
-import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
+import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { Tile } from "@/shared/ui-components/list/Tile";
 import {
   useOpenSubscriptionPortal,
   useRecruiterPrice,
@@ -34,22 +36,18 @@ type Status = SubscriptionStatus["status"];
 
 interface StatusMeta {
   label: string;
-  tone: "active" | "warning" | "neutral";
+  /** The one semantic tone the strip's glyph tile and status pill both wear,
+   * so a status can never show a green tile beside an amber badge. */
+  tone: "ok" | "warn" | "neutral";
   icon: typeof BadgeCheck;
 }
 
 const STATUS_META: Record<Status, StatusMeta> = {
-  active: { label: "Active", tone: "active", icon: BadgeCheck },
-  past_due: { label: "Payment past due", tone: "warning", icon: AlertTriangle },
-  incomplete: { label: "Incomplete", tone: "warning", icon: AlertTriangle },
+  active: { label: "Active", tone: "ok", icon: BadgeCheck },
+  past_due: { label: "Payment past due", tone: "warn", icon: AlertTriangle },
+  incomplete: { label: "Incomplete", tone: "warn", icon: AlertTriangle },
   canceled: { label: "Canceled", tone: "neutral", icon: Lock },
   none: { label: "Not subscribed", tone: "neutral", icon: Lock },
-};
-
-const TONE_STYLES: Record<StatusMeta["tone"], string> = {
-  active: "bg-[#E7F4EC] text-[#17734E] border-[#CDE7D8]",
-  warning: "bg-[#FBF3DF] text-[#92610C] border-[#F0E2B8]",
-  neutral: "bg-muted text-muted-foreground border-border",
 };
 
 /** One-line summary shown beside the status pill. */
@@ -85,13 +83,12 @@ export function SubscriptionPanel() {
 
   if (isLoading || !data) {
     return (
-      <div className="h-40 animate-pulse rounded-md border border-border bg-card" />
+      <div className="h-40 animate-pulse rounded-md border border-line bg-surface" />
     );
   }
 
   const status = data.status;
   const meta = STATUS_META[status];
-  const StatusIcon = meta.icon;
   const isActive = status === "active";
   // A Stripe customer exists once any checkout has happened, so the portal is
   // reachable for every status except a never-subscribed recruiter.
@@ -128,89 +125,79 @@ export function SubscriptionPanel() {
   })();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* Status strip */}
-      <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <span
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-md border",
-              TONE_STYLES[meta.tone],
-            )}
-          >
-            <StatusIcon className="h-[18px] w-[18px]" />
-          </span>
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-navy">Status</span>
-              <span
-                className={cn(
-                  "rounded-full border px-2 py-0.5 text-xs font-semibold",
-                  TONE_STYLES[meta.tone],
-                )}
-              >
-                {meta.label}
-              </span>
+      <Card>
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Tile icon={meta.icon} tone={meta.tone} />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-block font-[650] text-ink">Status</span>
+              <StatusBadge label={meta.label} tone={meta.tone} />
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-[3px] text-sub text-ink-muted">
               {statusLine(status, data.currentPeriodEnd)}
             </p>
           </div>
-        </div>
-        {canManageBilling && (
-          <Button
-            type="button"
-            variant="outline"
-            disabled={busy}
-            onClick={() => portal.mutate()}
-          >
-            <CreditCard className="h-[18px] w-[18px]" />
-            {portal.isPending ? "Opening…" : "Manage billing"}
-          </Button>
-        )}
-      </div>
-
-      {/* Plan card */}
-      <article className="overflow-hidden rounded-md bg-navy text-white shadow-card-lg">
-        <div className="flex flex-wrap items-start justify-between gap-4 p-8 pb-6">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.09em] text-[#85B1F3]">
-              {PLAN_NAME}
-            </p>
-            <p className="mt-2 font-heading text-[44px] font-extrabold leading-none">
-              {planPrice}
-              <span className="text-[17px] font-semibold text-[#858A98]">
-                {" "}
-                / {PLAN_INTERVAL}
-              </span>
-            </p>
-          </div>
-          {isActive && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1E4620] px-3 py-1 text-xs font-semibold text-[#7BE0A0]">
-              <BadgeCheck className="h-3.5 w-3.5" />
-              Current plan
-            </span>
+          {canManageBilling && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => portal.mutate()}
+              className="sm:ml-auto"
+            >
+              <CreditCard />
+              {portal.isPending ? "Opening…" : "Manage billing"}
+            </Button>
           )}
+        </CardContent>
+      </Card>
+
+      {/* `.plan` — the one place navy is a surface rather than ink: the value
+          of the membership is re-sold at every renewal. */}
+      <article className="overflow-hidden rounded-lg bg-navy text-rail-ink shadow-e2">
+        <div className="p-6">
+          <p className="text-label font-[650] uppercase text-sky">
+            {PLAN_NAME}
+          </p>
+          <div className="mt-2.5 flex flex-wrap items-baseline gap-1.5">
+            <span className="text-[40px] font-extrabold leading-none tracking-[-0.02em] tabular-nums text-white">
+              {planPrice}
+            </span>
+            <span className="text-block font-[550] text-rail-dim">
+              / {PLAN_INTERVAL}
+            </span>
+            {isActive && (
+              <span className="ml-auto inline-flex h-5.25 items-center gap-1.5 rounded-full bg-[#1e4620] px-2 text-[11px] font-[650] tracking-[0.02em] text-[#7be0a0]">
+                <BadgeCheck className="size-3.5" />
+                Current plan
+              </span>
+            )}
+          </div>
         </div>
 
-        <ul className="flex flex-col gap-3 px-8 pb-2">
+        <hr className="h-px border-0 bg-white/[0.12]" />
+
+        <ul className="flex flex-col gap-3 px-6 py-5">
           {PLAN_FEATURES.map((feature) => (
-            <li key={feature} className="flex items-center gap-3 text-[15px]">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#22345A] text-[#7BE0A0]">
-                <Check className="h-3 w-3" />
+            <li key={feature} className="flex items-center gap-2.5 text-sub">
+              <span className="flex size-[18px] shrink-0 items-center justify-center rounded-full bg-[#22345a] text-[10px] font-extrabold text-[#7be0a0]">
+                <Check className="size-2.5" strokeWidth={3.5} />
               </span>
-              <span className="text-[#DCE3F0]">{feature}</span>
+              <span className="text-[#dce3f0]">{feature}</span>
             </li>
           ))}
         </ul>
 
         {planAction && (
-          <div className="p-8 pt-6">
+          <div className="px-6 pb-6">
             <Button
               type="button"
+              size="lg"
               disabled={busy}
               onClick={planAction.run}
-              className="h-auto w-full rounded-[10px] py-3.5 text-[15px] font-bold sm:w-auto sm:px-8"
+              className="w-full sm:w-auto sm:px-8"
             >
               {planAction.label}
             </Button>
@@ -219,7 +206,7 @@ export function SubscriptionPanel() {
       </article>
 
       {(checkout.isError || portal.isError) && (
-        <p className="text-sm text-destructive">
+        <p className="text-sub font-medium text-bad">
           Something went wrong talking to Stripe. Please try again.
         </p>
       )}

@@ -21,12 +21,12 @@ export function MessageBubble({ event, isOwn }: MessageBubbleProps) {
   return (
     <div
       className={cn(
-        "max-w-full whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed",
+        "max-w-full whitespace-pre-wrap break-words rounded-[12px] border px-3 py-2 text-sub",
         // A single squared corner on the sender's side gives each bubble a
         // subtle tail pointing back at its author.
         isOwn
-          ? "rounded-tr-sm bg-primary text-primary-foreground"
-          : "rounded-tl-sm border border-border bg-card text-foreground shadow-sm",
+          ? "rounded-tr-[4px] border-blue bg-blue text-white"
+          : "rounded-tl-[4px] border-line bg-surface-sub text-ink-body",
       )}
     >
       {event.body}

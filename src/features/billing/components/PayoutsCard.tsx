@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/shared/ui-components/controls/card";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
+import { Tile } from "@/shared/ui-components/list/Tile";
 import { usePayoutAccount } from "../hooks/useBilling";
 import { useBillingRefreshBurst } from "../hooks/useBillingRefreshBurst";
 import { billingKeys } from "../keys";
@@ -84,20 +85,18 @@ export function PayoutsCard({ wallet }: { wallet?: RecruiterWalletSummary }) {
 
   return (
     <Card>
-      <CardHeader className="flex-row items-start gap-3 space-y-0">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
-          <Landmark className="h-[18px] w-[18px]" />
-        </span>
-        <div className="flex flex-col gap-1">
-          <CardTitle className="font-heading tracking-tight">Payouts</CardTitle>
-          <CardDescription>
+      <CardHeader className="items-start">
+        <Tile icon={Landmark} tone="blue" />
+        <div className="min-w-0 flex-1">
+          <CardTitle>Payouts</CardTitle>
+          <CardDescription className="mt-[3px]">
             Move your released commission to your bank whenever you like.
           </CardDescription>
         </div>
       </CardHeader>
       <CardContent>
         {account.isPending ? (
-          <div className="h-16 animate-pulse rounded-md bg-muted/40" />
+          <div className="h-16 animate-pulse rounded-sm bg-surface-sunken" />
         ) : account.isError ? (
           <ErrorRetryCallout
             message="Could not load your payout account."
@@ -106,10 +105,10 @@ export function PayoutsCard({ wallet }: { wallet?: RecruiterWalletSummary }) {
         ) : account.data.status === "verified" ? (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-navy">
+              <p className="text-block font-[550] text-ink">
                 {bankLabel(account.data)}
               </p>
-              <p className="mt-0.5 text-[13px] text-muted-foreground">
+              <p className="mt-[3px] text-sub text-ink-muted">
                 {pendingMinor > 0
                   ? `${formatMinor(pendingMinor)} on its way to your bank.`
                   : `Withdrawals arrive in ${ARRIVAL_WINDOW_LABEL} · minimum ${formatMinor(MIN_PAYOUT_MINOR)}.`}
@@ -142,10 +141,10 @@ export function PayoutsCard({ wallet }: { wallet?: RecruiterWalletSummary }) {
         ) : (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-navy">
+              <p className="text-block font-[550] text-ink">
                 {SETUP_COPY[account.data.status].headline}
               </p>
-              <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
+              <p className="mt-[3px] text-sub text-ink-muted">
                 {account.data.status === "restricted" &&
                 account.data.disabledReason
                   ? account.data.disabledReason

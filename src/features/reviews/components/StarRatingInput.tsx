@@ -42,20 +42,22 @@ export function StarRatingInput({ value, onChange }: StarRatingInputProps) {
             onFocus={() => setHovered(star)}
             onBlur={() => setHovered(0)}
             onClick={() => onChange(star)}
-            className="rounded-sm p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="rounded-xs p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
+            {/* The same gold as the read-only `RatingStars`, so a rating a
+                company sets and the one it later reads back are one color. */}
             <Star
               className={cn(
-                "h-7 w-7 transition-colors",
+                "size-7 transition-colors",
                 star <= shown
-                  ? "fill-[#F5A623] text-[#F5A623]"
-                  : "fill-muted text-muted",
+                  ? "fill-[#e8b93b] text-[#e8b93b]"
+                  : "fill-surface-sunken text-line-strong",
               )}
             />
           </button>
         ))}
       </div>
-      <span className="min-w-[72px] text-sm font-medium text-muted-foreground">
+      <span className="min-w-[72px] text-sub font-[550] text-ink-muted">
         {shown > 0 ? LABELS[shown] : ""}
       </span>
     </div>

@@ -1,19 +1,25 @@
 "use client";
 
-import Link from "next/link";
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
+import { BackLink, PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
 
 import { useMyDispute, usePostDisputeMessage } from "../hooks/useDisputes";
 import { DISPUTE_SUBJECT_LABELS, isDisputeOpen } from "../schemas";
 import { describeCountdown } from "../utils/describeCountdown";
 import { DisputeChannelThread } from "./DisputeChannelThread";
+import { DisputeFact } from "./DisputeFact";
 import { DisputeProofList } from "./DisputeProofList";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
@@ -25,8 +31,8 @@ export function ParticipantDisputeView({ id }: { id: string }) {
   if (isError) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-          <AlertCircle className="h-6 w-6" />
+        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sub text-bad">
+          <AlertCircle className="size-[22px]" />
           Could not load this dispute.
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
             Retry
@@ -37,7 +43,7 @@ export function ParticipantDisputeView({ id }: { id: string }) {
   }
   if (isPending) {
     return (
-      <div className="h-40 animate-pulse rounded-md border border-border bg-muted/40" />
+      <div className="h-40 animate-pulse rounded-md border border-line bg-surface-sub" />
     );
   }
 
@@ -55,57 +61,58 @@ export function ParticipantDisputeView({ id }: { id: string }) {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <div>
-        <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
-          <Link href="/disputes">
-            <ArrowLeft className="mr-1 h-4 w-4" /> All Disputes
-          </Link>
-        </Button>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-heading text-xl font-bold text-navy">
-            Dispute · {data.jobTitle}
-          </h1>
-          <DisputeStatusBadge status={data.status} />
-        </div>
+        <BackLink href="/disputes">All Disputes</BackLink>
+        <PageHeader
+          title={`Dispute · ${data.jobTitle}`}
+          badge={<DisputeStatusBadge status={data.status} />}
+        />
       </div>
 
       <Card>
-        <CardContent className="grid gap-4 p-5 sm:grid-cols-3">
-          <Fact label="Counterparty" value={data.counterpartyName} />
-          <Fact label="Fee In Escrow" value={formatMinor(data.amountMinor)} />
-          <Fact label="Opened" value={formatDate(data.createdAt)} />
-          <div className="sm:col-span-3">
-            <Fact
-              label="Subject"
-              value={DISPUTE_SUBJECT_LABELS[data.subject]}
-            />
-          </div>
-          <div className="sm:col-span-3">
-            <Fact label="Your Reason" value={data.reason} />
-          </div>
-          <div className="sm:col-span-3">
-            <Fact
-              label="Release Countdown"
-              value={describeCountdown(data.countdown)}
-            />
-          </div>
+        <CardContent className="grid grid-cols-2 gap-x-5 gap-y-3.5 sm:grid-cols-3">
+          <DisputeFact label="Counterparty" value={data.counterpartyName} />
+          <DisputeFact
+            label="Fee In Escrow"
+            value={formatMinor(data.amountMinor)}
+          />
+          <DisputeFact label="Opened" value={formatDate(data.createdAt)} />
+          <DisputeFact
+            className="col-span-2 sm:col-span-3"
+            label="Subject"
+            value={DISPUTE_SUBJECT_LABELS[data.subject]}
+          />
+          <DisputeFact
+            className="col-span-2 sm:col-span-3"
+            variant="prose"
+            label="Your Reason"
+            value={data.reason}
+          />
+          <DisputeFact
+            className="col-span-2 sm:col-span-3"
+            label="Release Countdown"
+            value={describeCountdown(data.countdown)}
+          />
           {data.resolutionNote ? (
-            <div className="sm:col-span-3">
-              <Fact label="Resolution" value={data.resolutionNote} />
-            </div>
+            <DisputeFact
+              className="col-span-2 sm:col-span-3"
+              variant="prose"
+              label="Resolution"
+              value={data.resolutionNote}
+            />
           ) : null}
-          <div className="sm:col-span-3">
+          <div className="col-span-2 sm:col-span-3">
             <DisputeProofList attachments={data.attachments} />
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="p-5">
-          <h2 className="mb-3 font-heading text-base font-bold text-navy">
-            Your Conversation With Support
-          </h2>
+        <CardHeader>
+          <CardTitle>Your Conversation With Support</CardTitle>
+        </CardHeader>
+        <CardContent>
           <DisputeChannelThread
             messages={data.messages}
             onSend={open ? send : undefined}
@@ -119,19 +126,6 @@ export function ParticipantDisputeView({ id }: { id: string }) {
           />
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function Fact({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-1 whitespace-pre-wrap break-words text-sm text-navy">
-        {value}
-      </p>
     </div>
   );
 }

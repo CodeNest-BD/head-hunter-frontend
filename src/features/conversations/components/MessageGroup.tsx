@@ -1,4 +1,5 @@
 import { cn } from "@/shared/libs/shadCnConfig";
+import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import type { ConversationEvent } from "../schemas";
 import { eventKey, type ConversationParty } from "../utils/groupEvents";
@@ -20,27 +21,6 @@ const PARTY_FALLBACK_LABEL: Record<ConversationParty, string> = {
   company: "Company",
   recruiter: "Recruiter",
 };
-
-const AVATAR_PALETTE = [
-  "bg-[#E8EDFB] text-[#3F5BA9]",
-  "bg-[#FBF1DC] text-[#8A6D3B]",
-  "bg-[#E7F0E9] text-[#3F7A5A]",
-  "bg-[#F2E9F3] text-[#7A4F86]",
-  "bg-[#FBE9E6] text-[#9B4A3F]",
-];
-function avatarTint(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i += 1) {
-    hash = (hash * 31 + name.charCodeAt(i)) | 0;
-  }
-  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
-}
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 /**
  * One run of consecutive messages from the same side of the conversation:
@@ -64,38 +44,22 @@ export function MessageGroup({
   const lastEvent = events[events.length - 1];
 
   return (
+    // `.msg` — a 78%-wide run, mirrored to the right for the viewer's own.
     <div
-      className={cn("flex gap-2.5", isOwn ? "flex-row-reverse" : "flex-row")}
+      className={cn(
+        "flex max-w-[78%] gap-[9px]",
+        isOwn ? "ml-auto flex-row-reverse" : "flex-row",
+      )}
     >
       {/* The counterparty gets an avatar; the viewer's own run is simply
           right-aligned, matching the design's asymmetry. */}
-      {!isOwn && (
-        <span
-          className={cn(
-            "mt-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-semibold",
-            avatarTint(label),
-          )}
-        >
-          {initials(label)}
-        </span>
-      )}
+      {!isOwn && <Avatar name={label} size="sm" />}
       <div
         className={cn(
-          "flex min-w-0 max-w-[82%] flex-col gap-1",
+          "flex min-w-0 flex-col",
           isOwn ? "items-end" : "items-start",
         )}
       >
-        <div
-          className={cn(
-            "flex items-baseline gap-2",
-            isOwn && "flex-row-reverse",
-          )}
-        >
-          <span className="text-xs font-semibold text-navy">{label}</span>
-          <span className="text-[11px] text-muted-foreground">
-            {formatDateTime(lastEvent.at)}
-          </span>
-        </div>
         <div
           className={cn(
             "flex w-full flex-col gap-1",
@@ -105,6 +69,16 @@ export function MessageGroup({
           {events.map((event) => (
             <MessageBubble key={eventKey(event)} event={event} isOwn={isOwn} />
           ))}
+        </div>
+        {/* `.msg__meta` — one name and one timestamp for the whole run. */}
+        <div
+          className={cn(
+            "mt-[3px] flex items-baseline gap-1.5 text-[11px] text-ink-faint",
+            isOwn && "flex-row-reverse",
+          )}
+        >
+          <span className="font-[550]">{label}</span>
+          <span className="tabular-nums">{formatDateTime(lastEvent.at)}</span>
         </div>
       </div>
     </div>

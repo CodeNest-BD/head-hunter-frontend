@@ -341,7 +341,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                 {...register("zip")}
               />
               {errors.zip && (
-                <p className="text-meta font-medium text-bad">{errors.zip.message}</p>
+                <p className="text-meta font-medium text-bad">
+                  {errors.zip.message}
+                </p>
               )}
             </div>
           </div>

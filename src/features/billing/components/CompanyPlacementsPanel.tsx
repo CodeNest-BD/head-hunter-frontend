@@ -13,14 +13,22 @@ import { formatMinor } from "@/shared/utils/money";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import * as T from "@/shared/ui-components/data/tableStyles";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { useCompanyPlacements, useRejectPlacement } from "../hooks/useBilling";
-import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./BillingTable";
+import { BillingTableFooter } from "./BillingTable";
 import {
   PLACEMENT_STATUS_LABELS,
   type CompanyPlacement,
@@ -68,25 +76,16 @@ const settleLabel = (placement: CompanyPlacement): string =>
 
 function PlacementsEmpty() {
   return (
-    <section className="flex flex-col rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <h2 className="font-heading text-base font-bold text-navy">
-        Placements &amp; Escrow
-      </h2>
-      <div className="mt-4 flex flex-col items-start gap-3 rounded-md border border-dashed border-input bg-secondary/40 p-5">
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-accent text-primary">
-          <ShieldCheck className="h-5 w-5" />
-        </span>
-        <div>
-          <p className="text-sm font-semibold text-navy">No placements yet</p>
-          <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-            When a candidate accepts your offer, its recruiter fee is held in
-            escrow and appears here. It releases to the recruiter 30 days after
-            the candidate joins. You can reject the hire until the joining date;
-            after that, raise a dispute.
-          </p>
-        </div>
-      </div>
-    </section>
+    <Card>
+      <CardHeader>
+        <CardTitle>Placements &amp; Escrow</CardTitle>
+      </CardHeader>
+      <EmptyState
+        icon={ShieldCheck}
+        title="No placements yet"
+        description="When a candidate accepts your offer, its recruiter fee is held in escrow and appears here. It releases to the recruiter 30 days after the candidate joins. You can reject the hire until the joining date; after that, raise a dispute."
+      />
+    </Card>
   );
 }
 
@@ -106,8 +105,8 @@ export function CompanyPlacementsPanel() {
   if (isError) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-          <AlertCircle className="h-6 w-6" />
+        <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sub text-bad">
+          <AlertCircle className="size-[17px]" />
           Could not load your placements.
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
             Retry
@@ -140,160 +139,112 @@ export function CompanyPlacementsPanel() {
   };
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="font-heading text-base font-bold text-navy">
-            Placements &amp; Escrow
-          </h2>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
-            Fees held for your hires. Each releases to the recruiter 30 days
-            after the joining date. Reject a hire before the joining date to
-            refund it; after that, raise a dispute.
-          </p>
+    <div className={T.TABLE_CARD}>
+      <CardHeader>
+        <CardTitle>Placements &amp; Escrow</CardTitle>
+        <CardDescription>
+          Fees held for your hires. Each releases to the recruiter 30 days after
+          the joining date. Reject a hire before the joining date to refund it;
+          after that, raise a dispute.
+        </CardDescription>
+      </CardHeader>
+
+      {confirming ? (
+        <div className="border-b border-line p-4">
+          <ConfirmAction
+            message={`Reject ${confirming.candidateName} and refund ${formatMinor(
+              confirming.amountMinor,
+            )} to your wallet? This reopens the role and cannot be undone.`}
+            confirmLabel="Reject & refund"
+            busyLabel="Refunding…"
+            busy={reject.isPending}
+            onConfirm={() => onReject(confirming.placementId)}
+            onCancel={() => setConfirmingId(null)}
+          />
         </div>
+      ) : null}
 
-        {confirming ? (
-          <div className="border-b border-border p-4">
-            <ConfirmAction
-              message={`Reject ${confirming.candidateName} and refund ${formatMinor(
-                confirming.amountMinor,
-              )} to your wallet? This reopens the role and cannot be undone.`}
-              confirmLabel="Reject & refund"
-              busyLabel="Refunding…"
-              busy={reject.isPending}
-              onConfirm={() => onReject(confirming.placementId)}
-              onCancel={() => setConfirmingId(null)}
-            />
-          </div>
-        ) : null}
-
-        {disputing ? (
-          <div className="border-b border-border p-4">
-            <RaiseDisputeForm
-              placementId={disputing.placementId}
-              party="company"
-              onCancel={() => setDisputingId(null)}
-              onRaised={(id) => {
-                setDisputingId(null);
-                router.push(`/disputes/${id}`);
-              }}
-            />
-          </div>
-        ) : null}
-
-        <div className="hidden overflow-x-auto sm:block">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className={HEAD_ROW}>
-                <th scope="col" className={TH}>
-                  Candidate
-                </th>
-                <th scope="col" className={TH}>
-                  Role
-                </th>
-                <th scope="col" className={TH}>
-                  Recruiter
-                </th>
-                <th scope="col" className={cn(TH, "text-right")}>
-                  Fee
-                </th>
-                <th scope="col" className={TH}>
-                  Status
-                </th>
-                <th scope="col" className={TH}>
-                  Released / hold ends
-                </th>
-                <th scope="col" className={cn(TH, "text-right")}>
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.data.map((p) => (
-                <tr key={p.placementId} className={BODY_ROW}>
-                  <td className="px-5 py-3 font-medium text-navy">
-                    {p.candidateName}
-                  </td>
-                  <td className="px-5 py-3 text-muted-foreground">
-                    <span className="block max-w-[200px] truncate">
-                      {p.jobTitle}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-muted-foreground">
-                    {p.recruiterName}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-right font-medium text-navy">
-                    {formatMinor(p.amountMinor)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <PlacementStatusBadge status={p.status} />
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                    {settleLabel(p)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <div className="flex justify-end gap-2">
-                      {isRejectable(p) ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={reject.isPending}
-                          onClick={() => {
-                            setDisputingId(null);
-                            setConfirmingId(p.placementId);
-                          }}
-                        >
-                          Reject
-                        </Button>
-                      ) : null}
-                      {isDisputable(p) ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setConfirmingId(null);
-                            setDisputingId(p.placementId);
-                          }}
-                        >
-                          Dispute
-                        </Button>
-                      ) : null}
-                      {!isRejectable(p) && !isDisputable(p) ? (
-                        <span className="text-xs text-muted-foreground">
-                          {p.status === "disputed" ? "In dispute" : "—"}
-                        </span>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {disputing ? (
+        <div className="border-b border-line p-4">
+          <RaiseDisputeForm
+            placementId={disputing.placementId}
+            party="company"
+            onCancel={() => setDisputingId(null)}
+            onRaised={(id) => {
+              setDisputingId(null);
+              router.push(`/disputes/${id}`);
+            }}
+          />
         </div>
+      ) : null}
 
-        <MobileRecordList className="sm:hidden">
-          {data.data.map((p) => (
-            <MobileRecordCard
-              key={p.placementId}
-              title={p.candidateName}
-              subtitle={`${p.jobTitle} · ${p.recruiterName}`}
-              trailing={<PlacementStatusBadge status={p.status} />}
-              fields={[
-                { label: "Fee", value: formatMinor(p.amountMinor) },
-                { label: "Released / hold ends", value: settleLabel(p) },
-              ]}
-              actions={
-                isRejectable(p) || isDisputable(p) ? (
-                  <div className="flex w-full gap-2">
+      <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
+        <table className={T.TABLE_EL}>
+          <thead className={T.TABLE_HEAD}>
+            <tr>
+              <th scope="col" className={cn(T.TABLE_TH, "w-[22%]")}>
+                Candidate
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Role
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Recruiter
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Fee
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Status
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Released / hold ends
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody className={T.TABLE_BODY}>
+            {data.data.map((p) => (
+              <tr key={p.placementId} className={T.TABLE_ROW}>
+                <td className={cn(T.TABLE_TD, T.TABLE_CELL_MAIN)}>
+                  {p.candidateName}
+                </td>
+                <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                  <span className="block max-w-[200px] truncate">
+                    {p.jobTitle}
+                  </span>
+                </td>
+                <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                  {p.recruiterName}
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                  )}
+                >
+                  {formatMinor(p.amountMinor)}
+                </td>
+                <td className={T.TABLE_TD}>
+                  <PlacementStatusBadge status={p.status} />
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap tabular-nums text-ink-body",
+                  )}
+                >
+                  {settleLabel(p)}
+                </td>
+                <td className={T.TABLE_TD}>
+                  <div className="flex justify-end gap-2">
                     {isRejectable(p) ? (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="flex-1"
                         disabled={reject.isPending}
                         onClick={() => {
                           setDisputingId(null);
@@ -308,7 +259,6 @@ export function CompanyPlacementsPanel() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="flex-1"
                         onClick={() => {
                           setConfirmingId(null);
                           setDisputingId(p.placementId);
@@ -317,20 +267,75 @@ export function CompanyPlacementsPanel() {
                         Dispute
                       </Button>
                     ) : null}
+                    {!isRejectable(p) && !isDisputable(p) ? (
+                      <span className="text-meta text-ink-faint">
+                        {p.status === "disputed" ? "In dispute" : "—"}
+                      </span>
+                    ) : null}
                   </div>
-                ) : undefined
-              }
-            />
-          ))}
-        </MobileRecordList>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        <BillingTableFooter
-          total={data.meta.total}
-          page={page}
-          totalPages={data.meta.totalPages}
-          onPage={setPage}
-        />
-      </CardContent>
-    </Card>
+      <MobileRecordList className="sm:hidden">
+        {data.data.map((p) => (
+          <MobileRecordCard
+            key={p.placementId}
+            title={p.candidateName}
+            subtitle={`${p.jobTitle} · ${p.recruiterName}`}
+            trailing={<PlacementStatusBadge status={p.status} />}
+            fields={[
+              { label: "Fee", value: formatMinor(p.amountMinor) },
+              { label: "Released / hold ends", value: settleLabel(p) },
+            ]}
+            actions={
+              isRejectable(p) || isDisputable(p) ? (
+                <div className="flex w-full gap-2">
+                  {isRejectable(p) ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      disabled={reject.isPending}
+                      onClick={() => {
+                        setDisputingId(null);
+                        setConfirmingId(p.placementId);
+                      }}
+                    >
+                      Reject
+                    </Button>
+                  ) : null}
+                  {isDisputable(p) ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setConfirmingId(null);
+                        setDisputingId(p.placementId);
+                      }}
+                    >
+                      Dispute
+                    </Button>
+                  ) : null}
+                </div>
+              ) : undefined
+            }
+          />
+        ))}
+      </MobileRecordList>
+
+      <BillingTableFooter
+        total={data.meta.total}
+        page={page}
+        totalPages={data.meta.totalPages}
+        onPage={setPage}
+      />
+    </div>
   );
 }

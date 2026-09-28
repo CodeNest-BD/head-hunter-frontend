@@ -76,7 +76,7 @@ export function MessageComposer({
   // the composer.
   if (!acceptsMessages) {
     return (
-      <p className="rounded-xl border border-border bg-secondary/40 px-4 py-3 text-center text-[13px] text-muted-foreground">
+      <p className="rounded-md border border-line bg-surface-sub px-4 py-3 text-center text-sub text-ink-muted">
         This candidate was passed on — the conversation is closed.
       </p>
     );
@@ -84,7 +84,8 @@ export function MessageComposer({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="rounded-xl border border-border bg-card shadow-sm focus-within:border-primary/40">
+      {/* `.composer` — one bordered unit: a borderless textarea over a bar. */}
+      <div className="rounded-md border border-line-strong bg-surface focus-within:border-blue focus-within:shadow-focus">
         <Textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
@@ -106,30 +107,30 @@ export function MessageComposer({
           }
           aria-label="Message"
           aria-describedby={scopeDescriptionId}
-          className="min-h-[76px] resize-none border-0 bg-transparent px-4 py-3 shadow-none focus-visible:ring-0"
+          className="min-h-16 resize-none rounded-none border-0 bg-transparent px-3 py-2.5 text-sub focus-visible:border-0 focus-visible:shadow-none focus-visible:outline-none"
         />
-        <div className="flex items-center justify-between gap-3 px-3 pb-3">
+        <div className="flex items-center gap-2 border-t border-line px-2.5 py-[7px]">
           <p
             id={scopeDescriptionId}
-            className="text-[11px] text-muted-foreground"
+            className="text-[11.5px] text-ink-faint"
           >
             Enter to send · Shift + Enter for a new line
           </p>
           <Button
             type="button"
             size="sm"
-            className={cn("shrink-0 gap-1.5")}
+            className={cn("ml-auto shrink-0")}
             disabled={!canSend}
             onClick={handleSend}
           >
             Send
-            <SendHorizontal className="h-3.5 w-3.5" />
+            <SendHorizontal aria-hidden="true" />
           </Button>
         </div>
       </div>
       {sendMessage.isError && (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+        <div className="flex items-center gap-2 rounded-sm border border-bad-line bg-bad-bg px-3 py-2 text-meta text-bad">
+          <AlertCircle className="size-3.5 shrink-0" />
           {sendMessageErrorMessage(sendMessage.error)}
         </div>
       )}

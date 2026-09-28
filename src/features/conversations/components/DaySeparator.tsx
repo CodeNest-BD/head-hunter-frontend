@@ -29,12 +29,12 @@ function dayLabel(iso: string, now: Date): string {
  * next to it. */
 export function DaySeparator({ date, now = new Date() }: DaySeparatorProps) {
   return (
-    <div className="flex items-center gap-3 py-2">
-      <span aria-hidden="true" className="h-px flex-1 bg-border" />
-      <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+    <div className="mb-2.5 mt-3.5 flex items-center gap-2.5">
+      <span aria-hidden="true" className="h-px flex-1 bg-line" />
+      <span className="text-label font-[650] uppercase text-ink-faint">
         {dayLabel(date, now)}
       </span>
-      <span aria-hidden="true" className="h-px flex-1 bg-border" />
+      <span aria-hidden="true" className="h-px flex-1 bg-line" />
     </div>
   );
 }
