@@ -80,7 +80,7 @@ export function FilePreviewDialog({
             <iframe
               src={`${previewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
               title={fileName}
-              className="h-full w-full flex-1 border-0 bg-muted"
+              className="h-full w-full flex-1 border-0 bg-surface-sunken"
             />
           )}
         </Dialog.Content>

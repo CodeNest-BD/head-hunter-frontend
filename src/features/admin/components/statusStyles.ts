@@ -38,10 +38,10 @@ export const VERIFICATION_STATUS_TONES: Record<string, PillTone> = {
 export const CANDIDATE_STATUS_TONES: Record<AdminCandidateStatus, PillTone> = {
   submitted: "info",
   reviewing: "warn",
-  interviewing: "warn",
-  offered: "ok",
+  interviewing: "info",
+  offered: "violet",
   hired: "ok",
-  passed: "bad",
+  passed: "neutral",
   unknown: "neutral",
 };
 
@@ -50,7 +50,7 @@ export const JOB_STATUS_TONES: Record<JobStatus, PillTone> = {
   draft: "neutral",
   paused: "warn",
   filled: "info",
-  closed: "neutral",
+  closed: "bad",
   expired: "bad",
   unknown: "neutral",
 };

@@ -301,7 +301,7 @@ function Option({
       onMouseEnter={onHover}
       className={cn(
         "relative flex w-full cursor-pointer select-none items-center rounded-xs py-1.5 pl-2.5 pr-8 text-left text-sub text-ink-body outline-none",
-        active && "bg-accent text-accent-foreground",
+        active && "bg-tint text-blue-ink",
         selected && "font-medium",
       )}
     >

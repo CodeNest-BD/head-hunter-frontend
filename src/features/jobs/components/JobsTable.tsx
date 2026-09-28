@@ -88,7 +88,7 @@ const STATUS_TONES: Record<string, PillTone> = {
   expired: "bad",
   paused: "warn",
   filled: "info",
-  closed: "neutral",
+  closed: "bad",
 };
 
 /** The statuses a job actually reaches in the product, for the filter. */

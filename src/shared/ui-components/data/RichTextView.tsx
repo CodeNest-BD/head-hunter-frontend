@@ -39,8 +39,8 @@ export function RichTextView({ value, className }: RichTextViewProps) {
     <div
       className={cn(
         "prose prose-sm max-w-none text-body leading-[1.7] text-ink-body",
-        "prose-headings:font-heading prose-headings:text-foreground",
-        "prose-a:text-primary prose-strong:text-foreground",
+        "prose-headings:font-heading prose-headings:text-ink",
+        "prose-a:text-blue-ink prose-strong:text-ink",
         className,
       )}
       // Safe: `html` has just passed sanitizeRichText's allow-list.

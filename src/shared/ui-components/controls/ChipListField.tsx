@@ -128,7 +128,7 @@ export function ChipListField({
               }
             }}
             placeholder={placeholder}
-            className={cn("h-11", error !== null && "border-destructive")}
+            className={cn("h-11", error !== null && "border-bad")}
           />
           <Button
             type="button"
