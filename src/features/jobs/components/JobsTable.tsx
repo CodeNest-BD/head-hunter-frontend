@@ -21,7 +21,6 @@ import { useWallet } from "@/features/billing/hooks/useBilling";
 import { useInboxJobs } from "@/features/inbox/hooks/useInbox";
 import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
 import { PageHeader } from "@/shared/ui-components/brand";
-import { CountChip } from "@/shared/ui-components/badges/CountChip";
 import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
 import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
@@ -298,6 +297,10 @@ export function JobsTable() {
     (job) => job.recruiterFeeMinor === 0,
   ).length;
   const wallet = useWallet();
+  // The fee notice sits above the toolbar, as the reference places it, but it
+  // still only accompanies a populated table — a filtered search that matches
+  // nothing should not start surfacing it.
+  const hasRows = (data?.data.length ?? 0) > 0;
 
   // Candidate counts live on the inbox rows, not the job; one fetch builds a
   // lookup keyed by job.
@@ -344,7 +347,6 @@ export function JobsTable() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Jobs"
-        badge={<CountChip>{data?.meta.total ?? 0}</CountChip>}
         subtitle="Create a job, then publish it to open it to recruiters."
       />
 
@@ -368,7 +370,7 @@ export function JobsTable() {
         />
       </div>
 
-      {noFeeCount > 0 && (
+      {noFeeCount > 0 && hasRows && (
         <Alert tone="warn">
           {noFeeCount} published job{noFeeCount === 1 ? "" : "s"} have no
           recruiter fee. Recruiters sort by fee, so these rank last.
