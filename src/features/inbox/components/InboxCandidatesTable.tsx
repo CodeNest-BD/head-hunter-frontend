@@ -10,7 +10,7 @@ import {
   CANDIDATE_STATUS_LABELS,
   type CandidateStatus,
 } from "@/features/candidates/schemas";
-import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
+import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { Button } from "@/shared/ui-components/controls/button";
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -80,7 +80,7 @@ function CandidateStatusBadge({ status }: { status: CandidateStatus }) {
   return (
     <StatusBadge
       label={CANDIDATE_STATUS_LABELS[status]}
-      className={CANDIDATE_STATUS_STYLES[status]}
+      tone={CANDIDATE_STATUS_TONES[status]}
     />
   );
 }

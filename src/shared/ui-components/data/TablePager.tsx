@@ -44,10 +44,10 @@ function pageWindow(page: number, totalPages: number): (number | "…")[] {
 }
 
 /**
- * Footer pager matching the reference: a rows-per-page selector and a
- * "1–10 of N" range on the left, numbered page buttons with prev/next
- * chevrons on the right. Shared by every table so pagination is identical
- * site-wide.
+ * The reference's `.pager`: a 10px/14px footer above a hairline carrying the
+ * rows-per-page selector and a "1–10 of N" range on the left, with 28px
+ * numbered page buttons and prev/next chevrons pushed to the right. Shared by
+ * every table so pagination is identical site-wide.
  */
 export function TablePager({
   page,
@@ -63,14 +63,14 @@ export function TablePager({
   const last = Math.min(page * pageSize, total);
 
   return (
-    <div className="flex flex-col gap-3 border-t border-border bg-card px-5 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-col gap-2 border-t border-line px-3.5 py-2.5 text-[12.5px] text-ink-muted sm:flex-row sm:items-center">
+      <div className="flex items-center gap-3">
         {onPageSize && (
           <Select
             value={String(pageSize)}
             onValueChange={(next) => onPageSize(Number(next))}
           >
-            <SelectTrigger className="h-8 w-[72px]" aria-label="Rows per page">
+            <SelectTrigger className="h-7 w-[68px]" aria-label="Rows per page">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -82,14 +82,14 @@ export function TablePager({
             </SelectContent>
           </Select>
         )}
-        <span className="tabular-nums text-brand-gray">
+        <span className="tabular-nums">
           {first.toLocaleString()}–{last.toLocaleString()} of{" "}
           {total.toLocaleString()}
         </span>
       </div>
 
       <nav
-        className="flex flex-wrap items-center gap-1"
+        className="flex flex-wrap items-center gap-1 sm:ml-auto"
         aria-label="Pagination"
       >
         <PagerButton
@@ -97,14 +97,14 @@ export function TablePager({
           disabled={page <= 1}
           onClick={() => onPage(page - 1)}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-3.5" />
         </PagerButton>
 
         {pageWindow(page, safeTotalPages).map((entry, index) =>
           entry === "…" ? (
             <span
               key={`gap-${index}`}
-              className="px-1.5 text-brand-gray-light"
+              className="px-1 text-ink-faint"
               aria-hidden="true"
             >
               …
@@ -126,13 +126,15 @@ export function TablePager({
           disabled={page >= safeTotalPages}
           onClick={() => onPage(page + 1)}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="size-3.5" />
         </PagerButton>
       </nav>
     </div>
   );
 }
 
+/** `.pager__btn` — a 28px hairline button that fills cobalt when it is the
+ * current page. */
 function PagerButton({
   children,
   onClick,
@@ -154,11 +156,11 @@ function PagerButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2 text-sm font-semibold tabular-nums transition-colors",
+        "inline-flex h-7 min-w-7 items-center justify-center rounded-xs border px-2 text-[12.5px] font-[550] tabular-nums transition-colors",
         active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-input bg-card text-navy hover:border-brand-primary hover:text-primary",
-        "disabled:pointer-events-none disabled:opacity-40",
+          ? "border-blue bg-blue text-white"
+          : "border-line-strong bg-surface text-ink-body hover:bg-surface-sub",
+        "disabled:pointer-events-none disabled:opacity-45",
       )}
     >
       {children}

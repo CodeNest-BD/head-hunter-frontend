@@ -11,8 +11,8 @@ interface FilterChipProps {
 }
 
 /**
- * A pill toggle used across the recruiter pages' filter rows: navy when active,
- * a bordered light chip otherwise. Selection state is exposed via aria-pressed.
+ * The reference's `.chip`: a 28px pill that is a hairline outline when idle and
+ * a solid cobalt fill when on. Selection state is exposed via aria-pressed.
  */
 export function FilterChip({
   active,
@@ -26,10 +26,10 @@ export function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+        "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-[11px] text-[12.5px] font-[550] transition-colors",
         active
-          ? "bg-navy text-white"
-          : "border border-border bg-card text-navy hover:bg-accent",
+          ? "border-blue bg-blue text-white"
+          : "border-line-strong bg-surface text-ink-muted hover:border-blue-ink hover:text-blue-ink",
         className,
       )}
     >

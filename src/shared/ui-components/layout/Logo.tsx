@@ -36,7 +36,7 @@ export function Logo({
   const large = size === "lg";
   return (
     <span
-      className={cn("inline-flex items-center gap-1.5 sm:gap-2", className)}
+      className={cn("inline-flex items-center gap-[9px]", className)}
     >
       {/* The mark is the same coloured crosshair on every surface — the blue
           ring reads on both light and navy — so only the wordmark ink adapts. */}
@@ -47,22 +47,22 @@ export function Logo({
         width={292}
         height={298}
         priority
-        className={cn("w-auto select-none", large ? "h-9" : "h-6 sm:h-7")}
+        className={cn("w-auto select-none", large ? "h-[30px]" : "h-[26px]")}
       />
       <span
         className={cn(
-          "font-heading font-extrabold leading-none tracking-[-0.02em]",
-          large ? "text-[24px]" : "text-[15px] sm:text-[19px]",
+          "font-heading font-[750] leading-none tracking-[-0.015em]",
+          large ? "text-[15px]" : "text-[14.5px]",
         )}
       >
         <span className={onDark ? "text-white" : "text-navy"}>
           Head
-          <span className={onDark ? "text-white" : "text-primary"}>-</span>
+          <span className={onDark ? "text-white" : "text-blue"}>-</span>
           Hunters
         </span>
         <span>
           <span className={onDark ? "text-white" : "text-navy"}>.</span>
-          <span className={onDark ? "text-white/60" : "text-brand-gray-light"}>
+          <span className={onDark ? "text-white/60" : "text-ink-faint"}>
             com
           </span>
         </span>

@@ -15,17 +15,19 @@ import {
 } from "@/features/jobs";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
+import type { PillTone } from "@/shared/ui-components/badges/Pill";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
-const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-muted text-muted-foreground",
-  published: "text-[#17734E] bg-[#E7F4EC]",
-  expired: "text-[#9B3535] bg-[#FBEAEA]",
-  paused: "text-[#92610C] bg-[#FBF3DF]",
-  filled: "bg-primary/15 text-primary",
-  closed: "bg-muted text-muted-foreground",
+/** Mirrors the jobs table's own status tones. */
+const STATUS_TONES: Record<string, PillTone> = {
+  draft: "neutral",
+  published: "ok",
+  expired: "bad",
+  paused: "warn",
+  filled: "info",
+  closed: "neutral",
 };
 
 function FormSkeleton() {
@@ -103,11 +105,8 @@ function EditJobContent({ jobId }: { jobId: string }) {
             Edit job
             <StatusBadge
               label={job.status}
-              className={cn(
-                "text-xs",
-                STATUS_STYLES[job.status] ?? "bg-muted text-muted-foreground",
-                "capitalize",
-              )}
+              tone={STATUS_TONES[job.status] ?? "neutral"}
+              className="capitalize"
             />
           </span>
         }

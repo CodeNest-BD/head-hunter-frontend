@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AlertCircle, ArrowRight, Inbox } from "lucide-react";
 
 import { UnreadBadge } from "@/features/conversations/components/UnreadBadge";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { FilterChip } from "@/shared/ui-components/controls/filter-chip";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -91,7 +91,7 @@ export function InboxJobsTable({ side }: { side: InboxSide }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Inbox"
         subtitle={copy.subtitle}
         metrics={[

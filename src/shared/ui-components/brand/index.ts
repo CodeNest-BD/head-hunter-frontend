@@ -1,4 +1,2 @@
-export { Eyebrow } from "./Eyebrow";
-export { GradientRule } from "./GradientRule";
-export { PageBanner, type BannerMetric } from "./PageBanner";
-export { PageHeader } from "./PageHeader";
+export { BackLink } from "./BackLink";
+export { PageHeader, type HeaderMetric } from "./PageHeader";

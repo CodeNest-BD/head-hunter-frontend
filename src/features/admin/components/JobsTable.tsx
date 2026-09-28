@@ -12,7 +12,7 @@ import {
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import {
   MobileRecordCard,
   MobileRecordList,
@@ -37,7 +37,7 @@ import { JobRowActions } from "./JobRowActions";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
 import { jobPath } from "@/features/jobs/utils/jobPath";
-import { JOB_STATUS_STYLES } from "./statusStyles";
+import { JOB_STATUS_TONES } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 import { TABLE_TOOLBAR } from "@/shared/ui-components/data/tableStyles";
 
@@ -64,7 +64,7 @@ function JobStatus({ status }: { status: AdminJobListItem["status"] }) {
   return (
     <StatusBadge
       label={JOB_STATUS_LABELS[status] ?? status}
-      className={JOB_STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
+      tone={JOB_STATUS_TONES[status] ?? "neutral"}
     />
   );
 }
@@ -261,7 +261,7 @@ export function JobsTable({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Jobs"
         subtitle="Every job posted on the platform. Filter by company, status or title."
         metrics={[

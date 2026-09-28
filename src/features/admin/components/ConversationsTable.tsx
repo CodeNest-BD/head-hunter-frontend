@@ -16,7 +16,7 @@ import { useListState } from "../hooks/useListState";
 import { CANDIDATE_LABELS, type ConversationListItem } from "../schemas";
 import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
-import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
+import { CANDIDATE_STATUS_TONES } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
 function formatDateTime(iso: string): string {
@@ -36,10 +36,7 @@ function ConversationStatus({
   return (
     <StatusBadge
       label={CANDIDATE_LABELS[conversation.status] ?? conversation.status}
-      className={
-        CANDIDATE_STATUS_STYLES[conversation.status] ??
-        "bg-muted text-muted-foreground"
-      }
+      tone={CANDIDATE_STATUS_TONES[conversation.status] ?? "neutral"}
     />
   );
 }

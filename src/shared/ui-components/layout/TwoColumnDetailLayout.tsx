@@ -26,8 +26,8 @@ export interface TwoColumnDetailLayoutProps {
 
 /**
  * The vertical space this layout can never use, on every page it renders
- * inside `DashboardLayout`: the fixed navbar (4rem) above `main`, plus
- * `main`'s own `pt-6` (1.5rem) and `pb-16` (4rem). 4 + 1.5 + 4 = 9.5rem.
+ * inside `DashboardLayout`: the fixed 56px top bar above `main`, plus `main`'s
+ * own `pt-5` (1.25rem) and `pb-14` (3.5rem). 3.5 + 1.25 + 3.5 = 8.25rem.
  *
  * This is the only viewport-relative number in this file, and the only
  * thing it has to know is `DashboardLayout`'s own chrome — never this page's
@@ -40,7 +40,7 @@ export interface TwoColumnDetailLayoutProps {
  * the desktop value is unchanged.
  */
 const PAGE_HEIGHT_CLASSNAME =
-  "h-[calc(100dvh-9.5rem)] lg:h-[calc(100vh-9.5rem)]";
+  "h-[calc(100dvh-8.25rem)] lg:h-[calc(100vh-8.25rem)]";
 
 type DetailPanel = "left" | "right";
 
@@ -62,20 +62,17 @@ function PanelTab({
       aria-selected={active}
       onClick={onSelect}
       className={cn(
-        "flex flex-1 items-center justify-center gap-1.5 rounded-sm px-3 py-2 text-sm font-semibold transition-colors",
+        "flex h-7 flex-1 items-center justify-center gap-1.5 rounded-xs px-3 text-[12.5px] font-semibold transition-colors",
         active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:text-foreground",
+          ? "bg-surface text-ink shadow-e1"
+          : "text-ink-muted hover:text-ink",
       )}
     >
       {label}
       {unread && (
         <span
           aria-label="Unread messages"
-          className={cn(
-            "h-1.5 w-1.5 rounded-full",
-            active ? "bg-primary-foreground" : "bg-primary",
-          )}
+          className="size-1.5 rounded-full bg-blue"
         />
       )}
     </button>
@@ -110,12 +107,12 @@ export function TwoColumnDetailLayout({
   const [panel, setPanel] = useState<DetailPanel>("left");
 
   return (
-    <div className={cn("flex w-full flex-col gap-6", PAGE_HEIGHT_CLASSNAME)}>
+    <div className={cn("flex w-full flex-col gap-4", PAGE_HEIGHT_CLASSNAME)}>
       {header && <div className="shrink-0">{header}</div>}
 
       <div
         role="tablist"
-        className="flex shrink-0 gap-1 rounded-md border border-border bg-card p-1 lg:hidden"
+        className="flex shrink-0 gap-0.5 rounded-sm border border-line bg-surface-sunken p-0.5 lg:hidden"
       >
         <PanelTab
           active={panel === "left"}
@@ -130,7 +127,7 @@ export function TwoColumnDetailLayout({
         />
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-2">
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
         {/* `self-start` on this column only, not `items-start` on the grid: this
             side should be as tall as its content, so a short submission leaves no
             blank band under it, while the thread on the right must keep filling
@@ -138,7 +135,7 @@ export function TwoColumnDetailLayout({
         <div
           role="tabpanel"
           className={cn(
-            "min-h-0 flex-col gap-6 overflow-y-auto lg:flex lg:max-h-full lg:self-start",
+            "min-h-0 flex-col gap-4 overflow-y-auto lg:flex lg:max-h-full lg:self-start",
             panel === "left" ? "flex" : "hidden",
           )}
         >

@@ -32,9 +32,9 @@ import { DetailField, DetailSkeleton, initials } from "./DetailPrimitives";
 import { RecruiterSubmissions } from "./RecruiterSubmissions";
 import {
   ACCOUNT_STATUS_LABELS,
-  ACCOUNT_STATUS_STYLES,
-  SUBSCRIPTION_STATUS_STYLES,
-  VERIFICATION_STATUS_STYLES,
+  ACCOUNT_STATUS_TONES,
+  SUBSCRIPTION_STATUS_TONES,
+  VERIFICATION_STATUS_TONES,
 } from "./statusStyles";
 
 function formatDate(iso: string | null): string {
@@ -68,10 +68,7 @@ function VerificationCard({ data }: { data: RecruiterDetailData }) {
         <CardTitle className="text-base">Verification</CardTitle>
         <StatusBadge
           label={VERIFICATION_LABELS[data.verificationStatus]}
-          className={
-            VERIFICATION_STATUS_STYLES[data.verificationStatus] ??
-            "bg-muted text-muted-foreground"
-          }
+          tone={VERIFICATION_STATUS_TONES[data.verificationStatus] ?? "neutral"}
         />
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -224,7 +221,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
                 </h2>
                 <StatusBadge
                   label={ACCOUNT_STATUS_LABELS[data.status]}
-                  className={ACCOUNT_STATUS_STYLES[data.status]}
+                  tone={ACCOUNT_STATUS_TONES[data.status]}
                 />
               </div>
             </div>
@@ -294,10 +291,7 @@ export function RecruiterDetail({ userId }: { userId: string }) {
                   SUBSCRIPTION_LABELS[data.subscriptionStatus] ??
                   data.subscriptionStatus
                 }
-                className={
-                  SUBSCRIPTION_STATUS_STYLES[data.subscriptionStatus] ??
-                  "bg-muted text-muted-foreground"
-                }
+                tone={SUBSCRIPTION_STATUS_TONES[data.subscriptionStatus] ?? "neutral"}
               />
             </div>
             <DetailField

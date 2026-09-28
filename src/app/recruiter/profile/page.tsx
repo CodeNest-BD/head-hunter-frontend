@@ -8,7 +8,7 @@ import {
   VerificationBanner,
   type VerificationStatus,
 } from "@/features/recruiters";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
 import {
   Tabs,
@@ -52,7 +52,7 @@ function RecruiterProfileContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Recruiter profile"
         subtitle="Your details, specializations and references."
         actions={

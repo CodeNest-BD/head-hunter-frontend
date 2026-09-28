@@ -18,7 +18,8 @@ import {
 import { useWallet } from "@/features/billing/hooks/useBilling";
 import { useInboxJobs } from "@/features/inbox/hooks/useInbox";
 import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
+import type { PillTone } from "@/shared/ui-components/badges/Pill";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
@@ -72,14 +73,14 @@ const STATUS_LABELS: Record<string, string> = {
   expired: "Expired",
 };
 
-/** Per-status pill colors for the Status column (mirrors the job detail page). */
-const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-muted text-muted-foreground",
-  published: "text-[#17734E] bg-[#E7F4EC]",
-  expired: "text-[#9B3535] bg-[#FBEAEA]",
-  paused: "text-[#92610C] bg-[#FBF3DF]",
-  filled: "bg-primary/15 text-primary",
-  closed: "bg-muted text-muted-foreground",
+/** Per-status pill tone for the Status column (mirrors the job detail page). */
+const STATUS_TONES: Record<string, PillTone> = {
+  draft: "neutral",
+  published: "ok",
+  expired: "bad",
+  paused: "warn",
+  filled: "info",
+  closed: "neutral",
 };
 
 /** The statuses a job actually reaches in the product, for the filter. */
@@ -111,7 +112,7 @@ function JobStatusBadge({ status }: { status: Job["status"] }) {
   return (
     <StatusBadge
       label={STATUS_LABELS[status] ?? status}
-      className={STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
+      tone={STATUS_TONES[status] ?? "neutral"}
     />
   );
 }
@@ -325,7 +326,7 @@ export function JobsTable() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Jobs"
         subtitle="Create a job, then publish it to open it to recruiters."
         metrics={[

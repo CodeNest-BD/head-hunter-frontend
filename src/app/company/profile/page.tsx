@@ -10,7 +10,7 @@ import {
   useMyCompanyProfile,
   type VerificationStatus,
 } from "@/features/companies";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Tabs,
@@ -44,7 +44,7 @@ function CompanyProfileContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Company Profile"
         subtitle="This is what recruiters see when they browse companies."
         actions={

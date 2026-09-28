@@ -19,7 +19,7 @@ import {
 import { useAdminConversations } from "../hooks/useAdmin";
 import { CANDIDATE_LABELS, type ConversationListItem } from "../schemas";
 import { ListPager } from "./ListPager";
-import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
+import { CANDIDATE_STATUS_TONES } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 
 const PAGE_SIZE = 10;
@@ -41,10 +41,7 @@ function SubmissionStatus({
   return (
     <StatusBadge
       label={CANDIDATE_LABELS[submission.status] ?? submission.status}
-      className={
-        CANDIDATE_STATUS_STYLES[submission.status] ??
-        "bg-muted text-muted-foreground"
-      }
+      tone={CANDIDATE_STATUS_TONES[submission.status] ?? "neutral"}
     />
   );
 }

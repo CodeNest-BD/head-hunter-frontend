@@ -7,7 +7,8 @@ import { cn } from "@/shared/libs/shadCnConfig";
 
 const Tabs = TabsPrimitive.Root;
 
-/** Underline tab bar: a row of triggers sharing a bottom rule. */
+/** The reference's `.tabs`: a shared bottom rule with a 2px cobalt underline
+ * marking the active tab. */
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
@@ -17,7 +18,7 @@ const TabsList = React.forwardRef<
     // Triggers are `whitespace-nowrap`, so a three-tab bar is wider than a
     // phone: scroll the bar itself rather than letting it widen the page.
     className={cn(
-      "flex items-center gap-4 overflow-x-auto border-b border-border sm:gap-6",
+      "flex items-center gap-0.5 overflow-x-auto border-b border-line",
       className,
     )}
     {...props}
@@ -25,6 +26,8 @@ const TabsList = React.forwardRef<
 ));
 TabsList.displayName = TabsPrimitive.List.displayName;
 
+/** `.tabs__tab` — 9px/13px padding, 13px/600 label, -1px so the active
+ * underline sits on top of the list's own rule. */
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
@@ -32,8 +35,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      // -mb-px lets the active underline sit on top of the list's border.
-      "-mb-px whitespace-nowrap border-b-2 border-transparent px-1 pb-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none data-[state=active]:border-primary data-[state=active]:text-navy",
+      "-mb-px inline-flex items-center gap-[7px] whitespace-nowrap border-b-2 border-transparent px-[13px] py-[9px] text-sub font-semibold text-ink-muted transition-colors hover:text-ink focus-visible:outline-none data-[state=active]:border-blue data-[state=active]:text-blue [&_svg]:size-[15px]",
       className,
     )}
     {...props}
@@ -47,7 +49,7 @@ const TabsContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    className={cn("mt-6 focus-visible:outline-none", className)}
+    className={cn("mt-4 focus-visible:outline-none", className)}
     {...props}
   />
 ));

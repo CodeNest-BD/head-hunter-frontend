@@ -1,13 +1,19 @@
+import type { PillTone } from "@/shared/ui-components/badges/Pill";
+
 import type { CandidateStatus } from "../schemas";
 
-/** Candidate status pill colors (matches the app's light status palette). */
-export const CANDIDATE_STATUS_STYLES: Record<CandidateStatus, string> = {
-  submitted: "bg-primary/15 text-primary",
-  reviewing: "text-[#92610C] bg-[#FBF3DF]",
-  interviewing: "text-[#92610C] bg-[#FBF3DF]",
-  offered: "text-[#17734E] bg-[#E7F4EC]",
-  hired: "text-[#17734E] bg-[#E7F4EC]",
+/**
+ * The semantic tone each candidate status wears. Statuses name a tone rather
+ * than a color, so every candidate pill in the app is drawn from the reference
+ * palette and a new status can never invent an off-palette badge.
+ */
+export const CANDIDATE_STATUS_TONES: Record<CandidateStatus, PillTone> = {
+  submitted: "info",
+  reviewing: "warn",
+  interviewing: "warn",
+  offered: "ok",
+  hired: "ok",
   // Red, matching the inbox list and the admin views: passed is an outcome,
   // not an absence of one.
-  passed: "bg-[#FBEAEA] text-[#9B3535]",
+  passed: "bad",
 };

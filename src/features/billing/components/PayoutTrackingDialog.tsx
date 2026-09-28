@@ -18,20 +18,13 @@ import {
   type Payout,
   type PayoutStatus,
 } from "../schemas";
-
-const STATUS_STYLES: Record<PayoutStatus, string> = {
-  pending: "bg-[#FBF3DF] text-[#7A5109]",
-  processing: "bg-primary/15 text-primary",
-  paid: "bg-[#E7F4EC] text-[#17734E]",
-  failed: "bg-[#FBEAEA] text-[#9B3535]",
-  canceled: "bg-muted text-muted-foreground",
-};
+import { PAYOUT_STATUS_TONES } from "../statusTones";
 
 export function PayoutStatusBadge({ status }: { status: PayoutStatus }) {
   return (
     <StatusBadge
       label={PAYOUT_STATUS_LABELS[status]}
-      className={STATUS_STYLES[status]}
+      tone={PAYOUT_STATUS_TONES[status]}
     />
   );
 }

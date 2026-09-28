@@ -25,8 +25,8 @@ import { HoldButton } from "./HoldButton";
 import { DetailField, DetailSkeleton } from "./DetailPrimitives";
 import {
   ACCOUNT_STATUS_LABELS,
-  ACCOUNT_STATUS_STYLES,
-  VERIFICATION_STATUS_STYLES,
+  ACCOUNT_STATUS_TONES,
+  VERIFICATION_STATUS_TONES,
 } from "./statusStyles";
 
 /**
@@ -51,10 +51,7 @@ function VerificationCard({ data }: { data: CompanyDetailData }) {
         <CardTitle className="text-base">Approval</CardTitle>
         <StatusBadge
           label={VERIFICATION_LABELS[data.verificationStatus]}
-          className={
-            VERIFICATION_STATUS_STYLES[data.verificationStatus] ??
-            "bg-muted text-muted-foreground"
-          }
+          tone={VERIFICATION_STATUS_TONES[data.verificationStatus] ?? "neutral"}
         />
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -240,14 +237,11 @@ export function CompanyDetail({ userId }: { userId: string }) {
                 </h2>
                 <StatusBadge
                   label={ACCOUNT_STATUS_LABELS[data.status]}
-                  className={ACCOUNT_STATUS_STYLES[data.status]}
+                  tone={ACCOUNT_STATUS_TONES[data.status]}
                 />
                 <StatusBadge
                   label={VERIFICATION_LABELS[data.verificationStatus]}
-                  className={
-                    VERIFICATION_STATUS_STYLES[data.verificationStatus] ??
-                    "bg-muted text-muted-foreground"
-                  }
+                  tone={VERIFICATION_STATUS_TONES[data.verificationStatus] ?? "neutral"}
                 />
               </div>
               <p className="text-sm text-muted-foreground">{data.email}</p>

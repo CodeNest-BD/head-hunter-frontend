@@ -8,7 +8,7 @@ import { useMessageUnreadCount } from "@/features/conversations";
 import { useJobs } from "@/features/jobs";
 import { useNotifications } from "@/features/notifications";
 import { useInboxJobs } from "@/features/inbox";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import {
   AttentionRow,
   Panel,
@@ -102,7 +102,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title={`${firstName}'s Dashboard`}
         subtitle={subtitleParts.join(" · ")}
       />
@@ -120,7 +120,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           }
           icon={Briefcase}
           href="/company/jobs"
-          showArrow={false}
         />
         <StatCard
           label="New candidates"
@@ -132,7 +131,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           }
           icon={Users}
           href="/company/inbox"
-          showArrow={false}
         />
         <StatCard
           label="Available funds"
@@ -140,7 +138,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           hint="free funds to post jobs"
           icon={DollarSign}
           href="/company/wallet"
-          showArrow={false}
         />
         <StatCard
           label="Reserved funds"
@@ -148,7 +145,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           hint="held for live jobs"
           icon={Lock}
           href="/company/wallet"
-          showArrow={false}
         />
       </div>
 

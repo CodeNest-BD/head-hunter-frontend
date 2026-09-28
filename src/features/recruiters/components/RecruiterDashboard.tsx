@@ -7,7 +7,7 @@ import { useJobs } from "@/features/jobs";
 import { useNotifications } from "@/features/notifications";
 import { useRecruiterWallet } from "@/features/billing";
 import { useInboxJobs } from "@/features/inbox";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import {
   AttentionRow,
   Panel,
@@ -114,7 +114,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title={`${firstName}'s Dashboard`}
         subtitle={subtitleParts.join(" · ")}
       />
@@ -147,7 +147,6 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
           hint="what you've earned this year"
           icon={Wallet2}
           href="/recruiter/wallet"
-          showArrow={false}
         />
       </div>
 

@@ -16,7 +16,7 @@ import { CandidateFields } from "./CandidateFields";
 import { PassCandidateAction } from "./PassCandidateAction";
 import { ScheduleInterviewAction } from "./ScheduleInterviewAction";
 import { SendOfferForm } from "./SendOfferForm";
-import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
+import { CANDIDATE_STATUS_TONES } from "./statusStyles";
 import { CANDIDATE_STATUS_LABELS, type Candidate } from "../schemas";
 
 interface CandidateCardProps {
@@ -65,7 +65,7 @@ export function CandidateCard({
         <div className="shrink-0">
           <StatusBadge
             label={CANDIDATE_STATUS_LABELS[candidate.status]}
-            className={CANDIDATE_STATUS_STYLES[candidate.status]}
+            tone={CANDIDATE_STATUS_TONES[candidate.status]}
           />
         </div>
       </CardHeader>

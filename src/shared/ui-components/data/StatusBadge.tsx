@@ -1,23 +1,30 @@
-import { cn } from "@/shared/libs/shadCnConfig";
+import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
 
 export interface StatusBadgeProps {
   label: string;
-  /** Per-status color classes — the domain-specific STATUS_STYLES lookup at
-   * the call site. This component only owns the shared pill recipe. */
-  className: string;
+  /** The semantic tone for this status — the domain's own status→tone lookup
+   * at the call site. This component only owns the shared pill recipe. */
+  tone: PillTone;
+  /** Drops the leading dot, for a pill that carries a value rather than a
+   * state (e.g. "$0 — set a fee"). */
+  plain?: boolean;
+  className?: string;
 }
 
-/** Canonical status pill — the color classes come from the caller's own
- * per-status style map; only the rendering recipe lives here. */
-export function StatusBadge({ label, className }: StatusBadgeProps) {
+/**
+ * The canonical status pill — the reference's `.pill`. A status picks one of
+ * seven semantic tones rather than a color, so a new status can never invent
+ * an off-palette badge.
+ */
+export function StatusBadge({
+  label,
+  tone,
+  plain,
+  className,
+}: StatusBadgeProps) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        className,
-      )}
-    >
+    <Pill tone={tone} plain={plain} className={className}>
       {label}
-    </span>
+    </Pill>
   );
 }

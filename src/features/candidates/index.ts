@@ -16,7 +16,7 @@ export {
   useSubmitCandidate,
   useUpdateCandidate,
 } from "./hooks/useCandidates";
-export { CANDIDATE_STATUS_STYLES } from "./components/statusStyles";
+export { CANDIDATE_STATUS_TONES } from "./components/statusStyles";
 export { candidateKeys } from "./keys";
 export { CANDIDATE_STATUS_LABELS } from "./schemas";
 export type { Attachment, Candidate, CandidateStatus } from "./schemas";
