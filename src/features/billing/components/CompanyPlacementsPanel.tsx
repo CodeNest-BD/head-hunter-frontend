@@ -27,6 +27,10 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
+import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
 import { useCompanyPlacements, useRejectPlacement } from "../hooks/useBilling";
 import { BillingTableFooter } from "./BillingTable";
 import {
@@ -35,6 +39,11 @@ import {
   type PlacementStatus,
 } from "../schemas";
 import { PLACEMENT_STATUS_TONES } from "../statusTones";
+
+/** Every escrow state, labelled exactly as the row's own pill labels it. */
+const PLACEMENT_STATUS_OPTIONS = (
+  Object.entries(PLACEMENT_STATUS_LABELS) as [PlacementStatus, string][]
+).map(([value, label]) => ({ value, label }));
 
 /** A placement can be rejected only while its fee is held and the candidate has
  * not reached their joining date — the countdown starts at midnight UTC that
@@ -99,7 +108,15 @@ export function CompanyPlacementsPanel() {
   const [page, setPage] = useState(1);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [disputingId, setDisputingId] = useState<string | null>(null);
-  const { data, isPending, isError, refetch } = useCompanyPlacements(page);
+  const [status, setStatus] = useState<string | null>(null);
+  const { data, isPending, isError, refetch } = useCompanyPlacements(
+    page,
+    status ?? undefined,
+  );
+  const changeStatus = (next: string | null) => {
+    setStatus(next);
+    setPage(1);
+  };
   const reject = useRejectPlacement();
 
   if (isError) {
@@ -194,9 +211,14 @@ export function CompanyPlacementsPanel() {
               <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
                 Fee
               </th>
-              <th scope="col" className={T.TABLE_TH}>
-                Status
-              </th>
+              <FilterableHead label="Status">
+                <ColumnFilter
+                  label="Status"
+                  options={PLACEMENT_STATUS_OPTIONS}
+                  value={status}
+                  onChange={changeStatus}
+                />
+              </FilterableHead>
               <th scope="col" className={T.TABLE_TH}>
                 Released / hold ends
               </th>

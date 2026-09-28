@@ -30,10 +30,11 @@ export function useWallet() {
   return useQuery({ queryKey: billingKeys.wallet, queryFn: fetchWallet });
 }
 
-export function useLedger(page: number) {
+export function useLedger(page: number, entryType?: string) {
   return useQuery({
-    queryKey: billingKeys.ledger(page),
-    queryFn: () => fetchLedger(page),
+    queryKey: billingKeys.ledger(page, entryType),
+    queryFn: () => fetchLedger(page, entryType),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -61,18 +62,18 @@ export function useRecruiterWallet(enabled = true) {
   });
 }
 
-export function useRecruiterPlacements(page: number) {
+export function useRecruiterPlacements(page: number, status?: string) {
   return useQuery({
-    queryKey: billingKeys.recruiterPlacements(page),
-    queryFn: () => fetchRecruiterPlacements(page),
+    queryKey: billingKeys.recruiterPlacements(page, status),
+    queryFn: () => fetchRecruiterPlacements(page, status),
     placeholderData: keepPreviousData,
   });
 }
 
-export function useCompanyPlacements(page: number) {
+export function useCompanyPlacements(page: number, status?: string) {
   return useQuery({
-    queryKey: billingKeys.companyPlacements(page),
-    queryFn: () => fetchCompanyPlacements(page),
+    queryKey: billingKeys.companyPlacements(page, status),
+    queryFn: () => fetchCompanyPlacements(page, status),
     placeholderData: keepPreviousData,
   });
 }

@@ -16,7 +16,16 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
+import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
 import { useLedger } from "../hooks/useBilling";
+
+/** Each kind of wallet movement, labelled as the Activity cell labels it. */
+const LEDGER_TYPE_OPTIONS = (
+  Object.entries(LEDGER_TYPE_LABELS) as [LedgerEntry["entryType"], string][]
+).map(([value, label]) => ({ value, label }));
 import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
 import { PurchaseReceiptDialog } from "./PurchaseReceiptDialog";
 
@@ -60,7 +69,12 @@ function LedgerDocument({
 /** The wallet's append-only history, newest first. */
 export function LedgerTable() {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useLedger(page);
+  const [entryType, setEntryType] = useState<string | null>(null);
+  const { data, isLoading } = useLedger(page, entryType ?? undefined);
+  const changeEntryType = (next: string | null) => {
+    setEntryType(next);
+    setPage(1);
+  };
   const { user } = useAuth();
   const accountName = user ? `${user.firstName} ${user.lastName}`.trim() : "";
 
@@ -93,9 +107,14 @@ export function LedgerTable() {
               <th scope="col" className={T.TABLE_TH}>
                 When
               </th>
-              <th scope="col" className={cn(T.TABLE_TH, "w-2/5")}>
-                Activity
-              </th>
+              <FilterableHead label="Activity" className="w-2/5">
+                <ColumnFilter
+                  label="Activity"
+                  options={LEDGER_TYPE_OPTIONS}
+                  value={entryType}
+                  onChange={changeEntryType}
+                />
+              </FilterableHead>
               <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
                 Amount
               </th>

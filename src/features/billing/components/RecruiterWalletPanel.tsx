@@ -37,7 +37,16 @@ import {
   type RecruiterPlacement,
   type RecruiterWalletSummary,
 } from "../schemas";
+import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
 import { PLACEMENT_STATUS_TONES } from "../statusTones";
+
+/** Every escrow state, labelled exactly as the row's own pill labels it. */
+const PLACEMENT_STATUS_OPTIONS = (
+  Object.entries(PLACEMENT_STATUS_LABELS) as [PlacementStatus, string][]
+).map(([value, label]) => ({ value, label }));
 import { BillingTableFooter } from "./BillingTable";
 import { PayoutsCard } from "./PayoutsCard";
 import { PayoutsTable } from "./PayoutsTable";
@@ -217,7 +226,8 @@ function PlacementsTable({
 }) {
   const router = useRouter();
   const [disputingId, setDisputingId] = useState<string | null>(null);
-  const { data } = useRecruiterPlacements(page);
+  const [status, setStatus] = useState<string | null>(null);
+  const { data } = useRecruiterPlacements(page, status ?? undefined);
   // Only reachable between pages, where the table is already on screen — stand
   // in with the same card rather than collapsing the page to nothing.
   if (!data) return <TableSkeleton columns={7} />;
@@ -260,9 +270,17 @@ function PlacementsTable({
               <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
                 Commission
               </th>
-              <th scope="col" className={T.TABLE_TH}>
-                Status
-              </th>
+              <FilterableHead label="Status">
+                <ColumnFilter
+                  label="Status"
+                  options={PLACEMENT_STATUS_OPTIONS}
+                  value={status}
+                  onChange={(next) => {
+                    setStatus(next);
+                    onPage(1);
+                  }}
+                />
+              </FilterableHead>
               <th scope="col" className={T.TABLE_TH}>
                 Released / Hold Ends
               </th>

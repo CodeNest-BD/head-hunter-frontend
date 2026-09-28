@@ -33,9 +33,10 @@ export async function fetchWallet(): Promise<WalletSummary> {
 /** GET /v1/billing/wallet/ledger */
 export async function fetchLedger(
   page: number,
+  entryType?: string,
 ): Promise<Paginated<LedgerEntry>> {
   const { data } = await apiClient.get<unknown>("/billing/wallet/ledger", {
-    params: { page, limit: 20 },
+    params: { page, limit: 20, ...(entryType ? { entryType } : {}) },
   });
   return paginatedSchema(ledgerEntrySchema).parse(data);
 }
@@ -71,11 +72,12 @@ export async function fetchRecruiterWallet(): Promise<RecruiterWalletSummary> {
 /** GET /v1/recruiter/wallet/placements — the recruiter's placement history. */
 export async function fetchRecruiterPlacements(
   page: number,
+  status?: string,
 ): Promise<Paginated<RecruiterPlacement>> {
   const { data } = await apiClient.get<unknown>(
     "/recruiter/wallet/placements",
     {
-      params: { page, limit: 20 },
+      params: { page, limit: 20, ...(status ? { status } : {}) },
     },
   );
   return paginatedSchema(recruiterPlacementSchema).parse(data);
@@ -84,9 +86,10 @@ export async function fetchRecruiterPlacements(
 /** GET /v1/company/placements — the company's escrow view. */
 export async function fetchCompanyPlacements(
   page: number,
+  status?: string,
 ): Promise<Paginated<CompanyPlacement>> {
   const { data } = await apiClient.get<unknown>("/company/placements", {
-    params: { page, limit: 20 },
+    params: { page, limit: 20, ...(status ? { status } : {}) },
   });
   return paginatedSchema(companyPlacementSchema).parse(data);
 }
