@@ -126,7 +126,8 @@ export function StatCard({
     "group flex items-start gap-3 rounded-md border border-line bg-surface px-4 py-3.5 shadow-e1",
     "transition-[box-shadow,transform,border-color] duration-200 ease-out",
     "hover:-translate-y-px hover:shadow-e2 motion-reduce:transform-none",
-    href && "hover:border-line-strong hover:-translate-y-0.5",
+    href &&
+      "hover:-translate-y-0.5 hover:border-line-strong motion-reduce:transform-none",
     classNameProp,
   );
   const body = (

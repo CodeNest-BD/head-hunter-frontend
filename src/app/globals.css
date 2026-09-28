@@ -263,10 +263,17 @@
     transform: translateY(0);
   }
 }
+/* The reference's own rule (hh.css), rather than the narrower one this file
+   used to carry: that only silenced `fadeUp` and `hh-` classes, so any other
+   animation — a gradient sweep, the brand loader's ring — kept running for a
+   reader who asked for stillness. Transforms are not transitions, so a hover
+   lift still needs its own `motion-reduce:transform-none` at the call site. */
 @media (prefers-reduced-motion: reduce) {
-  [class*="fadeUp"],
-  [class*="hh-"] {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
+    transition: none !important;
   }
 }
 
