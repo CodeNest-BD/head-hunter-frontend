@@ -9,6 +9,10 @@ import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
 import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
+import {
   ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
@@ -55,6 +59,17 @@ function formatDate(iso: string): string {
     year: "numeric",
   });
 }
+
+const STATUS_FILTER_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "suspended", label: "Suspended" },
+] as const;
+
+const APPROVAL_FILTER_OPTIONS = [
+  { value: "pending", label: "Pending" },
+  { value: "verified", label: "Approved" },
+  { value: "rejected", label: "Declined" },
+] as const;
 
 const COLUMNS: ColumnDef[] = [
   { key: "company", label: "Company", required: true },
@@ -173,6 +188,16 @@ export function CompaniesTable() {
     changeLimit,
   } = useListState();
   const [verificationFilter, setVerificationFilter] = useState("");
+  // A filter that matches nothing hides the header row it lives in, so the
+  // empty state carries its own way back out.
+  const hasFilters =
+    qInput !== "" || status !== "" || verificationFilter !== "";
+  const resetFilters = () => {
+    setQInput("");
+    changeStatus("");
+    setVerificationFilter("");
+    setPage(1);
+  };
   const cols = useVisibleColumns("admin.companies.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminCompanies({
     page,
@@ -218,10 +243,7 @@ export function CompaniesTable() {
               value: status,
               onChange: changeStatus,
               allLabel: "All statuses",
-              options: [
-                { value: "active", label: "Active" },
-                { value: "suspended", label: "Suspended" },
-              ],
+              options: [...STATUS_FILTER_OPTIONS],
             }}
             extraFilter={{
               value: verificationFilter,
@@ -230,11 +252,7 @@ export function CompaniesTable() {
                 setPage(1);
               },
               allLabel: "All approvals",
-              options: [
-                { value: "pending", label: "Pending" },
-                { value: "verified", label: "Approved" },
-                { value: "rejected", label: "Declined" },
-              ],
+              options: [...APPROVAL_FILTER_OPTIONS],
             }}
           />
         </div>
@@ -267,6 +285,18 @@ export function CompaniesTable() {
             icon={Building2}
             title="No companies found"
             description="Try a different search or filter."
+            action={
+              hasFilters ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                >
+                  Reset filters
+                </Button>
+              ) : undefined
+            }
           />
         </div>
       ) : (
@@ -294,14 +324,29 @@ export function CompaniesTable() {
                     </th>
                   )}
                   {cols.isVisible("approval") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Approval
-                    </th>
+                    <FilterableHead label="Approval">
+                      <ColumnFilter
+                        label="Approval"
+                        options={APPROVAL_FILTER_OPTIONS}
+                        value={
+                          verificationFilter === "" ? null : verificationFilter
+                        }
+                        onChange={(next) => {
+                          setVerificationFilter(next ?? "");
+                          setPage(1);
+                        }}
+                      />
+                    </FilterableHead>
                   )}
                   {cols.isVisible("status") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Status
-                    </th>
+                    <FilterableHead label="Status">
+                      <ColumnFilter
+                        label="Status"
+                        options={STATUS_FILTER_OPTIONS}
+                        value={status === "" ? null : status}
+                        onChange={(next) => changeStatus(next ?? "")}
+                      />
+                    </FilterableHead>
                   )}
                   {cols.isVisible("avgFee") && (
                     <th scope="col" className={cn(TABLE_TH, "text-right")}>

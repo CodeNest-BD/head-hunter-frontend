@@ -8,9 +8,10 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import { Card } from "@/shared/ui-components/controls/card";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import * as T from "@/shared/ui-components/data/tableStyles";
+import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   MobileRecordCard,
   MobileRecordList,
@@ -64,13 +65,8 @@ export function LedgerTable() {
   const accountName = user ? `${user.firstName} ${user.lastName}`.trim() : "";
 
   if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center text-sub text-ink-muted">
-          Loading history…
-        </CardContent>
-      </Card>
-    );
+    // When · Activity · Amount · Balance · Reserved · Document.
+    return <TableSkeleton rows={6} columns={6} />;
   }
 
   const entries = data?.data ?? [];

@@ -83,7 +83,7 @@ export function SubscriptionPanel() {
 
   if (isLoading || !data) {
     return (
-      <div className="h-40 animate-pulse rounded-md border border-line bg-surface" />
+      <div className="h-40 animate-pulse rounded-md border border-line bg-surface-sub" />
     );
   }
 

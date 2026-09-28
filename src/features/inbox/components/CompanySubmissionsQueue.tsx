@@ -7,11 +7,9 @@ import {
   BadgeCheck,
   Briefcase,
   CalendarClock,
-  Check,
   Eye,
   FileText,
   Inbox,
-  ListFilter,
   Search,
   Sparkles,
   UserCheck,
@@ -24,17 +22,18 @@ import {
 } from "@/features/candidates/schemas";
 import { CandidateQuickView } from "@/features/candidates/components/CandidateQuickView";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
+import {
+  ColumnFilter,
+  FilterableHead,
+  type ColumnFilterOption,
+} from "@/shared/ui-components/data/ColumnFilter";
+import { MobileFilters } from "@/shared/ui-components/data/MobileFilters";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatTimeAgo, formatDateTime } from "@/shared/utils/formatDate";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/shared/ui-components/controls/popover";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
 import { PageHeader } from "@/shared/ui-components/brand";
@@ -95,17 +94,14 @@ const QUEUE_STATUS_LABELS: Record<CandidateStatus, string> = {
   passed: "Passed",
 };
 
-interface FilterOption {
-  value: string;
-  label: string;
-}
+const STATUS_OPTIONS: ColumnFilterOption[] = CANDIDATE_STATUSES.map(
+  (value) => ({
+    value,
+    label: QUEUE_STATUS_LABELS[value],
+  }),
+);
 
-const STATUS_OPTIONS: FilterOption[] = CANDIDATE_STATUSES.map((value) => ({
-  value,
-  label: QUEUE_STATUS_LABELS[value],
-}));
-
-const RECRUITER_OPTIONS: FilterOption[] = [
+const RECRUITER_OPTIONS: ColumnFilterOption[] = [
   { value: "rated", label: "Rated recruiters" },
   { value: "unrated", label: "Unrated recruiters" },
 ];
@@ -141,134 +137,6 @@ const STAT_CARDS: StatCardDef[] = [
   { key: "hired", label: "Hired", icon: UserCheck, value: (s) => s.hired },
   { key: "passed", label: "Passed", icon: BadgeCheck, value: (s) => s.passed },
 ];
-
-/**
- * A column-header filter: the ListFilter icon opens a single-select value list
- * (searchable when there are many options, e.g. jobs). Empty selection means
- * "all"; the icon reads as active once a value is picked. Server-backed —
- * selecting sets a query param, so it filters the whole result set, not just
- * the current page. Mirrors the recruiter submissions table's column filters.
- */
-function HeaderFilter({
-  label,
-  options,
-  value,
-  onChange,
-  searchable = false,
-}: {
-  label: string;
-  options: FilterOption[];
-  value: string | null;
-  onChange: (next: string | null) => void;
-  searchable?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const active = value !== null;
-  const shown = searchable
-    ? options.filter((option) =>
-        option.label.toLowerCase().includes(search.trim().toLowerCase()),
-      )
-    : options;
-
-  const select = (next: string | null) => {
-    onChange(next);
-    setOpen(false);
-    setSearch("");
-  };
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Filter by ${label}`}
-          className={cn(
-            "inline-flex size-5 items-center justify-center rounded-xs transition-colors",
-            active
-              ? "bg-tint text-blue"
-              : "text-ink-faint hover:bg-surface-sunken hover:text-ink",
-          )}
-        >
-          <ListFilter className="size-3.5" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-56 p-0">
-        {searchable && (
-          <div className="border-b border-line p-2">
-            <div className="relative">
-              <Search
-                aria-hidden="true"
-                className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
-              />
-              <input
-                autoFocus
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={`Search ${label.toLowerCase()}…`}
-                className="h-7.5 w-full rounded-sm border border-line-strong bg-surface pl-7 pr-2 text-meta text-ink outline-none transition-colors placeholder:text-ink-faint focus-visible:border-blue focus-visible:shadow-focus"
-              />
-            </div>
-          </div>
-        )}
-        <div className="max-h-56 overflow-y-auto p-1">
-          {shown.length === 0 ? (
-            <p className="px-2 py-3 text-center text-meta text-ink-muted">
-              No matches
-            </p>
-          ) : (
-            shown.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => select(option.value)}
-                className="flex w-full items-center gap-2 rounded-xs px-2 py-1.5 text-left text-meta text-ink-body transition-colors hover:bg-surface-sub"
-              >
-                <span className="flex size-4 shrink-0 items-center justify-center">
-                  {value === option.value && (
-                    <Check className="size-3.5 text-blue" />
-                  )}
-                </span>
-                <span className="truncate">{option.label}</span>
-              </button>
-            ))
-          )}
-        </div>
-        {active && (
-          <div className="border-t border-line p-1">
-            <button
-              type="button"
-              onClick={() => select(null)}
-              className="w-full rounded-xs px-2 py-1.5 text-left text-meta font-[550] text-blue-ink transition-colors hover:bg-surface-sub"
-            >
-              Clear
-            </button>
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-/** A header cell carrying its label and an inline column filter. */
-function FilterableHead({
-  label,
-  className,
-  children,
-}: {
-  label: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <th className={cn(TABLE_TH, className)}>
-      <span className="inline-flex items-center gap-1.5">
-        {label}
-        {children}
-      </span>
-    </th>
-  );
-}
 
 function RecruiterCell({ row }: { row: InboxSubmissionRow }) {
   if (!row.recruiter) {
@@ -355,7 +223,7 @@ export function CompanySubmissionsQueue() {
     sortBy,
   });
 
-  const jobOptions = useMemo<FilterOption[]>(
+  const jobOptions = useMemo<ColumnFilterOption[]>(
     () =>
       (jobs.data?.data ?? []).map((job) => ({
         value: job.jobId,
@@ -445,6 +313,31 @@ export function CompanySubmissionsQueue() {
         </NativeSelect>
       </div>
 
+      {/* The Job, Recruiter and Status filters live in a header row a phone
+          never renders, so they get their own phone-only control. */}
+      <MobileFilters
+        filters={[
+          {
+            value: jobId ?? "",
+            onChange: (next) => changeJob(next === "" ? null : next),
+            allLabel: "All jobs",
+            options: jobOptions,
+          },
+          {
+            value: status ?? "",
+            onChange: (next) => changeStatus(next === "" ? null : next),
+            allLabel: "All statuses",
+            options: STATUS_OPTIONS,
+          },
+          {
+            value: recruiterKind ?? "",
+            onChange: (next) => changeRecruiter(next === "" ? null : next),
+            allLabel: "All recruiters",
+            options: RECRUITER_OPTIONS,
+          },
+        ]}
+      />
+
       <div className="flex items-center justify-between gap-3 text-sub">
         <span className="tabular-nums text-ink-muted">
           {submissions.data
@@ -466,7 +359,8 @@ export function CompanySubmissionsQueue() {
       </div>
 
       {submissions.isPending ? (
-        <TableSkeleton rows={6} />
+        /* Candidate · Job · Recruiter · Rating · Submitted · Status · Actions. */
+        <TableSkeleton rows={6} columns={7} />
       ) : submissions.isError ? (
         <ErrorRetryCallout
           message="Could not load your submissions."
@@ -482,6 +376,18 @@ export function CompanySubmissionsQueue() {
                 ? "Try a different search or filter."
                 : "Recruiters' candidates will land here as they come in."
             }
+            action={
+              hasFilters ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                >
+                  Reset filters
+                </Button>
+              ) : undefined
+            }
           />
         </div>
       ) : (
@@ -492,7 +398,7 @@ export function CompanySubmissionsQueue() {
                 <tr>
                   <th className={TABLE_TH}>Candidate</th>
                   <FilterableHead label="Job">
-                    <HeaderFilter
+                    <ColumnFilter
                       label="Job"
                       options={jobOptions}
                       value={jobId}
@@ -501,7 +407,7 @@ export function CompanySubmissionsQueue() {
                     />
                   </FilterableHead>
                   <FilterableHead label="Recruiter">
-                    <HeaderFilter
+                    <ColumnFilter
                       label="Recruiter"
                       options={RECRUITER_OPTIONS}
                       value={recruiterKind}
@@ -511,7 +417,7 @@ export function CompanySubmissionsQueue() {
                   <th className={TABLE_TH}>Rating</th>
                   <th className={TABLE_TH}>Submitted</th>
                   <FilterableHead label="Status">
-                    <HeaderFilter
+                    <ColumnFilter
                       label="Status"
                       options={STATUS_OPTIONS}
                       value={status}

@@ -87,7 +87,11 @@ export function RaiseDisputePanel() {
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {isPending ? (
-          <p className="text-sub text-ink-muted">Loading your placements…</p>
+          /* The `.field` this resolves into: its label over the select. */
+          <div aria-hidden="true" className="flex max-w-lg flex-col gap-1.5">
+            <div className="h-4 w-32 animate-pulse rounded-xs bg-surface-sunken" />
+            <div className="h-9 w-full animate-pulse rounded-sm bg-surface-sunken" />
+          </div>
         ) : options.length === 0 ? (
           <p className="rounded-sm border border-dashed border-line-strong bg-surface-sub px-3 py-2.5 text-sub text-ink-muted">
             You have no placements held in escrow right now, so there is nothing

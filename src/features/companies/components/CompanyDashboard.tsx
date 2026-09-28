@@ -25,6 +25,7 @@ import {
   Panel,
   PanelGroup,
   StatCard,
+  StatValueSkeleton,
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
 import { ListRow } from "@/shared/ui-components/list/ListRow";
@@ -131,7 +132,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard
           label="Published jobs"
-          value={published.isPending ? "—" : publishedTotal}
+          value={published.isPending ? <StatValueSkeleton /> : publishedTotal}
           hint={
             noFeeCount > 0
               ? `${noFeeCount} without a fee`
@@ -143,7 +144,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
         />
         <StatCard
           label="New candidates"
-          value={inbox.isPending ? "—" : newCandidates}
+          value={inbox.isPending ? <StatValueSkeleton /> : newCandidates}
           hint={
             newCandidates === 0
               ? "nothing waiting on you"
@@ -154,14 +155,26 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
         />
         <StatCard
           label="Available funds"
-          value={formatMinor(wallet.data?.availableMinor)}
+          value={
+            wallet.isPending ? (
+              <StatValueSkeleton />
+            ) : (
+              formatMinor(wallet.data?.availableMinor)
+            )
+          }
           hint="free funds to post jobs"
           icon={DollarSign}
           href="/company/wallet"
         />
         <StatCard
           label="Reserved funds"
-          value={formatMinor(wallet.data?.reservedMinor)}
+          value={
+            wallet.isPending ? (
+              <StatValueSkeleton />
+            ) : (
+              formatMinor(wallet.data?.reservedMinor)
+            )
+          }
           hint="held for live jobs"
           icon={Lock}
           href="/company/wallet"

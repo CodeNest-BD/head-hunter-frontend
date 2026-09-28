@@ -9,9 +9,9 @@ import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCal
 /** Matches the loading placeholder used across the company pages. */
 function PageSkeleton() {
   return (
-    <div className="flex flex-col gap-5">
-      <div className="h-56 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
-      <div className="h-40 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
+    <div className="flex flex-col gap-4">
+      <div className="h-56 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
+      <div className="h-40 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
     </div>
   );
 }

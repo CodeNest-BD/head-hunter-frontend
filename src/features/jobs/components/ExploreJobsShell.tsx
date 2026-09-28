@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { PublicShell } from "@/components/landing/PublicShell";
@@ -49,8 +50,10 @@ export function ExploreJobsShell() {
 
   if (status === "booting") {
     return (
+      /* Guest chrome or account chrome is not known until the session
+         settles, so there is no shape to trace — spinner, not skeleton. */
       <div className="flex min-h-screen items-center justify-center gap-2 bg-canvas text-sub text-ink-muted">
-        <span className="size-4 animate-spin rounded-full border-2 border-line-strong border-t-blue" />
+        <Loader2 className="size-[15px] animate-spin text-ink-faint" />
         Loading…
       </div>
     );

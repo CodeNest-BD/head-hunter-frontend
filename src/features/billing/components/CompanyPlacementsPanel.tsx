@@ -116,7 +116,7 @@ export function CompanyPlacementsPanel() {
     );
   }
 
-  if (isPending) return <TableSkeleton />;
+  if (isPending) return <TableSkeleton columns={7} />;
   if (data.data.length === 0) return <PlacementsEmpty />;
 
   const confirming = confirmingId

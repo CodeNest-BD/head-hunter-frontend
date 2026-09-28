@@ -13,12 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
-import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/ui-components/controls/tabs";
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
+import { MobileFilters } from "@/shared/ui-components/data/MobileFilters";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   TABLE_BODY,
@@ -44,14 +43,16 @@ import {
 } from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
-/** Each view names the statuses the server should keep; "All" names none. */
-const FILTERS: {
+/**
+ * Each view names the statuses the server should keep; no view selected is the
+ * unfiltered list, so the filter's own Clear row is what used to be "All".
+ */
+const STATUS_VIEWS: {
   label: string;
   value: string;
-  statuses?: readonly DisputeStatus[];
+  statuses: readonly DisputeStatus[];
 }[] = [
   { label: "Open", value: "open_active", statuses: ["open", "under_review"] },
-  { label: "All", value: "all" },
   {
     label: "Resolved — Refunded",
     value: "resolved_refund",
@@ -69,73 +70,77 @@ const RAISED_BY_LABELS: Record<DisputeChannel, string> = {
   recruiter: "Recruiter",
 };
 
-/** Whose side opened the dispute — "any" is the unfiltered tab. */
-type RaisedByTab = DisputeChannel | "any";
-
-const RAISED_BY_TABS: { label: string; value: RaisedByTab }[] = [
-  { label: "All", value: "any" },
+const RAISED_BY_OPTIONS: { label: string; value: DisputeChannel }[] = [
   { label: "Raised by Company", value: "company" },
   { label: "Raised by Recruiter", value: "recruiter" },
 ];
 
-/** Narrows the tab bar's plain string back to a tab this table understands —
- * same shape as `isCandidateSort` in the inbox table. */
-const isRaisedByTab = (value: string): value is RaisedByTab =>
-  RAISED_BY_TABS.some((tab) => tab.value === value);
+/** Narrows the filter's plain string back to a channel the query accepts;
+ * `undefined` is the unfiltered list. */
+const toRaisedBy = (value: string | null): DisputeChannel | undefined =>
+  RAISED_BY_OPTIONS.find((option) => option.value === value)?.value;
 
 /** The admin dispute inbox. */
 export function AdminDisputesTable() {
   const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState("open_active");
-  const [raisedByTab, setRaisedByTab] = useState<RaisedByTab>("any");
-  const statuses = FILTERS.find((f) => f.value === filter)?.statuses;
+  const [statusView, setStatusView] = useState<string | null>("open_active");
+  const [raisedBy, setRaisedBy] = useState<DisputeChannel | undefined>(
+    undefined,
+  );
+  const statuses = STATUS_VIEWS.find((v) => v.value === statusView)?.statuses;
   const { data, isPending, isError, refetch } = useAdminDisputes(
     page,
     statuses,
-    raisedByTab === "any" ? undefined : raisedByTab,
+    raisedBy,
   );
 
   const rows = data?.data ?? [];
+
+  // The Status filter starts on Open, and it lives in a header row the empty
+  // state replaces — so an admin with nothing open would have no way back to
+  // the full list without this.
+  const hasFilters = statusView !== null || raisedBy !== undefined;
+  const resetFilters = () => {
+    setStatusView(null);
+    setRaisedBy(undefined);
+    setPage(1);
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Disputes</CardTitle>
-        <NativeSelect
-          value={filter}
-          onChange={(e) => {
-            setFilter(e.target.value);
-            setPage(1);
-          }}
-          className="ml-auto w-auto min-w-[170px] max-w-[220px]"
-        >
-          {FILTERS.map((f) => (
-            <option key={f.value} value={f.value}>
-              {f.label}
-            </option>
-          ))}
-        </NativeSelect>
       </CardHeader>
 
-      {/* Same underline tab bar as the admin Settings page, so the two admin
-          screens filter the same way. The list below is the only panel, so
-          the triggers drive the query rather than swapping TabsContent. */}
-      <Tabs
-        value={raisedByTab}
-        onValueChange={(value) => {
-          if (!isRaisedByTab(value)) return;
-          setRaisedByTab(value);
-          setPage(1);
-        }}
-      >
-        <TabsList className="px-4">
-          {RAISED_BY_TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      {/* This table has no toolbar, and its filters live in a header row a
+          phone never renders — so they get their own phone-only control. */}
+      <div className="px-4 pt-4 sm:hidden">
+        <MobileFilters
+          filters={[
+            {
+              value: statusView ?? "",
+              onChange: (next) => {
+                setStatusView(next === "" ? null : next);
+                setPage(1);
+              },
+              allLabel: "All statuses",
+              options: STATUS_VIEWS.map(({ label, value }) => ({
+                label,
+                value,
+              })),
+            },
+            {
+              value: raisedBy ?? "",
+              onChange: (next) => {
+                setRaisedBy(toRaisedBy(next === "" ? null : next));
+                setPage(1);
+              },
+              allLabel: "Raised by anyone",
+              options: RAISED_BY_OPTIONS,
+            },
+          ]}
+        />
+      </div>
 
       {isError ? (
         <div className="flex flex-col items-center gap-3 p-8 text-center text-sub text-bad">
@@ -150,9 +155,19 @@ export function AdminDisputesTable() {
           <TableSkeleton />
         </div>
       ) : rows.length === 0 ? (
-        <p className="p-8 text-center text-sub text-ink-muted">
-          No disputes here.
-        </p>
+        <div className="flex flex-col items-center gap-3 p-8 text-center">
+          <p className="text-sub text-ink-muted">No disputes here.</p>
+          {hasFilters && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={resetFilters}
+            >
+              Reset filters
+            </Button>
+          )}
+        </div>
       ) : (
         <>
           <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
@@ -168,18 +183,34 @@ export function AdminDisputesTable() {
                   <th scope="col" className={TABLE_TH}>
                     Candidate / Role
                   </th>
-                  <th scope="col" className={TABLE_TH}>
-                    Raised By
-                  </th>
+                  <FilterableHead label="Raised By">
+                    <ColumnFilter
+                      label="Raised By"
+                      options={RAISED_BY_OPTIONS}
+                      value={raisedBy ?? null}
+                      onChange={(next) => {
+                        setRaisedBy(toRaisedBy(next));
+                        setPage(1);
+                      }}
+                    />
+                  </FilterableHead>
                   <th scope="col" className={TABLE_TH}>
                     Subject
                   </th>
                   <th scope="col" className={cn(TABLE_TH, "text-right")}>
                     Fee
                   </th>
-                  <th scope="col" className={TABLE_TH}>
-                    Status
-                  </th>
+                  <FilterableHead label="Status">
+                    <ColumnFilter
+                      label="Status"
+                      options={STATUS_VIEWS}
+                      value={statusView}
+                      onChange={(next) => {
+                        setStatusView(next);
+                        setPage(1);
+                      }}
+                    />
+                  </FilterableHead>
                   <th scope="col" className={TABLE_TH}>
                     Opened
                   </th>

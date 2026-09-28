@@ -41,7 +41,16 @@ export function ReviewCta({ offerId }: ReviewCtaProps) {
     setComment(existing?.comment ?? "");
   }, [open, existing]);
 
-  if (isLoading) return null;
+  // Hold the trigger's footprint rather than popping a button into the offer
+  // card once the existing review resolves.
+  if (isLoading) {
+    return (
+      <div
+        aria-hidden="true"
+        className="h-7.5 w-36 animate-pulse rounded-xs bg-surface-sunken"
+      />
+    );
+  }
 
   const isPending = createReview.isPending || updateReview.isPending;
   const submit = (): void => {

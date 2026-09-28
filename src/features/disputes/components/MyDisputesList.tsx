@@ -70,7 +70,8 @@ export function MyDisputesList() {
       </div>
     );
   }
-  if (isPending) return <TableSkeleton />;
+  // Role · Subject · Counterparty · Fee · Status · Opened · (open).
+  if (isPending) return <TableSkeleton columns={7} />;
 
   if (data.data.length === 0) {
     return (

@@ -283,6 +283,15 @@ export function JobsTable() {
     changeLimit,
   } = useListState();
   const [category, setCategory] = useState("");
+  // A filter that matches nothing hides the header row it lives in, so the
+  // empty state carries its own way back out.
+  const hasFilters = qInput !== "" || status !== "" || category !== "";
+  const resetFilters = () => {
+    setQInput("");
+    changeStatus("");
+    setCategory("");
+    setPage(1);
+  };
   const cols = useVisibleColumns("company.jobs.columns", COLUMNS);
   const parsedStatus = jobStatusSchema.safeParse(status);
   const { data, isPending, isError, refetch } = useJobs({
@@ -319,6 +328,21 @@ export function JobsTable() {
           query={qInput}
           onQueryChange={setQInput}
           placeholder="Search jobs by title…"
+          filter={{
+            value: status,
+            onChange: changeStatus,
+            allLabel: "All statuses",
+            options: [...STATUS_FILTER_OPTIONS],
+          }}
+          extraFilter={{
+            value: category,
+            onChange: (next) => {
+              setCategory(next);
+              setPage(1);
+            },
+            allLabel: "All categories",
+            options: CATEGORY_OPTIONS,
+          }}
         />
       </div>
       <div className="sm:ml-auto">
@@ -385,7 +409,8 @@ export function JobsTable() {
           </div>
         </div>
       ) : isPending ? (
-        <TableSkeleton />
+        /* Match whatever columns this reader has left switched on. */
+        <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
       ) : data.data.length === 0 ? (
         <div className={TABLE_CARD}>
           <EmptyState
@@ -393,12 +418,24 @@ export function JobsTable() {
             title="No jobs found"
             description="Try a different search or filter, or post a new role."
             action={
-              <Button asChild type="button">
-                <Link href="/company/jobs/new">
-                  <Plus />
-                  New job
-                </Link>
-              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button asChild type="button">
+                  <Link href="/company/jobs/new">
+                    <Plus />
+                    New job
+                  </Link>
+                </Button>
+                {hasFilters && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={resetFilters}
+                  >
+                    Reset filters
+                  </Button>
+                )}
+              </div>
             }
           />
         </div>

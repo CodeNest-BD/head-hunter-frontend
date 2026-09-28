@@ -25,6 +25,7 @@ import {
   Panel,
   PanelGroup,
   StatCard,
+  StatValueSkeleton,
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
 import { ListRow } from "@/shared/ui-components/list/ListRow";
@@ -142,28 +143,46 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard
           label="Open roles"
-          value={openRoles.isPending ? "—" : (openRolesCount ?? "—")}
+          value={
+            openRoles.isPending ? (
+              <StatValueSkeleton />
+            ) : (
+              (openRolesCount ?? "—")
+            )
+          }
           hint="open to you right now"
           icon={Briefcase}
           href="/explore-jobs"
         />
         <StatCard
           label="Candidates in process"
-          value={inbox.isPending ? "—" : candidateCount}
+          value={inbox.isPending ? <StatValueSkeleton /> : candidateCount}
           hint="submitted, interviewing, pending feedback"
           icon={Users}
           href="/recruiter/inbox"
         />
         <StatCard
           label="Pending commission"
-          value={formatMinor(wallet.data?.inEscrowMinor ?? 0)}
+          value={
+            wallet.isPending ? (
+              <StatValueSkeleton />
+            ) : (
+              formatMinor(wallet.data?.inEscrowMinor ?? 0)
+            )
+          }
           hint="released 30 days after a start"
           icon={Clock}
           href="/recruiter/wallet"
         />
         <StatCard
           label="Commissions YTD"
-          value={formatMinor(wallet.data?.earnedYtdMinor ?? 0)}
+          value={
+            wallet.isPending ? (
+              <StatValueSkeleton />
+            ) : (
+              formatMinor(wallet.data?.earnedYtdMinor ?? 0)
+            )
+          }
           hint="what you've earned this year"
           icon={Wallet2}
           href="/recruiter/wallet"

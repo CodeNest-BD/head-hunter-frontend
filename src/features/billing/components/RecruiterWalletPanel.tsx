@@ -218,7 +218,9 @@ function PlacementsTable({
   const router = useRouter();
   const [disputingId, setDisputingId] = useState<string | null>(null);
   const { data } = useRecruiterPlacements(page);
-  if (!data) return null;
+  // Only reachable between pages, where the table is already on screen — stand
+  // in with the same card rather than collapsing the page to nothing.
+  if (!data) return <TableSkeleton columns={7} />;
 
   const disputing = disputingId
     ? data.data.find((p) => p.placementId === disputingId)
@@ -413,7 +415,8 @@ export function RecruiterWalletPanel() {
           </CardContent>
         </Card>
       ) : placements.isPending ? (
-        <TableSkeleton />
+        /* Company · Role · Candidate · Commission · Status · Released · (act). */
+        <TableSkeleton columns={7} />
       ) : hasPlacements ? (
         <div className="flex flex-col gap-4">
           <PlacementsTable page={page} onPage={setPage} />

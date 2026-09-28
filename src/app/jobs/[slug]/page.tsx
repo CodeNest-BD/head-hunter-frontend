@@ -90,7 +90,16 @@ function CompanyJobActions({ job }: { job: Job }) {
 function RecruiterCta({ jobId }: { jobId: string }) {
   const { isVerified, verificationStatus, isLoading } =
     useIsVerifiedRecruiter();
-  if (isLoading) return null;
+  // Hold the button's footprint: this CTA leads the job's sidebar, and popping
+  // it in after the verification query lands shoves everything below it down.
+  if (isLoading) {
+    return (
+      <div
+        aria-hidden="true"
+        className="h-9 w-full animate-pulse rounded-sm bg-surface-sunken"
+      />
+    );
+  }
   if (isVerified) return <SubmitCandidatesButton jobId={jobId} />;
   return (
     <div className="flex flex-col gap-1.5">

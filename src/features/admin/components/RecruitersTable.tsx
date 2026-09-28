@@ -16,6 +16,10 @@ import { TableAvatar } from "@/shared/ui-components/data/TableAvatar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
 import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
+import {
   ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
@@ -56,6 +60,17 @@ function formatDate(iso: string): string {
     year: "numeric",
   });
 }
+
+const STATUS_FILTER_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "suspended", label: "Suspended" },
+] as const;
+
+const VERIFICATION_FILTER_OPTIONS = [
+  { value: "pending", label: "Pending" },
+  { value: "verified", label: "Verified" },
+  { value: "rejected", label: "Rejected" },
+] as const;
 
 const COLUMNS: ColumnDef[] = [
   { key: "recruiter", label: "Recruiter", required: true },
@@ -155,6 +170,16 @@ export function RecruitersTable() {
     changeLimit,
   } = useListState();
   const [verificationFilter, setVerificationFilter] = useState("");
+  // A filter that matches nothing hides the header row it lives in, so the
+  // empty state carries its own way back out.
+  const hasFilters =
+    qInput !== "" || status !== "" || verificationFilter !== "";
+  const resetFilters = () => {
+    setQInput("");
+    changeStatus("");
+    setVerificationFilter("");
+    setPage(1);
+  };
   const cols = useVisibleColumns("admin.recruiters.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminRecruiters({
     page,
@@ -191,10 +216,7 @@ export function RecruitersTable() {
               value: status,
               onChange: changeStatus,
               allLabel: "All statuses",
-              options: [
-                { value: "active", label: "Active" },
-                { value: "suspended", label: "Suspended" },
-              ],
+              options: [...STATUS_FILTER_OPTIONS],
             }}
             extraFilter={{
               value: verificationFilter,
@@ -203,11 +225,7 @@ export function RecruitersTable() {
                 setPage(1);
               },
               allLabel: "All verification",
-              options: [
-                { value: "pending", label: "Pending" },
-                { value: "verified", label: "Verified" },
-                { value: "rejected", label: "Rejected" },
-              ],
+              options: [...VERIFICATION_FILTER_OPTIONS],
             }}
           />
         </div>
@@ -240,6 +258,18 @@ export function RecruitersTable() {
             icon={Users}
             title="No recruiters found"
             description="Try a different search or filter."
+            action={
+              hasFilters ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                >
+                  Reset filters
+                </Button>
+              ) : undefined
+            }
           />
         </div>
       ) : (
@@ -252,9 +282,19 @@ export function RecruitersTable() {
                     Recruiter
                   </th>
                   {cols.isVisible("verification") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Verification
-                    </th>
+                    <FilterableHead label="Verification">
+                      <ColumnFilter
+                        label="Verification"
+                        options={VERIFICATION_FILTER_OPTIONS}
+                        value={
+                          verificationFilter === "" ? null : verificationFilter
+                        }
+                        onChange={(next) => {
+                          setVerificationFilter(next ?? "");
+                          setPage(1);
+                        }}
+                      />
+                    </FilterableHead>
                   )}
                   {cols.isVisible("rating") && (
                     <th scope="col" className={TABLE_TH}>
@@ -272,9 +312,14 @@ export function RecruitersTable() {
                     </th>
                   )}
                   {cols.isVisible("status") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Status
-                    </th>
+                    <FilterableHead label="Status">
+                      <ColumnFilter
+                        label="Status"
+                        options={STATUS_FILTER_OPTIONS}
+                        value={status === "" ? null : status}
+                        onChange={(next) => changeStatus(next ?? "")}
+                      />
+                    </FilterableHead>
                   )}
                   {cols.isVisible("placements") && (
                     <th scope="col" className={cn(TABLE_TH, "text-right")}>

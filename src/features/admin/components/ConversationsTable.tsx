@@ -6,6 +6,10 @@ import { AlertCircle, MessagesSquare } from "lucide-react";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
+import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   MobileRecordCard,
@@ -29,6 +33,14 @@ import {
   TABLE_TD,
   TABLE_TH,
 } from "@/shared/ui-components/data/tableStyles";
+
+const STATUS_FILTER_OPTIONS = [
+  { value: "submitted", label: "Submitted" },
+  { value: "under_review", label: "Under review" },
+  { value: "advanced", label: "Advanced" },
+  { value: "rejected", label: "Rejected" },
+  { value: "withdrawn", label: "Withdrawn" },
+] as const;
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -86,6 +98,14 @@ export function ConversationsTable() {
     limit,
     changeLimit,
   } = useListState();
+  // A filter that matches nothing hides the header row it lives in, so the
+  // empty state carries its own way back out.
+  const hasFilters = qInput !== "" || status !== "";
+  const resetFilters = () => {
+    setQInput("");
+    changeStatus("");
+    setPage(1);
+  };
   const { data, isPending, isError, refetch } = useAdminConversations({
     page,
     limit,
@@ -103,13 +123,7 @@ export function ConversationsTable() {
           value: status,
           onChange: changeStatus,
           allLabel: "All statuses",
-          options: [
-            { value: "submitted", label: "Submitted" },
-            { value: "under_review", label: "Under review" },
-            { value: "advanced", label: "Advanced" },
-            { value: "rejected", label: "Rejected" },
-            { value: "withdrawn", label: "Withdrawn" },
-          ],
+          options: [...STATUS_FILTER_OPTIONS],
         }}
       />
 
@@ -133,6 +147,18 @@ export function ConversationsTable() {
             icon={MessagesSquare}
             title="No conversations found"
             description="Conversations appear once a recruiter submits candidates to a job."
+            action={
+              hasFilters ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                >
+                  Reset filters
+                </Button>
+              ) : undefined
+            }
           />
         </div>
       ) : (
@@ -153,9 +179,14 @@ export function ConversationsTable() {
                   <th scope="col" className={cn(TABLE_TH, "text-center")}>
                     Messages
                   </th>
-                  <th scope="col" className={TABLE_TH}>
-                    Status
-                  </th>
+                  <FilterableHead label="Status">
+                    <ColumnFilter
+                      label="Status"
+                      options={STATUS_FILTER_OPTIONS}
+                      value={status === "" ? null : status}
+                      onChange={(next) => changeStatus(next ?? "")}
+                    />
+                  </FilterableHead>
                   <th scope="col" className={cn(TABLE_TH, "text-right")}>
                     Last activity
                   </th>

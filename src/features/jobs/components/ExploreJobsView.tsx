@@ -51,6 +51,7 @@ import { US_STATE_NAME_BY_CODE } from "@/shared/data/usStatesGeo";
 import { useStateCities } from "@/shared/hooks/useStateCities";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
+import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { jobPath } from "../utils/jobPath";
 import { PublicJobCard } from "./PublicJobCard";
 import { UsJobMap, type MapSelection } from "./UsJobMap";
@@ -905,6 +906,74 @@ function SegmentedToggle<T extends string>({
   );
 }
 
+/** One card's worth of blocks: the category pill and age, a two-line title,
+ * company and location, the tag row, then the ruled money footer and its
+ * button — the same stack `PublicJobCard` resolves into. */
+function JobCardSkeleton() {
+  return (
+    <article
+      aria-hidden="true"
+      className="flex h-full flex-col rounded-md border border-line bg-surface p-4 shadow-e1 sm:p-5"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="h-5 w-24 animate-pulse rounded-full bg-surface-sunken" />
+        <div className="h-3 w-12 animate-pulse rounded-xs bg-surface-sunken" />
+      </div>
+      <div className="mt-3 flex flex-col gap-1.5">
+        <div className="h-4 w-full animate-pulse rounded-xs bg-surface-sunken" />
+        <div className="h-4 w-3/5 animate-pulse rounded-xs bg-surface-sunken" />
+      </div>
+      <div className="mt-1.5 flex flex-col gap-1">
+        <div className="h-4 w-2/5 animate-pulse rounded-xs bg-surface-sunken" />
+        <div className="h-4 w-1/3 animate-pulse rounded-xs bg-surface-sunken" />
+      </div>
+      <div className="mt-auto flex flex-wrap gap-2 pt-3">
+        <div className="h-5.25 w-16 animate-pulse rounded-full bg-surface-sunken" />
+        <div className="h-5.25 w-20 animate-pulse rounded-full bg-surface-sunken" />
+      </div>
+      <div className="mt-3 flex flex-col gap-3 border-t border-line pt-4">
+        <div className="flex flex-col gap-1.5">
+          <div className="h-3.5 w-28 animate-pulse rounded-xs bg-surface-sunken" />
+          <div className="h-5 w-32 animate-pulse rounded-xs bg-surface-sunken" />
+          <div className="h-3 w-36 animate-pulse rounded-xs bg-surface-sunken" />
+        </div>
+        <div className="h-9 w-full animate-pulse rounded-sm bg-surface-sunken" />
+      </div>
+    </article>
+  );
+}
+
+/** The results grid or list, in outline. Which of the two is already known
+ * before the query lands, so the page settles into the shape it will keep. */
+function ResultsSkeleton({
+  view,
+  pageSize,
+}: {
+  view: ResultView;
+  pageSize: number;
+}) {
+  // A full page of placeholders would run far past the fold; enough to fill
+  // the first screen is what stops the scroll position jumping.
+  const count = Math.min(pageSize, 6);
+  if (view === "cards") {
+    return (
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: count }).map((_, i) => (
+          <JobCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+  // Role · Terms · Pay · Recruiter fee · Posted, on the list's flatter card.
+  return (
+    <TableSkeleton
+      rows={count}
+      columns={5}
+      className="rounded-sm shadow-none"
+    />
+  );
+}
+
 function ResultsBody({
   query,
   items,
@@ -929,11 +998,7 @@ function ResultsBody({
   const { data, isLoading, isError } = query;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16 text-sub text-ink-muted">
-        <Loader2 className="mr-2 size-5 animate-spin" /> Loading jobs…
-      </div>
-    );
+    return <ResultsSkeleton view={view} pageSize={pageSize} />;
   }
   if (isError || !data) {
     return (

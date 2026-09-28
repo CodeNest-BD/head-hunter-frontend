@@ -19,6 +19,10 @@ import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
 import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
+import {
   ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
@@ -140,10 +144,21 @@ export function InboxCandidatesTable({
     { key: "actions", label: "Actions", required: true },
   ] satisfies ColumnDef[]);
 
-  // Sort lives beside the filters rather than on the column headers: the
-  // server owns the ordering (rating is a join it alone can do), so a header
-  // click would imply a client-side sort that never happens.
+  // Filtering moved onto the column headers, but sort stays in the toolbar:
+  // the server owns the ordering (rating is a join it alone can do), so a
+  // header click would imply a client-side sort that never happens.
   const [sortBy, setSortBy] = useState<InboxCandidateSort>("submittedAt");
+
+  // A filter that matches nothing hides the header row it lives in, so the
+  // empty state carries its own way back out. Sort is an ordering, not a
+  // narrowing, so it is left alone.
+  const hasFilters = qInput !== "" || status !== "";
+  const resetFilters = () => {
+    setQInput("");
+    changeStatus("");
+    setPage(1);
+  };
+
   const { data, isPending, isError, refetch } = useInboxCandidates(
     side,
     jobId,
@@ -179,7 +194,9 @@ export function InboxCandidatesTable({
             options: STATUS_FILTER_OPTIONS,
           }}
           extraFilter={{
-            value: sortBy,
+            // The default sort is the toolbar's "no selection", so the applied
+            // count reads as a count of narrowings, not of dropdowns.
+            value: sortBy === "submittedAt" ? "" : sortBy,
             onChange: (next) => {
               // "" is the toolbar's "no selection", which for a sort means the
               // default rather than an absent one.
@@ -241,7 +258,23 @@ export function InboxCandidatesTable({
                 ? "When a recruiter sends someone to this job, they appear here — newest first."
                 : "Candidates you send to this job appear here, each with its own conversation."
             }
-            action={emptyAction}
+            action={
+              hasFilters ? (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {emptyAction}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={resetFilters}
+                  >
+                    Reset filters
+                  </Button>
+                </div>
+              ) : (
+                emptyAction
+              )
+            }
           />
         </div>
       ) : (
@@ -261,7 +294,14 @@ export function InboxCandidatesTable({
                     <th className={TABLE_TH}>Submitted</th>
                   )}
                   {cols.isVisible("status") && (
-                    <th className={TABLE_TH}>Status</th>
+                    <FilterableHead label="Status">
+                      <ColumnFilter
+                        label="Status"
+                        options={STATUS_FILTER_OPTIONS}
+                        value={status === "" ? null : status}
+                        onChange={(next) => changeStatus(next ?? "")}
+                      />
+                    </FilterableHead>
                   )}
                   <th className={TABLE_TH} />
                 </tr>

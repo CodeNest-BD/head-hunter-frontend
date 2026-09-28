@@ -32,6 +32,7 @@ import {
   TABLE_TD_STACKED,
   TABLE_TH,
 } from "@/shared/ui-components/data/tableStyles";
+import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   useAdmins,
   useChangeAdminPassword,
@@ -415,7 +416,13 @@ export function AdminManagement() {
         </CardHeader>
         <CardContent className="p-0">
           {isPending ? (
-            <div className="h-32 animate-pulse" />
+            /* The roster is Admin · Created · Actions. Borderless: the card
+               around it already draws the frame. */
+            <TableSkeleton
+              rows={3}
+              columns={3}
+              className="rounded-none border-0 shadow-none"
+            />
           ) : isError ? (
             <div className="m-4 flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
               <div className="flex items-center gap-2.5 font-[550]">

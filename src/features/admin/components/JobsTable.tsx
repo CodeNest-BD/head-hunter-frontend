@@ -9,6 +9,10 @@ import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
 import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
+import {
   ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
@@ -62,6 +66,15 @@ function formatDate(iso: string): string {
     year: "numeric",
   });
 }
+
+const STATUS_FILTER_OPTIONS = [
+  { value: "published", label: "Published" },
+  { value: "draft", label: "Draft" },
+  { value: "paused", label: "Paused" },
+  { value: "filled", label: "Filled" },
+  { value: "closed", label: "Closed" },
+  { value: "expired", label: "Expired" },
+] as const;
 
 const COLUMNS: ColumnDef[] = [
   { key: "job", label: "Job", required: true },
@@ -202,6 +215,15 @@ export function JobsTable({
     limit,
     changeLimit,
   } = useListState(initialStatus);
+  // A filter that matches nothing hides the header row it lives in, so the
+  // empty state carries its own way back out. The company scope is a deep-link
+  // with its own chip to clear, so it stays put.
+  const hasFilters = qInput !== "" || status !== "";
+  const resetFilters = () => {
+    setQInput("");
+    changeStatus("");
+    setPage(1);
+  };
   const cols = useVisibleColumns("admin.jobs.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminJobs({
     page,
@@ -313,14 +335,7 @@ export function JobsTable({
               value: status,
               onChange: changeStatus,
               allLabel: "All statuses",
-              options: [
-                { value: "published", label: "Published" },
-                { value: "draft", label: "Draft" },
-                { value: "paused", label: "Paused" },
-                { value: "filled", label: "Filled" },
-                { value: "closed", label: "Closed" },
-                { value: "expired", label: "Expired" },
-              ],
+              options: [...STATUS_FILTER_OPTIONS],
             }}
           />
         </div>
@@ -389,6 +404,18 @@ export function JobsTable({
             icon={Briefcase}
             title="No jobs found"
             description="Try a different search or filter."
+            action={
+              hasFilters ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                >
+                  Reset filters
+                </Button>
+              ) : undefined
+            }
           />
         </div>
       ) : (
@@ -415,9 +442,14 @@ export function JobsTable({
                     </th>
                   )}
                   {cols.isVisible("status") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Status
-                    </th>
+                    <FilterableHead label="Status">
+                      <ColumnFilter
+                        label="Status"
+                        options={STATUS_FILTER_OPTIONS}
+                        value={status === "" ? null : status}
+                        onChange={(next) => changeStatus(next ?? "")}
+                      />
+                    </FilterableHead>
                   )}
                   {cols.isVisible("fee") && (
                     <th scope="col" className={cn(TABLE_TH, "text-right")}>

@@ -165,6 +165,20 @@ export function StatCard({
   );
 }
 
+/**
+ * Stands in for a `StatCard` figure whose query has not landed yet. It is an
+ * inline-block shorter than the figure's line box, so the card keeps exactly
+ * the height it will have once the number arrives and the strip never jumps.
+ */
+export function StatValueSkeleton() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block h-[17px] w-16 animate-pulse rounded-xs bg-surface-sunken align-middle"
+    />
+  );
+}
+
 export type AttentionTone = "blue" | "amber" | "muted";
 
 export interface AttentionItem {

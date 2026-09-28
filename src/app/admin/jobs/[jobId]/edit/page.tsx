@@ -25,8 +25,13 @@ function EditContent({ jobId }: { jobId: string }) {
   const [confirmRepost, setConfirmRepost] = useState(false);
 
   if (isPending) {
+    // The same two-card shape the company's job editor stands in with — this
+    // page renders the very same `JobForm`.
     return (
-      <div className="h-64 animate-pulse rounded-md border border-line bg-surface" />
+      <div className="flex flex-col gap-4">
+        <div className="h-72 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
+        <div className="h-48 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
+      </div>
     );
   }
   if (isError || !job) {

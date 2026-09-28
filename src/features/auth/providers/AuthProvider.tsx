@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
 import { bootFailed } from "../store/authSlice";
 import { refreshAccessToken } from "../lib/refreshClient";
@@ -113,8 +115,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   if (!isPublicRoute(pathname)) {
     if (status === "booting") {
       return (
-        <div className="flex min-h-screen items-center justify-center gap-2 bg-background text-sm text-muted-foreground">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
+        /* Which page is coming is not known until the session settles, so
+           there is no shape to trace — the house spinner, not a skeleton. */
+        <div className="flex min-h-screen items-center justify-center gap-2 bg-canvas text-sub text-ink-muted">
+          <Loader2 className="size-[15px] animate-spin text-ink-faint" />
           Loading…
         </div>
       );

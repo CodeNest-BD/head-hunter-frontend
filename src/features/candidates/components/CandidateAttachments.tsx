@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Eye, FileText } from "lucide-react";
+import { Download, Eye, FileText, Loader2 } from "lucide-react";
 
 import { FilePreviewDialog } from "@/shared/ui-components/feedback/FilePreviewDialog";
 import { formatSize } from "@/shared/utils/formatSize";
@@ -46,7 +46,14 @@ export function CandidateAttachments({
   const attachments = useAttachments(candidateId, enabled);
 
   if (attachments.isPending) {
-    return <p className="text-sub text-ink-muted">Loading files…</p>;
+    // A short inline wait inside a panel that is already drawn — the house
+    // spinner beside the copy, not a skeleton that would displace the rows.
+    return (
+      <p className="flex items-center gap-2 text-sub text-ink-muted">
+        <Loader2 className="size-[15px] shrink-0 animate-spin text-ink-faint" />
+        Loading files…
+      </p>
+    );
   }
   if (attachments.isError) {
     return <p className="text-sub text-bad">Could not load files.</p>;

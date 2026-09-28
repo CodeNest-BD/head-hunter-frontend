@@ -109,10 +109,18 @@ export function AdminOverview() {
         {banner}
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
           {[0, 1, 2, 3, 4].map((i) => (
+            /* A `StatCard`'s three stacked lines — label, figure, hint — on
+               the same white card, so the strip does not resize when the
+               numbers land. */
             <div
               key={i}
-              className="h-24 animate-pulse rounded-md border border-line bg-surface"
-            />
+              aria-hidden="true"
+              className="flex h-24 flex-col justify-center gap-2 rounded-md border border-line bg-surface px-4 shadow-e1"
+            >
+              <div className="h-3 w-20 animate-pulse rounded-xs bg-surface-sunken" />
+              <div className="h-6 w-14 animate-pulse rounded-xs bg-surface-sunken" />
+              <div className="h-3 w-24 animate-pulse rounded-xs bg-surface-sunken" />
+            </div>
           ))}
         </div>
       </div>
