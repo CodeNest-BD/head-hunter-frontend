@@ -47,7 +47,8 @@ const COLUMNS: readonly FooterColumn[] = [
 
 /** Internal routes go through next/link; mailto/tel stay plain anchors. */
 function FooterNavLink({ label, href }: FooterLink) {
-  const className = "text-sm text-white/60 transition-colors hover:text-white";
+  const className =
+    "text-sub text-ink-muted transition-colors hover:text-blue-ink";
   if (href.startsWith("mailto:") || href.startsWith("tel:")) {
     return (
       <a href={href} className={className}>
@@ -63,20 +64,22 @@ function FooterNavLink({ label, href }: FooterLink) {
 }
 
 /**
- * Site footer for every public page: a navy panel with the brand lockup and a
- * short pitch, three columns of links, and a legal bar. Full-bleed background
- * with a centered 1240px inner column so it reads the same on the narrow
+ * The reference's `.pubfoot`: a white surface above a hairline, carrying the
+ * brand lockup and a short pitch, three columns of links, and a legal bar.
+ * White rather than navy because the design system reserves navy for ink and
+ * small accents — never a full-bleed surface. Full width with a centred
+ * 1200px inner column (`.pubwrap`), so it reads the same on the narrow
  * marketing pages and the full-width tool pages.
  */
 export function LandingFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-navy text-white">
-      <div className="mx-auto grid max-w-[1240px] gap-10 px-4 py-14 sm:px-5 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:px-10">
+    <footer className="mt-14 border-t border-line bg-surface">
+      <div className="mx-auto grid max-w-[1200px] gap-8 px-6 py-7 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div className="max-w-xs">
-          <Logo tone="onDark" />
-          <p className="mt-4 text-sm leading-relaxed text-white/55">
+          <Logo />
+          <p className="mt-3 text-sub leading-relaxed text-ink-muted">
             You set the price. We connect you to the best — the recruiting
             marketplace where companies name their fee and top recruiters
             deliver.
@@ -85,10 +88,10 @@ export function LandingFooter() {
 
         {COLUMNS.map((column) => (
           <nav key={column.title} aria-label={column.title}>
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/40">
+            <h2 className="text-label font-[650] uppercase text-ink-muted">
               {column.title}
             </h2>
-            <ul className="mt-4 flex flex-col gap-3">
+            <ul className="mt-3 flex flex-col gap-2">
               {column.links.map((link) =>
                 // The two role-aware links own their own <li> so the role they
                 // are not for drops the item entirely, rather than leaving an
@@ -116,8 +119,8 @@ export function LandingFooter() {
         ))}
       </div>
 
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-[1240px] flex-col gap-2 px-4 py-5 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between sm:px-5 md:px-10">
+      <div className="border-t border-line">
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-2 px-6 py-4 text-meta text-ink-faint sm:flex-row sm:items-center sm:justify-between">
           <span>© {year} Head-Hunters.com. All rights reserved.</span>
           <span>A US-based recruiting marketplace.</span>
         </div>

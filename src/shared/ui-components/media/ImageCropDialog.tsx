@@ -50,7 +50,7 @@ function ControlSlider({
       onValueChange={([next]) => onValueChange(next)}
     >
       <Slider.Track className="relative h-1 grow rounded-full bg-border">
-        <Slider.Range className="absolute h-full rounded-full bg-primary" />
+        <Slider.Range className="absolute h-full rounded-full bg-blue" />
       </Slider.Track>
       <Slider.Thumb
         aria-label={ariaLabel}
@@ -121,10 +121,10 @@ export function ImageCropDialog({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
         <Dialog.Content
           onOpenAutoFocus={reset}
-          className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-x-hidden overflow-y-auto rounded-md border border-border bg-card shadow-card-lg focus:outline-none"
+          className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 flex-col overflow-x-hidden overflow-y-auto rounded-lg border border-line bg-surface shadow-pop focus:outline-none"
         >
-          <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3">
-            <Dialog.Title className="text-sm font-bold capitalize text-navy">
+          <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3">
+            <Dialog.Title className="text-card font-[650] capitalize text-ink">
               Edit {label}
             </Dialog.Title>
             <Dialog.Close asChild>
@@ -132,7 +132,7 @@ export function ImageCropDialog({
                 type="button"
                 aria-label="Close"
                 disabled={busy}
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
+                className="rounded-xs p-1 text-ink-muted hover:bg-surface-sub hover:text-ink disabled:opacity-55"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -165,7 +165,7 @@ export function ImageCropDialog({
 
           <div className="flex shrink-0 flex-col gap-4 px-5 py-4">
             <div className="flex items-center gap-3">
-              <ZoomIn className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <ZoomIn className="size-[15px] shrink-0 text-ink-muted" />
               <ControlSlider
                 ariaLabel="Zoom"
                 value={zoom}

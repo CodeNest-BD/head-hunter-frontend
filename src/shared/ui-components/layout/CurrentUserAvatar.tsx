@@ -16,7 +16,7 @@ import { RecruiterPhoto } from "@/shared/ui-components/data/RecruiterPhoto";
  * fetched only for that role, sharing the cached `myProfile` query the
  * dashboard/profile already load.
  *
- * `className` sets the size (e.g. `h-8 w-8 text-xs`); tailwind-merge lets it
+ * `className` sets the size (e.g. `size-8 text-meta`); tailwind-merge lets it
  * override the default size classes.
  */
 export function CurrentUserAvatar({ className }: { className?: string }) {
@@ -63,11 +63,11 @@ export function CurrentUserAvatar({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-accent font-bold text-primary",
+        "flex shrink-0 items-center justify-center rounded-full bg-tint font-bold text-blue-ink",
         className,
       )}
     >
-      {initials ?? <UserRound className="h-4 w-4" />}
+      {initials ?? <UserRound className="size-4" />}
     </span>
   );
 }

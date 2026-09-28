@@ -134,16 +134,16 @@ export function RichTextEditor({
 
   if (!editor) {
     return (
-      <div className="min-h-[230px] animate-pulse rounded-md border border-input bg-muted/50" />
+      <div className="min-h-[230px] animate-pulse rounded-sm border border-line-strong bg-surface-sub" />
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-input bg-background shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+    <div className="overflow-hidden rounded-sm border border-line-strong bg-surface transition-colors focus-within:border-blue focus-within:shadow-focus">
       <div
         role="toolbar"
         aria-label="Text formatting"
-        className="flex flex-wrap items-center gap-0.5 border-b border-border bg-secondary/60 px-2 py-1.5"
+        className="flex flex-wrap items-center gap-0.5 border-b border-line bg-surface-sub px-2 py-1.5"
       >
         <ToolbarButton
           icon={Bold}
@@ -240,7 +240,7 @@ function ToolbarButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors",
+        "inline-flex size-7 items-center justify-center rounded-xs text-ink-muted transition-colors",
         "hover:bg-accent hover:text-primary disabled:pointer-events-none disabled:opacity-40",
         isActive && "bg-accent text-primary",
       )}

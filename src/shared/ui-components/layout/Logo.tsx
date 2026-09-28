@@ -35,9 +35,7 @@ export function Logo({
   const onDark = tone === "onDark";
   const large = size === "lg";
   return (
-    <span
-      className={cn("inline-flex items-center gap-[9px]", className)}
-    >
+    <span className={cn("inline-flex items-center gap-[9px]", className)}>
       {/* The mark is the same coloured crosshair on every surface — the blue
           ring reads on both light and navy — so only the wordmark ink adapts. */}
       <Image

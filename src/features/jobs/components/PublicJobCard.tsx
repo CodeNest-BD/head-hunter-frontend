@@ -11,6 +11,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui-components/controls/tooltip";
+import { Button } from "@/shared/ui-components/controls/button";
+import { Tag } from "@/shared/ui-components/badges/Tag";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { formatMinor } from "@/shared/utils/money";
 
@@ -101,13 +103,13 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
   const [isTitleRevealed, setIsTitleRevealed] = useState(false);
 
   return (
-    <article className="flex h-full flex-col rounded-md border border-brand-line bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover sm:p-5">
+    <article className="flex h-full flex-col rounded-md border border-line bg-surface p-4 shadow-e1 transition-shadow hover:border-line-strong hover:shadow-e2 sm:p-5">
       <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex w-fit rounded-full bg-accent px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] text-brand-secondary">
+        <span className="inline-flex w-fit rounded-full bg-tint px-2.5 py-1 text-[10px] font-[650] uppercase tracking-[0.06em] text-blue-ink">
           {categoryLabel(job.roleCategory)}
         </span>
         {posted && (
-          <span className="shrink-0 text-xs text-brand-gray-light">
+          <span className="shrink-0 text-meta text-ink-faint">
             {posted}
           </span>
         )}
@@ -129,7 +131,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
               // keyboard equivalent. Neither is offered on a title that fits.
               tabIndex={isTitleTruncated ? 0 : undefined}
               onClick={() => setIsTitleRevealed(true)}
-              className="mt-3 line-clamp-2 font-heading text-lg font-extrabold leading-snug text-navy outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="mt-3 line-clamp-2 text-card font-[650] leading-snug text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {job.title}
             </h3>
@@ -140,7 +142,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
       {/* Company and location each keep their own row. Wrapping them together
        * put the location beside the company on one card and beneath it on the
        * next, which is the bulk of what read as ragged across a row. */}
-      <div className="mt-1.5 flex flex-col gap-1 text-sm text-brand-gray">
+      <div className="mt-1.5 flex flex-col gap-1 text-sub text-ink-muted">
         <span className="flex min-w-0 items-center gap-2">
           <CompanyLogo
             companyProfileId={job.companyProfileId}
@@ -151,7 +153,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
           <span className="truncate">{job.companyName}</span>
         </span>
         <span className="flex min-w-0 items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
           <span className="truncate">{locationLine(job)}</span>
         </span>
       </div>
@@ -162,12 +164,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
        * row instead of floating up behind a short title. */}
       <div className="mt-auto flex flex-wrap gap-2 pt-3">
         {tags(job).map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full bg-[#F1F3F5] px-2.5 py-0.5 text-xs font-medium text-[#616676]"
-          >
-            {tag}
-          </span>
+          <Tag key={tag}>{tag}</Tag>
         ))}
       </div>
 
@@ -176,45 +173,42 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
        * salary range, a fee and the action on one row without clipping. The
        * reference side-by-side footer returns once the columns are wide
        * enough for it. */}
-      <div className="mt-3 flex flex-col gap-3 border-t border-brand-line pt-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
+      <div className="mt-3 flex flex-col gap-3 border-t border-line pt-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
         <div className="min-w-0">
           {/* Always one line, stated either way — an omitted salary used to
            * leave a card a line shorter than its neighbours, which pulled its
            * fee and button out of step with theirs. */}
           {salary ? (
-            <p className="mb-1.5 text-sm font-bold text-navy">
+            <p className="mb-1.5 text-sub font-[650] tabular-nums text-ink">
               {salary}
-              <span className="ml-1.5 text-xs font-medium text-brand-gray">
+              <span className="ml-1.5 text-meta font-[450] text-ink-muted">
                 pay
               </span>
             </p>
           ) : (
-            <p className="mb-1.5 text-sm font-medium text-brand-gray-light">
+            <p className="mb-1.5 text-sub font-[550] text-ink-faint">
               Pay not disclosed
             </p>
           )}
-          <p className="font-heading text-xl font-extrabold leading-none text-primary">
+          <p className="text-section font-[650] tabular-nums leading-none text-ink">
             {isFree ? "Free" : formatMinor(job.recruiterFeeMinor)}
-            <span className="ml-1.5 text-sm font-medium text-brand-gray">
+            <span className="ml-1.5 text-sub font-[450] text-ink-muted">
               recruiter fee
             </span>
           </p>
           {/* How much competition the role already has. Stated at zero too, so
            * "nobody has submitted yet" is visible rather than inferred from a
            * missing line. */}
-          <p className="mt-1.5 text-xs font-medium text-brand-gray">
+          <p className="mt-1.5 text-meta font-[450] text-ink-muted">
             {job.submittedCandidates}{" "}
             {job.submittedCandidates === 1
               ? "submitted candidate"
               : "submitted candidates"}
           </p>
         </div>
-        <Link
-          href={jobPath(job)}
-          className="inline-flex w-full shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 2xl:w-auto"
-        >
-          View details
-        </Link>
+        <Button asChild className="w-full shrink-0 2xl:w-auto">
+          <Link href={jobPath(job)}>View details</Link>
+        </Button>
       </div>
     </article>
   );

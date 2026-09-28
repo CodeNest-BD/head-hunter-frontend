@@ -84,23 +84,23 @@ function NavDropdown({
       <Dropdown.Trigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1 text-sm font-semibold text-brand-slate outline-none transition-colors hover:text-primary data-[state=open]:text-primary"
+          className="inline-flex items-center gap-1 rounded-sm px-[11px] py-[7px] text-body font-[550] text-ink-body outline-none transition-colors hover:bg-surface-sub data-[state=open]:bg-tint data-[state=open]:text-blue"
         >
           {label}
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="size-3.5" />
         </button>
       </Dropdown.Trigger>
       <Dropdown.Portal>
         <Dropdown.Content
           align="start"
           sideOffset={12}
-          className="z-50 min-w-[210px] rounded-md border border-border bg-popover p-1 shadow-card-lg"
+          className="z-50 min-w-[210px] rounded-sm border border-line bg-surface p-1 shadow-pop"
         >
           {items.map((item) => (
             <Dropdown.Item key={item.href} asChild>
               <Link
                 href={item.href}
-                className="block rounded-sm px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent focus:bg-accent"
+                className="block rounded-xs px-2.5 py-1.5 text-sub text-ink-body outline-none transition-colors hover:bg-surface-sub focus:bg-surface-sub"
               >
                 {item.label}
               </Link>
@@ -124,7 +124,7 @@ function MobileGroup({
 }) {
   return (
     <div>
-      <p className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-gray-light">
+      <p className="px-2.5 pb-1.5 text-[10.5px] font-bold uppercase tracking-[0.09em] text-ink-faint">
         {label}
       </p>
       <div className="flex flex-col gap-1">
@@ -133,7 +133,7 @@ function MobileGroup({
             key={item.href}
             item={item}
             onClick={onNavigate}
-            className="rounded-md px-2.5 py-2.5 text-sm font-semibold text-brand-slate hover:bg-accent hover:text-primary"
+            className="rounded-sm px-2.5 py-2 text-sub font-[550] text-ink-body hover:bg-surface-sub hover:text-ink"
           />
         ))}
       </div>
@@ -174,13 +174,12 @@ export function LandingNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-brand-line bg-white/95 backdrop-blur">
-        {/* Full-width with the same horizontal padding as the app header
-            (DashboardLayout), so the logo sits at the same position on every
-            page — marketing and signed-in alike. */}
+      <header className="sticky top-0 z-30 border-b border-line bg-surface">
+        {/* `.pubnav` — the same height, edge padding and brand block as the app
+            top bar, so the bar never shifts between page types. */}
         <nav
           aria-label="Primary"
-          className="flex h-16 w-full items-center gap-6 px-3 sm:px-6 lg:px-10"
+          className="flex h-topbar w-full items-center gap-3 pl-4 pr-5"
         >
           <Link href="/" aria-label="Head-Hunters home">
             <Logo />
@@ -188,12 +187,12 @@ export function LandingNav() {
 
           <div className="flex-1" />
 
-          <div className="hidden items-center gap-6 lg:flex">
+          <div className="hidden items-center gap-1 lg:flex">
             {PRIMARY_LINKS.map((item) => (
               <NavItemAnchor
                 key={item.href}
                 item={item}
-                className="text-sm font-semibold text-brand-slate transition-colors hover:text-primary"
+                className="rounded-sm px-[11px] py-[7px] text-body font-[550] text-ink-body transition-colors hover:bg-surface-sub"
               />
             ))}
             {showForCompanies && (
@@ -205,11 +204,11 @@ export function LandingNav() {
             <NavDropdown label="Resources" items={RESOURCES} />
           </div>
 
-          <div className="hidden items-center gap-3 lg:flex">
+          <div className="hidden items-center gap-2 lg:flex">
             {booting ? (
               <span
                 aria-hidden="true"
-                className="h-9 w-24 animate-pulse rounded-md bg-brand-line"
+                className="h-9 w-24 animate-pulse rounded-sm bg-line"
               />
             ) : isAuthed && user ? (
               <>
@@ -218,31 +217,27 @@ export function LandingNav() {
               </>
             ) : (
               <>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="border-[#C9D0DF] font-semibold text-navy hover:border-primary hover:bg-transparent hover:text-primary"
-                >
+                <Button asChild variant="ghost">
                   <Link href="/login">Log In</Link>
                 </Button>
                 <Dropdown.Root>
                   <Dropdown.Trigger asChild>
-                    <Button className="font-bold">
+                    <Button size="sm">
                       Sign Up
-                      <ChevronDown className="ml-1 h-4 w-4" />
+                      <ChevronDown className="size-3.5" />
                     </Button>
                   </Dropdown.Trigger>
                   <Dropdown.Portal>
                     <Dropdown.Content
                       align="end"
                       sideOffset={8}
-                      className="z-50 min-w-[180px] rounded-md border border-border bg-popover p-1 shadow-card-lg"
+                      className="z-50 min-w-[180px] rounded-sm border border-line bg-surface p-1 shadow-pop"
                     >
                       {SIGNUP_AUDIENCES.map((item) => (
                         <Dropdown.Item key={item.href} asChild>
                           <Link
                             href={item.href}
-                            className="block rounded-sm px-2.5 py-2 text-sm text-foreground outline-none transition-colors hover:bg-accent focus:bg-accent"
+                            className="block rounded-xs px-2.5 py-1.5 text-sub text-ink-body outline-none transition-colors hover:bg-surface-sub focus:bg-surface-sub"
                           >
                             {item.label}
                           </Link>
@@ -257,12 +252,12 @@ export function LandingNav() {
 
           <button
             type="button"
-            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#C9D0DF] text-navy lg:hidden"
+            className="ml-auto inline-flex size-8.5 items-center justify-center rounded-sm text-ink-muted transition-colors hover:bg-surface-sub hover:text-ink lg:hidden"
             aria-label="Open menu"
             aria-expanded={open}
             onClick={() => setOpen(true)}
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="size-[17px]" />
           </button>
         </nav>
       </header>
@@ -282,20 +277,20 @@ export function LandingNav() {
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
-          <aside className="absolute inset-y-0 right-0 flex w-80 max-w-[85%] flex-col border-l border-brand-line bg-white shadow-2xl">
-            <div className="flex items-center justify-between gap-3 border-b border-brand-line px-4 py-3.5">
+          <aside className="absolute inset-y-0 right-0 flex w-80 max-w-[85%] flex-col border-l border-line bg-surface shadow-pop">
+            <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
               {isAuthed && user ? (
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-tint text-meta font-bold text-blue">
                     {`${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || (
-                      <UserRound className="h-4 w-4" />
+                      <UserRound className="size-4" />
                     )}
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-bold text-navy">
+                    <span className="block truncate text-[12.5px] font-semibold text-ink">
                       {user.firstName} {user.lastName}
                     </span>
-                    <span className="block truncate text-xs capitalize text-muted-foreground">
+                    <span className="block truncate text-[10.5px] capitalize text-ink-faint">
                       {user.role}
                     </span>
                   </span>
@@ -307,9 +302,9 @@ export function LandingNav() {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
-                className="shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-navy"
+                className="flex size-8.5 shrink-0 items-center justify-center rounded-sm text-ink-muted transition-colors hover:bg-surface-sub hover:text-ink"
               >
-                <X className="h-5 w-5" />
+                <X className="size-[17px]" />
               </button>
             </div>
 
@@ -323,9 +318,9 @@ export function LandingNav() {
                         key={item.href}
                         href={item.href}
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 rounded-md px-2.5 py-2.5 text-sm font-medium text-brand-slate hover:bg-accent hover:text-primary"
+                        className="flex h-9 items-center gap-2.5 rounded-sm px-2.5 text-sub font-[550] text-ink-muted hover:bg-surface-sub hover:text-ink"
                       >
-                        <Icon className="h-[18px] w-[18px] text-muted-foreground" />
+                        <Icon className="size-[17px]" />
                         {item.label}
                       </Link>
                     );
@@ -336,9 +331,7 @@ export function LandingNav() {
               <div
                 className={cn(
                   "flex flex-col gap-4 p-3",
-                  isAuthed &&
-                    navItems.length > 0 &&
-                    "border-t border-brand-line",
+                  isAuthed && navItems.length > 0 && "border-t border-line",
                 )}
               >
                 <MobileGroup
@@ -368,11 +361,11 @@ export function LandingNav() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 border-t border-brand-line p-3">
+            <div className="flex flex-col gap-2 border-t border-line p-3">
               {booting ? (
                 <span
                   aria-hidden="true"
-                  className="h-9 animate-pulse rounded-md bg-brand-line"
+                  className="h-9 animate-pulse rounded-sm bg-line"
                 />
               ) : isAuthed ? (
                 <button
@@ -381,28 +374,20 @@ export function LandingNav() {
                     setOpen(false);
                     void logout();
                   }}
-                  className="flex items-center gap-3 rounded-md px-2.5 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10"
+                  className="flex h-9 items-center gap-2.5 rounded-sm px-2.5 text-sub font-[550] text-bad hover:bg-bad-bg"
                 >
-                  <LogOut className="h-[18px] w-[18px]" />
+                  <LogOut className="size-[17px]" />
                   Log out
                 </button>
               ) : (
                 <>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full border-[#C9D0DF] font-semibold text-navy"
-                  >
+                  <Button asChild variant="outline" className="w-full">
                     <Link href="/login" onClick={() => setOpen(false)}>
                       Log In
                     </Link>
                   </Button>
                   {SIGNUP_AUDIENCES.map((item) => (
-                    <Button
-                      key={item.href}
-                      asChild
-                      className="w-full font-bold"
-                    >
+                    <Button key={item.href} asChild className="w-full">
                       <Link href={item.href} onClick={() => setOpen(false)}>
                         Sign Up &mdash; {item.label}
                       </Link>

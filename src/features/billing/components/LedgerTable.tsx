@@ -9,6 +9,8 @@ import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardContent } from "@/shared/ui-components/controls/card";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
+import * as T from "@/shared/ui-components/data/tableStyles";
 import {
   MobileRecordCard,
   MobileRecordList,
@@ -28,8 +30,9 @@ const isPurchase = (type: LedgerEntry["entryType"]): boolean =>
 // Amount and Document are rendered by both the desktop table and the mobile
 // card, so their shape lives here rather than inline in either one.
 
+/** Money into the wallet reads green; money leaving it stays in ink. */
 const amountToneClass = (entry: LedgerEntry): string =>
-  isInflow(entry.entryType) ? "text-[#17734E]" : "text-navy";
+  isInflow(entry.entryType) ? "text-ok" : "text-ink";
 
 const amountLabel = (entry: LedgerEntry): string =>
   `${isInflow(entry.entryType) ? "+" : "−"}${formatMinor(entry.amountMinor)}`;
@@ -43,16 +46,13 @@ function LedgerDocument({
 }) {
   return isPurchase(entry.entryType) ? (
     <PurchaseReceiptDialog entry={entry} accountName={accountName}>
-      <button
-        type="button"
-        className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-accent"
-      >
-        <FileText className="h-3.5 w-3.5" />
+      <Button type="button" variant="outline" size="sm">
+        <FileText />
         Receipt
-      </button>
+      </Button>
     </PurchaseReceiptDialog>
   ) : (
-    <span className="text-muted-foreground/50">—</span>
+    <span className="text-ink-faint">—</span>
   );
 }
 
@@ -66,7 +66,7 @@ export function LedgerTable() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-sm text-muted-foreground">
+        <CardContent className="p-8 text-center text-sub text-ink-muted">
           Loading history…
         </CardContent>
       </Card>
@@ -77,18 +77,11 @@ export function LedgerTable() {
   if (entries.length === 0) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
-            <Receipt className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-navy">No activity yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Load funds and your top-ups, reservations and refunds will show up
-              here.
-            </p>
-          </div>
-        </CardContent>
+        <EmptyState
+          icon={Receipt}
+          title="No activity yet"
+          description="Load funds and your top-ups, reservations and refunds will show up here."
+        />
       </Card>
     );
   }
@@ -96,125 +89,148 @@ export function LedgerTable() {
   const totalPages = data?.meta.totalPages ?? 1;
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="hidden overflow-x-auto sm:block">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-                <th className="px-5 py-3 font-semibold">When</th>
-                <th className="px-5 py-3 font-semibold">Activity</th>
-                <th className="px-5 py-3 text-right font-semibold">Amount</th>
-                <th className="px-5 py-3 text-right font-semibold">Balance</th>
-                <th className="px-5 py-3 text-right font-semibold">Reserved</th>
-                <th className="px-5 py-3 text-right font-semibold">Document</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => (
-                <tr
-                  key={entry.id}
-                  className="border-b border-border/60 last:border-0"
-                >
-                  <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                    {formatDateTime(entry.createdAt)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <p className="font-medium text-navy">
-                      {LEDGER_TYPE_LABELS[entry.entryType]}
-                    </p>
-                    {entry.description && (
-                      <p className="text-xs text-muted-foreground">
-                        {entry.description}
-                      </p>
-                    )}
-                  </td>
-                  <td
-                    className={cn(
-                      "whitespace-nowrap px-5 py-3 text-right font-semibold",
-                      amountToneClass(entry),
-                    )}
-                  >
-                    {amountLabel(entry)}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-right text-muted-foreground">
-                    {formatMinor(entry.balanceAfterMinor)}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-right text-muted-foreground">
-                    {formatMinor(entry.reservedAfterMinor)}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-3 text-right">
-                    <LedgerDocument entry={entry} accountName={accountName} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <MobileRecordList className="sm:hidden">
-          {entries.map((entry) => (
-            <MobileRecordCard
-              key={entry.id}
-              title={LEDGER_TYPE_LABELS[entry.entryType]}
-              subtitle={entry.description}
-              trailing={
-                <span
+    <div className={T.TABLE_CARD}>
+      <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
+        <table className={T.TABLE_EL}>
+          <thead className={T.TABLE_HEAD}>
+            <tr className={T.TABLE_HEAD_ROW}>
+              <th scope="col" className={T.TABLE_TH}>
+                When
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "w-2/5")}>
+                Activity
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Amount
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Balance
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Reserved
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Document
+              </th>
+            </tr>
+          </thead>
+          <tbody className={T.TABLE_BODY}>
+            {entries.map((entry) => (
+              <tr key={entry.id} className={T.TABLE_ROW}>
+                <td
                   className={cn(
-                    "whitespace-nowrap text-sm font-semibold",
+                    T.TABLE_TD,
+                    "whitespace-nowrap tabular-nums text-ink-body",
+                  )}
+                >
+                  {formatDateTime(entry.createdAt)}
+                </td>
+                <td className={T.TABLE_TD_STACKED}>
+                  <p className={T.TABLE_CELL_MAIN}>
+                    {LEDGER_TYPE_LABELS[entry.entryType]}
+                  </p>
+                  {entry.description && (
+                    <p className={T.TABLE_CELL_SUB}>{entry.description}</p>
+                  )}
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right font-[650] tabular-nums",
                     amountToneClass(entry),
                   )}
                 >
                   {amountLabel(entry)}
-                </span>
-              }
-              fields={[
-                { label: "When", value: formatDateTime(entry.createdAt) },
-                {
-                  label: "Balance",
-                  value: formatMinor(entry.balanceAfterMinor),
-                },
-                {
-                  label: "Reserved",
-                  value: formatMinor(entry.reservedAfterMinor),
-                },
-                {
-                  label: "Document",
-                  value: (
-                    <LedgerDocument entry={entry} accountName={accountName} />
-                  ),
-                },
-              ]}
-            />
-          ))}
-        </MobileRecordList>
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-border px-5 py-3 text-sm">
-            <span className="text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                  )}
+                >
+                  {formatMinor(entry.balanceAfterMinor)}
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                  )}
+                >
+                  {formatMinor(entry.reservedAfterMinor)}
+                </td>
+                <td
+                  className={cn(T.TABLE_TD, "whitespace-nowrap text-right")}
+                >
+                  <LedgerDocument entry={entry} accountName={accountName} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <MobileRecordList className="sm:hidden">
+        {entries.map((entry) => (
+          <MobileRecordCard
+            key={entry.id}
+            title={LEDGER_TYPE_LABELS[entry.entryType]}
+            subtitle={entry.description}
+            trailing={
+              <span
+                className={cn(
+                  "whitespace-nowrap text-sub font-[650] tabular-nums",
+                  amountToneClass(entry),
+                )}
               >
-                Previous
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
+                {amountLabel(entry)}
+              </span>
+            }
+            fields={[
+              { label: "When", value: formatDateTime(entry.createdAt) },
+              {
+                label: "Balance",
+                value: formatMinor(entry.balanceAfterMinor),
+              },
+              {
+                label: "Reserved",
+                value: formatMinor(entry.reservedAfterMinor),
+              },
+              {
+                label: "Document",
+                value: (
+                  <LedgerDocument entry={entry} accountName={accountName} />
+                ),
+              },
+            ]}
+          />
+        ))}
+      </MobileRecordList>
+      {totalPages > 1 && (
+        <div className="flex flex-col gap-2 border-t border-line px-3.5 py-2.5 text-[12.5px] text-ink-muted sm:flex-row sm:items-center">
+          <span className="tabular-nums">
+            Page {page} of {totalPages}
+          </span>
+          <div className="flex items-center gap-1 sm:ml-auto">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 }

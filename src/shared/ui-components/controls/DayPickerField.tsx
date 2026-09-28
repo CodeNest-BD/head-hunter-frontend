@@ -69,21 +69,17 @@ export function DayPickerField({
           id={id}
           aria-label={ariaLabel}
           className={cn(
-            "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm transition-colors hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+            "flex h-9 w-full items-center justify-between gap-2 rounded-sm border border-line-strong bg-surface px-[11px] text-body transition-colors hover:bg-surface-sub focus-visible:border-blue focus-visible:shadow-focus focus-visible:outline-none",
             className,
           )}
         >
-          <span
-            className={
-              selectedDate ? "text-foreground" : "text-muted-foreground"
-            }
-          >
+          <span className={selectedDate ? "text-ink" : "text-ink-faint"}>
             {selectedDate
               ? format(selectedDate, "EEE, d MMM yyyy")
               : placeholder}
           </span>
           <CalendarIcon
-            className="h-4 w-4 shrink-0 text-muted-foreground"
+            className="size-3.5 shrink-0 text-ink-faint"
             aria-hidden="true"
           />
         </button>
@@ -92,7 +88,7 @@ export function DayPickerField({
         <Popover.Content
           align="start"
           sideOffset={4}
-          className="z-50 rounded-md border border-border bg-card p-2 shadow-card-lg focus:outline-none"
+          className="z-50 rounded-sm border border-line bg-surface p-2 shadow-pop focus:outline-none"
         >
           <Calendar
             mode="single"

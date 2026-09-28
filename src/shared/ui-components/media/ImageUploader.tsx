@@ -118,7 +118,7 @@ export function ImageUploader({
             </Button>
           )}
         </div>
-        <p className="text-[13px] text-muted-foreground">
+        <p className="text-sub text-ink-muted">
           {busy ? "Uploading…" : helpText}
         </p>
       </div>

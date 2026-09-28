@@ -1,7 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Briefcase, DollarSign, Lock, Users } from "lucide-react";
+import {
+  Award,
+  Bell,
+  Briefcase,
+  CalendarCheck,
+  DollarSign,
+  Lock,
+  MessageSquare,
+  UserPlus,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 import { useWallet } from "@/features/billing";
 import { useMessageUnreadCount } from "@/features/conversations";
@@ -16,12 +27,38 @@ import {
   StatCard,
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
+import { ListRow } from "@/shared/ui-components/list/ListRow";
+import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { useMyCompanyProfile } from "../hooks/useCompanyProfile";
 
 /** A description shorter than this reads as a placeholder to recruiters. */
 const MIN_DESCRIPTION = 40;
+
+/**
+ * The tinted glyph that leads an activity row. Matching on the event's type
+ * keeps the tile meaningful as the backend adds types — an unrecognised event
+ * still reads as a neutral notice rather than mislabelling itself.
+ */
+function activityGlyph(type: string): { icon: LucideIcon; tone: TileTone } {
+  const t = type.toLowerCase();
+  if (t.includes("offer") || t.includes("hire") || t.includes("placement")) {
+    return { icon: Award, tone: "violet" };
+  }
+  if (t.includes("interview")) return { icon: CalendarCheck, tone: "ok" };
+  if (t.includes("wallet") || t.includes("payout") || t.includes("payment")) {
+    return { icon: DollarSign, tone: "ok" };
+  }
+  if (t.includes("message") || t.includes("chat")) {
+    return { icon: MessageSquare, tone: "blue" };
+  }
+  if (t.includes("candidate") || t.includes("submission")) {
+    return { icon: UserPlus, tone: "blue" };
+  }
+  if (t.includes("job")) return { icon: Briefcase, tone: "neutral" };
+  return { icon: Bell, tone: "neutral" };
+}
 
 export function CompanyDashboard({ firstName }: { firstName: string }) {
   const profile = useMyCompanyProfile();
@@ -101,7 +138,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
   const recentActivity = activity.data?.data ?? [];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title={`${firstName}'s Dashboard`}
         subtitle={subtitleParts.join(" · ")}
@@ -109,7 +146,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
 
       {/* Ordered left-to-right as the employer's flow: post jobs → review
           candidates → the funds that back it all. */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard
           label="Published jobs"
           value={published.isPending ? "—" : publishedTotal}
@@ -118,6 +155,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
               ? `${noFeeCount} without a fee`
               : "live on the job map"
           }
+          hintTone={noFeeCount > 0 ? "warn" : "default"}
           icon={Briefcase}
           href="/company/jobs"
         />
@@ -160,7 +198,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
                 action={
                   <Link
                     href="/notifications"
-                    className="text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+                    className="text-[12.5px] font-[550] text-blue-ink transition-colors hover:text-blue-deep"
                   >
                     View all
                   </Link>
@@ -173,7 +211,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
                     ))}
                   </div>
                 ) : (
-                  <p className="py-6 text-sm text-muted-foreground">
+                  <p className="px-4 py-6 text-sub text-ink-muted">
                     You&apos;re all caught up — nothing needs your attention
                     right now.
                   </p>
@@ -187,28 +225,29 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
             content: (
               <Panel title="Recent activity">
                 {recentActivity.length > 0 ? (
-                  <ul className="flex flex-col">
-                    {recentActivity.map((note) => (
-                      <li
-                        key={note.id}
-                        className="border-b border-border/70 py-3.5 last:border-0"
-                      >
-                        <p className="text-sm font-medium text-navy">
-                          {note.title}
-                        </p>
-                        {note.body && (
-                          <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-                            {note.body}
-                          </p>
-                        )}
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {formatDateTime(note.createdAt)}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex flex-col">
+                    {recentActivity.map((note) => {
+                      const { icon, tone } = activityGlyph(note.type);
+                      return (
+                        <ListRow key={note.id}>
+                          <Tile icon={icon} tone={tone} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-body text-ink">{note.title}</p>
+                            {note.body && (
+                              <p className="mt-0.5 text-sub text-ink-muted">
+                                {note.body}
+                              </p>
+                            )}
+                            <p className="mt-[3px] text-meta text-ink-faint">
+                              {formatDateTime(note.createdAt)}
+                            </p>
+                          </div>
+                        </ListRow>
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <p className="py-6 text-sm text-muted-foreground">
+                  <p className="px-4 py-6 text-sub text-ink-muted">
                     No recent activity yet.
                   </p>
                 )}

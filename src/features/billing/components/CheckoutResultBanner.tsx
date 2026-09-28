@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+
+import { Alert } from "@/shared/ui-components/feedback/Alert";
 
 interface CheckoutResultBannerProps {
   /** Query param written by the Stripe redirect URLs, e.g. "topup". */
@@ -42,21 +43,8 @@ export function CheckoutResultBanner({
 
   const isSuccess = result === "success";
   return (
-    <div
-      role="status"
-      className={
-        "flex items-start gap-3 rounded-md border px-4 py-3 text-sm " +
-        (isSuccess
-          ? "border-[#CDE7D8] bg-[#E7F4EC] text-[#17734E]"
-          : "border-[#F0D4D4] bg-[#FBEAEA] text-[#9B3535]")
-      }
-    >
-      {isSuccess ? (
-        <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0" />
-      ) : (
-        <XCircle className="mt-0.5 h-[18px] w-[18px] shrink-0" />
-      )}
+    <Alert tone={isSuccess ? "ok" : "bad"}>
       <p>{isSuccess ? successMessage : cancelMessage}</p>
-    </div>
+    </Alert>
   );
 }

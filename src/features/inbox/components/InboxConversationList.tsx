@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Briefcase, Inbox, Search } from "lucide-react";
 
+import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import {
   CANDIDATE_STATUS_LABELS,
   type CandidateStatus,
@@ -13,9 +14,17 @@ import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
+import { Avatar } from "@/shared/ui-components/badges/Avatar";
+import { RefChip } from "@/shared/ui-components/badges/RefChip";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
+import { Card, CardHeader } from "@/shared/ui-components/controls/card";
 import { Input } from "@/shared/ui-components/controls/input";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
+import { Alert } from "@/shared/ui-components/feedback/Alert";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
+import { ListRow } from "@/shared/ui-components/list/ListRow";
 
 import type { InboxSide } from "../api/inbox";
 import { useInboxConversations } from "../hooks/useInbox";
@@ -55,45 +64,12 @@ const COPY: Record<
 
 type Filter = "all" | "unread";
 
+/** The two positions of the reference's `.seg` control above the list. */
+const FILTERS: readonly Filter[] = ["all", "unread"];
+
 /** Server page size — shared by the query and the pager's range readout so the
  * "N–M of total" it prints matches what the server actually returned. */
 const PAGE_SIZE = 20;
-
-/** The chip a thread wears while it carries news the reader has not seen — the
- * platform's needs-action amber, as on an open dispute. */
-const REVIEW_STYLE = "bg-[#FBF3DF] text-[#7A5109]";
-
-/** Soft two-tone chip per pipeline stage, matching the design's colours. */
-const STATUS_STYLES: Record<CandidateStatus, string> = {
-  submitted: "bg-[#EEF1F6] text-[#5B6B7C]",
-  reviewing: "bg-[#FBF3DF] text-[#7A5109]",
-  interviewing: "bg-[#E8EEFB] text-[#3B5BA9]",
-  offered: "bg-[#EFE9FB] text-[#6B4FA8]",
-  hired: "bg-[#E7F4EC] text-[#17734E]",
-  passed: "bg-[#F1EFEF] text-[#8A7F7F]",
-};
-
-/** A stable per-counterparty tint for the initials tile. */
-const AVATAR_PALETTE = [
-  "bg-[#E8EDFB] text-[#3F5BA9]",
-  "bg-[#FBF1DC] text-[#8A6D3B]",
-  "bg-[#E7F0E9] text-[#3F7A5A]",
-  "bg-[#F2E9F3] text-[#7A4F86]",
-  "bg-[#FBE9E6] text-[#9B4A3F]",
-];
-function avatarTint(name: string): string {
-  let h = 0;
-  for (let i = 0; i < name.length; i += 1) {
-    h = (h * 31 + name.charCodeAt(i)) | 0;
-  }
-  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
-}
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 /**
  * The inbox: a flat list of message threads, most-recent first — a row is the
@@ -131,38 +107,35 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
   ).length;
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight text-navy">
-          Inbox
-        </h1>
-        <p className="text-sm text-muted-foreground">{copy.subtitle}</p>
-      </div>
+    <div className="flex flex-col gap-4">
+      <PageHeader title="Inbox" subtitle={copy.subtitle} />
 
-      {/* Search + All/Unread segmented control — a left-aligned group, so the
-       * control sits beside the search rather than stranded at the far edge. */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[240px] max-w-[480px] flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      {/* `.toolbar` — the 36px search box and the All/Unread segmented control
+       * sit directly on the canvas, left-aligned as one group. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[220px] max-w-[360px] flex-1">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
+          />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search company, candidate or job"
-            className="h-11 rounded-lg bg-card pl-9"
+            className="pl-8 text-sub"
           />
         </div>
-        <div className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border bg-card p-1">
-          {(["all", "unread"] as const).map((key) => (
+        <div className="inline-flex shrink-0 rounded-sm border border-line bg-surface-sunken p-0.5">
+          {FILTERS.map((key) => (
             <button
               key={key}
               type="button"
               onClick={() => setFilter(key)}
               className={cn(
-                "rounded-md px-4 py-1.5 text-sm font-semibold capitalize transition-colors",
+                "inline-flex h-7 items-center gap-1.5 rounded-xs px-3 text-[12.5px] font-semibold capitalize transition-colors",
                 filter === key
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "bg-surface text-ink shadow-e1"
+                  : "text-ink-muted hover:text-ink",
               )}
             >
               {key}
@@ -172,95 +145,89 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
       </div>
 
       {isError ? (
-        <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-          <div className="flex items-center gap-2 font-medium">
-            <AlertCircle className="h-[18px] w-[18px]" />
-            Could not load your inbox.
+        <Alert tone="bad" icon={AlertCircle}>
+          <div className="flex flex-col items-start gap-2.5">
+            <span className="font-[650]">Could not load your inbox.</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void refetch()}
+            >
+              Retry
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="self-start"
-            onClick={() => void refetch()}
-          >
-            Retry
-          </Button>
-        </div>
+        </Alert>
       ) : isPending ? (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="overflow-hidden rounded-md border border-line bg-surface shadow-e1">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="h-[84px] w-full animate-pulse border-b border-border/60 bg-muted/40 last:border-0"
+              className="h-[84px] w-full animate-pulse border-b border-line bg-surface-sub last:border-b-0"
             />
           ))}
         </div>
       ) : rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-input bg-card px-6 py-16 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Inbox className="h-6 w-6" />
-          </span>
-          <div className="flex flex-col gap-1">
-            <p className="font-heading text-base font-semibold text-navy">
-              {q || filter === "unread"
+        <Card className="overflow-hidden">
+          <EmptyState
+            icon={Inbox}
+            title={
+              q || filter === "unread"
                 ? "No conversations match"
-                : "No conversations yet"}
-            </p>
-            {!q && filter !== "unread" ? (
-              <p className="max-w-sm text-sm text-muted-foreground">
-                {copy.emptyHint.before}
-                <Link
-                  href={copy.emptyHint.href}
-                  className="font-medium text-primary underline-offset-2 hover:underline"
-                >
-                  {copy.emptyHint.label}
-                </Link>
-                {copy.emptyHint.after}
-              </p>
-            ) : null}
-          </div>
-        </div>
+                : "No conversations yet"
+            }
+            description={
+              !q && filter !== "unread" ? (
+                <>
+                  {copy.emptyHint.before}
+                  <Link
+                    href={copy.emptyHint.href}
+                    className="font-[550] text-blue-ink underline-offset-2 hover:underline"
+                  >
+                    {copy.emptyHint.label}
+                  </Link>
+                  {copy.emptyHint.after}
+                </>
+              ) : undefined
+            }
+          />
+        </Card>
       ) : (
-        <>
-          <div
-            className={cn(
-              "overflow-hidden rounded-xl border border-border bg-card shadow-card transition-opacity",
-              isPlaceholderData && "opacity-60",
-            )}
-          >
-            <div className="flex items-center justify-between border-b border-border px-5 py-2.5">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                Conversations
+        <Card
+          className={cn(
+            "overflow-hidden transition-opacity",
+            isPlaceholderData && "opacity-60",
+          )}
+        >
+          <CardHeader className="py-2.5">
+            <span className="text-label font-[650] uppercase text-ink-muted">
+              Conversations
+            </span>
+            {unreadOnPage > 0 ? (
+              <span className="ml-auto text-meta tabular-nums text-ink-muted">
+                {unreadOnPage} unread
               </span>
-              {unreadOnPage > 0 ? (
-                <span className="text-[11px] font-medium text-muted-foreground">
-                  {unreadOnPage} unread
-                </span>
-              ) : null}
-            </div>
-            <ul className="divide-y divide-border">
-              {rows.map((row) => (
-                <ConversationRow
-                  key={row.candidateId}
-                  row={row}
-                  side={side}
-                  onOpen={() =>
-                    router.push(`/${side}/inbox/${row.candidateId}`)
-                  }
-                  jobHref={copy.jobHref(row.jobId, row.jobTitle)}
-                />
-              ))}
-            </ul>
-            <TablePager
-              page={meta?.page ?? 1}
-              totalPages={meta?.totalPages ?? 1}
-              total={meta?.total ?? rows.length}
-              pageSize={PAGE_SIZE}
-              onPage={setPage}
-            />
-          </div>
-        </>
+            ) : null}
+          </CardHeader>
+          <ul>
+            {rows.map((row) => (
+              <ConversationRow
+                key={row.candidateId}
+                row={row}
+                side={side}
+                onOpen={() => router.push(`/${side}/inbox/${row.candidateId}`)}
+                jobHref={copy.jobHref(row.jobId, row.jobTitle)}
+              />
+            ))}
+          </ul>
+          <TablePager
+            page={meta?.page ?? 1}
+            totalPages={meta?.totalPages ?? 1}
+            total={meta?.total ?? rows.length}
+            pageSize={PAGE_SIZE}
+            onPage={setPage}
+          />
+        </Card>
       )}
     </div>
   );
@@ -296,7 +263,9 @@ function ConversationRow({
     : noMessageLine(row);
 
   return (
-    <li>
+    // The separator lives on the list item so the row's own `last:` rule stays
+    // true — `ListRow` then owns only the padding, tint and cobalt rail.
+    <li className="border-b border-line last:border-b-0">
       <div
         role="button"
         tabIndex={0}
@@ -307,80 +276,71 @@ function ConversationRow({
             onOpen();
           }
         }}
-        className={cn(
-          "flex cursor-pointer items-start gap-3 px-5 py-4 transition-colors",
-          needsYou
-            ? "bg-primary/[0.04] shadow-[inset_3px_0_0_0_hsl(var(--primary))] hover:bg-primary/[0.08]"
-            : "hover:bg-secondary/40",
-        )}
+        className="cursor-pointer"
       >
-        {/* Unread dot */}
-        <span className="flex w-2.5 shrink-0 justify-center pt-2">
-          {needsYou ? (
-            <span
-              className="block h-2.5 w-2.5 shrink-0 rounded-full bg-primary"
-              aria-label="Unread"
-            />
-          ) : null}
-        </span>
+        <ListRow unread={needsYou} interactive className="border-b-0">
+          {/* Unread dot — kept in the flow when read so the columns stay aligned. */}
+          <span className="flex w-[7px] shrink-0 justify-center pt-[7px]">
+            {needsYou ? (
+              <span
+                className="block size-[7px] shrink-0 rounded-full bg-blue"
+                aria-label="Unread"
+              />
+            ) : null}
+          </span>
 
-        {/* Avatar */}
-        <span
-          className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
-            avatarTint(row.counterpartyName),
-          )}
-        >
-          {initials(row.counterpartyName)}
-        </span>
+          <Avatar name={row.counterpartyName} size="md" />
 
-        {/* Subject + preview */}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-3">
-            <span
+          {/* Subject + preview */}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "min-w-0 flex-1 truncate text-sub text-ink",
+                  needsYou ? "font-[650]" : "font-semibold",
+                )}
+              >
+                {row.counterpartyName}
+              </span>
+              <span className="shrink-0 whitespace-nowrap text-meta tabular-nums text-ink-faint">
+                {formatDate(row.lastActivityAt)}
+              </span>
+            </div>
+
+            <div className="mt-[3px] flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="truncate text-sub text-ink-muted">
+                {row.candidateName}
+              </span>
+              <span aria-hidden="true" className="text-ink-faint">
+                ·
+              </span>
+              <Link
+                href={jobHref}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex min-w-0 max-w-full"
+              >
+                <RefChip className="transition-colors hover:bg-info-line">
+                  <Briefcase aria-hidden="true" />
+                  <span className="truncate">{row.jobTitle}</span>
+                </RefChip>
+              </Link>
+              <span className="ml-auto shrink-0">
+                <StatusPill status={row.status} needsReview={row.needsReview} />
+              </span>
+            </div>
+
+            <p
               className={cn(
-                "min-w-0 flex-1 truncate text-[15px]",
-                needsYou ? "font-bold text-navy" : "font-semibold text-navy",
+                "mt-[3px] truncate text-sub",
+                hasMessage && unread
+                  ? "font-[550] text-ink-body"
+                  : "text-ink-muted",
               )}
             >
-              {row.counterpartyName}
-            </span>
-            <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-muted-foreground">
-              {formatDate(row.lastActivityAt)}
-            </span>
+              {preview}
+            </p>
           </div>
-
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-[13px] text-navy/80">
-              {row.candidateName}
-            </span>
-            <span aria-hidden="true" className="text-muted-foreground">
-              ·
-            </span>
-            <Link
-              href={jobHref}
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex max-w-full items-center gap-1 rounded-[5px] border border-[#D7E0EF] bg-[#F1F5FC] px-1.5 py-0.5 text-[12px] font-medium text-[#24457A] transition-colors hover:bg-[#E7EEFA]"
-            >
-              <Briefcase className="h-3 w-3 shrink-0" />
-              <span className="truncate">{row.jobTitle}</span>
-            </Link>
-            <span className="ml-auto shrink-0">
-              <StatusPill status={row.status} needsReview={row.needsReview} />
-            </span>
-          </div>
-
-          <p
-            className={cn(
-              "mt-1.5 truncate text-[13px]",
-              hasMessage && unread
-                ? "font-medium text-navy"
-                : "text-muted-foreground",
-            )}
-          >
-            {preview}
-          </p>
-        </div>
+        </ListRow>
       </div>
     </li>
   );
@@ -398,14 +358,12 @@ function StatusPill({
   status: CandidateStatus;
   needsReview: boolean;
 }) {
-  return (
-    <span
-      className={cn(
-        "rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide",
-        needsReview ? REVIEW_STYLE : STATUS_STYLES[status],
-      )}
-    >
-      {needsReview ? "Review" : CANDIDATE_STATUS_LABELS[status]}
-    </span>
+  return needsReview ? (
+    <StatusBadge label="Review" tone="warn" />
+  ) : (
+    <StatusBadge
+      label={CANDIDATE_STATUS_LABELS[status]}
+      tone={CANDIDATE_STATUS_TONES[status]}
+    />
   );
 }

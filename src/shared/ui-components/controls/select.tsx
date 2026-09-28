@@ -51,7 +51,10 @@ const SelectTrigger = React.forwardRef<
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="size-3 shrink-0 text-ink-muted" strokeWidth={2.5} />
+      <ChevronDown
+        className="size-3 shrink-0 text-ink-muted"
+        strokeWidth={2.5}
+      />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));

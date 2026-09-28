@@ -10,7 +10,7 @@ export function UnreadBadge({ count }: UnreadBadgeProps) {
   return (
     <span
       aria-label={`${count} unread messages`}
-      className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold tabular-nums text-primary-foreground"
+      className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue px-1.5 text-[10.5px] font-bold tabular-nums text-white"
     >
       {count}
     </span>

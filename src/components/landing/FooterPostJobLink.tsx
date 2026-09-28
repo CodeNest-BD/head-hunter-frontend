@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/features/auth";
 
 const FOOTER_LINK_CLASS =
-  "text-sm text-white/60 transition-colors hover:text-white";
+  "text-sub text-ink-muted transition-colors hover:text-blue-ink";
 
 /**
  * The footer's "Post a Job" list item. Posting is an employer action, so a

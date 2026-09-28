@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import { useStateCities } from "@/shared/hooks/useStateCities";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { Card } from "@/shared/ui-components/controls/card";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
@@ -119,22 +120,22 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <div className="divide-y divide-border rounded-md border border-border bg-card shadow-card">
+      <Card>
         <FormSection title="Identity" hint="Your brand within the website.">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label>Logo</Label>
             <CompanyLogoUploader profile={profile} />
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="companyName">Company Name</Label>
             <Input id="companyName" {...register("companyName")} />
             {errors.companyName && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.companyName.message}
               </p>
             )}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="website">Website</Label>
             <Input
               id="website"
@@ -142,18 +143,18 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               {...register("website")}
             />
             {errors.website && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.website.message}
               </p>
             )}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="description">Company Description</Label>
               <span
                 className={cn(
-                  "text-xs",
-                  descriptionShort ? "text-[#B4820A]" : "text-muted-foreground",
+                  "text-meta tabular-nums",
+                  descriptionShort ? "font-[550] text-warn" : "text-ink-faint",
                 )}
               >
                 {descriptionLength} / {MAX_DESCRIPTION}
@@ -167,7 +168,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               placeholder="What your company does…in your own words."
               {...register("description")}
             />
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-meta text-ink-faint">
               This is the company&apos;s first impression – a good description
               and details about your organization help you stand out to your
               next great hire!
@@ -179,8 +180,8 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           title="Business Details"
           hint="Shown on your profile so recruiters can make the closest match."
         >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="industry">Industry</Label>
               <Input
                 id="industry"
@@ -188,26 +189,27 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                 {...register("industry")}
               />
               {errors.industry && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.industry.message}
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="yearFounded">Year Founded</Label>
               <NumericInput
                 id="yearFounded"
                 maxLength={4}
+                className="tabular-nums"
                 placeholder="2014"
                 {...register("yearFounded")}
               />
               {errors.yearFounded && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.yearFounded.message}
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="employeeSize">Number of Employees</Label>
               <Controller
                 control={control}
@@ -231,12 +233,12 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                 )}
               />
               {errors.employeeSize && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.employeeSize.message}
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="revenue">Annual Revenue</Label>
               {/* The $ is a permanent prefix, not part of the value. The field is
                   numeric-only, so legacy free-text values like "$50M" are cleaned
@@ -248,14 +250,14 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                   <div className="relative">
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-body text-ink-faint"
                     >
                       $
                     </span>
                     <NumericInput
                       decimal
                       id="revenue"
-                      className="pl-7"
+                      className="pl-7 tabular-nums"
                       placeholder="50000000"
                       value={(field.value ?? "").replace(/[^\d.]/g, "")}
                       onChange={field.onChange}
@@ -265,7 +267,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                 )}
               />
               {errors.revenue && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.revenue.message}
                 </p>
               )}
@@ -277,7 +279,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
           title="Address"
           hint="Your corporate or main office address."
         >
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="addressLine">Street Address</Label>
             <Input
               id="addressLine"
@@ -285,13 +287,13 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
               {...register("addressLine")}
             />
             {errors.addressLine && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.addressLine.message}
               </p>
             )}
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,11rem)_6rem]">
-            <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,11rem)_6rem]">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="state">State</Label>
               <Controller
                 control={control}
@@ -305,12 +307,12 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                 )}
               />
               {errors.state && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.state.message}
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="city">City</Label>
               <Controller
                 control={control}
@@ -325,16 +327,21 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
                 )}
               />
               {errors.city && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.city.message}
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="zip">ZIP</Label>
-              <NumericInput id="zip" placeholder="94103" {...register("zip")} />
+              <NumericInput
+                id="zip"
+                className="tabular-nums"
+                placeholder="94103"
+                {...register("zip")}
+              />
               {errors.zip && (
-                <p className="text-xs text-destructive">{errors.zip.message}</p>
+                <p className="text-meta font-medium text-bad">{errors.zip.message}</p>
               )}
             </div>
           </div>
@@ -347,7 +354,7 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
             backend drops the column. */}
         <input type="hidden" {...register("commissionMin")} />
         <input type="hidden" {...register("commissionMax")} />
-      </div>
+      </Card>
 
       <CompanyFormSaveBar
         isDirty={isDirty}

@@ -5,17 +5,17 @@ import { formatMinor } from "@/shared/utils/money";
 import { useWallet } from "../hooks/useBilling";
 
 /**
- * Balance at a glance. "Available" leads in navy because it is the number that
- * governs what the company can post and offer against; balance and the held
- * escrow explain it.
+ * Balance at a glance. "Available" leads because it is the number that governs
+ * what the company can post and offer against; balance and the held escrow
+ * explain it. All three wear the same stat card — the reference defines no
+ * emphasised variant, so one figure never out-shouts its neighbours.
  */
 export function WalletSummary() {
   const { data } = useWallet();
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+    <div className="grid gap-3 sm:grid-cols-3">
       <StatCard
-        className="col-span-2 sm:col-span-1"
         label="Available to spend"
         value={formatMinor(data?.availableMinor)}
         hint="Spendable on new offers"

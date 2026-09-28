@@ -12,7 +12,8 @@ import {
 /**
  * The recruiter's profile-photo control. A thin wrapper over the shared
  * {@link ImageUploader} — identical behaviour to the company logo control
- * (pick → crop/rotate → immediate upload).
+ * (pick → crop/rotate → immediate upload), and framed in the same `.well` so
+ * the portrait and the controls that change it read as one unit.
  */
 export function RecruiterPhotoUploader({
   profile,
@@ -26,22 +27,24 @@ export function RecruiterPhotoUploader({
   const remove = useRemoveRecruiterPhoto();
 
   return (
-    <ImageUploader
-      label="photo"
-      hasImage={profile.hasPhoto}
-      helpText="PNG, JPG, or WebP · up to 2 MB · a clear headshot works best."
-      isBusy={upload.isPending || remove.isPending}
-      upload={(file) => upload.mutateAsync(file)}
-      onRemove={() => remove.mutate()}
-      renderPreview={(version) => (
-        <RecruiterPhoto
-          recruiterProfileId={profile.id}
-          hasPhoto={profile.hasPhoto}
-          name={name}
-          size="xl"
-          version={version}
-        />
-      )}
-    />
+    <div className="rounded-sm border border-line bg-surface-sub px-3 py-2.5">
+      <ImageUploader
+        label="photo"
+        hasImage={profile.hasPhoto}
+        helpText="PNG, JPG, or WebP · up to 2 MB · a clear headshot works best."
+        isBusy={upload.isPending || remove.isPending}
+        upload={(file) => upload.mutateAsync(file)}
+        onRemove={() => remove.mutate()}
+        renderPreview={(version) => (
+          <RecruiterPhoto
+            recruiterProfileId={profile.id}
+            hasPhoto={profile.hasPhoto}
+            name={name}
+            size="xl"
+            version={version}
+          />
+        )}
+      />
+    </div>
   );
 }

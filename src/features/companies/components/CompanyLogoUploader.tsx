@@ -13,28 +13,33 @@ import {
  * {@link ImageUploader} so it behaves identically to the recruiter photo control
  * — the caller threads it into the Identity section so a logo sits beside the
  * name it represents.
+ *
+ * The reference frames it as a `.well`, so the mark and the controls that change
+ * it read as one unit rather than three loose elements in the field column.
  */
 export function CompanyLogoUploader({ profile }: { profile: CompanyProfile }) {
   const upload = useUploadCompanyLogo();
   const remove = useRemoveCompanyLogo();
 
   return (
-    <ImageUploader
-      label="logo"
-      hasImage={profile.hasLogo}
-      helpText="PNG, JPG, or WebP · up to 2 MB · square works best."
-      isBusy={upload.isPending || remove.isPending}
-      upload={(file) => upload.mutateAsync(file)}
-      onRemove={() => remove.mutate()}
-      renderPreview={(version) => (
-        <CompanyLogo
-          companyProfileId={profile.id}
-          hasLogo={profile.hasLogo}
-          name={profile.companyName}
-          size="xl"
-          version={version}
-        />
-      )}
-    />
+    <div className="rounded-sm border border-line bg-surface-sub px-3 py-2.5">
+      <ImageUploader
+        label="logo"
+        hasImage={profile.hasLogo}
+        helpText="PNG, JPG, or WebP · up to 2 MB · square works best."
+        isBusy={upload.isPending || remove.isPending}
+        upload={(file) => upload.mutateAsync(file)}
+        onRemove={() => remove.mutate()}
+        renderPreview={(version) => (
+          <CompanyLogo
+            companyProfileId={profile.id}
+            hasLogo={profile.hasLogo}
+            name={profile.companyName}
+            size="xl"
+            version={version}
+          />
+        )}
+      />
+    </div>
   );
 }

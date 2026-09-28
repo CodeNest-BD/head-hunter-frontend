@@ -15,18 +15,14 @@ export interface NegotiationStateBadgesProps {
 }
 
 /**
- * Same four-tone palette the two detail pages already use for their status
- * pills (submission/candidate `STATUS_STYLES`) — no new visual primitive,
- * just applied to a third, separate fact.
+ * The same four semantic tones the status pills use, applied to a third,
+ * separate fact — no new visual primitive, and no palette of its own.
  */
 const TONE_STYLES = {
-  neutral: {
-    dot: "bg-muted-foreground/50",
-    pill: "bg-muted text-muted-foreground",
-  },
-  pending: { dot: "bg-[#92610C]", pill: "text-[#92610C] bg-[#FBF3DF]" },
-  positive: { dot: "bg-[#17734E]", pill: "text-[#17734E] bg-[#E7F4EC]" },
-  active: { dot: "bg-primary", pill: "bg-primary/15 text-primary" },
+  neutral: { dot: "bg-neutral", pill: "bg-neutral-bg text-neutral" },
+  pending: { dot: "bg-warn", pill: "bg-warn-bg text-warn" },
+  positive: { dot: "bg-ok", pill: "bg-ok-bg text-ok" },
+  active: { dot: "bg-info", pill: "bg-info-bg text-info" },
 } as const;
 type Tone = keyof typeof TONE_STYLES;
 
@@ -87,15 +83,15 @@ function NegotiationBadge({ label, content }: NegotiationBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex h-5.25 items-center gap-[5px] whitespace-nowrap rounded-full px-2 text-[11px] font-[650] tracking-[0.02em]",
         tone.pill,
       )}
     >
       <span
-        className={cn("h-1.5 w-1.5 shrink-0 rounded-full", tone.dot)}
+        className={cn("size-[5px] shrink-0 rounded-full", tone.dot)}
         aria-hidden="true"
       />
-      {label}: <span className="font-normal">{content.phrase}</span>
+      {label}: <span className="font-[450]">{content.phrase}</span>
     </span>
   );
 }

@@ -140,12 +140,14 @@ export function ChipListField({
           </Button>
         </div>
       )}
-      {error !== null && <p className="text-xs text-destructive">{error}</p>}
+      {error !== null && (
+        <p className="text-meta font-medium text-bad">{error}</p>
+      )}
       {value.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {value.map((entry, index) => (
             <li key={entry}>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 py-1 pl-3 pr-1.5 text-xs font-medium text-primary">
+              <span className="inline-flex h-6.5 items-center gap-1.5 rounded-full border border-blue bg-tint pl-2.5 pr-1 text-meta font-[550] text-blue-ink">
                 {entry}
                 <button
                   type="button"
@@ -153,7 +155,7 @@ export function ChipListField({
                     onChange(value.filter((_, position) => position !== index))
                   }
                   aria-label={`Remove ${entry}`}
-                  className="rounded-full p-0.5 text-primary/70 transition-colors hover:bg-primary/15 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-full p-0.5 text-blue-ink/70 transition-colors hover:bg-tint-strong hover:text-blue-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <X className="h-3 w-3" aria-hidden="true" />
                 </button>
