@@ -321,8 +321,8 @@ export function CompanySubmissionsQueue() {
   // Read once as the initial value rather than synced: once here, the Job
   // column filter owns the choice, so clearing it must not be undone by the
   // URL it arrived from.
-  const [jobId, setJobId] = useState<string | null>(() =>
-    searchParams.get("job"),
+  const [jobId, setJobId] = useState<string | null>(
+    () => searchParams?.get("job") ?? null,
   );
   const [status, setStatus] = useState<string | null>(null);
   const [recruiterKind, setRecruiterKind] = useState<string | null>(null);
