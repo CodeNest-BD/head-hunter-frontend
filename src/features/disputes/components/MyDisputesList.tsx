@@ -18,6 +18,7 @@ import {
   TABLE_HEAD,
   TABLE_ROW,
   TABLE_ROW_UNREAD,
+  TABLE_TD_RAIL,
   TABLE_SCROLL,
   TABLE_TD,
   TABLE_TH,
@@ -41,10 +42,6 @@ function PendingPill() {
     </Pill>
   );
 }
-
-/** The inbox's left accent bar. On the first cell, not the row: an inset
- * shadow on a `<tr>` doesn't render reliably across browsers. */
-const UPDATED_CELL = "shadow-rail";
 
 function UpdateDot() {
   return (
@@ -124,7 +121,7 @@ export function MyDisputesList() {
                   className={cn(
                     TABLE_TD,
                     "text-ink",
-                    d.hasUpdate ? `font-[650] ${UPDATED_CELL}` : "font-[550]",
+                    d.hasUpdate ? `font-[650] ${TABLE_TD_RAIL}` : "font-[550]",
                   )}
                 >
                   <span className="flex items-center gap-2">

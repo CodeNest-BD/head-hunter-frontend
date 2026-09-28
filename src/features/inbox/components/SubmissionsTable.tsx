@@ -16,6 +16,7 @@ import {
   CANDIDATE_STATUSES,
   CANDIDATE_STATUS_LABELS,
 } from "@/features/candidates/schemas";
+import { CandidateQuickView } from "@/features/candidates/components/CandidateQuickView";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
@@ -52,6 +53,7 @@ import {
   TABLE_HEAD,
   TABLE_ROW,
   TABLE_ROW_UNREAD,
+  TABLE_TD_RAIL,
   TABLE_SCROLL,
   TABLE_TD,
   TABLE_TD_STACKED,
@@ -500,7 +502,12 @@ export function SubmissionsTable({
                       row.unreadMessages > 0 && TABLE_ROW_UNREAD,
                     )}
                   >
-                    <td className={TABLE_TD}>
+                    <td
+                      className={cn(
+                        TABLE_TD,
+                        row.unreadMessages > 0 && TABLE_TD_RAIL,
+                      )}
+                    >
                       <span className="flex items-center gap-2">
                         <Avatar name={row.candidateName} size="sm" />
                         <span
@@ -516,6 +523,10 @@ export function SubmissionsTable({
                               aria-label="Unread messages"
                             />
                           )}
+                          <CandidateQuickView
+                            candidateId={row.candidateId}
+                            name={row.candidateName}
+                          />
                         </span>
                       </span>
                     </td>

@@ -27,6 +27,11 @@ const ACTION_CLASS =
 
 interface CandidateAttachmentsProps {
   candidateId: string;
+  /**
+   * Every call mints fresh presigned URLs, so a surface that opens on demand
+   * (the quick-view popover) holds this false until it is actually open.
+   */
+  enabled?: boolean;
 }
 
 /**
@@ -36,8 +41,9 @@ interface CandidateAttachmentsProps {
  */
 export function CandidateAttachments({
   candidateId,
+  enabled = true,
 }: CandidateAttachmentsProps) {
-  const attachments = useAttachments(candidateId, true);
+  const attachments = useAttachments(candidateId, enabled);
 
   if (attachments.isPending) {
     return <p className="text-sub text-ink-muted">Loading files…</p>;

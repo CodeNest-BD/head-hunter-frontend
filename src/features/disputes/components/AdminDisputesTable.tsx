@@ -26,6 +26,7 @@ import {
   TABLE_HEAD,
   TABLE_ROW,
   TABLE_ROW_UNREAD,
+  TABLE_TD_RAIL,
   TABLE_SCROLL,
   TABLE_TD,
   TABLE_TH,
@@ -62,10 +63,6 @@ const FILTERS: {
     statuses: ["resolved_release"],
   },
 ];
-
-/** The inbox's left accent bar. On the first cell, not the row: an inset
- * shadow on a `<tr>` doesn't render reliably across browsers. */
-const UNREAD_CELL = "shadow-rail";
 
 const RAISED_BY_LABELS: Record<DisputeChannel, string> = {
   company: "Company",
@@ -199,7 +196,7 @@ export function AdminDisputesTable() {
                       className={cn(
                         TABLE_TD,
                         "text-ink",
-                        d.unread ? `font-[650] ${UNREAD_CELL}` : "font-[550]",
+                        d.unread ? `font-[650] ${TABLE_TD_RAIL}` : "font-[550]",
                       )}
                     >
                       <span className="flex items-center gap-2">

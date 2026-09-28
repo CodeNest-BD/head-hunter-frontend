@@ -31,6 +31,7 @@ import {
   TABLE_CELL_MAIN,
   TABLE_ROW,
   TABLE_ROW_UNREAD,
+  TABLE_TD_RAIL,
   TABLE_SCROLL,
   TABLE_TD,
   TABLE_TD_STACKED,
@@ -282,7 +283,7 @@ export function InboxCandidatesTable({
                         TABLE_CELL_MAIN,
                         // The inbox's accent bar — on the cell, since an inset
                         // shadow on a `<tr>` doesn't render reliably.
-                        candidateNeedsAttention(row) && "shadow-rail",
+                        candidateNeedsAttention(row) && TABLE_TD_RAIL,
                       )}
                     >
                       <span className="flex items-center gap-2">
@@ -301,11 +302,11 @@ export function InboxCandidatesTable({
                             value={row.recruiter?.ratingAvg ?? null}
                             count={row.recruiter?.ratingCount}
                           />
-                          {row.recruiter?.yearsExperience != null && (
-                            <span className="text-[11.5px] tabular-nums text-ink-faint">
-                              {row.recruiter.yearsExperience} yrs
-                            </span>
-                          )}
+                          <span className="text-[11.5px] tabular-nums text-ink-faint">
+                            {row.recruiter?.yearsExperience == null
+                              ? "Experience not set"
+                              : `${row.recruiter.yearsExperience} yrs`}
+                          </span>
                         </div>
                       </td>
                     )}

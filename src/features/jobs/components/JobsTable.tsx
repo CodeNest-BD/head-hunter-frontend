@@ -30,6 +30,10 @@ import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
 import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
+import {
   ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
@@ -162,7 +166,7 @@ function CandidateCount({
 }) {
   return count !== undefined && count > 0 ? (
     <Link
-      href={`/company/inbox/job/${jobId}`}
+      href={`/company/inbox?job=${jobId}`}
       className="font-[550] tabular-nums text-blue-ink transition-colors hover:underline"
     >
       {count}
@@ -315,21 +319,6 @@ export function JobsTable() {
           query={qInput}
           onQueryChange={setQInput}
           placeholder="Search jobs by title…"
-          filter={{
-            value: status,
-            onChange: changeStatus,
-            allLabel: "All statuses",
-            options: [...STATUS_FILTER_OPTIONS],
-          }}
-          extraFilter={{
-            value: category,
-            onChange: (next) => {
-              setCategory(next);
-              setPage(1);
-            },
-            allLabel: "All categories",
-            options: CATEGORY_OPTIONS,
-          }}
         />
       </div>
       <div className="sm:ml-auto">
@@ -421,10 +410,27 @@ export function JobsTable() {
                 <tr>
                   <th className={cn(TABLE_TH, "w-[32%]")}>Title</th>
                   {cols.isVisible("status") && (
-                    <th className={TABLE_TH}>Status</th>
+                    <FilterableHead label="Status">
+                      <ColumnFilter
+                        label="Status"
+                        options={STATUS_FILTER_OPTIONS}
+                        value={status === "" ? null : status}
+                        onChange={(next) => changeStatus(next ?? "")}
+                      />
+                    </FilterableHead>
                   )}
                   {cols.isVisible("category") && (
-                    <th className={TABLE_TH}>Category</th>
+                    <FilterableHead label="Category">
+                      <ColumnFilter
+                        label="Category"
+                        options={CATEGORY_OPTIONS}
+                        value={category === "" ? null : category}
+                        onChange={(next) => {
+                          setCategory(next ?? "");
+                          setPage(1);
+                        }}
+                      />
+                    </FilterableHead>
                   )}
                   {cols.isVisible("fee") && (
                     <th className={cn(TABLE_TH, "text-right")}>

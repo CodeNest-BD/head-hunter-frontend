@@ -52,8 +52,15 @@ export const TABLE_TH =
  * the last row drops its rule, as the reference's `tr:last-child td` does. */
 export const TABLE_BODY = "bg-surface [&>tr:last-child>td]:border-b-0";
 export const TABLE_ROW = "transition-colors hover:bg-surface-sub";
-/** An unread row: a cobalt wash with a matching hover. */
+/**
+ * An unread row: a cobalt wash with a matching hover. The wash alone is 4.5%
+ * and barely registers, so pair it with `TABLE_TD_RAIL` on the row's FIRST
+ * cell — an inset box-shadow on a `<tr>` does not render reliably across
+ * browsers, which is why the rail belongs on a cell rather than the row.
+ */
 export const TABLE_ROW_UNREAD = "bg-unread bg-unread-hover transition-colors";
+/** The cobalt edge marking an unread row. Goes on the row's first `<td>`. */
+export const TABLE_TD_RAIL = "shadow-rail";
 export const TABLE_TD = "h-11 border-b border-line px-3.5 py-1.5 align-middle";
 /**
  * `.cell-2l` — a two-line cell (title over its timestamp). It keeps the row's

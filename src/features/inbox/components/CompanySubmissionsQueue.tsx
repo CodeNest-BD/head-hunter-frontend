@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   BadgeCheck,
   Briefcase,
@@ -22,6 +22,7 @@ import {
   CANDIDATE_STATUSES,
   type CandidateStatus,
 } from "@/features/candidates/schemas";
+import { CandidateQuickView } from "@/features/candidates/components/CandidateQuickView";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -53,6 +54,7 @@ import {
   TABLE_HEAD,
   TABLE_ROW,
   TABLE_ROW_UNREAD,
+  TABLE_TD_RAIL,
   TABLE_SCROLL,
   TABLE_TD,
   TABLE_TD_STACKED,
@@ -277,11 +279,11 @@ function RecruiterCell({ row }: { row: InboxSubmissionRow }) {
       <p className="truncate font-[550] text-ink">
         {row.recruiter.firstName} {row.recruiter.lastName}
       </p>
-      {row.recruiter.yearsExperience !== null && (
-        <p className={cn(TABLE_CELL_SUB, "tabular-nums")}>
-          {row.recruiter.yearsExperience} yrs experience
-        </p>
-      )}
+      <p className={cn(TABLE_CELL_SUB, "tabular-nums")}>
+        {row.recruiter.yearsExperience === null
+          ? "Experience not set"
+          : `${row.recruiter.yearsExperience} yrs experience`}
+      </p>
     </div>
   );
 }
@@ -311,10 +313,17 @@ function JobLink({ row }: { row: InboxSubmissionRow }) {
  */
 export function CompanySubmissionsQueue() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState("");
   const [q, setQ] = useState("");
-  const [jobId, setJobId] = useState<string | null>(null);
+  // `?job=` scopes the queue to one job — how a job's candidate count opens it.
+  // Read once as the initial value rather than synced: once here, the Job
+  // column filter owns the choice, so clearing it must not be undone by the
+  // URL it arrived from.
+  const [jobId, setJobId] = useState<string | null>(() =>
+    searchParams.get("job"),
+  );
   const [status, setStatus] = useState<string | null>(null);
   const [recruiterKind, setRecruiterKind] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SubmissionSort>("priority");
@@ -525,7 +534,7 @@ export function CompanySubmissionsQueue() {
                       )}
                       onClick={() => openThread(row.candidateId)}
                     >
-                      <td className={cn(TABLE_TD, attention && "shadow-rail")}>
+                      <td className={cn(TABLE_TD, attention && TABLE_TD_RAIL)}>
                         <span className="flex items-center gap-2">
                           {attention && (
                             <span
@@ -537,6 +546,10 @@ export function CompanySubmissionsQueue() {
                           <span className={TABLE_CELL_MAIN}>
                             {row.candidateName}
                           </span>
+                          <CandidateQuickView
+                            candidateId={row.candidateId}
+                            name={row.candidateName}
+                          />
                         </span>
                       </td>
                       <td className={TABLE_TD}>

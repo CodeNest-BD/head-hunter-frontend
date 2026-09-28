@@ -32,9 +32,15 @@ export function useMyCandidatesForJob(jobId: string) {
   });
 }
 
-/** One candidate — the subject of a conversation, and its detail pane. */
-export function useCandidate(candidateId: string) {
+/**
+ * One candidate — the subject of a conversation, and its detail pane.
+ *
+ * `enabled` exists for the quick-view popover: a table of fifty rows must not
+ * fire fifty requests for panels nobody opened.
+ */
+export function useCandidate(candidateId: string, enabled = true) {
   return useQuery({
+    enabled,
     queryKey: candidateKeys.detail(candidateId),
     queryFn: () => fetchCandidate(candidateId),
     // The company moves the status, so the recruiter's copy has to learn about

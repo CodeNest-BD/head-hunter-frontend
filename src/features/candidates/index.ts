@@ -5,6 +5,7 @@ export { CandidateCard } from "./components/CandidateCard";
 export { CandidateDetailPanel } from "./components/CandidateDetailPanel";
 export { CandidateFields } from "./components/CandidateFields";
 export { CandidateForm } from "./components/CandidateForm";
+export { CandidateQuickView } from "./components/CandidateQuickView";
 export { CandidateRailSkeleton } from "./components/CandidateRailSkeleton";
 export { ScheduleInterviewAction } from "./components/ScheduleInterviewAction";
 export { SendOfferForm } from "./components/SendOfferForm";
