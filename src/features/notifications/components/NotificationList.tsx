@@ -162,7 +162,7 @@ function NotificationRow({
   );
 
   return (
-    <ListRow unread={unread} interactive={href !== null}>
+    <ListRow element="li" unread={unread} interactive={href !== null}>
       {href ? (
         <Link
           href={href}
@@ -319,20 +319,13 @@ export function NotificationList() {
               <Card className="overflow-hidden">
                 <ul className="flex flex-col">
                   {group.items.map((item) => (
-                    // The row's own hairline sits on the `<li>`: `ListRow`'s
-                    // `last:` rule can never fire while each row is an only
-                    // child.
-                    <li
+                    <NotificationRow
                       key={item.id}
-                      className="border-b border-line last:border-b-0"
-                    >
-                      <NotificationRow
-                        item={item}
-                        onOpen={(id) => markRead.mutate(id)}
-                        onMarkRead={(id) => markRead.mutate(id)}
-                        isMarkingRead={markRead.isPending}
-                      />
-                    </li>
+                      item={item}
+                      onOpen={(id) => markRead.mutate(id)}
+                      onMarkRead={(id) => markRead.mutate(id)}
+                      isMarkingRead={markRead.isPending}
+                    />
                   ))}
                 </ul>
               </Card>

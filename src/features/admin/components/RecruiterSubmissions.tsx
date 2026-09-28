@@ -201,6 +201,9 @@ export function RecruiterSubmissions({
               totalPages={data.meta.totalPages}
               total={data.meta.total}
               onPage={setPage}
+              // This list fetches 10 a page, not the admin default — without
+              // it the pager computes its range from 25 and reads wrong.
+              pageSize={PAGE_SIZE}
             />
           </>
         )}

@@ -90,7 +90,9 @@ function EditContent({ jobId }: { jobId: string }) {
         canAttachBenefitsDocument={false}
         onSubmit={(input) =>
           update.mutate(
-            { jobId, input: input as unknown as Record<string, unknown> },
+            // `JobWriteInput` is an interface, so it carries no implicit index
+            // signature for the mutation's `Record<string, unknown>` payload.
+            { jobId, input: { ...input } },
             { onSuccess: () => router.push("/admin/jobs") },
           )
         }

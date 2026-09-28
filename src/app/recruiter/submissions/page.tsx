@@ -15,7 +15,7 @@ export default function RecruiterSubmissionsPage() {
     <RequireRole role="recruiter">
       <DashboardLayout wide>
         <RequireApprovedRecruiter>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <PageHeader
               title="Submissions"
               subtitle="Every candidate you've submitted, across all jobs. Open one for its conversation."

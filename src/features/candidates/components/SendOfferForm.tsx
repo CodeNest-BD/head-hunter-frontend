@@ -184,17 +184,19 @@ export function SendOfferForm({
     return (
       <form
         onSubmit={onSubmit}
-        className="flex flex-col gap-2.5 rounded-md border border-border/60 p-3"
+        className="flex flex-col gap-3 rounded-sm border border-line bg-surface-sub p-3"
       >
-        <p className="text-sm font-medium text-foreground">Send offer</p>
-        <div className="flex flex-col gap-1">
+        <p className="text-sub font-[650] text-ink">Send offer</p>
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="send-offer-salary">Salary (USD/yr)</Label>
           <NumericInput id="send-offer-salary" {...register("salary")} />
           {errors.salary && (
-            <p className="text-xs text-destructive">{errors.salary.message}</p>
+            <p className="text-meta font-medium text-bad">
+              {errors.salary.message}
+            </p>
           )}
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="send-offer-start-date">Start date</Label>
           <DayPickerField
             id="send-offer-start-date"
@@ -207,17 +209,15 @@ export function SendOfferForm({
             minDay={earliestStartDay}
           />
           {errors.startDate && (
-            <p className="text-xs text-destructive">
+            <p className="text-meta font-medium text-bad">
               {errors.startDate.message}
             </p>
           )}
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="send-offer-notes">
             Notes
-            <span className="ml-1 font-normal text-muted-foreground">
-              Optional
-            </span>
+            <span className="ml-1 font-[450] text-ink-faint">Optional</span>
           </Label>
           <Textarea id="send-offer-notes" {...register("notes")} />
         </div>
@@ -230,8 +230,8 @@ export function SendOfferForm({
           </Button>
         </div>
         {createOffer.isError && (
-          <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          <div className="flex items-center gap-2 rounded-sm border border-bad-line bg-bad-bg px-3 py-2 text-meta text-bad">
+            <AlertCircle className="size-3.5 shrink-0" />
             {sendOfferErrorMessage(createOffer.error)}
           </div>
         )}
@@ -254,7 +254,7 @@ export function SendOfferForm({
         Send offer
       </Button>
       {disabledReason && (
-        <p id={disabledReasonId} className="text-xs text-muted-foreground">
+        <p id={disabledReasonId} className="text-meta text-ink-muted">
           {disabledReason}
         </p>
       )}
@@ -287,8 +287,8 @@ export function SendOfferForm({
           </Button>
         ))}
       {withdrawOffer.isError && (
-        <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+        <div className="flex items-center gap-2 rounded-sm border border-bad-line bg-bad-bg px-3 py-2 text-meta text-bad">
+          <AlertCircle className="size-3.5 shrink-0" />
           {withdrawOfferErrorMessage(withdrawOffer.error)}
         </div>
       )}

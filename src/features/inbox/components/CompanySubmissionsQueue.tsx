@@ -526,9 +526,7 @@ export function CompanySubmissionsQueue() {
                       )}
                       onClick={() => openThread(row.candidateId)}
                     >
-                      <td
-                        className={cn(TABLE_TD, attention && "shadow-rail")}
-                      >
+                      <td className={cn(TABLE_TD, attention && "shadow-rail")}>
                         <span className="flex items-center gap-2">
                           {attention && (
                             <span

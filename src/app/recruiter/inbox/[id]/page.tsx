@@ -31,16 +31,16 @@ function ErrorCallout({
   onRetry?: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-      <div className="flex items-center gap-2 font-medium">
-        <AlertCircle className="h-[18px] w-[18px] shrink-0" />
+    <div className="flex flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-4 text-sub text-bad">
+      <div className="flex items-center gap-2 font-[650]">
+        <AlertCircle className="size-[15px] shrink-0" />
         {message}
       </div>
       {onRetry && (
         <div>
           <button
             type="button"
-            className="rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
+            className="inline-flex h-7.5 items-center rounded-xs border border-bad-line px-2.5 text-[12.5px] font-semibold transition-colors hover:bg-bad/10"
             onClick={() => void onRetry()}
           >
             Retry
@@ -91,7 +91,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
 
   if (mode === "edit" && canManageCandidate) {
     return (
-      <div className="rounded-md border border-border/70 bg-card p-4 shadow-sm lg:h-full lg:overflow-y-auto">
+      <div className="rounded-md border border-line bg-surface p-4 shadow-e1 lg:h-full lg:overflow-y-auto">
         <CandidateForm
           jobId={candidate.jobId}
           candidate={candidate}
@@ -107,7 +107,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
     <CandidateDetailPanel
       candidate={candidate}
       stageLabel={CANDIDATE_STATUS_LABELS[candidate.status]}
-      stageClassName={CANDIDATE_STATUS_TONES[candidate.status]}
+      stageTone={CANDIDATE_STATUS_TONES[candidate.status]}
       negotiation={
         negotiationState !== undefined ? (
           <NegotiationStateBadges
@@ -124,17 +124,17 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              className="size-7 [&_svg]:size-[15px]"
               aria-label="Edit candidate"
               onClick={() => setMode("edit")}
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil aria-hidden="true" />
             </Button>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              className="size-7 hover:bg-bad-bg hover:text-bad [&_svg]:size-[15px]"
               aria-label="Remove candidate"
               aria-pressed={mode === "confirm-remove"}
               onClick={() =>
@@ -143,14 +143,14 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
                 )
               }
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 aria-hidden="true" />
             </Button>
           </>
         )
       }
       banner={
         mode === "confirm-remove" && canManageCandidate ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+          <div className="rounded-sm border border-bad-line bg-bad-bg p-3">
             <ConfirmAction
               message="Remove this candidate? This cannot be undone."
               confirmLabel="Confirm remove"

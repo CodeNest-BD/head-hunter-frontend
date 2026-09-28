@@ -253,7 +253,10 @@ function JobRowActions({ jobId, title }: { jobId: string; title: string }) {
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className={cn(itemClass, "text-bad hover:bg-bad-bg hover:text-bad")}
+              className={cn(
+                itemClass,
+                "text-bad hover:bg-bad-bg hover:text-bad",
+              )}
             >
               <Trash2 className="size-[15px]" />
               Delete
@@ -423,7 +426,9 @@ export function JobsTable() {
                     <th className={TABLE_TH}>Category</th>
                   )}
                   {cols.isVisible("fee") && (
-                    <th className={cn(TABLE_TH, "text-right")}>Recruiter fee</th>
+                    <th className={cn(TABLE_TH, "text-right")}>
+                      Recruiter fee
+                    </th>
                   )}
                   {cols.isVisible("expiry") && (
                     <th className={TABLE_TH}>Expiry</th>
@@ -437,7 +442,9 @@ export function JobsTable() {
               <tbody className={TABLE_BODY}>
                 {data.data.map((job) => {
                   const candidateCount = candidatesByJob.get(job.id);
-                  const dateLabel = formatDate(job.publishedAt ?? job.createdAt);
+                  const dateLabel = formatDate(
+                    job.publishedAt ?? job.createdAt,
+                  );
                   return (
                     <tr key={job.id} className={TABLE_ROW}>
                       <td className={TABLE_TD_STACKED}>
@@ -474,14 +481,15 @@ export function JobsTable() {
                           <JobExpiry expiresAt={job.expiresAt} />
                         </td>
                       )}
-                      {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
-                        <td className={cn(TABLE_TD, "text-center")}>
-                          <CandidateCount
-                            jobId={job.id}
-                            count={candidateCount}
-                          />
-                        </td>
-                      )}
+                      {!HIDE_PHASE2_FEATURES &&
+                        cols.isVisible("candidates") && (
+                          <td className={cn(TABLE_TD, "text-center")}>
+                            <CandidateCount
+                              jobId={job.id}
+                              count={candidateCount}
+                            />
+                          </td>
+                        )}
                       <td className={cn(TABLE_TD, "text-right")}>
                         <div className="flex justify-end">
                           <JobRowActions jobId={job.id} title={job.title} />

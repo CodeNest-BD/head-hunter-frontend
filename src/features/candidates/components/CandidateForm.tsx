@@ -4,9 +4,16 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { FileText, Paperclip, Target, User } from "lucide-react";
+import {
+  FileText,
+  Paperclip,
+  Target,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
@@ -102,36 +109,30 @@ function defaultValuesFor(candidate?: Candidate): CandidateFormValues {
 /** One outlined-field look across the whole form: white fill, a comfortable
  * (not oversized) height and soft-but-crisp corners, instead of the short
  * transparent default. */
-const FIELD_CLASS = "h-10 rounded-md bg-card";
-const LABEL_CLASS = "text-[10.5px] font-semibold text-muted-foreground";
+const FIELD_CLASS = "";
+const LABEL_CLASS = "";
 
 /** A titled sub-card grouping related fields — the editable mirror of the
  * candidate rail's Contact / Profile / Expectations sections. */
 function FormSection({
   icon,
-  iconTint,
+  iconTone,
   title,
   children,
 }: {
-  icon: ReactNode;
-  iconTint: string;
+  icon: LucideIcon;
+  iconTone: TileTone;
   title: string;
   children: ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex items-center gap-2 border-b border-border/70 bg-secondary/40 px-3.5 py-2.5">
-        <span
-          className={cn(
-            "flex h-6 w-6 shrink-0 items-center justify-center rounded-md",
-            iconTint,
-          )}
-        >
-          {icon}
-        </span>
-        <span className="text-[13px] font-semibold text-navy">{title}</span>
+    <div className="overflow-hidden rounded-md border border-line bg-surface shadow-e1">
+      {/* `.card__head` */}
+      <div className="flex items-center gap-2.5 border-b border-line bg-surface-sub px-3.5 py-2.5">
+        <Tile icon={icon} tone={iconTone} className="size-6 rounded-xs" />
+        <span className="text-sub font-[650] text-ink">{title}</span>
       </div>
-      <div className="flex flex-col gap-3.5 p-3.5">{children}</div>
+      <div className="flex flex-col gap-3 p-3.5">{children}</div>
     </div>
   );
 }
@@ -212,15 +213,11 @@ export function CandidateForm({
     ? updateCandidate.isPending || !isDirty
     : submitCandidate.isPending || Boolean(cvError);
 
-  const twoCol = cn("grid gap-3.5", dense ? "grid-cols-1" : "grid-cols-2");
+  const twoCol = cn("grid gap-3", dense ? "grid-cols-1" : "grid-cols-2");
 
   return (
     <form onSubmit={onSubmit} className="space-y-3.5">
-      <FormSection
-        icon={<User className="h-3.5 w-3.5" />}
-        iconTint="bg-primary/10 text-primary"
-        title="Contact"
-      >
+      <FormSection icon={User} iconTone="blue" title="Contact">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="fullName" className={LABEL_CLASS}>
             Full name
@@ -231,7 +228,7 @@ export function CandidateForm({
             {...register("fullName")}
           />
           {errors.fullName && (
-            <p className="text-xs text-destructive">
+            <p className="text-meta font-medium text-bad">
               {errors.fullName.message}
             </p>
           )}
@@ -248,7 +245,9 @@ export function CandidateForm({
             {...register("email")}
           />
           {errors.email && (
-            <p className="text-xs text-destructive">{errors.email.message}</p>
+            <p className="text-meta font-medium text-bad">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
@@ -269,7 +268,7 @@ export function CandidateForm({
               {...register("linkedinUrl")}
             />
             {errors.linkedinUrl && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.linkedinUrl.message}
               </p>
             )}
@@ -277,11 +276,7 @@ export function CandidateForm({
         </div>
       </FormSection>
 
-      <FormSection
-        icon={<FileText className="h-3.5 w-3.5" />}
-        iconTint="bg-[#FBF1DC] text-[#8A6D3B]"
-        title="Profile"
-      >
+      <FormSection icon={FileText} iconTone="warn" title="Profile">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="overview" className={LABEL_CLASS}>
             Overview
@@ -289,7 +284,7 @@ export function CandidateForm({
           <Textarea
             id="overview"
             rows={4}
-            className="min-h-[104px] rounded-md bg-card"
+            className="min-h-[104px]"
             {...register("overview")}
           />
         </div>
@@ -316,7 +311,7 @@ export function CandidateForm({
               {...register("yearsOfExperience")}
             />
             {errors.yearsOfExperience && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.yearsOfExperience.message}
               </p>
             )}
@@ -324,11 +319,7 @@ export function CandidateForm({
         </div>
       </FormSection>
 
-      <FormSection
-        icon={<Target className="h-3.5 w-3.5" />}
-        iconTint="bg-[#E7F4EC] text-[#17734E]"
-        title="Expectations"
-      >
+      <FormSection icon={Target} iconTone="ok" title="Expectations">
         <div className={twoCol}>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="expectedSalary" className={LABEL_CLASS}>
@@ -340,7 +331,7 @@ export function CandidateForm({
               {...register("expectedSalary")}
             />
             {errors.expectedSalary && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.expectedSalary.message}
               </p>
             )}
@@ -355,7 +346,7 @@ export function CandidateForm({
               {...register("noticePeriodDays")}
             />
             {errors.noticePeriodDays && (
-              <p className="text-xs text-destructive">
+              <p className="text-meta font-medium text-bad">
                 {errors.noticePeriodDays.message}
               </p>
             )}
@@ -364,11 +355,7 @@ export function CandidateForm({
       </FormSection>
 
       {!candidate && (
-        <FormSection
-          icon={<Paperclip className="h-3.5 w-3.5" />}
-          iconTint="bg-[#F2E9F3] text-[#7A4F86]"
-          title="CV / Resume"
-        >
+        <FormSection icon={Paperclip} iconTone="violet" title="CV / Resume">
           <input
             id="cvFile"
             type="file"
@@ -378,10 +365,10 @@ export function CandidateForm({
               setCvTouched(true);
               setCvFile(event.target.files?.[0] ?? null);
             }}
-            className="rounded-md border border-input bg-card px-3 py-2.5 text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+            className="rounded-sm border border-line-strong bg-surface px-3 py-2.5 text-body text-ink file:mr-3 file:rounded-xs file:border-0 file:bg-blue file:px-3 file:py-1.5 file:text-sub file:font-semibold file:text-white hover:file:bg-blue-deep"
           />
           {cvTouched && cvError && (
-            <p className="mt-1.5 text-xs text-destructive">{cvError}</p>
+            <p className="mt-1.5 text-meta font-medium text-bad">{cvError}</p>
           )}
         </FormSection>
       )}

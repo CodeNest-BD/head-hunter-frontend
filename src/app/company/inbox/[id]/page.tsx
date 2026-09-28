@@ -24,16 +24,16 @@ function ErrorCallout({
   onRetry?: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-      <div className="flex items-center gap-2 font-medium">
-        <AlertCircle className="h-[18px] w-[18px] shrink-0" />
+    <div className="flex flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-4 text-sub text-bad">
+      <div className="flex items-center gap-2 font-[650]">
+        <AlertCircle className="size-[15px] shrink-0" />
         {message}
       </div>
       {onRetry && (
         <div>
           <button
             type="button"
-            className="rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
+            className="inline-flex h-7.5 items-center rounded-xs border border-bad-line px-2.5 text-[12.5px] font-semibold transition-colors hover:bg-bad/10"
             onClick={() => void onRetry()}
           >
             Retry

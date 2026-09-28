@@ -1,44 +1,25 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { FileText, Target, User } from "lucide-react";
+import { FileText, Target, User, type LucideIcon } from "lucide-react";
 
-import { cn } from "@/shared/libs/shadCnConfig";
+import type { PillTone } from "@/shared/ui-components/badges/Pill";
+import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
+import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { CandidateAttachments } from "./CandidateAttachments";
 import type { Candidate } from "../schemas";
 
-/** A stable per-name tint for the avatar tile, shared with the inbox rows. */
-const AVATAR_PALETTE = [
-  "bg-[#E8EDFB] text-[#3F5BA9]",
-  "bg-[#FBF1DC] text-[#8A6D3B]",
-  "bg-[#E7F0E9] text-[#3F7A5A]",
-  "bg-[#F2E9F3] text-[#7A4F86]",
-  "bg-[#FBE9E6] text-[#9B4A3F]",
-];
-function avatarTint(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i += 1) {
-    hash = (hash * 31 + name.charCodeAt(i)) | 0;
-  }
-  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
-}
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-/** One label-over-value pair inside a section card. */
+/** One label-over-value pair inside a section card — the `.fact` recipe. */
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5">
-      <span className="text-[10.5px] font-semibold text-muted-foreground">
+    <div className="flex min-w-0 flex-col">
+      <span className="text-label font-[650] uppercase text-ink-muted">
         {label}
       </span>
-      <span className="break-words text-[13px] leading-5 text-foreground">
+      <span className="mt-[3px] break-words text-body font-[550] text-ink">
         {children}
       </span>
     </div>
@@ -48,33 +29,25 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 /** A titled sub-card: an icon-tile header over a body of fields. */
 function Section({
   icon,
-  iconTint,
+  iconTone,
   title,
   note,
   children,
 }: {
-  icon: ReactNode;
-  iconTint: string;
+  icon: LucideIcon;
+  iconTone: TileTone;
   title: string;
   note?: string;
   children: ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex items-center gap-2 border-b border-border/70 bg-secondary/40 px-3.5 py-2.5">
-        <span
-          className={cn(
-            "flex h-6 w-6 shrink-0 items-center justify-center rounded-md",
-            iconTint,
-          )}
-        >
-          {icon}
-        </span>
-        <span className="text-[13px] font-semibold text-navy">{title}</span>
+    <div className="overflow-hidden rounded-md border border-line bg-surface shadow-e1">
+      {/* `.card__head` */}
+      <div className="flex items-center gap-2.5 border-b border-line bg-surface-sub px-3.5 py-2.5">
+        <Tile icon={icon} tone={iconTone} className="size-6 rounded-xs" />
+        <span className="text-sub font-[650] text-ink">{title}</span>
         {note ? (
-          <span className="ml-auto text-[11px] text-muted-foreground">
-            {note}
-          </span>
+          <span className="ml-auto text-[11px] text-ink-faint">{note}</span>
         ) : null}
       </div>
       <div className="flex flex-col gap-3 p-3.5">{children}</div>
@@ -84,10 +57,10 @@ function Section({
 
 interface CandidateDetailPanelProps {
   candidate: Candidate;
-  /** The candidate's pipeline stage — its label and chip colour, supplied by
+  /** The candidate's pipeline stage — its label and semantic tone, supplied by
    * the caller so this panel never re-derives the status styling. */
   stageLabel: string;
-  stageClassName: string;
+  stageTone: PillTone;
   /** Header controls (Edit / Remove, or the company's schedule / offer entry
    * points) — rendered top-right beside the avatar. */
   headerActions?: ReactNode;
@@ -108,7 +81,7 @@ interface CandidateDetailPanelProps {
 export function CandidateDetailPanel({
   candidate,
   stageLabel,
-  stageClassName,
+  stageTone,
   headerActions,
   banner,
   negotiation,
@@ -123,24 +96,17 @@ export function CandidateDetailPanel({
     candidate.noticePeriodDays !== null;
 
   return (
-    <div className="space-y-3.5 rounded-md border border-border/70 bg-card p-4 shadow-sm lg:h-full lg:overflow-y-auto">
+    <div className="space-y-3.5 rounded-md border border-line bg-surface p-4 shadow-e1 lg:h-full lg:overflow-y-auto">
       {/* Header: who this is, their stage, and the record actions. */}
       <div className="flex items-start gap-3">
-        <span
-          className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-semibold",
-            avatarTint(candidate.fullName),
-          )}
-        >
-          {initials(candidate.fullName)}
-        </span>
+        <Avatar name={candidate.fullName} size="lg" />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <p className="truncate font-heading text-base font-semibold text-navy">
+          <p className="truncate text-block font-[650] text-ink">
             {candidate.fullName}
           </p>
           <a
             href={`mailto:${candidate.email}`}
-            className="truncate text-xs text-primary underline-offset-2 hover:underline"
+            className="truncate text-meta text-blue-ink underline-offset-2 hover:underline"
           >
             {candidate.email}
           </a>
@@ -154,35 +120,32 @@ export function CandidateDetailPanel({
 
       {banner}
 
-      {/* At-a-glance stats. */}
-      <div className="grid grid-cols-3 gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3.5">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-[10px] font-semibold text-muted-foreground">
+      {/* At-a-glance stats — the reference's `.well` under a three-up grid. */}
+      <div className="grid grid-cols-3 gap-2 rounded-sm border border-line bg-surface-sub px-3 py-2.5">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="text-label font-[650] uppercase text-ink-muted">
             Stage
           </span>
-          <span
-            className={cn(
-              "w-fit rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide",
-              stageClassName,
-            )}
-          >
-            {stageLabel}
-          </span>
+          <StatusBadge
+            label={stageLabel}
+            tone={stageTone}
+            className="w-fit max-w-full"
+          />
         </div>
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-[10px] font-semibold text-muted-foreground">
+        <div className="flex min-w-0 flex-col">
+          <span className="text-label font-[650] uppercase text-ink-muted">
             Submitted
           </span>
-          <span className="text-[13px] font-semibold text-navy">
+          <span className="mt-[3px] text-sub font-[650] tabular-nums text-ink">
             {formatDate(candidate.createdAt)}
           </span>
         </div>
         {candidate.yearsOfExperience !== null ? (
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-[10px] font-semibold text-muted-foreground">
+          <div className="flex min-w-0 flex-col">
+            <span className="text-label font-[650] uppercase text-ink-muted">
               Experience
             </span>
-            <span className="text-[13px] font-semibold text-navy">
+            <span className="mt-[3px] text-sub font-[650] tabular-nums text-ink">
               {candidate.yearsOfExperience} yrs
             </span>
           </div>
@@ -192,15 +155,15 @@ export function CandidateDetailPanel({
       {negotiation}
 
       <Section
-        icon={<User className="h-3.5 w-3.5" />}
-        iconTint="bg-primary/10 text-primary"
+        icon={User}
+        iconTone="blue"
         title="Contact"
         note="Visible to you only"
       >
         <Field label="Email">
           <a
             href={`mailto:${candidate.email}`}
-            className="text-primary underline-offset-2 hover:underline"
+            className="text-blue-ink underline-offset-2 hover:underline"
           >
             {candidate.email}
           </a>
@@ -213,7 +176,7 @@ export function CandidateDetailPanel({
                 href={candidate.linkedinUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="text-primary underline-offset-2 hover:underline"
+                className="text-blue-ink underline-offset-2 hover:underline"
               >
                 Profile
               </a>
@@ -225,17 +188,13 @@ export function CandidateDetailPanel({
       </Section>
 
       {hasProfile ? (
-        <Section
-          icon={<FileText className="h-3.5 w-3.5" />}
-          iconTint="bg-[#FBF1DC] text-[#8A6D3B]"
-          title="Profile"
-        >
+        <Section icon={FileText} iconTone="warn" title="Profile">
           {candidate.overview ? (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10.5px] font-semibold text-muted-foreground">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-label font-[650] uppercase text-ink-muted">
                 Overview
               </span>
-              <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground">
+              <p className="mt-[3px] whitespace-pre-wrap text-sub leading-relaxed text-ink-body">
                 {candidate.overview}
               </p>
             </div>
@@ -259,11 +218,7 @@ export function CandidateDetailPanel({
       ) : null}
 
       {hasExpectations ? (
-        <Section
-          icon={<Target className="h-3.5 w-3.5" />}
-          iconTint="bg-[#E7F4EC] text-[#17734E]"
-          title="Expectations"
-        >
+        <Section icon={Target} iconTone="ok" title="Expectations">
           <div className="grid grid-cols-2 gap-3">
             {candidate.expectedSalaryMinor !== null ? (
               <Field label="Expected salary">
