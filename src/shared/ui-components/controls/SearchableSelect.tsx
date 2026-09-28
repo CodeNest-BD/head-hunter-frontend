@@ -174,7 +174,10 @@ export function SearchableSelect({
     !query && maxResults !== undefined && options.length > maxResults;
 
   return (
+    // Modal so the popover owns the scroll lock: it portals outside any parent
+    // Dialog, whose lock would otherwise swallow wheel events on the list.
     <Popover
+      modal
       open={open}
       onOpenChange={(next) => {
         setOpen(next);

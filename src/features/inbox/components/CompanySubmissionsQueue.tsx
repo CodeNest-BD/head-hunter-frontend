@@ -488,7 +488,7 @@ export function CompanySubmissionsQueue() {
         </div>
       ) : (
         <div className={TABLE_CARD}>
-          <div className={cn(TABLE_SCROLL, "hidden overflow-x-auto sm:block")}>
+          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
             <table className={TABLE_EL}>
               <thead className={TABLE_HEAD}>
                 <tr className={TABLE_HEAD_ROW}>
