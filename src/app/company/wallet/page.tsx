@@ -12,7 +12,7 @@ import {
   WalletSummary,
   useBillingRefreshBurst,
 } from "@/features/billing";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 const RESERVE_STEPS: readonly { title: string; detail: string }[] = [
@@ -73,7 +73,7 @@ function WalletContent() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Wallet"
         subtitle="Load funds once, then post jobs and make offers against your balance. A recruiter fee is held in escrow only when a candidate accepts your offer."
         actions={

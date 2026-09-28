@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { ArrowRight, type LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
 
 export interface DashboardPanel {
@@ -46,9 +46,10 @@ export function PanelGroup({
 
   return (
     <div>
+      {/* `.tabs` — the same underline bar the rest of the app uses. */}
       <div
         role="tablist"
-        className="flex items-center gap-4 overflow-x-auto border-b border-border lg:hidden"
+        className="flex items-center gap-0.5 overflow-x-auto border-b border-line lg:hidden"
       >
         {tabs.map((panel) => (
           <button
@@ -58,10 +59,10 @@ export function PanelGroup({
             aria-selected={panel.id === active}
             onClick={() => setActive(panel.id)}
             className={cn(
-              "-mb-px whitespace-nowrap border-b-2 px-1 pb-2.5 text-sm font-semibold transition-colors",
+              "-mb-px whitespace-nowrap border-b-2 px-[13px] py-[9px] text-sub font-semibold transition-colors",
               panel.id === active
-                ? "border-primary text-navy"
-                : "border-transparent text-muted-foreground hover:text-foreground",
+                ? "border-blue text-blue"
+                : "border-transparent text-ink-muted hover:text-ink",
             )}
           >
             {panel.label}
@@ -69,7 +70,7 @@ export function PanelGroup({
         ))}
       </div>
 
-      <div className={cn("mt-4 grid gap-4 lg:mt-0", gridClassName)}>
+      <div className={cn("mt-3 grid gap-3 lg:mt-0", gridClassName)}>
         {panels.map((panel) => (
           <div
             key={panel.id}
@@ -89,9 +90,10 @@ export function PanelGroup({
 }
 
 /**
- * A single headline metric on the light scheme: an optional circular icon badge
- * leads, the label/figure/hint stack in the middle, and a trailing arrow appears
- * when the card links somewhere — echoing the dashboard's left-to-right flow.
+ * The reference's `.stat`: an uppercase 11px label, a 24px tabular figure and a
+ * 12px hint stacked at the left, with a 34px tinted glyph tile at the right.
+ * Every stat card in the app is this one shape — the reference defines no
+ * emphasised variant, so a figure never out-shouts its neighbours.
  *
  * Pass `href` when the number has somewhere to go: a stat the reader cannot act
  * on is decoration, and the figure is usually the reason they came to the page.
@@ -102,62 +104,56 @@ export function StatCard({
   hint,
   icon: Icon,
   href,
-  showArrow = true,
+  hintTone = "default",
   className: classNameProp,
 }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
-  /** Optional leading icon, shown in a soft blue circle. */
+  /** Optional trailing icon, shown in a soft blue tile. */
   icon?: LucideIcon;
   href?: string;
-  /** Drops the trailing arrow on a card that still links somewhere. */
-  showArrow?: boolean;
+  /** `.stat__hint--warn` — amber ink for a hint that flags a problem. */
+  hintTone?: "default" | "warn";
   /** Grid placement from the caller, e.g. a lead card spanning both columns. */
   className?: string;
 }) {
   const className = cn(
-    "group block rounded-md border border-border bg-card p-4 shadow-card sm:p-5",
-    href && "transition-colors hover:border-primary/40",
+    "flex items-start gap-3 rounded-md border border-line bg-surface px-4 py-3.5 shadow-e1",
+    href && "transition-shadow hover:border-line-strong hover:shadow-e2",
     classNameProp,
   );
   const body = (
-    <div className="flex items-start gap-3">
+    <>
+      <div className="min-w-0 flex-1">
+        <p className="text-label font-[650] uppercase text-ink-muted">
+          {label}
+        </p>
+        {/* A money figure carries no spaces, so without an explicit break it
+            runs straight out of the card on a narrow track. */}
+        <p className="mt-[5px] break-words text-stat font-bold tabular-nums text-ink">
+          {value}
+        </p>
+        {hint && (
+          <p
+            className={cn(
+              "mt-1 text-meta",
+              hintTone === "warn" ? "font-[550] text-warn" : "text-ink-faint",
+            )}
+          >
+            {hint}
+          </p>
+        )}
+      </div>
       {Icon && (
         <span
           aria-hidden="true"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+          className="flex size-8.5 shrink-0 items-center justify-center rounded-sm bg-tint text-blue"
         >
-          <Icon className="h-5 w-5" />
+          <Icon className="size-[17px]" />
         </span>
       )}
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary/70">
-          {label}
-        </p>
-        {/* Figure over hint, always stacked: beside the number, a multi-word
-            hint collides with a large figure once the card is narrow (e.g. the
-            3-up wallet grid). Stacking keeps it clean at every width. */}
-        <div className="mt-1.5 flex flex-col gap-0.5 sm:mt-2">
-          {/* A money figure carries no spaces, so without an explicit break it
-              runs straight out of the card on a narrow track. */}
-          <span className="break-words text-2xl font-extrabold tracking-[-0.02em] tabular-nums text-navy sm:text-3xl">
-            {value}
-          </span>
-          {hint && (
-            <span className="text-xs text-muted-foreground sm:text-sm">
-              {hint}
-            </span>
-          )}
-        </div>
-      </div>
-      {href && showArrow && (
-        <ArrowRight
-          aria-hidden="true"
-          className="mt-0.5 h-4 w-4 shrink-0 text-primary/70 transition-transform group-hover:translate-x-0.5"
-        />
-      )}
-    </div>
+    </>
   );
 
   return href ? (
@@ -181,40 +177,41 @@ export interface AttentionItem {
 }
 
 const DOT_TONE: Record<AttentionTone, string> = {
-  blue: "bg-primary",
-  amber: "bg-[#E0A008]",
-  muted: "bg-brand-sky",
+  blue: "bg-blue",
+  amber: "bg-[#e8a23b]",
+  muted: "bg-ink-faint",
 };
 
+/**
+ * The reference's `.attn`: a status dot, the headline over its one-line reason,
+ * and a small outline button carrying the action to the right edge.
+ */
 export function AttentionRow({ item }: { item: AttentionItem }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-border/70 py-3.5 last:border-0">
-      <div className="flex min-w-0 items-start gap-3">
-        <span
-          aria-hidden="true"
-          className={cn(
-            "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-            DOT_TONE[item.tone],
-          )}
-        />
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-navy">{item.title}</p>
-          <p className="mt-0.5 text-[13px] leading-relaxed text-muted-foreground">
-            {item.detail}
-          </p>
-        </div>
+    <div className="flex items-center gap-2.5 border-b border-line px-4 py-2.5 last:border-b-0">
+      <span
+        aria-hidden="true"
+        className={cn("size-2 shrink-0 rounded-full", DOT_TONE[item.tone])}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-sub font-semibold text-ink">{item.title}</p>
+        <p className="text-meta text-ink-muted">{item.detail}</p>
       </div>
       <Link
         href={item.href}
-        className="shrink-0 whitespace-nowrap text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+        className="inline-flex h-7.5 shrink-0 items-center whitespace-nowrap rounded-xs border border-line-strong bg-surface px-2.5 text-[12.5px] font-semibold text-ink transition-colors hover:bg-surface-sub"
       >
-        {item.actionLabel} <span aria-hidden="true">→</span>
+        {item.actionLabel}
       </Link>
     </div>
   );
 }
 
-/** A card whose body is a list, with a title and an optional header action. */
+/**
+ * The reference's `.card` with a `.card__head`: a title ruled off from a body
+ * that is a list of rows. The rows supply their own padding, so the body does
+ * not add any of its own.
+ */
 export function Panel({
   title,
   action,
@@ -225,12 +222,12 @@ export function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="flex flex-col rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <div className="flex items-center justify-between">
-        <h2 className="font-heading text-base font-bold text-navy">{title}</h2>
-        {action}
+    <section className="flex flex-col rounded-md border border-line bg-surface shadow-e1">
+      <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
+        <h2 className="text-card font-[650] text-ink">{title}</h2>
+        {action && <div className="ml-auto">{action}</div>}
       </div>
-      <div className="mt-2">{children}</div>
+      <div className="flex flex-col">{children}</div>
     </section>
   );
 }

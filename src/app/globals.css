@@ -3,53 +3,114 @@
 @tailwind utilities;
 
 /*
- * Head-Hunters light theme — client palette (requirements/client-feedback/
- * color&typography.txt): near-white canvas #FDFEFE, white cards, dark-blue
- * ink #0A1738 (text is dark blue, never black), primary #034AEF with
- * secondary blue #2658CF, section tint #EEF4FD, border #E0E8F3, input
- * #C9D0DF. All shadcn tokens are defined on :root so token-based components
- * adopt it.
+ * Head-Hunters design system — ported verbatim from the redesign reference
+ * (head-hunter-design/assets/hh.css).
+ *
+ * Blue & white theme:
+ *  • Layered surfaces: cool blue-grey canvas -> white cards -> tinted sub-surfaces
+ *  • White topbar + white rail with a blue-tint active state
+ *  • Cobalt #034AEF strictly for actions/links; semantic colors for status
+ *  • Condensed density: 56px topbar, 44px rows, 36px controls, 16px rhythm
+ *  • One type family, strict scale: 11/12/13/14/15/17/20/26, tabular-nums
+ *
+ * The raw tokens live here; `tailwind.config.ts` exposes each one as a utility
+ * so components stay on Tailwind rather than bespoke class names.
  */
 @layer base {
   :root {
-    /* Canvas #FDFEFE / ink #0A1738 */
-    --background: 180 33% 99%;
-    --foreground: 223 70% 13%;
+    /* ── Ground ── */
+    --canvas: #f2f5fa;
+    --surface: #ffffff;
+    --surface-sub: #f7fafd; /* table heads, section fills */
+    --surface-sunken: #eef3fa; /* wells, code, quiet fills */
 
-    /* White surfaces; dark-blue heading ink #0A1738 */
+    /* ── Ink ── */
+    --ink: #0a1738; /* headings, primary data */
+    --ink-body: #333d57; /* body copy */
+    --ink-muted: #64708b; /* secondary text, hints */
+    --ink-faint: #8b95ac; /* timestamps, placeholders */
+
+    /* ── Lines ── */
+    --line: #dfe7f2;
+    --line-strong: #c9d4e6;
+
+    /* ── Brand ── */
+    --blue: #034aef;
+    --blue-deep: #0038c8;
+    --blue-ink: #2658cf; /* link-on-tint, secondary blue */
+    --tint: #eaf1fe; /* selected fills, secondary buttons */
+    --tint-strong: #dbe8fd;
+    --sky: #85b1f3;
+
+    /* ── Navy — ink and small accents only, never large surfaces ── */
+    --navy: #0a1738;
+    --navy-2: #142352;
+    --navy-3: #1d2f66;
+    --rail-ink: #aab6d4;
+    --rail-ink-dim: #6d7ba0;
+
+    /* ── Semantic ── */
+    --ok: #0e7a43;
+    --ok-bg: #e2f4e8;
+    --ok-line: #c4e6d1;
+    --warn: #8a5a00;
+    --warn-bg: #fcf1d8;
+    --warn-line: #f0dfb2;
+    --bad: #b3261e;
+    --bad-bg: #fbe9e7;
+    --bad-line: #f3cdc9;
+    --info: #2658cf;
+    --info-bg: #e8eefb;
+    --info-line: #cfdcf6;
+    --violet: #6b4fa8;
+    --violet-bg: #efe9fb;
+    --violet-line: #ddd2f2;
+    --neutral: #5b6577;
+    --neutral-bg: #edf0f5;
+    --neutral-line: #dbe1ea;
+
+    /* ── Shell metrics ── */
+    --topbar-h: 56px;
+    --rail-w: 232px;
+
+    /*
+     * ── shadcn/ui tokens ──
+     * Re-pointed at the tokens above so every token-based component adopts the
+     * reference palette without being touched individually.
+     */
+    --background: 213 43% 96%; /* --canvas  #f2f5fa */
+    --foreground: 223 70% 13%; /* --ink     #0a1738 */
     --card: 0 0% 100%;
     --card-foreground: 223 70% 13%;
     --popover: 0 0% 100%;
     --popover-foreground: 223 70% 13%;
 
-    /* Brand blue #034AEF */
-    --primary: 222 98% 47%;
+    --primary: 222 98% 47%; /* --blue      #034aef */
     --primary-foreground: 0 0% 100%;
 
-    /* Soft blue section surface #EEF4FD */
-    --secondary: 216 79% 96%;
-    --secondary-foreground: 223 70% 13%;
+    --secondary: 218 94% 96%; /* --tint      #eaf1fe */
+    --secondary-foreground: 222 69% 48%; /* --blue-ink  #2658cf */
 
-    --muted: 216 79% 96%;
-    /* Secondary text #616676 */
-    --muted-foreground: 226 10% 42%;
+    --muted: 210 50% 98%; /* --surface-sub  #f7fafd */
+    --muted-foreground: 220 16% 47%; /* --ink-muted    #64708b */
 
-    /* Blue tint #EEF4FD for accent fills; ink = secondary blue #2658CF */
-    --accent: 216 79% 96%;
-    --accent-foreground: 222 69% 48%;
+    --accent: 218 94% 96%; /* --tint      #eaf1fe */
+    --accent-foreground: 222 69% 48%; /* --blue-ink  #2658cf */
 
-    /* Danger #B3261E on white */
-    --destructive: 3 71% 41%;
+    --destructive: 3 71% 41%; /* --bad       #b3261e */
     --destructive-foreground: 0 0% 100%;
 
-    /* Hairlines: border #E0E8F3, input #C9D0DF */
-    --border: 215 44% 92%;
-    --input: 221 26% 83%;
-    --ring: 222 98% 47%;
+    --border: 213 46% 91%; /* --line         #dfe7f2 */
+    --input: 216 40% 85%; /* --line-strong  #c9d4e6 */
+    --ring: 222 98% 47%; /* --blue         #034aef */
 
-    /* 14px base radius to match the reference design's soft corners: surfaces
-       use `rounded-md` (12px) uniformly, containers `rounded-lg` (14px). */
-    --radius: 0.875rem;
+    /*
+     * 12px base radius, so the inherited shadcn scale lands exactly on the
+     * reference: lg = --r-lg (12px, page panels), md = --r-md (10px, cards),
+     * sm = --r-sm (8px, controls). `rounded-xs` (6px, chips) is added in the
+     * Tailwind config.
+     */
+    --radius: 0.75rem;
 
     --chart-1: 222 98% 47%;
     --chart-2: 222 69% 48%;
@@ -57,14 +118,14 @@
     --chart-4: 214 82% 74%;
     --chart-5: 208 95% 85%;
 
-    /* Sidebar — white with a blue-tint active state and dark-blue ink. */
+    /* Sidebar — white rail, blue-tint active state, muted idle ink. */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 226 10% 42%;
+    --sidebar-foreground: 220 16% 47%;
     --sidebar-primary: 222 98% 47%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 216 79% 96%;
-    --sidebar-accent-foreground: 223 70% 13%;
-    --sidebar-border: 215 44% 92%;
+    --sidebar-accent: 218 94% 96%;
+    --sidebar-accent-foreground: 222 69% 48%;
+    --sidebar-border: 213 46% 91%;
     --sidebar-ring: 222 98% 47%;
   }
 }
@@ -75,6 +136,8 @@
   }
   html {
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
     /* Reserve the scrollbar's space at all times. Opening a scroll-locking
        overlay (Radix Select / Dialog / Popover, via react-remove-scroll) hides
        the page scrollbar; without a reserved gutter that removal reflows the
@@ -82,31 +145,45 @@
     scrollbar-gutter: stable;
   }
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    /* The reference sets the body to 13.5px/1.5 on --ink-body and lets the
+       type roles step up from there. */
+    background-color: var(--canvas);
+    color: var(--ink-body);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--ink);
+    text-wrap: balance;
   }
   ::selection {
     background-color: hsl(222 98% 47% / 0.18);
   }
+  ::placeholder {
+    color: var(--ink-faint);
+  }
+  :focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
 @layer utilities {
-  /* Brand navy #0A1738 — hero/nav panels and heading ink where a token isn't apt. */
-  .text-navy {
-    color: #0a1738;
+  /*
+   * Unread emphasis for table and list rows. The reference tints the row with
+   * the brand blue at 4.5% (8% on hover) — a translucent wash the Tailwind
+   * color scale can't express, since the palette is built from `var()` tokens.
+   * Elevation, radii and the focus halo all live in `tailwind.config.ts`.
+   */
+  .bg-unread {
+    background-color: rgba(3, 74, 239, 0.045);
   }
-  .bg-navy {
-    background-color: #0a1738;
-  }
-  /* Soft navy-tinted elevation. */
-  .shadow-card {
-    box-shadow: 0 14px 40px rgba(10, 23, 56, 0.07);
-  }
-  .shadow-card-lg {
-    box-shadow: 0 14px 40px rgba(10, 23, 56, 0.1);
-  }
-  .shadow-card-hover {
-    box-shadow: 0 12px 34px rgba(10, 23, 56, 0.12);
+  .bg-unread-hover:hover {
+    background-color: rgba(3, 74, 239, 0.08);
   }
 }
 
@@ -114,20 +191,20 @@
 @layer utilities {
   .scrollbar-navy {
     scrollbar-width: thin;
-    scrollbar-color: hsl(220 15% 78%) transparent;
+    scrollbar-color: var(--line-strong) transparent;
   }
   .scrollbar-navy::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   .scrollbar-navy::-webkit-scrollbar-thumb {
-    background-color: hsl(220 15% 80%);
+    background-color: var(--line-strong);
     border-radius: 9999px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
   .scrollbar-navy::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(220 15% 70%);
+    background-color: var(--ink-faint);
   }
 }
 
@@ -166,5 +243,5 @@ html body[data-scroll-locked] {
   float: left;
   height: 0;
   pointer-events: none;
-  color: hsl(var(--muted-foreground));
+  color: var(--ink-faint);
 }

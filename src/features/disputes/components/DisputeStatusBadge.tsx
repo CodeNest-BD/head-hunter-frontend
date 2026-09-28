@@ -1,24 +1,26 @@
 "use client";
 
+import type { PillTone } from "@/shared/ui-components/badges/Pill";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 
 import { DISPUTE_STATUS_LABELS, type DisputeStatus } from "../schemas";
 
-const STATUS_STYLES: Record<DisputeStatus, string> = {
-  open: "bg-[#FBF3DF] text-[#7A5109]",
-  under_review: "bg-primary/15 text-primary",
-  resolved_release: "bg-[#E7F4EC] text-[#17734E]",
-  resolved_refund: "bg-[#E7F4EC] text-[#17734E]",
-  resolved_split: "bg-[#E7F4EC] text-[#17734E]",
-  resolved_resumed: "bg-[#E7F4EC] text-[#17734E]",
-  closed: "bg-muted text-muted-foreground",
+/** Open needs action, under review is in flight, every resolution is settled. */
+const STATUS_TONES: Record<DisputeStatus, PillTone> = {
+  open: "warn",
+  under_review: "info",
+  resolved_release: "ok",
+  resolved_refund: "ok",
+  resolved_split: "ok",
+  resolved_resumed: "ok",
+  closed: "neutral",
 };
 
 export function DisputeStatusBadge({ status }: { status: DisputeStatus }) {
   return (
     <StatusBadge
       label={DISPUTE_STATUS_LABELS[status] ?? status}
-      className={STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
+      tone={STATUS_TONES[status] ?? "neutral"}
     />
   );
 }

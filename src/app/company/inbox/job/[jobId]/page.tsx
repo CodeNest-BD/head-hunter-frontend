@@ -32,7 +32,6 @@ export default function CompanyInboxJobPage() {
               Back to inbox
             </Link>
             <PageHeader
-              variant="banner"
               title={job?.title ?? "Candidates"}
               subtitle="Everyone sent to this job, newest first. Open one for its conversation."
               className="mb-0"

@@ -6,7 +6,7 @@ import { AlertCircle, Briefcase } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { CANDIDATE_STATUS_LABELS } from "@/features/candidates/schemas";
-import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
+import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -324,7 +324,7 @@ export function Thread({ candidateId }: ThreadProps) {
               <span
                 className={cn(
                   "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                  CANDIDATE_STATUS_STYLES[threadHeader.candidate.status],
+                  CANDIDATE_STATUS_TONES[threadHeader.candidate.status],
                 )}
               >
                 {CANDIDATE_STATUS_LABELS[threadHeader.candidate.status]}

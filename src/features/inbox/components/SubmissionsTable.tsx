@@ -16,7 +16,7 @@ import {
   CANDIDATE_STATUSES,
   CANDIDATE_STATUS_LABELS,
 } from "@/features/candidates/schemas";
-import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
+import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -276,7 +276,7 @@ function StatusPill({ row }: { row: InboxConversationRow }) {
     <span
       className={cn(
         "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold",
-        CANDIDATE_STATUS_STYLES[row.status],
+        CANDIDATE_STATUS_TONES[row.status],
       )}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />

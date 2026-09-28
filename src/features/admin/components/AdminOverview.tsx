@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import {
   AttentionRow,
   Panel,
@@ -90,8 +90,7 @@ export function AdminOverview() {
   const companies = useAdminCompanies({ page: 1, limit: 100 });
 
   const banner = (
-    <PageBanner
-      size="lg"
+    <PageHeader
       eyebrow="Marketplace overview"
       title="Admin Dashboard"
       subtitle={

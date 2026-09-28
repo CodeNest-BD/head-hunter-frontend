@@ -26,14 +26,7 @@ import {
   type CompanyPlacement,
   type PlacementStatus,
 } from "../schemas";
-
-const STATUS_STYLES: Record<PlacementStatus, string> = {
-  released: "bg-[#E7F4EC] text-[#17734E]",
-  held: "bg-[#FBF3DF] text-[#7A5109]",
-  releasing: "bg-primary/15 text-primary",
-  disputed: "bg-[#FBEAEA] text-[#9B3535]",
-  refunded: "bg-muted text-muted-foreground",
-};
+import { PLACEMENT_STATUS_TONES } from "../statusTones";
 
 /** A placement can be rejected only while its fee is held and the candidate has
  * not reached their joining date — the countdown starts at midnight UTC that
@@ -62,7 +55,7 @@ function PlacementStatusBadge({ status }: { status: PlacementStatus }) {
   return (
     <StatusBadge
       label={PLACEMENT_STATUS_LABELS[status] ?? status}
-      className={STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
+      tone={PLACEMENT_STATUS_TONES[status] ?? "neutral"}
     />
   );
 }

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { FilterChip } from "@/shared/ui-components/controls/filter-chip";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatTime } from "@/shared/utils/formatDate";
@@ -265,7 +265,7 @@ export function NotificationList() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Notifications"
         subtitle="Updates on your jobs, candidates and conversations."
         actions={

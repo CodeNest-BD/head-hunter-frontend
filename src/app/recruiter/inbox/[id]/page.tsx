@@ -12,7 +12,7 @@ import {
   useCandidate,
   useDeleteCandidate,
   CANDIDATE_STATUS_LABELS,
-  CANDIDATE_STATUS_STYLES,
+  CANDIDATE_STATUS_TONES,
 } from "@/features/candidates";
 import { Thread, useMessageUnreadCounts } from "@/features/conversations";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
@@ -107,7 +107,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
     <CandidateDetailPanel
       candidate={candidate}
       stageLabel={CANDIDATE_STATUS_LABELS[candidate.status]}
-      stageClassName={CANDIDATE_STATUS_STYLES[candidate.status]}
+      stageClassName={CANDIDATE_STATUS_TONES[candidate.status]}
       negotiation={
         negotiationState !== undefined ? (
           <NegotiationStateBadges

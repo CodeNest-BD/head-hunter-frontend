@@ -32,9 +32,9 @@ import { Logo } from "./Logo";
 const SIDEBAR_COLLAPSED_KEY = "hh-sidebar-collapsed";
 
 /**
- * Top-bar account menu: avatar + name opening a popover with the full role
- * navigation (Profile included) plus Log out — a complete mirror of the
- * sidebar, so everything is reachable from either place. Below `xl` only the
+ * Top-bar account menu — the reference's `.userchip`: avatar, name over role,
+ * and a caret, opening a popover with the full role navigation (Profile
+ * included) plus Log out, a complete mirror of the rail. Below `xl` only the
  * avatar shows: the name and role are the bar's most expendable text, and the
  * popover repeats them the moment it opens.
  */
@@ -51,30 +51,33 @@ function UserMenu() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex h-9 shrink-0 items-center gap-2 rounded-md px-0.5 text-left transition-colors hover:bg-accent xl:pl-1 xl:pr-2"
+          className="flex shrink-0 items-center gap-2.5 rounded-sm py-1 pl-1 pr-1.5 text-left transition-colors hover:bg-surface-sub"
         >
-          <CurrentUserAvatar className="h-8 w-8 text-xs" />
-          <span className="hidden min-w-0 flex-col leading-tight xl:flex">
-            <span className="truncate text-sm font-semibold text-navy">
+          <CurrentUserAvatar className="size-8 text-meta" />
+          <span className="hidden min-w-0 flex-col leading-[1.15] xl:flex">
+            <span className="truncate text-[12.5px] font-semibold text-ink">
               {user.firstName} {user.lastName}
             </span>
-            <span className="truncate text-[11px] capitalize text-muted-foreground">
+            <span className="truncate text-[10.5px] capitalize text-ink-muted">
               {user.role}
             </span>
           </span>
-          <ChevronDown className="hidden h-4 w-4 shrink-0 text-muted-foreground xl:block" />
+          <ChevronDown
+            className="hidden size-3 shrink-0 text-ink-faint xl:block"
+            strokeWidth={2.4}
+          />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-60">
-        <div className="border-b border-border px-3 py-2.5">
-          <p className="truncate text-sm font-semibold text-navy">
+      <PopoverContent align="end" className="w-60 p-0">
+        <div className="border-b border-line px-3 py-2.5">
+          <p className="truncate text-[12.5px] font-semibold text-ink">
             {user.firstName} {user.lastName}
           </p>
-          <p className="truncate text-xs capitalize text-muted-foreground">
+          <p className="truncate text-[10.5px] capitalize text-ink-muted">
             {user.role}
           </p>
         </div>
-        {/* The full role navigation, mirroring the sidebar. */}
+        {/* The full role navigation, mirroring the rail. */}
         <div className="p-1">
           {items.map((item) => {
             const Icon = item.icon;
@@ -83,25 +86,25 @@ function UserMenu() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 rounded-sm px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-accent"
+                className="flex items-center gap-2.5 rounded-xs px-2.5 py-2 text-sub text-ink-body transition-colors hover:bg-surface-sub hover:text-ink"
               >
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <Icon className="size-4 text-ink-muted" />
                 <span className="flex-1 truncate">{item.label}</span>
                 <NavBadge badge={item.badge} />
               </Link>
             );
           })}
         </div>
-        <div className="border-t border-border p-1">
+        <div className="border-t border-line p-1">
           <button
             type="button"
             onClick={() => {
               setOpen(false);
               void logout();
             }}
-            className="flex w-full items-center gap-2.5 rounded-sm px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+            className="flex w-full items-center gap-2.5 rounded-xs px-2.5 py-2 text-sub text-ink-body transition-colors hover:bg-bad-bg hover:text-bad"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="size-4" />
             Log out
           </button>
         </div>
@@ -110,6 +113,11 @@ function UserMenu() {
   );
 }
 
+/**
+ * The reference's `.rail__item`: a 36px row at 13px/550 on muted ink, turning
+ * to a blue tint with a cobalt inset bar and a cobalt glyph when it is the
+ * current page.
+ */
 function NavLink({
   item,
   active,
@@ -129,25 +137,17 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-md py-2 text-sm font-medium transition-colors",
-        collapsed ? "justify-center px-0" : "px-3",
+        "flex h-9 items-center gap-2.5 rounded-sm text-sub font-[550] transition-colors",
+        collapsed ? "justify-center px-0" : "px-2.5",
         active
-          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-          : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+          ? "bg-tint font-[650] text-blue-ink shadow-rail"
+          : "text-ink-muted hover:bg-surface-sub hover:text-ink",
       )}
     >
-      {active && (
-        <span
-          aria-hidden="true"
-          className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary"
-        />
-      )}
       <Icon
         className={cn(
-          "h-[18px] w-[18px] shrink-0 transition-colors",
-          active
-            ? "text-primary"
-            : "text-sidebar-foreground/70 group-hover:text-sidebar-accent-foreground",
+          "size-[17px] shrink-0",
+          active ? "text-blue" : "opacity-90",
         )}
       />
       {!collapsed && <span className="truncate">{item.label}</span>}
@@ -188,20 +188,21 @@ function SidebarContent({
       : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <div className="flex h-full flex-col">
-      <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-navy px-3 py-4">
-        {/* MENU label with the collapse toggle at its right (rail only). When
-         * collapsed the label hides and the toggle centres. The drawer heads
-         * its nav with the account block instead, so it needs neither. */}
+    <div className="flex h-full flex-col px-2.5 pb-2.5 pt-3.5">
+      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto scrollbar-navy">
+        {/* `.rail__section` — the section label, with the collapse toggle at its
+         * right (rail only). When collapsed the label hides and the toggle
+         * centres. The drawer heads its nav with the account block instead, so
+         * it needs neither. */}
         <div
           className={cn(
-            "flex items-center pb-2",
-            collapsed ? "justify-center" : "justify-between px-3",
+            "flex items-center pb-1.5",
+            collapsed ? "justify-center" : "justify-between px-2",
             isDrawer && "hidden",
           )}
         >
           {!collapsed && (
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/50">
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.09em] text-ink-faint">
               Menu
             </p>
           )}
@@ -211,12 +212,12 @@ function SidebarContent({
               onClick={onToggleCollapse}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               aria-expanded={!collapsed}
-              className="rounded-md p-1 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+              className="rounded-xs p-1 text-ink-muted transition-colors hover:bg-surface-sub hover:text-ink"
             >
               {collapsed ? (
-                <PanelLeftOpen className="h-[18px] w-[18px]" />
+                <PanelLeftOpen className="size-[17px]" />
               ) : (
-                <PanelLeftClose className="h-[18px] w-[18px]" />
+                <PanelLeftClose className="size-[17px]" />
               )}
             </button>
           )}
@@ -232,33 +233,37 @@ function SidebarContent({
         ))}
       </nav>
 
-      <div className="border-t border-sidebar-border p-3">
+      {/* `.rail__foot` — identity on the left, log out as an icon button. */}
+      <div className="mt-auto flex items-center gap-2.5 border-t border-line p-2.5">
         {/* The drawer carries the account block in its own header, so repeating
          * it here would show the same name twice. */}
         {!collapsed && !isDrawer && (
-          <div className="flex items-center gap-3 rounded-md px-2 py-2">
-            <CurrentUserAvatar className="h-9 w-9 text-xs" />
+          <>
+            <CurrentUserAvatar className="size-8 text-meta" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-sidebar-accent-foreground">
+              <p className="truncate text-[12.5px] font-semibold text-ink">
                 {user.firstName} {user.lastName}
               </p>
-              <p className="truncate text-xs capitalize text-sidebar-foreground/60">
+              <p className="truncate text-[10.5px] capitalize text-ink-faint">
                 {user.role}
               </p>
             </div>
-          </div>
+          </>
         )}
         <button
           type="button"
           onClick={() => void logout()}
-          title={collapsed ? "Log out" : undefined}
+          title="Log out"
+          aria-label={collapsed || !isDrawer ? "Log out" : undefined}
           className={cn(
-            "flex w-full items-center gap-3 rounded-md py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-destructive/15 hover:text-destructive",
-            collapsed ? "justify-center px-0" : "mt-1 px-3",
+            "flex items-center gap-2.5 rounded-sm text-sub font-[550] text-ink-muted transition-colors hover:bg-bad-bg hover:text-bad",
+            collapsed || !isDrawer
+              ? "size-8.5 shrink-0 justify-center"
+              : "w-full px-2.5 py-2",
           )}
         >
-          <LogOut className="h-[18px] w-[18px] shrink-0" />
-          {!collapsed && "Log out"}
+          <LogOut className="size-[17px] shrink-0" />
+          {!collapsed && isDrawer && "Log out"}
         </button>
       </div>
     </div>
@@ -287,10 +292,14 @@ export interface DashboardLayoutProps {
 }
 
 /**
- * App chrome for authenticated pages: a left sidebar (role-based nav) and a
- * slim top bar. On desktop the sidebar collapses to an icon-only rail (the
- * choice is remembered); on small screens it is a slide-over toggled from the
- * top bar. The content area is full-width; pages own any narrower column.
+ * The reference's app shell: a white 56px top bar over a white 232px rail, both
+ * ruled off with hairlines, and a blue-grey canvas behind the content. Navy is
+ * kept as ink and small accents — never a large surface.
+ *
+ * On desktop the rail collapses to an icon-only strip (the choice is
+ * remembered); on small screens it is a slide-over toggled from the top bar.
+ * Content is capped at 1560px and centred, so wide screens get balanced margins
+ * instead of a dead right side.
  */
 export function DashboardLayout({
   children,
@@ -323,18 +332,18 @@ export function DashboardLayout({
   }, [collapsed]);
 
   return (
-    <div className="min-h-screen bg-secondary">
-      {/* Full-width top navbar: logo + global links on the left; role actions,
-       * notifications and the account menu on the right. Spans the whole width,
-       * with the sidebar sitting beneath it. */}
-      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center gap-1.5 border-b border-border/70 bg-white/85 px-3 backdrop-blur-md sm:gap-3 sm:px-6 lg:px-10">
+    <div className="min-h-screen bg-canvas">
+      {/* `.topbar` — brand on the left in a rail-width block so it lines up with
+       * the nav beneath it; role actions, notifications and the account chip on
+       * the right. */}
+      <header className="fixed inset-x-0 top-0 z-50 flex h-topbar items-center gap-3 border-b border-line bg-surface pl-4 pr-5">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
-          className="-ml-1 shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+          className="-ml-1 flex size-8.5 shrink-0 items-center justify-center rounded-sm text-ink-muted transition-colors hover:bg-surface-sub hover:text-ink lg:hidden"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="size-[17px]" />
         </button>
         {/* `min-w-0` + the wordmark's own `truncate`: if the bar still runs out
          * of room the name ellipsises, rather than shunting the account avatar
@@ -342,25 +351,25 @@ export function DashboardLayout({
         <Link
           href="/"
           aria-label="Head-Hunters home"
-          className="min-w-0 shrink"
+          className="min-w-0 shrink lg:w-[216px] lg:shrink-0"
         >
           <Logo className="max-w-full [&>span]:truncate" />
         </Link>
         {/* `shrink-0` so the account avatar is never the thing squeezed off the
          * end of a narrow top bar. */}
-        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           {user && <TopBarActions role={user.role} />}
           <UserMenu />
         </div>
       </header>
 
-      {/* Sidebar — sits below the navbar on desktop (nav only; the account
+      {/* `.rail` — sits below the top bar on desktop (nav only; the account
        * controls live in the top-bar user menu). */}
       {!hideSidebar && (
         <aside
           className={cn(
-            "fixed bottom-0 left-0 top-16 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 lg:flex",
-            collapsed ? "w-16" : "w-64",
+            "fixed bottom-0 left-0 top-topbar z-40 hidden flex-col border-r border-line bg-surface transition-[width] duration-200 lg:flex",
+            collapsed ? "w-topbar" : "w-rail",
           )}
         >
           <SidebarContent
@@ -371,41 +380,41 @@ export function DashboardLayout({
         </aside>
       )}
 
-      {/* Slide-over sidebar (mobile) — full nav plus the account block, since
-       * the top-bar user menu is cramped on small screens. */}
+      {/* Slide-over rail (mobile) — full nav plus the account block, since the
+       * top-bar user menu is cramped on small screens. */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
             onClick={close}
             aria-hidden="true"
           />
-          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[80%] flex-col border-r border-sidebar-border bg-sidebar shadow-2xl">
-            <div className="flex items-center justify-between gap-3 border-b border-sidebar-border px-4 py-3.5">
+          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[80%] flex-col border-r border-line bg-surface shadow-pop">
+            <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
               {user ? (
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <CurrentUserAvatar className="h-9 w-9 text-xs" />
+                  <CurrentUserAvatar className="size-8 text-meta" />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-bold text-sidebar-accent-foreground">
+                    <span className="block truncate text-[12.5px] font-semibold text-ink">
                       {user.firstName} {user.lastName}
                     </span>
-                    <span className="block truncate text-xs capitalize text-sidebar-foreground/60">
+                    <span className="block truncate text-[10.5px] capitalize text-ink-faint">
                       {user.role}
                     </span>
                   </span>
                 </div>
               ) : (
                 <Link href="/" aria-label="Head-Hunters home" onClick={close}>
-                  <Logo tone="onDark" />
+                  <Logo />
                 </Link>
               )}
               <button
                 type="button"
                 onClick={close}
                 aria-label="Close menu"
-                className="shrink-0 rounded-md p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+                className="flex size-8.5 shrink-0 items-center justify-center rounded-sm text-ink-muted transition-colors hover:bg-surface-sub hover:text-ink"
               >
-                <X className="h-5 w-5" />
+                <X className="size-[17px]" />
               </button>
             </div>
             <SidebarContent onNavigate={close} variant="drawer" />
@@ -413,18 +422,19 @@ export function DashboardLayout({
         </div>
       )}
 
-      {/* Content — offset below the navbar and beside the sidebar. */}
+      {/* `.page` — offset below the top bar and beside the rail. */}
       <div
         className={cn(
-          "pt-16 transition-[padding] duration-200",
-          hideSidebar ? "" : collapsed ? "lg:pl-16" : "lg:pl-64",
+          "pt-topbar transition-[padding] duration-200",
+          hideSidebar ? "" : collapsed ? "lg:pl-topbar" : "lg:pl-rail",
         )}
       >
-        {/* Navbar (4rem) is the only chrome above; see TwoColumnDetailLayout's
-         * PAGE_HEIGHT_CLASSNAME, which also accounts for this main's pt-6/pb-16.
+        {/* Top bar (56px) is the only chrome above; see TwoColumnDetailLayout's
+         * PAGE_HEIGHT_CLASSNAME, which also accounts for this main's pt-5/pb-14.
          * (The breadcrumb bar is hidden for now.) */}
-        <main className="min-h-[calc(100vh-4rem)] px-4 pb-16 pt-6 sm:px-6 lg:px-10">
-          <div className="w-full">{children}</div>
+        <main className="min-h-[calc(100vh-var(--topbar-h))] px-4 pb-14 pt-5 sm:px-6">
+          {/* `.page__inner` — fluid to a 1560px cap, then centred. */}
+          <div className="mx-auto w-full max-w-page">{children}</div>
         </main>
       </div>
     </div>

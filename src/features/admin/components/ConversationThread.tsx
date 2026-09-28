@@ -22,7 +22,7 @@ import {
   type ConversationThread as ConversationThreadPage,
 } from "../schemas";
 import { DetailSkeleton } from "./DetailPrimitives";
-import { CANDIDATE_STATUS_STYLES } from "./statusStyles";
+import { CANDIDATE_STATUS_TONES } from "./statusStyles";
 
 const EVENT_ICON: Record<ConversationEvent["type"], LucideIcon> = {
   submission: Send,
@@ -123,10 +123,7 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
                 CANDIDATE_LABELS[header.candidate.status] ??
                 header.candidate.status
               }
-              className={
-                CANDIDATE_STATUS_STYLES[header.candidate.status] ??
-                "bg-muted text-muted-foreground"
-              }
+              tone={CANDIDATE_STATUS_TONES[header.candidate.status] ?? "neutral"}
             />
           </div>
           <p className="text-sm text-muted-foreground">

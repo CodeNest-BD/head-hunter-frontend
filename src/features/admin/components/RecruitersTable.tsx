@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, Users } from "lucide-react";
 
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import {
   MobileRecordCard,
   MobileRecordList,
@@ -29,8 +29,8 @@ import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
 import {
   ACCOUNT_STATUS_LABELS,
-  ACCOUNT_STATUS_STYLES,
-  VERIFICATION_STATUS_STYLES,
+  ACCOUNT_STATUS_TONES,
+  VERIFICATION_STATUS_TONES,
 } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 import { TABLE_TOOLBAR } from "@/shared/ui-components/data/tableStyles";
@@ -72,10 +72,7 @@ function RecruiterVerification({
   return (
     <StatusBadge
       label={VERIFICATION_LABELS[recruiter.verificationStatus]}
-      className={
-        VERIFICATION_STATUS_STYLES[recruiter.verificationStatus] ??
-        "bg-muted text-muted-foreground"
-      }
+      tone={VERIFICATION_STATUS_TONES[recruiter.verificationStatus] ?? "neutral"}
     />
   );
 }
@@ -84,7 +81,7 @@ function RecruiterStatus({ recruiter }: { recruiter: RecruiterListItem }) {
   return (
     <StatusBadge
       label={ACCOUNT_STATUS_LABELS[recruiter.status]}
-      className={ACCOUNT_STATUS_STYLES[recruiter.status]}
+      tone={ACCOUNT_STATUS_TONES[recruiter.status]}
     />
   );
 }
@@ -159,7 +156,7 @@ export function RecruitersTable() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Recruiters"
         subtitle="Every recruiter on the platform. Open a profile or suspend an account."
         metrics={[

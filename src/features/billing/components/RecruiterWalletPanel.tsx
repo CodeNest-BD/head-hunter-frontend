@@ -7,7 +7,7 @@ import { AlertCircle, Wallet2 } from "lucide-react";
 
 import { RaiseDisputeForm } from "@/features/disputes";
 import { ENABLE_RECRUITER_PAYOUTS } from "@/shared/config/featureFlags";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
@@ -29,17 +29,10 @@ import {
   type RecruiterPlacement,
   type RecruiterWalletSummary,
 } from "../schemas";
+import { PLACEMENT_STATUS_TONES } from "../statusTones";
 import { BODY_ROW, BillingTableFooter, HEAD_ROW, TH } from "./BillingTable";
 import { PayoutsCard } from "./PayoutsCard";
 import { PayoutsTable } from "./PayoutsTable";
-
-const STATUS_STYLES: Record<PlacementStatus, string> = {
-  released: "bg-[#E7F4EC] text-[#17734E]",
-  held: "bg-[#FBF3DF] text-[#7A5109]",
-  releasing: "bg-primary/15 text-primary",
-  disputed: "bg-[#FBEAEA] text-[#9B3535]",
-  refunded: "bg-muted text-muted-foreground",
-};
 
 /** How a commission moves from a hire to the recruiter's balance. */
 const COMMISSION_STEPS: readonly { title: string; detail: string }[] = [
@@ -237,7 +230,7 @@ function PlacementStatusBadge({ status }: { status: PlacementStatus }) {
   return (
     <StatusBadge
       label={PLACEMENT_STATUS_LABELS[status] ?? status}
-      className={STATUS_STYLES[status] ?? "bg-muted text-muted-foreground"}
+      tone={PLACEMENT_STATUS_TONES[status] ?? "neutral"}
     />
   );
 }
@@ -404,7 +397,7 @@ export function RecruiterWalletPanel() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Wallet"
         subtitle="Commissions paid out, held in escrow, and under dispute."
       />

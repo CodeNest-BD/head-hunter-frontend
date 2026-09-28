@@ -22,7 +22,7 @@ import {
   CANDIDATE_STATUSES,
   type CandidateStatus,
 } from "@/features/candidates/schemas";
-import { CANDIDATE_STATUS_STYLES } from "@/features/candidates/components/statusStyles";
+import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatTimeAgo, formatDateTime } from "@/shared/utils/formatDate";
@@ -572,7 +572,7 @@ export function CompanySubmissionsQueue() {
                       <td className={TABLE_TD}>
                         <StatusBadge
                           label={QUEUE_STATUS_LABELS[row.status]}
-                          className={CANDIDATE_STATUS_STYLES[row.status]}
+                          tone={CANDIDATE_STATUS_TONES[row.status]}
                         />
                       </td>
                       <td className={cn(TABLE_TD, "text-right")}>
@@ -600,7 +600,7 @@ export function CompanySubmissionsQueue() {
                 trailing={
                   <StatusBadge
                     label={QUEUE_STATUS_LABELS[row.status]}
-                    className={CANDIDATE_STATUS_STYLES[row.status]}
+                    tone={CANDIDATE_STATUS_TONES[row.status]}
                   />
                 }
                 className={cn(

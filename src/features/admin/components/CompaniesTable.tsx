@@ -12,7 +12,7 @@ import {
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
-import { PageBanner } from "@/shared/ui-components/brand";
+import { PageHeader } from "@/shared/ui-components/brand";
 import {
   MobileRecordCard,
   MobileRecordList,
@@ -30,8 +30,8 @@ import { ListPager } from "./ListPager";
 import { ListToolbar } from "./ListToolbar";
 import {
   ACCOUNT_STATUS_LABELS,
-  ACCOUNT_STATUS_STYLES,
-  VERIFICATION_STATUS_STYLES,
+  ACCOUNT_STATUS_TONES,
+  VERIFICATION_STATUS_TONES,
 } from "./statusStyles";
 import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
 import { TABLE_TOOLBAR } from "@/shared/ui-components/data/tableStyles";
@@ -88,10 +88,7 @@ function CompanyApproval({ company }: { company: CompanyListItem }) {
   return (
     <StatusBadge
       label={VERIFICATION_LABELS[company.verificationStatus]}
-      className={
-        VERIFICATION_STATUS_STYLES[company.verificationStatus] ??
-        "bg-muted text-muted-foreground"
-      }
+      tone={VERIFICATION_STATUS_TONES[company.verificationStatus] ?? "neutral"}
     />
   );
 }
@@ -100,7 +97,7 @@ function CompanyStatus({ company }: { company: CompanyListItem }) {
   return (
     <StatusBadge
       label={ACCOUNT_STATUS_LABELS[company.status]}
-      className={ACCOUNT_STATUS_STYLES[company.status]}
+      tone={ACCOUNT_STATUS_TONES[company.status]}
     />
   );
 }
@@ -183,7 +180,7 @@ export function CompaniesTable() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBanner
+      <PageHeader
         title="Companies"
         subtitle="Every company on the platform, their wallet, and account controls."
         metrics={[
