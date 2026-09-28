@@ -68,6 +68,14 @@ React Hook Form for form state; **Zod** for schema validation (shared with parsi
 
 ## UI & Styling
 
+> **Read [`component-design-guidance.md`](./component-design-guidance.md) before
+> building any UI.** It is the catalogue of the 65 shared components and the
+> rules for using them — tokens, the type and density scales, the recipes for a
+> table page / form page / dialog / status, loading states and motion. Nearly
+> every screen here is assembled from parts that already exist; a new one-off is
+> almost always one of those parts drifting. If a part nearly fits, extend it
+> rather than writing a second one.
+
 Tailwind CSS for styling; compose class names with `tailwind-merge` / `cn`. Build on the Radix UI primitives and the shared `ui-components/` and `components/` rather than adding new one-off component libraries. Register any new remote image host in `next.config.js` (`images.domains`). Keep bundle impact minimal — prefer an existing dependency over a new one, and rely on `optimizePackageImports` for barrel-heavy libraries.
 
 **Header capitalization**: every header/heading text is capitalized — page titles, section headings, card titles, table column headers, stat/metric labels, tabs, and the like. Use Title Case for multi-word headers (e.g. "Account Status", "Recruiting History", "Available Fees"). This is a copy rule, not CSS — write the label capitalized rather than relying on `uppercase`/`capitalize` utilities to fake it.
