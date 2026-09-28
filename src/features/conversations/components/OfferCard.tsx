@@ -202,9 +202,7 @@ export function OfferCard({
             <span className="text-stat font-bold tabular-nums text-ink">
               {formatMinor(salaryMinor)}
             </span>
-            <span className="text-meta text-ink-faint">
-              base salary / year
-            </span>
+            <span className="text-meta text-ink-faint">base salary / year</span>
           </div>
           <div className="grid flex-1 gap-2 sm:min-w-[220px] sm:grid-cols-2">
             {startDate && (

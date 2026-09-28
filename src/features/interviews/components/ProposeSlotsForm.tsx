@@ -250,10 +250,7 @@ export function ProposeSlotsForm({
           built rather than as output of the picker below it. */}
       <div className="flex flex-col gap-1.5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <p
-            id={stagedHeadingId}
-            className="text-sub font-[650] text-ink"
-          >
+          <p id={stagedHeadingId} className="text-sub font-[650] text-ink">
             Times you&apos;ll propose
           </p>
           <span className="text-meta tabular-nums text-ink-muted">

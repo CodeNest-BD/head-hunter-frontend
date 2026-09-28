@@ -30,37 +30,34 @@ export function DisputeProofList({
       <p className="text-label font-[650] uppercase text-ink-muted">Proof</p>
       <ul className="overflow-hidden rounded-sm border border-line bg-surface">
         {attachments.map((file) => (
-          // The row's own hairline sits on the `<li>`: `ListRow`'s `last:`
-          // rule can never fire while each row is an only child.
-          <li key={file.id} className="border-b border-line last:border-b-0">
-            {/* `.listrow` — each document is one evidence row led by a tile. */}
-            <ListRow className="items-center gap-2.5">
-              <Tile icon={FileText} tone="neutral" />
-              <a
-                href={file.previewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="min-w-0 flex-1 truncate text-sub font-[550] text-blue-ink underline-offset-2 hover:underline"
-              >
-                {file.fileName}
-              </a>
-              <span className="shrink-0 text-meta text-ink-faint">
-                {FILED_BY_LABEL[file.uploadedBy]}
+          // `.listrow` — each document is one evidence row led by a tile. The
+          // row renders as the `<li>` itself, so its `last:` rule can fire.
+          <ListRow key={file.id} element="li" className="items-center gap-2.5">
+            <Tile icon={FileText} tone="neutral" />
+            <a
+              href={file.previewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-w-0 flex-1 truncate text-sub font-[550] text-blue-ink underline-offset-2 hover:underline"
+            >
+              {file.fileName}
+            </a>
+            <span className="shrink-0 text-meta text-ink-faint">
+              {FILED_BY_LABEL[file.uploadedBy]}
+            </span>
+            {file.sizeBytes !== null && (
+              <span className="shrink-0 tabular-nums text-meta text-ink-faint">
+                {formatSize(file.sizeBytes)}
               </span>
-              {file.sizeBytes !== null && (
-                <span className="shrink-0 tabular-nums text-meta text-ink-faint">
-                  {formatSize(file.sizeBytes)}
-                </span>
-              )}
-              <a
-                href={file.downloadUrl}
-                aria-label={`Download ${file.fileName}`}
-                className="inline-flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
-              >
-                <Download className="size-[15px]" />
-              </a>
-            </ListRow>
-          </li>
+            )}
+            <a
+              href={file.downloadUrl}
+              aria-label={`Download ${file.fileName}`}
+              className="inline-flex size-7 shrink-0 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
+            >
+              <Download className="size-[15px]" />
+            </a>
+          </ListRow>
         ))}
       </ul>
     </div>

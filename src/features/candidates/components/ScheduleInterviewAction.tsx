@@ -100,10 +100,8 @@ export function ScheduleInterviewAction({
 
   if (panel.kind === "proposing") {
     return (
-      <div className="flex flex-col gap-2 rounded-md border border-border/60 p-3">
-        <p className="text-sm font-medium text-foreground">
-          Schedule Interview
-        </p>
+      <div className="flex flex-col gap-2 rounded-sm border border-line bg-surface-sub p-3">
+        <p className="text-sub font-[650] text-ink">Schedule Interview</p>
         <ProposeSlotsForm
           target={{ kind: "new", candidateId }}
           onDone={() =>

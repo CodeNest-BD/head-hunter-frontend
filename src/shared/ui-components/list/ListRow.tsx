@@ -4,6 +4,13 @@ import { cn } from "@/shared/libs/shadCnConfig";
 
 export interface ListRowProps {
   children: ReactNode;
+  /**
+   * The element to render. Lists that are semantically lists pass `"li"` so the
+   * row *is* the list item — wrapping this in an outer `<li>` would make the row
+   * an only child, and `last:border-b-0` could then never fire, leaving a
+   * hairline under the final row.
+   */
+  element?: "div" | "li";
   /** Tints the row and marks its left edge with a cobalt bar. */
   unread?: boolean;
   /** The reading pane's current row — a solid tint, no separate hover. */
@@ -19,13 +26,14 @@ export interface ListRowProps {
  */
 export function ListRow({
   children,
+  element: Element = "div",
   unread = false,
   selected = false,
   interactive = false,
   className,
 }: ListRowProps) {
   return (
-    <div
+    <Element
       className={cn(
         "flex items-start gap-[11px] border-b border-line px-4 py-[11px] last:border-b-0",
         interactive && !selected && "hover:bg-surface-sub",
@@ -36,6 +44,6 @@ export function ListRow({
       )}
     >
       {children}
-    </div>
+    </Element>
   );
 }

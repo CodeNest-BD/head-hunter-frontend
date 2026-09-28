@@ -9,7 +9,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
  * outlined and filled buttons share a hit box.
  */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-[7px] whitespace-nowrap rounded-sm border border-transparent text-sub font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-55 [&_svg]:size-[15px] [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-[7px] whitespace-nowrap rounded-sm border border-transparent text-sub font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-55 [&_svg:not([class*='size-'])]:size-[15px] [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -26,7 +26,7 @@ const buttonVariants = cva(
         sm: "h-7.5 rounded-xs px-2.5 text-[12.5px]",
         lg: "h-10.5 px-4.5 text-block",
         /** `.iconbtn` — a 34px square with no label. */
-        icon: "size-8.5 rounded-sm p-0 [&_svg]:size-[17px]",
+        icon: "size-8.5 rounded-sm p-0 [&_svg:not([class*='size-'])]:size-[17px]",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

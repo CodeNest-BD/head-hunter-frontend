@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 import { RequireApprovedRecruiter, RequireRole } from "@/features/auth";
 import { CandidateForm } from "@/features/candidates";
-import { PageHeader } from "@/shared/ui-components/brand";
+import { BackLink, PageHeader } from "@/shared/ui-components/brand";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 /**
@@ -24,20 +22,16 @@ export default function SubmitCandidatePage() {
     <RequireRole role="recruiter">
       <DashboardLayout>
         <RequireApprovedRecruiter>
-          <div className="flex w-full flex-col gap-6">
-            <Link
-              href={listHref}
-              className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
+          <div className="flex w-full flex-col gap-4">
+            <BackLink href={listHref} className="mb-0">
               Back to your candidates
-            </Link>
+            </BackLink>
             <PageHeader
               title="Submit a candidate"
               subtitle="They get their own conversation with the company as soon as you send them."
               className="mb-0"
             />
-            <div className="flex flex-col gap-4 rounded-md border border-border/70 bg-card p-5 shadow-sm">
+            <div className="flex flex-col gap-4 rounded-md border border-line bg-surface p-4 shadow-e1">
               <CandidateForm
                 jobId={params.jobId}
                 onDone={() => router.push(listHref)}

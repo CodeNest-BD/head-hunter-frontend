@@ -289,7 +289,9 @@ export function JobLivePreview({
             <div className="min-w-0">
               <BlockLabel>Timeline to hire</BlockLabel>
               {values.timelineToHire === "" ? (
-                <p className="mt-[3px] text-body font-[550] text-ink-muted">—</p>
+                <p className="mt-[3px] text-body font-[550] text-ink-muted">
+                  —
+                </p>
               ) : (
                 <div className="mt-1.5">
                   <Pill tone="warn" plain>

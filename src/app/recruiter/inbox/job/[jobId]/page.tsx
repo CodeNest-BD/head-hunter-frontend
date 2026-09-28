@@ -31,20 +31,20 @@ function JobCandidates({ jobId }: { jobId: string }) {
   // button that says why rather than a link that goes nowhere.
   const submitAction = atCap ? (
     <Button type="button" disabled>
-      <Plus className="h-4 w-4" />
+      <Plus aria-hidden="true" />
       At the {MAX_CANDIDATES}-candidate limit
     </Button>
   ) : (
     <Button asChild type="button" disabled={mine.isPending}>
       <Link href={`/recruiter/inbox/job/${jobId}/submit`}>
-        <Plus className="h-4 w-4" />
+        <Plus aria-hidden="true" />
         {isEmpty ? "Submit a candidate" : "Submit another candidate"}
       </Link>
     </Button>
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <PageHeader
           title="Your candidates"

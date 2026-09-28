@@ -109,9 +109,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
           {categoryLabel(job.roleCategory)}
         </span>
         {posted && (
-          <span className="shrink-0 text-meta text-ink-faint">
-            {posted}
-          </span>
+          <span className="shrink-0 text-meta text-ink-faint">{posted}</span>
         )}
       </div>
 

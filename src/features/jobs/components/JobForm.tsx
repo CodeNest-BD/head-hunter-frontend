@@ -1112,9 +1112,7 @@ export function JobForm({
                     }
                     {...register("benefits.retirement401kMatch")}
                   />
-                  <span className="text-sub text-ink-muted">
-                    (% Match)
-                  </span>
+                  <span className="text-sub text-ink-muted">(% Match)</span>
                 </div>
                 {/* Day counts sit beside their own checkbox and tick it on focus,
                   the same way the 401K match does. */}
@@ -1175,7 +1173,9 @@ export function JobForm({
                 />
               </div>
               {benefitsError && (
-                <p className="text-meta font-medium text-bad">{benefitsError}</p>
+                <p className="text-meta font-medium text-bad">
+                  {benefitsError}
+                </p>
               )}
 
               {values.benefits.ancillary && (

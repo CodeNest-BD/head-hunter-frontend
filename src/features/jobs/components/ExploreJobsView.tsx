@@ -696,7 +696,8 @@ const MAP_HEADER =
   "flex flex-col gap-2.5 border-b border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between";
 
 /** `.card` — the white surface the map, its header and its legend sit on. */
-const MAP_CARD = "overflow-hidden rounded-md border border-line bg-surface shadow-e1";
+const MAP_CARD =
+  "overflow-hidden rounded-md border border-line bg-surface shadow-e1";
 
 /** A translucent bordered dot echoing the map bubbles, at a legend size. */
 function LegendDot({ size }: { size: number }) {

@@ -282,7 +282,9 @@ function PayBenefitsBox({ job }: { job: JobView }) {
               ))}
             </ul>
           ) : (
-            !downloadableDocument && <p className="mt-1 text-body text-ink">—</p>
+            !downloadableDocument && (
+              <p className="mt-1 text-body text-ink">—</p>
+            )
           )}
           {downloadableDocument && (
             <div className="mt-2">

@@ -391,10 +391,7 @@ export function SubmissionsTable({
           if (isSort(next)) setSort(next);
         }}
       >
-        <SelectTrigger
-          className="w-full sm:w-[168px]"
-          aria-label="Sort"
-        >
+        <SelectTrigger className="w-full sm:w-[168px]" aria-label="Sort">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -529,9 +526,7 @@ export function SubmissionsTable({
                     <td className={TABLE_TD}>
                       <JobLink jobId={row.jobId} title={row.jobTitle} />
                     </td>
-                    <td
-                      className={cn(TABLE_TD_STACKED, "whitespace-nowrap")}
-                    >
+                    <td className={cn(TABLE_TD_STACKED, "whitespace-nowrap")}>
                       <span className="block tabular-nums text-ink">
                         {formatDate(submittedOf(row))}
                       </span>

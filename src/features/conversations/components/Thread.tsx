@@ -300,13 +300,14 @@ export function Thread({ candidateId }: ThreadProps) {
                 {counterpartyHeading}
               </h2>
               <StatusBadge
-                label={
-                  CANDIDATE_STATUS_LABELS[threadHeader.candidate.status]
-                }
+                label={CANDIDATE_STATUS_LABELS[threadHeader.candidate.status]}
                 tone={CANDIDATE_STATUS_TONES[threadHeader.candidate.status]}
               />
             </div>
-            <Link href={jobHref} className="mt-1 inline-flex min-w-0 max-w-full">
+            <Link
+              href={jobHref}
+              className="mt-1 inline-flex min-w-0 max-w-full"
+            >
               <RefChip className="transition-colors hover:bg-info-line">
                 <Briefcase aria-hidden="true" />
                 <span className="truncate">{threadHeader.job.title}</span>

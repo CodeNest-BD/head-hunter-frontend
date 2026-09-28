@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeft, Send, SquarePen } from "lucide-react";
+import { AlertCircle, ChevronLeft, Send, SquarePen } from "lucide-react";
 
 import { RequireApprovedRecruiter, useAuth } from "@/features/auth";
 import { useJob, usePublishJob } from "@/features/jobs";
@@ -15,15 +15,15 @@ import { jobToJobView } from "@/features/jobs/utils/toJobView";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { PublicShell } from "@/components/landing/PublicShell";
 import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
-import { PageHeader } from "@/shared/ui-components/brand";
+import { BackLink, PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 function DetailSkeleton() {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="h-28 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
-      <div className="h-80 w-full animate-pulse rounded-md border border-border/70 bg-muted" />
+    <div className="flex flex-col gap-4">
+      <div className="h-28 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
+      <div className="h-80 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
     </div>
   );
 }
@@ -40,7 +40,7 @@ function SubmitCandidatesButton({ jobId }: { jobId: string }) {
   if (HIDE_PHASE2_FEATURES) {
     return (
       <Button type="button" className="w-full" disabled>
-        <Send className="h-[18px] w-[18px]" />
+        <Send className="size-[15px]" />
         Submit candidates
       </Button>
     );
@@ -51,7 +51,7 @@ function SubmitCandidatesButton({ jobId }: { jobId: string }) {
   return (
     <Button asChild type="button" className="w-full">
       <Link href={`/recruiter/inbox/job/${jobId}`}>
-        <Send className="h-[18px] w-[18px]" />
+        <Send className="size-[15px]" />
         Submit candidates
       </Link>
     </Button>
@@ -74,7 +74,7 @@ function CompanyJobActions({ job }: { job: Job }) {
     <div className="flex flex-wrap gap-2">
       <Button asChild type="button" variant="outline" size="sm">
         <Link href={`/company/jobs/${job.id}`}>
-          <SquarePen className="h-4 w-4" />
+          <SquarePen className="size-[15px]" />
           Edit
         </Link>
       </Button>
@@ -95,16 +95,16 @@ function RecruiterCta({ jobId }: { jobId: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       <Button type="button" className="w-full" disabled>
-        <Send className="h-[18px] w-[18px]" />
+        <Send className="size-[15px]" />
         Submit candidates
       </Button>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-meta text-ink-muted">
         {verificationStatus === "rejected"
           ? "Your verification was declined — see your "
           : "Submitting unlocks once you're verified — check your "}
         <Link
           href="/recruiter/profile"
-          className="font-medium text-primary underline-offset-2 hover:underline"
+          className="font-[550] text-blue-ink underline-offset-2 hover:underline"
         >
           profile
         </Link>
@@ -145,7 +145,6 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
       <PageHeader
         title={job?.title ?? "Job detail"}
         subtitle="The fee, the role, and everything you need before you submit a candidate."
-        className="mb-0"
         actions={
           role === "company" && job ? <CompanyJobActions job={job} /> : null
         }
@@ -153,18 +152,21 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
       {isPending ? (
         <DetailSkeleton />
       ) : isError || !job ? (
-        <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
-          <div className="flex items-center gap-2 font-medium">
-            <AlertCircle className="h-[18px] w-[18px]" />
+        <div className="flex flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+          <div className="flex items-center gap-2.5 font-[550]">
+            <AlertCircle className="size-[15px] shrink-0" />
             Could not load this job. It may have expired or been closed.
           </div>
-          <button
-            type="button"
-            className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
-            onClick={() => void refetch()}
-          >
-            Retry
-          </button>
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void refetch()}
+            >
+              Retry
+            </Button>
+          </div>
         </div>
       ) : (
         <JobDetailBody
@@ -195,12 +197,14 @@ function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
   return (
     <DashboardLayout wide="detail" hideSidebar>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
+        {/* `.backlink`, as a button: this one returns to wherever the viewer
+            came from, so there is no href for the shared `BackLink`. */}
         <button
           type="button"
           onClick={goBack}
-          className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="-mb-2 inline-flex w-fit items-center gap-1.5 text-[12.5px] font-[550] text-ink-muted transition-colors hover:text-ink"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ChevronLeft className="size-3.5" aria-hidden="true" />
           Back
         </button>
         <RequireApprovedRecruiter>
@@ -221,25 +225,21 @@ function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
 function GuestJobDetail() {
   return (
     <PublicShell>
-      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-12 sm:px-5 md:px-0">
-        <Link
-          href="/explore-jobs"
-          className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
+      <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-12 sm:px-5 md:px-0">
+        <BackLink href="/explore-jobs" className="mb-0">
           Back to Live Map
-        </Link>
-        <div className="rounded-md border border-border bg-card p-6 text-center sm:p-10">
-          <p className="font-heading text-lg font-extrabold text-navy">
+        </BackLink>
+        <div className="rounded-md border border-line bg-surface p-5 text-center shadow-e1 sm:p-10">
+          <p className="text-section font-[650] text-ink">
             Sign up to view this job
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sub text-ink-muted">
             Create a recruiter account and get verified to see the role, the
             company and the recruiter fee, and to submit candidates.
           </p>
-          <Button asChild className="mt-6 w-full font-bold sm:w-auto">
+          <Button asChild className="mt-6 w-full sm:w-auto">
             <Link href="/signup">
-              <Send className="h-[18px] w-[18px]" />
+              <Send className="size-[15px]" />
               Sign up as a recruiter
             </Link>
           </Button>

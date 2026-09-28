@@ -110,10 +110,7 @@ export function MessageComposer({
           className="min-h-16 resize-none rounded-none border-0 bg-transparent px-3 py-2.5 text-sub focus-visible:border-0 focus-visible:shadow-none focus-visible:outline-none"
         />
         <div className="flex items-center gap-2 border-t border-line px-2.5 py-[7px]">
-          <p
-            id={scopeDescriptionId}
-            className="text-[11.5px] text-ink-faint"
-          >
+          <p id={scopeDescriptionId} className="text-[11.5px] text-ink-faint">
             Enter to send · Shift + Enter for a new line
           </p>
           <Button
