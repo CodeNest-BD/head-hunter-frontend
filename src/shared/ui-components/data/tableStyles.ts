@@ -10,13 +10,14 @@
  */
 
 /**
- * `.tablecard` — the white card the table lives in. No `overflow-hidden`: that
- * would clip the page-level sticky header. Instead of clipping to the card's
- * `rounded-md` corners, the header row and the last body row round their own
- * outer corners to match (see TABLE_HEAD_ROW / TABLE_BODY). Without that the
- * header band's square corners poke past the rounded border.
+ * `.tablecard` — the white card the table lives in. It clips to its own radius,
+ * so the header band's square corners cannot poke past the rounded border and
+ * neither the head nor the last row needs corner classes of its own. Safe
+ * because every in-row menu (kebab, column picker, filter popover) renders
+ * through a Radix portal and so escapes the clip.
  */
-export const TABLE_CARD = "rounded-md border border-line bg-surface shadow-e1";
+export const TABLE_CARD =
+  "overflow-hidden rounded-md border border-line bg-surface shadow-e1";
 
 /** `.toolbar` — the search/filter/columns row above a table. It sits directly
  * on the canvas in the reference, not on a card of its own. */
@@ -24,10 +25,9 @@ export const TABLE_TOOLBAR =
   "flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center";
 
 /**
- * `.tablecard__scroll`. Deliberately NOT a vertical overflow container: an
- * `overflow-y` here would become the scroll port and break the page-level
- * sticky header. The page (body) scrolls instead, so the vertical scrollbar
- * belongs to the page and tracks the rows rather than spanning the header.
+ * `.tablecard__scroll` — horizontal only, so a wide table scrolls sideways
+ * inside its card instead of widening the page. The page keeps the vertical
+ * scroll.
  */
 export const TABLE_SCROLL = "w-full overflow-x-auto";
 
@@ -38,22 +38,19 @@ export const TABLE_EL = "w-full border-collapse text-sub";
  * labels in muted ink, distinct from both the white rows and the canvas.
  */
 export const TABLE_HEAD = "text-left";
-// Round the outer top corners of the header band to match the card, since the
-// card can't clip with overflow-hidden (it would break the sticky header).
-export const TABLE_HEAD_ROW =
-  "[&>th:first-child]:rounded-tl-md [&>th:last-child]:rounded-tr-md";
 /**
- * Each header cell is sticky (page scroll) below the fixed 56px top bar, with a
- * solid fill so rows never bleed through while it's pinned.
+ * The header band does NOT stick. It used to, pinned under the fixed top bar,
+ * which only ever worked while no ancestor was a scroll container — and
+ * `TABLE_SCROLL`'s `overflow-x` makes one, which re-parents a sticky element to
+ * that box and leaves the header floating over the first rows. The reference
+ * does not stick it either.
  */
 export const TABLE_TH =
-  "sticky top-topbar z-20 h-9.5 whitespace-nowrap border-b border-line bg-surface-sub px-3.5 text-label font-[650] uppercase tracking-[0.06em] text-ink-muted";
+  "h-9.5 whitespace-nowrap border-b border-line bg-surface-sub px-3.5 text-label font-[650] uppercase tracking-[0.06em] text-ink-muted";
 
-/** `.table td` — white 44px rows with hairline separators and a subtle hover.
- * The last row rounds its outer bottom corners so a row hover never squares off
- * the card. */
-export const TABLE_BODY =
-  "bg-surface [&>tr:last-child>td]:border-b-0 [&>tr:last-child>td:first-child]:rounded-bl-md [&>tr:last-child>td:last-child]:rounded-br-md";
+/** `.table td` — white 44px rows with hairline separators and a subtle hover;
+ * the last row drops its rule, as the reference's `tr:last-child td` does. */
+export const TABLE_BODY = "bg-surface [&>tr:last-child>td]:border-b-0";
 export const TABLE_ROW = "transition-colors hover:bg-surface-sub";
 /** An unread row: a cobalt wash with a matching hover. */
 export const TABLE_ROW_UNREAD = "bg-unread bg-unread-hover transition-colors";

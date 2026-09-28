@@ -28,7 +28,6 @@ import {
   TABLE_CARD,
   TABLE_EL,
   TABLE_HEAD,
-  TABLE_HEAD_ROW,
   TABLE_CELL_MAIN,
   TABLE_ROW,
   TABLE_ROW_UNREAD,
@@ -249,7 +248,7 @@ export function InboxCandidatesTable({
           <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
             <table className={TABLE_EL}>
               <thead className={TABLE_HEAD}>
-                <tr className={TABLE_HEAD_ROW}>
+                <tr>
                   <th className={TABLE_TH}>Candidate</th>
                   {isCompany && cols.isVisible("recruiter") && (
                     <th className={TABLE_TH}>Recruiter</th>

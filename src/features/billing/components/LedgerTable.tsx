@@ -93,7 +93,7 @@ export function LedgerTable() {
       <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
         <table className={T.TABLE_EL}>
           <thead className={T.TABLE_HEAD}>
-            <tr className={T.TABLE_HEAD_ROW}>
+            <tr>
               <th scope="col" className={T.TABLE_TH}>
                 When
               </th>
