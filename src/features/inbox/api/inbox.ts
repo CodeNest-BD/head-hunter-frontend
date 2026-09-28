@@ -2,12 +2,10 @@ import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 import {
   inboxAttentionCountSchema,
-  inboxCandidateRowSchema,
   inboxConversationRowSchema,
   inboxJobRowSchema,
   inboxSubmissionRowSchema,
   inboxSubmissionStatsSchema,
-  type InboxCandidateRow,
   type InboxCandidateSort,
   type InboxConversationRow,
   type InboxJobRow,
@@ -62,17 +60,6 @@ export interface InboxJobsParams {
   status?: string;
 }
 
-export interface InboxCandidatesParams {
-  page?: number;
-  limit?: number;
-  /** Case-insensitive match on the candidate's or recruiter's name. */
-  q?: string;
-  /** Candidate status filter. */
-  status?: string;
-  sortBy?: InboxCandidateSort;
-  sortOrder?: "ASC" | "DESC";
-}
-
 /** GET /v1/{side}/inbox/jobs — level 1 of either inbox. */
 export async function fetchInboxJobs(
   side: InboxSide,
@@ -87,28 +74,6 @@ export async function fetchInboxJobs(
     },
   });
   return paginatedSchema(inboxJobRowSchema).parse(data);
-}
-
-/** GET /v1/{side}/inbox/jobs/:jobId/candidates — level 2, newest first. */
-export async function fetchInboxCandidates(
-  side: InboxSide,
-  jobId: string,
-  params: InboxCandidatesParams,
-): Promise<Paginated<InboxCandidateRow>> {
-  const { data } = await apiClient.get<unknown>(
-    `/${side}/inbox/jobs/${jobId}/candidates`,
-    {
-      params: {
-        page: params.page ?? 1,
-        limit: params.limit ?? 25,
-        q: params.q || undefined,
-        status: params.status || undefined,
-        sortBy: params.sortBy || undefined,
-        sortOrder: params.sortOrder || undefined,
-      },
-    },
-  );
-  return paginatedSchema(inboxCandidateRowSchema).parse(data);
 }
 
 /** GET /v1/{side}/inbox/attention-count — the number behind the nav badge. */

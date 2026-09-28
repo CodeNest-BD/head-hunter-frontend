@@ -6,11 +6,9 @@ import {
   fetchCompanySubmissionStats,
   fetchCompanySubmissions,
   fetchInboxAttentionCount,
-  fetchInboxCandidates,
   fetchInboxConversations,
   fetchInboxJobs,
   type CompanySubmissionsParams,
-  type InboxCandidatesParams,
   type InboxConversationsParams,
   type InboxJobsParams,
   type InboxSide,
@@ -36,18 +34,6 @@ export function useInboxJobs(side: InboxSide, params: InboxJobsParams) {
     queryKey: inboxKeys.jobs(side, params),
     queryFn: () => fetchInboxJobs(side, params),
     // Keep the current page visible while the next page/search loads.
-    placeholderData: keepPreviousData,
-  });
-}
-
-export function useInboxCandidates(
-  side: InboxSide,
-  jobId: string,
-  params: InboxCandidatesParams,
-) {
-  return useQuery({
-    queryKey: inboxKeys.candidates(side, jobId, params),
-    queryFn: () => fetchInboxCandidates(side, jobId, params),
     placeholderData: keepPreviousData,
   });
 }

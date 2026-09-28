@@ -8,7 +8,6 @@
  * drill-down: jobs → candidates → that candidate's conversation. Import from
  * "@/features/inbox" only; api/, hooks/ and components/ are internal.
  */
-export { InboxCandidatesTable } from "./components/InboxCandidatesTable";
 export { InboxConversationList } from "./components/InboxConversationList";
 export { CompanySubmissionsQueue } from "./components/CompanySubmissionsQueue";
 export { InboxConversationPane } from "./components/InboxConversationPane";
@@ -17,7 +16,6 @@ export { InboxJobsTable } from "./components/InboxJobsTable";
 export { SubmissionsTable } from "./components/SubmissionsTable";
 export {
   useInboxAttentionCount,
-  useInboxCandidates,
   useInboxConversations,
   useInboxJobs,
 } from "./hooks/useInbox";

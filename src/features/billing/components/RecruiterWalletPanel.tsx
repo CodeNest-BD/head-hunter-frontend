@@ -43,6 +43,7 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
+  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -242,15 +243,20 @@ function PlacementsTable({
   page,
   onPage,
   cols,
+  status,
+  onStatus,
+  data,
 }: {
   page: number;
   onPage: (page: number) => void;
   cols: PlacementColumns;
+  status: string | null;
+  onStatus: (next: string | null) => void;
+  /** The panel owns the query, so the two do not fetch the same page twice. */
+  data: ReturnType<typeof useRecruiterPlacements>["data"];
 }) {
   const router = useRouter();
   const [disputingId, setDisputingId] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const { data } = useRecruiterPlacements(page, status ?? undefined);
   // Only reachable between pages, where the table is already on screen — stand
   // in with the same card rather than collapsing the page to nothing.
   if (!data) {
@@ -316,10 +322,7 @@ function PlacementsTable({
                     label="Status"
                     options={PLACEMENT_STATUS_OPTIONS}
                     value={status}
-                    onChange={(next) => {
-                      setStatus(next);
-                      onPage(1);
-                    }}
+                    onChange={onStatus}
                   />
                 </FilterableHead>
               )}
@@ -435,14 +438,23 @@ function PlacementsTable({
 /** Recruiter earnings: balances, placement history, and how payouts work. */
 export function RecruiterWalletPanel() {
   const [page, setPage] = useState(1);
+  const [status, setStatus] = useState<string | null>(null);
   const wallet = useRecruiterWallet();
-  const placements = useRecruiterPlacements(page);
+  const placements = useRecruiterPlacements(page, status ?? undefined);
   const cols = useVisibleColumns(
     "recruiter.placements.columns",
     PLACEMENT_COLUMNS,
   );
+  const changeStatus = (next: string | null) => {
+    setStatus(next);
+    setPage(1);
+  };
+  useClearFilterWhenHidden(cols.isVisible("status"), () => changeStatus(null));
 
-  const hasPlacements = (placements.data?.data.length ?? 0) > 0;
+  // A filtered list that matches nothing is not the same as having no
+  // placements — the first needs a way back, the second an explanation.
+  const rows = placements.data?.data ?? [];
+  const hasPlacements = rows.length > 0 || status !== null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -495,7 +507,14 @@ export function RecruiterWalletPanel() {
         <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
       ) : hasPlacements ? (
         <div className="flex flex-col gap-4">
-          <PlacementsTable page={page} onPage={setPage} cols={cols} />
+          <PlacementsTable
+            page={page}
+            onPage={setPage}
+            cols={cols}
+            status={status}
+            onStatus={changeStatus}
+            data={placements.data}
+          />
           <HowCommissionPaid />
         </div>
       ) : (

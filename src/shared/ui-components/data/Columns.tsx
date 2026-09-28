@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { Check, SlidersHorizontal } from "lucide-react";
 
@@ -50,6 +50,29 @@ export function useVisibleColumns(storageKey: string, columns: ColumnDef[]) {
   const isVisible = (key: string): boolean => !hidden.has(key);
 
   return { columns, isVisible, toggle, allKeys };
+}
+
+/**
+ * Clears a column's filter when the reader hides that column.
+ *
+ * A filter control lives in its column header, so hiding the column takes the
+ * control off screen — while the filter it set goes on narrowing the list, with
+ * nothing left to explain why. Column visibility is persisted, so that state
+ * survives a reload: without this, hiding a filtered column can silently strand
+ * a reader on a partial list for good.
+ *
+ * `clear` is held in a ref, so a caller can pass an inline arrow without the
+ * effect re-running on every render.
+ */
+export function useClearFilterWhenHidden(
+  visible: boolean,
+  clear: () => void,
+): void {
+  const clearRef = useRef(clear);
+  clearRef.current = clear;
+  useEffect(() => {
+    if (!visible) clearRef.current();
+  }, [visible]);
 }
 
 /** The "Columns" dropdown (checkbox list) matching the reference's toggle. */

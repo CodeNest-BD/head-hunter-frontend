@@ -35,6 +35,7 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
+  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -293,6 +294,16 @@ export function JobsTable() {
     setPage(1);
   };
   const cols = useVisibleColumns("company.jobs.columns", COLUMNS);
+  // A filter control lives in its column header, so hiding the column would
+  // leave the filter narrowing the list with nothing to explain it — and
+  // column visibility is persisted, so that would survive a reload.
+  useClearFilterWhenHidden(cols.isVisible("status"), () => {
+    changeStatus("");
+  });
+  useClearFilterWhenHidden(cols.isVisible("category"), () => {
+    setCategory("");
+    setPage(1);
+  });
   const parsedStatus = jobStatusSchema.safeParse(status);
   const { data, isPending, isError, refetch } = useJobs({
     page,

@@ -57,8 +57,12 @@ export function ListToolbar({
             className="w-full border-0 bg-transparent text-sub text-ink outline-none placeholder:text-ink-faint"
           />
         </label>
-        <MobileFilters filters={filters} />
       </div>
+      {/* A sibling of the search row, not a child of it: its expanded selects
+          are full-width rows, and nested in that `items-center` row they would
+          resolve their width against a shrink-to-fit column beside the search
+          box — squeezing the input and stacking the selects into a sliver. */}
+      <MobileFilters filters={filters} />
     </div>
   );
 }

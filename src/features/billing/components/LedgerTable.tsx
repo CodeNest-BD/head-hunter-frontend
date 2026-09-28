@@ -114,6 +114,21 @@ export function LedgerTable() {
           icon={Receipt}
           title="No activity yet"
           description="Load funds and your top-ups, reservations and refunds will show up here."
+          // This card replaces the header row that carries the Activity
+          // filter, so a reader who filters to a movement they have none of
+          // would otherwise have no way back.
+          action={
+            entryType !== null ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => changeEntryType(null)}
+              >
+                Reset filters
+              </Button>
+            ) : undefined
+          }
         />
       </Card>
     );

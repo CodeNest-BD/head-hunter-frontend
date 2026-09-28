@@ -33,6 +33,7 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
+  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -100,7 +101,12 @@ const settleLabel = (placement: CompanyPlacement): string =>
     ? formatDate(placement.releasedAt)
     : formatDate(placement.holdExpiresAt);
 
-function PlacementsEmpty() {
+/**
+ * `onReset` is passed only when a filter is what emptied the list — the header
+ * row carrying the Status filter is replaced by this card, so without a way out
+ * from here a reader who filters to a state they have none of is stuck.
+ */
+function PlacementsEmpty({ onReset }: { onReset?: () => void }) {
   return (
     <Card>
       <CardHeader>
@@ -110,6 +116,13 @@ function PlacementsEmpty() {
         icon={ShieldCheck}
         title="No placements yet"
         description="When a candidate accepts your offer, its recruiter fee is held in escrow and appears here. It releases to the recruiter 30 days after the candidate joins. You can reject the hire until the joining date; after that, raise a dispute."
+        action={
+          onReset ? (
+            <Button type="button" variant="outline" size="sm" onClick={onReset}>
+              Reset filters
+            </Button>
+          ) : undefined
+        }
       />
     </Card>
   );
@@ -136,6 +149,12 @@ export function CompanyPlacementsPanel() {
   };
   const reject = useRejectPlacement();
   const cols = useVisibleColumns("company.placements.columns", COLUMNS);
+  // A filter control lives in its column header, so hiding the column would
+  // leave the filter narrowing the list with nothing to explain it — and
+  // column visibility is persisted, so that would survive a reload.
+  useClearFilterWhenHidden(cols.isVisible("status"), () => {
+    changeStatus(null);
+  });
 
   if (isError) {
     return (
@@ -157,7 +176,13 @@ export function CompanyPlacementsPanel() {
       <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
     );
   }
-  if (data.data.length === 0) return <PlacementsEmpty />;
+  if (data.data.length === 0) {
+    return (
+      <PlacementsEmpty
+        onReset={status !== null ? () => changeStatus(null) : undefined}
+      />
+    );
+  }
 
   const confirming = confirmingId
     ? data.data.find((p) => p.placementId === confirmingId)

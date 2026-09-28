@@ -6,8 +6,6 @@ export const inboxKeys = {
     ["inbox", side, "conversations", params] as const,
   jobs: (side: InboxSide, params: unknown) =>
     ["inbox", side, "jobs", params] as const,
-  candidates: (side: InboxSide, jobId: string, params: unknown) =>
-    ["inbox", side, "candidates", jobId, params] as const,
   attentionCount: (side: InboxSide) =>
     ["inbox", side, "attention-count"] as const,
   submissions: (params: unknown) =>

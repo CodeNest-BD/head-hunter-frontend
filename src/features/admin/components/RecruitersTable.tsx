@@ -21,6 +21,7 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
+  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -181,6 +182,14 @@ export function RecruitersTable() {
     setPage(1);
   };
   const cols = useVisibleColumns("admin.recruiters.columns", COLUMNS);
+  // A filter control lives in its column header, so hiding the column would
+  // leave the filter narrowing the list with nothing to explain it — and
+  // column visibility is persisted, so that would survive a reload.
+  useClearFilterWhenHidden(cols.isVisible("status"), () => changeStatus(""));
+  useClearFilterWhenHidden(cols.isVisible("verification"), () => {
+    setVerificationFilter("");
+    setPage(1);
+  });
   const { data, isPending, isError, refetch } = useAdminRecruiters({
     page,
     limit,

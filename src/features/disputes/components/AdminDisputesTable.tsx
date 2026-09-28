@@ -19,6 +19,7 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
+  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -112,6 +113,17 @@ export function AdminDisputesTable() {
     undefined,
   );
   const cols = useVisibleColumns("admin.disputes.columns", COLUMNS);
+  // A filter control lives in its column header, so hiding the column would
+  // leave the filter narrowing the list with nothing to explain it — and
+  // column visibility is persisted, so that would survive a reload.
+  useClearFilterWhenHidden(cols.isVisible("status"), () => {
+    setStatusView(null);
+    setPage(1);
+  });
+  useClearFilterWhenHidden(cols.isVisible("raisedBy"), () => {
+    setRaisedBy(undefined);
+    setPage(1);
+  });
   const statuses = STATUS_VIEWS.find((v) => v.value === statusView)?.statuses;
   const { data, isPending, isError, refetch } = useAdminDisputes(
     page,
