@@ -69,9 +69,9 @@ export function ColumnsToggle({
       <Dropdown.Trigger asChild>
         <button
           type="button"
-          className="hidden h-9 items-center gap-2 rounded-md border border-input bg-card px-3 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary sm:inline-flex"
+          className="hidden h-7.5 items-center gap-[7px] rounded-xs px-2.5 text-[12.5px] font-semibold text-ink-muted transition-colors hover:bg-surface-sub hover:text-ink sm:inline-flex"
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <SlidersHorizontal className="size-[15px]" />
           Columns
         </button>
       </Dropdown.Trigger>
@@ -79,9 +79,9 @@ export function ColumnsToggle({
         <Dropdown.Content
           align="end"
           sideOffset={4}
-          className="z-50 min-w-[200px] rounded-md border border-border bg-popover p-1.5 shadow-card-lg"
+          className="z-50 min-w-[200px] rounded-sm border border-line bg-surface p-1 shadow-pop"
         >
-          <p className="px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-brand-gray">
+          <p className="px-2.5 py-1.5 text-label font-[650] uppercase text-ink-muted">
             Toggle columns
           </p>
           {columns.map((column) => {
@@ -95,20 +95,20 @@ export function ColumnsToggle({
                   event.preventDefault();
                   onToggle(column.key);
                 }}
-                className="flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-foreground outline-none hover:bg-accent focus:bg-accent data-[disabled]:cursor-default data-[disabled]:opacity-60"
+                className="flex cursor-pointer items-center gap-2.5 rounded-xs px-2.5 py-1.5 text-sub text-ink-body outline-none hover:bg-surface-sub focus:bg-surface-sub data-[disabled]:cursor-default data-[disabled]:opacity-60"
               >
                 <span
-                  className={`flex h-4 w-4 items-center justify-center rounded border ${
+                  className={`flex size-[15px] items-center justify-center rounded-[4px] border ${
                     checked
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input"
+                      ? "border-blue bg-blue text-white"
+                      : "border-line-strong"
                   }`}
                 >
-                  {checked && <Check className="h-3 w-3" />}
+                  {checked && <Check className="size-3" strokeWidth={3} />}
                 </span>
                 {column.label}
                 {column.required && (
-                  <span className="ml-auto text-xs text-brand-gray-light">
+                  <span className="ml-auto text-meta text-ink-faint">
                     required
                   </span>
                 )}

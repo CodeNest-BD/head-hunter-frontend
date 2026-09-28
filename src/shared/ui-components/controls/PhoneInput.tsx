@@ -99,9 +99,7 @@ export function PhoneInput({
                 <span className="text-base leading-none">
                   {countryFlag(code)}
                 </span>
-                <span className="text-muted-foreground">
-                  {callingCode(code)}
-                </span>
+                <span className="text-ink-faint">{callingCode(code)}</span>
               </span>
             );
           }}

@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
 
 /** Sticky save bar so Save is always reachable while editing. */
@@ -13,11 +14,21 @@ export function CompanyFormSaveBar({
   onDiscard: () => void;
 }) {
   return (
-    <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-card-lg backdrop-blur sm:px-5">
-      <span className="text-sm text-muted-foreground">
+    // The reference's `.savebar`: a translucent, blurred strip that floats over
+    // the form it belongs to, its state read out on the left and its actions
+    // pushed to the right edge.
+    <div className="sticky bottom-3 z-20 flex items-center gap-2.5 rounded-md border border-line bg-surface/90 px-3.5 py-2.5 shadow-pop backdrop-blur-[6px]">
+      <span className="flex items-center gap-[7px] text-[12.5px] text-ink-muted">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "size-2 shrink-0 rounded-full",
+            isDirty ? "bg-[#e8a23b]" : "bg-ok",
+          )}
+        />
         {isDirty ? "Unsaved changes" : "All changes saved"}
       </span>
-      <div className="flex gap-2">
+      <div className="ml-auto flex gap-2">
         <Button
           type="button"
           variant="outline"

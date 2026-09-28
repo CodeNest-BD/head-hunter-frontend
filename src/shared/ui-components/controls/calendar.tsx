@@ -10,7 +10,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 const navButtonClassName = cn(
   buttonVariants({ variant: "ghost", size: "icon" }),
-  "h-7 w-7 text-muted-foreground hover:text-foreground disabled:opacity-40",
+  "size-7 text-ink-muted hover:text-ink disabled:opacity-40",
 );
 
 /** react-day-picker renders one `Chevron` for both nav directions, so the
@@ -43,29 +43,29 @@ export function Calendar({
         months: "relative flex flex-col gap-4 sm:flex-row",
         month: "flex flex-col gap-3",
         month_caption: "flex h-7 items-center justify-center",
-        caption_label: "text-sm font-medium text-foreground",
+        caption_label: "text-sub font-semibold text-ink",
         nav: "absolute inset-x-1 top-0 flex items-center justify-between",
         button_previous: navButtonClassName,
         button_next: navButtonClassName,
         month_grid: "w-full border-collapse",
         weekdays: "flex",
         weekday:
-          "w-8 text-[0.7rem] font-normal uppercase text-muted-foreground",
+          "w-8 text-[10.5px] font-[650] uppercase tracking-[0.07em] text-ink-muted",
         week: "mt-1 flex w-full",
-        day: "h-8 w-8 p-0 text-center text-sm",
+        day: "size-8 p-0 text-center text-sub",
         // The selected/today state lands on the grid cell, so the visual
         // treatment is pushed down onto the button it wraps.
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 rounded-md p-0 text-sm font-normal",
+          "size-8 rounded-xs p-0 text-sub font-normal tabular-nums",
         ),
         selected:
-          "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary",
+          "[&>button]:bg-blue [&>button]:text-white [&>button]:hover:bg-blue-deep",
         // Underlined rather than recoloured: a colour here would fight
         // `selected`'s foreground on the day that is both.
         today:
           "[&>button]:font-semibold [&>button]:underline [&>button]:decoration-primary [&>button]:decoration-2 [&>button]:underline-offset-4",
-        outside: "[&>button]:text-muted-foreground/50",
+        outside: "[&>button]:text-ink-faint",
         disabled: "[&>button]:pointer-events-none [&>button]:opacity-40",
         hidden: "invisible",
         ...classNames,

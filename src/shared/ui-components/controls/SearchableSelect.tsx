@@ -189,8 +189,8 @@ export function SearchableSelect({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-            selectedLabel === null && "text-muted-foreground",
+            "flex h-9 w-full items-center justify-between gap-2 rounded-sm border border-line-strong bg-surface px-[11px] text-body text-ink transition-colors focus:border-blue focus:shadow-focus focus:outline-none disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-ink-muted",
+            selectedLabel === null && "text-ink-faint",
             className,
           )}
         >
@@ -229,7 +229,7 @@ export function SearchableSelect({
             onKeyDown={onSearchKeyDown}
             placeholder={searchPlaceholder}
             aria-label={searchPlaceholder}
-            className="h-9 w-full bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
+            className="h-9 w-full bg-transparent py-2 text-body text-ink outline-none placeholder:text-ink-faint"
           />
         </div>
         <div
@@ -251,12 +251,12 @@ export function SearchableSelect({
             />
           ))}
           {entries.length === 0 && (
-            <p className="px-2 py-6 text-center text-sm text-muted-foreground">
+            <p className="px-2 py-6 text-center text-sub text-ink-muted">
               {emptyMessage}
             </p>
           )}
           {truncated && (
-            <p className="px-2 py-1.5 text-center text-xs text-muted-foreground">
+            <p className="px-2 py-1.5 text-center text-meta text-ink-faint">
               Showing first {maxResults} — type to search all{" "}
               {options.length.toLocaleString("en-US")}
             </p>
@@ -297,7 +297,7 @@ function Option({
       onClick={onSelect}
       onMouseEnter={onHover}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-left text-sm outline-none",
+        "relative flex w-full cursor-pointer select-none items-center rounded-xs py-1.5 pl-2.5 pr-8 text-left text-sub text-ink-body outline-none",
         active && "bg-accent text-accent-foreground",
         selected && "font-medium",
       )}

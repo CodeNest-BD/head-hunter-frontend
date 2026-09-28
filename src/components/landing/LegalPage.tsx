@@ -36,7 +36,7 @@ function emphasise(text: string): ReactNode {
   return parts.map((part, index) =>
     // Odd indexes are what sat between a pair of delimiters.
     index % 2 === 1 ? (
-      <strong key={index} className="font-bold text-navy">
+      <strong key={index} className="font-[650] text-ink">
         {part}
       </strong>
     ) : (
@@ -50,26 +50,26 @@ function Block({ block }: { block: LegalBlock }) {
     // `whitespace-pre-line`: a paragraph may carry a hard line break where the
     // source sets an address block on consecutive lines.
     return (
-      <p className="mt-4 whitespace-pre-line first:mt-0">{emphasise(block)}</p>
+      <p className="mt-2.5 whitespace-pre-line first:mt-0">
+        {emphasise(block)}
+      </p>
     );
   }
   if ("sub" in block) {
-    return (
-      <p className="mt-5 font-semibold text-navy first:mt-0">{block.sub}</p>
-    );
+    return <p className="mt-4 font-[650] text-ink first:mt-0">{block.sub}</p>;
   }
   if ("strong" in block) {
     return (
-      <p className="mt-4 font-bold text-navy first:mt-0">{block.strong}</p>
+      <p className="mt-2.5 font-[650] text-ink first:mt-0">{block.strong}</p>
     );
   }
   return (
-    <ul className="mt-3 flex flex-col gap-1.5 first:mt-0">
+    <ul className="mt-2.5 flex flex-col gap-1.5 first:mt-0">
       {block.list.map((item) => (
         <li key={item} className="flex gap-2.5">
           <span
             aria-hidden="true"
-            className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/50"
+            className="mt-2 size-1.5 shrink-0 rounded-full bg-sky"
           />
           <span>{emphasise(item)}</span>
         </li>
@@ -100,42 +100,42 @@ export function LegalPage({
 }) {
   return (
     <PublicShell>
-      {/* Header band */}
-      <header className="border-b border-brand-line bg-gradient-to-b from-secondary to-background">
-        <div className="mx-auto max-w-[1100px] px-5 py-14 md:px-10 md:py-16">
-          <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-primary">
+      {/* `.band--tint` — the header fades the white surface into the canvas. */}
+      <header className="bg-gradient-to-b from-surface to-canvas py-9">
+        <div className="mx-auto max-w-[1200px] px-6">
+          <p className="text-[11.5px] font-[750] uppercase tracking-[0.14em] text-blue">
             {eyebrow}
           </p>
-          <h1 className="mt-3 font-heading text-3xl font-extrabold tracking-[-0.02em] text-navy md:text-5xl">
+          <h1 className="mt-2 text-[30px] font-extrabold leading-[1.18] tracking-[-0.022em] text-navy">
             {title}
           </h1>
-          <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-brand-line bg-white px-3 py-1 text-xs font-medium text-brand-gray">
+          <span className="mt-3 inline-flex h-5.25 items-center rounded-full bg-neutral-bg px-2 text-[11px] font-[650] tracking-[0.02em] text-neutral">
             Last updated {updated}
-          </p>
+          </span>
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1100px] px-5 py-12 md:px-10 md:py-16">
-        <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-14">
+      <div className="mx-auto max-w-[1200px] px-6 pb-6 pt-9">
+        <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
           {/* Table of contents — sticky on desktop, scrolls if it runs long. */}
           <nav
             aria-label="On this page"
-            className="mb-10 lg:mb-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:self-start lg:overflow-y-auto lg:pr-2"
+            className="mb-8 lg:sticky lg:top-[84px] lg:mb-0 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto lg:pr-2"
           >
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-gray-light">
+            <p className="px-2.5 pb-2 text-label font-[650] uppercase text-ink-muted">
               On this page
             </p>
-            <ol className="mt-3 flex flex-col gap-1">
+            <ol className="flex flex-col">
               {sections.map((section) => (
                 <li key={section.id}>
                   <a
                     href={`#${section.id}`}
-                    className="flex gap-2 rounded-md px-2 py-1.5 text-[13px] leading-snug text-brand-slate transition-colors hover:bg-accent hover:text-primary"
+                    className="flex gap-2 rounded-xs px-2.5 py-[5px] text-[12.5px] leading-snug text-ink-muted transition-colors hover:bg-tint hover:text-blue-ink"
                   >
-                    <span className="w-4 shrink-0 text-right font-semibold tabular-nums text-brand-gray-light">
+                    <span className="w-4 shrink-0 text-right tabular-nums text-ink-faint">
                       {section.number}
                     </span>
-                    <span className="uppercase">{section.title}</span>
+                    <span>{section.title}</span>
                   </a>
                 </li>
               ))}
@@ -144,28 +144,28 @@ export function LegalPage({
 
           {/* Body */}
           <article className="min-w-0">
-            <div className="text-[15px] leading-relaxed text-brand-slate">
+            <div className="max-w-prose text-block leading-[1.7] text-ink-body">
               {intro.map((paragraph) => (
-                <p key={paragraph} className="mt-4 first:mt-0">
+                <p key={paragraph} className="mt-2.5 first:mt-0">
                   {emphasise(paragraph)}
                 </p>
               ))}
             </div>
 
-            <div className="mt-10 flex flex-col gap-10">
+            <div className="mt-7 flex flex-col gap-7">
               {sections.map((section) => (
                 <section
                   key={section.id}
                   id={section.id}
-                  className="scroll-mt-24 border-t border-brand-line pt-8"
+                  className="scroll-mt-20 border-t border-line pt-6"
                 >
-                  <h2 className="flex items-baseline gap-3 font-heading text-xl font-bold uppercase text-navy">
-                    <span className="text-base font-extrabold tabular-nums text-primary">
-                      {section.number}
+                  <h2 className="flex items-baseline gap-2 text-section font-bold text-ink">
+                    <span className="tabular-nums text-blue">
+                      {section.number}.
                     </span>
                     {section.title}
                   </h2>
-                  <div className="mt-3 text-[15px] leading-relaxed text-brand-slate">
+                  <div className="mt-2.5 max-w-prose text-block leading-[1.7] text-ink-body">
                     {section.blocks.map((block, index) => (
                       <Block key={index} block={block} />
                     ))}
@@ -174,11 +174,11 @@ export function LegalPage({
               ))}
             </div>
 
-            <p className="mt-12 rounded-lg border border-brand-line bg-secondary/50 px-5 py-4 text-sm text-brand-slate">
+            <p className="mt-6 rounded-sm border border-line bg-surface-sub px-3 py-2.5 text-sub text-ink-muted">
               Questions about this page? Contact us at{" "}
               <a
                 href="mailto:info@head-hunters.com"
-                className="font-semibold text-brand-secondary underline-offset-2 hover:underline"
+                className="font-semibold text-blue-ink underline-offset-2 hover:underline"
               >
                 info@head-hunters.com
               </a>

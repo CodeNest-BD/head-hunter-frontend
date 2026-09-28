@@ -56,10 +56,8 @@ export const TABLE_BODY =
   "bg-surface [&>tr:last-child>td]:border-b-0 [&>tr:last-child>td:first-child]:rounded-bl-md [&>tr:last-child>td:last-child]:rounded-br-md";
 export const TABLE_ROW = "transition-colors hover:bg-surface-sub";
 /** An unread row: a cobalt wash with a matching hover. */
-export const TABLE_ROW_UNREAD =
-  "bg-unread bg-unread-hover transition-colors";
-export const TABLE_TD =
-  "h-11 border-b border-line px-3.5 py-1.5 align-middle";
+export const TABLE_ROW_UNREAD = "bg-unread bg-unread-hover transition-colors";
+export const TABLE_TD = "h-11 border-b border-line px-3.5 py-1.5 align-middle";
 /** `.cell-2l` — a two-line cell (title over its timestamp) needs more room. */
 export const TABLE_TD_STACKED =
   "border-b border-line px-3.5 py-2 align-middle leading-[1.3]";

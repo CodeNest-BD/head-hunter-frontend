@@ -161,7 +161,7 @@ export function GlobalProgressBar() {
       style={{ opacity: visible ? 1 : 0, transition: "opacity 200ms ease" }}
     >
       <div
-        className="h-full bg-primary"
+        className="h-full bg-blue"
         style={{
           width: `${progress}%`,
           transition: "width 300ms ease",

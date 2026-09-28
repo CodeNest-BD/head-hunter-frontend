@@ -37,9 +37,7 @@ export function MobileRecordList({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <ul className={cn("divide-y divide-border", className)}>{children}</ul>
-  );
+  return <ul className={cn("divide-y divide-line", className)}>{children}</ul>;
 }
 
 /**
@@ -59,9 +57,9 @@ export function MobileRecordCard({
 }: MobileRecordCardProps) {
   const identity = (
     <div className="min-w-0 flex-1">
-      <p className="truncate text-sm font-semibold text-navy">{title}</p>
+      <p className="truncate text-sub font-semibold text-ink">{title}</p>
       {subtitle && (
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+        <p className="mt-px truncate text-[11.5px] text-ink-faint">
           {subtitle}
         </p>
       )}
@@ -74,7 +72,7 @@ export function MobileRecordCard({
   );
 
   return (
-    <li className={cn("px-4 py-3.5", className)}>
+    <li className={cn("px-3.5 py-3", className)}>
       <div className="flex items-start gap-3">
         {href ? (
           <Link href={href} className="min-w-0 flex-1">
@@ -90,10 +88,10 @@ export function MobileRecordCard({
         <dl className="mt-3 space-y-1.5">
           {populated.map((field) => (
             <div key={field.label} className="flex items-baseline gap-3">
-              <dt className="w-28 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-[#616676]">
+              <dt className="w-28 shrink-0 text-label font-[650] uppercase text-ink-muted">
                 {field.label}
               </dt>
-              <dd className="min-w-0 flex-1 text-sm text-foreground">
+              <dd className="min-w-0 flex-1 text-sub text-ink-body">
                 {field.value}
               </dd>
             </div>

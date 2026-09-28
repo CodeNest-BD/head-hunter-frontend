@@ -2,16 +2,6 @@
 
 import { Button } from "@/shared/ui-components/controls/button";
 
-/**
- * The billing card-table look, shared by the placements, escrow, and
- * withdrawals tables so they stay identical side by side on the wallet pages.
- */
-export const TH = "px-5 py-3 font-semibold";
-export const HEAD_ROW =
-  "border-b border-border bg-muted/40 text-left text-xs uppercase tracking-[0.08em] text-muted-foreground";
-export const BODY_ROW =
-  "border-b border-border/60 transition-colors last:border-0 even:bg-muted/20 hover:bg-accent/50";
-
 interface BillingTableFooterProps {
   total: number;
   page: number;
@@ -19,7 +9,11 @@ interface BillingTableFooterProps {
   onPage: (page: number) => void;
 }
 
-/** The "N total · page X of Y" + Previous/Next footer under a billing table. */
+/**
+ * The "N total · page X of Y" + Previous/Next footer under a billing table —
+ * the reference's `.pager`: a hairline-ruled 12.5px strip whose tabular count
+ * sits at the left and whose page controls are pushed to the right edge.
+ */
 export function BillingTableFooter({
   total,
   page,
@@ -27,12 +21,12 @@ export function BillingTableFooter({
   onPage,
 }: BillingTableFooterProps) {
   return (
-    <div className="flex items-center justify-between border-t border-border px-5 py-3 text-sm">
-      <span className="text-muted-foreground">
+    <div className="flex flex-col gap-2 border-t border-line px-3.5 py-2.5 text-[12.5px] text-ink-muted sm:flex-row sm:items-center">
+      <span className="tabular-nums">
         {total.toLocaleString()} total · page {page} of{" "}
         {Math.max(totalPages, 1)}
       </span>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-1 sm:ml-auto">
         <Button
           type="button"
           variant="outline"

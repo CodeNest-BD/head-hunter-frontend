@@ -26,7 +26,7 @@ export function RichTextView({ value, className }: RichTextViewProps) {
     return (
       <p
         className={cn(
-          "whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground",
+          "whitespace-pre-wrap text-body leading-[1.7] text-ink-body",
           className,
         )}
       >
@@ -38,7 +38,7 @@ export function RichTextView({ value, className }: RichTextViewProps) {
   return (
     <div
       className={cn(
-        "prose prose-sm max-w-none text-muted-foreground",
+        "prose prose-sm max-w-none text-body leading-[1.7] text-ink-body",
         "prose-headings:font-heading prose-headings:text-foreground",
         "prose-a:text-primary prose-strong:text-foreground",
         className,

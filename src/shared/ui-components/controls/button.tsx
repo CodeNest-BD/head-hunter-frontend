@@ -15,12 +15,10 @@ const buttonVariants = cva(
       variant: {
         default: "bg-blue text-white shadow-e1 hover:bg-blue-deep",
         secondary: "bg-tint text-blue-ink hover:bg-tint-strong",
-        outline:
-          "border-line-strong bg-surface text-ink hover:bg-surface-sub",
+        outline: "border-line-strong bg-surface text-ink hover:bg-surface-sub",
         ghost: "text-ink-muted hover:bg-surface-sub hover:text-ink",
         /** The reference styles danger as a red-on-white outline, not a fill. */
-        destructive:
-          "border-bad-line bg-surface text-bad hover:bg-bad-bg",
+        destructive: "border-bad-line bg-surface text-bad hover:bg-bad-bg",
         link: "h-auto p-0 font-[550] text-blue-ink underline-offset-2 hover:underline",
       },
       size: {

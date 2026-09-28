@@ -25,11 +25,11 @@ export function companyLogoUrl(
 }
 
 const SIZE_CLASSES = {
-  xs: "h-7 w-7 text-[10px] rounded",
-  sm: "h-9 w-9 text-xs rounded-md",
-  md: "h-12 w-12 text-sm rounded-md",
-  lg: "h-16 w-16 text-lg rounded-lg",
-  xl: "h-20 w-20 text-xl rounded-lg",
+  xs: "size-6.5 text-[10.5px] rounded-xs",
+  sm: "size-8 text-meta rounded-sm",
+  md: "size-10 text-block rounded-[10px]",
+  lg: "size-13 text-[18px] rounded-[12px]",
+  xl: "size-16 text-[22px] rounded-[12px]",
 } as const;
 
 export type CompanyLogoSize = keyof typeof SIZE_CLASSES;
@@ -65,7 +65,7 @@ export function CompanyLogo({
   return (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center overflow-hidden bg-accent font-extrabold text-primary",
+        "flex shrink-0 items-center justify-center overflow-hidden border border-line bg-surface font-bold text-navy",
         SIZE_CLASSES[size],
         className,
       )}

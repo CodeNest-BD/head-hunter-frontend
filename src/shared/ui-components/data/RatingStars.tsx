@@ -22,13 +22,11 @@ export function RatingStars({
   size = "sm",
   className,
 }: RatingStarsProps) {
-  const starClass = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
+  const starClass = size === "sm" ? "size-3" : "size-3.5";
 
   if (value === null) {
     return (
-      <span
-        className={cn("text-xs font-medium text-muted-foreground", className)}
-      >
+      <span className={cn("text-meta text-ink-faint", className)}>
         New — no reviews yet
       </span>
     );
@@ -50,16 +48,16 @@ export function RatingStars({
             className={cn(
               starClass,
               star <= Math.round(value)
-                ? "fill-[#F5A623] text-[#F5A623]"
-                : "fill-muted text-muted",
+                ? "fill-[#e8b93b] text-[#e8b93b]"
+                : "fill-line-strong text-line-strong",
             )}
           />
         ))}
       </span>
       <span
         className={cn(
-          "font-semibold text-foreground",
-          size === "sm" ? "text-xs" : "text-sm",
+          "font-semibold tabular-nums text-ink",
+          size === "sm" ? "text-meta" : "text-sub",
         )}
       >
         {value.toFixed(1)}
@@ -67,8 +65,8 @@ export function RatingStars({
       {count !== undefined && (
         <span
           className={cn(
-            "text-muted-foreground",
-            size === "sm" ? "text-xs" : "text-sm",
+            "tabular-nums text-ink-faint",
+            size === "sm" ? "text-meta" : "text-sub",
           )}
         >
           ({count})

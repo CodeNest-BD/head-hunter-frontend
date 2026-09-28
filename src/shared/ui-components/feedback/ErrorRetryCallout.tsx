@@ -17,9 +17,9 @@ export function ErrorRetryCallout({
   onRetry,
 }: ErrorRetryCalloutProps) {
   return (
-    <div className="flex max-w-md flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-      <div className="flex items-center gap-2 font-medium">
-        <AlertCircle className="h-[18px] w-[18px]" />
+    <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg px-3.5 py-[11px] text-sub text-bad">
+      <div className="flex items-center gap-2.5 font-[550]">
+        <AlertCircle className="size-[15px] shrink-0" />
         {message}
       </div>
       <div>

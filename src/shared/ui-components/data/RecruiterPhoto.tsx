@@ -22,11 +22,11 @@ export function recruiterPhotoUrl(
 }
 
 const SIZE_CLASSES = {
-  xs: "h-7 w-7 text-[10px]",
-  sm: "h-9 w-9 text-xs",
-  md: "h-12 w-12 text-sm",
-  lg: "h-16 w-16 text-lg",
-  xl: "h-20 w-20 text-xl",
+  xs: "size-6.5 text-[10.5px]",
+  sm: "size-8 text-meta",
+  md: "size-10 text-block",
+  lg: "size-13 text-[18px]",
+  xl: "size-16 text-[22px]",
 } as const;
 
 export type RecruiterPhotoSize = keyof typeof SIZE_CLASSES;
@@ -60,7 +60,7 @@ export function RecruiterPhoto({
   return (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 font-extrabold text-primary",
+        "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-tint font-bold text-blue-ink",
         SIZE_CLASSES[size],
         className,
       )}

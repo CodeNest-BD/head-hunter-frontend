@@ -7,11 +7,13 @@ import { AlertCircle, Building2 } from "lucide-react";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
 import {
   ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { PageHeader } from "@/shared/ui-components/brand";
 import {
   MobileRecordCard,
@@ -21,20 +23,31 @@ import {
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardContent } from "@/shared/ui-components/controls/card";
 import { useAdminCompanies, useAdminStats } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
 import { VERIFICATION_LABELS, type CompanyListItem } from "../schemas";
 import { AccountRowActions } from "./AccountRowActions";
 import { ListPager } from "./ListPager";
-import { ListToolbar } from "./ListToolbar";
 import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_STATUS_TONES,
   VERIFICATION_STATUS_TONES,
 } from "./statusStyles";
-import { BODY_ROW_CLASS, TABLE_CLASS, THEAD_ROW_CLASS } from "./tableStyles";
-import { TABLE_TOOLBAR } from "@/shared/ui-components/data/tableStyles";
+import {
+  TABLE_BODY,
+  TABLE_CARD,
+  TABLE_CELL_MAIN,
+  TABLE_CELL_SUB,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_HEAD_ROW,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TD_STACKED,
+  TABLE_TH,
+  TABLE_TOOLBAR,
+} from "@/shared/ui-components/data/tableStyles";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -67,20 +80,24 @@ function companyJobsHref(
   return `/admin/jobs?${params.toString()}`;
 }
 
+/**
+ * Money ink: a funded wallet reads as a figure that matters, an unfunded one
+ * stays faint — the reference treats $0 as a normal early state, not an error.
+ */
 function walletToneClass(balanceMinor: number): string {
-  return balanceMinor > 0 ? "font-bold text-navy" : "text-muted-foreground";
+  return balanceMinor > 0 ? "font-[650] text-ink" : "text-ink-faint";
 }
 
 function CompanyJobCount({ company }: { company: CompanyListItem }) {
   return company.jobCount > 0 ? (
     <Link
       href={companyJobsHref(company.companyProfileId, company.companyName)}
-      className="font-medium text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+      className="font-[550] tabular-nums text-blue-ink hover:underline focus-visible:underline focus-visible:outline-none"
     >
       {company.jobCount}
     </Link>
   ) : (
-    <span className="text-muted-foreground">0</span>
+    <span className="tabular-nums text-ink-faint">0</span>
   );
 }
 
@@ -179,7 +196,7 @@ export function CompaniesTable() {
   ).length;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Companies"
         subtitle="Every company on the platform, their wallet, and account controls."
@@ -192,226 +209,221 @@ export function CompaniesTable() {
         ]}
       />
 
-      <div className="flex flex-col gap-4">
-        <div className={TABLE_TOOLBAR}>
-          <div className="flex-1">
-            <ListToolbar
-              query={qInput}
-              onQueryChange={setQInput}
-              placeholder="Search companies by name or email…"
-              filter={{
-                value: status,
-                onChange: changeStatus,
-                allLabel: "All statuses",
-                options: [
-                  { value: "active", label: "Active" },
-                  { value: "suspended", label: "Suspended" },
-                ],
-              }}
-              extraFilter={{
-                value: verificationFilter,
-                onChange: (next) => {
-                  setVerificationFilter(next);
-                  setPage(1);
-                },
-                allLabel: "All approvals",
-                options: [
-                  { value: "pending", label: "Pending" },
-                  { value: "verified", label: "Approved" },
-                  { value: "rejected", label: "Declined" },
-                ],
-              }}
-            />
-          </div>
+      <div className={TABLE_TOOLBAR}>
+        <div className="flex-1">
+          <ListToolbar
+            query={qInput}
+            onQueryChange={setQInput}
+            placeholder="Search companies by name or email…"
+            filter={{
+              value: status,
+              onChange: changeStatus,
+              allLabel: "All statuses",
+              options: [
+                { value: "active", label: "Active" },
+                { value: "suspended", label: "Suspended" },
+              ],
+            }}
+            extraFilter={{
+              value: verificationFilter,
+              onChange: (next) => {
+                setVerificationFilter(next);
+                setPage(1);
+              },
+              allLabel: "All approvals",
+              options: [
+                { value: "pending", label: "Pending" },
+                { value: "verified", label: "Approved" },
+                { value: "rejected", label: "Declined" },
+              ],
+            }}
+          />
+        </div>
+        <div className="sm:ml-auto">
           <ColumnsToggle
             columns={cols.columns}
             isVisible={cols.isVisible}
             onToggle={cols.toggle}
           />
         </div>
+      </div>
 
-        {isPending ? (
-          <TableSkeleton />
-        ) : isError ? (
-          <Card>
-            <CardContent className="flex flex-col items-center gap-3 p-8 text-center text-sm text-destructive">
-              <AlertCircle className="h-6 w-6" />
-              Could not load companies.
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void refetch()}
-              >
-                Retry
-              </Button>
-            </CardContent>
-          </Card>
-        ) : data.data.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
-                <Building2 className="h-6 w-6" />
-              </span>
-              <p className="text-sm font-semibold text-navy">
-                No companies found
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Try a different search or filter.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              <div className="hidden w-full overflow-x-auto sm:block">
-                <table className={TABLE_CLASS}>
-                  <thead>
-                    <tr className={THEAD_ROW_CLASS}>
-                      <th scope="col" className="px-5 py-3 font-semibold">
-                        Company
-                      </th>
-                      {cols.isVisible("wallet") && (
-                        <th
-                          scope="col"
-                          className="px-5 py-3 text-right font-semibold"
-                        >
-                          Wallet
-                        </th>
-                      )}
-                      {cols.isVisible("jobs") && (
-                        <th
-                          scope="col"
-                          className="px-5 py-3 text-center font-semibold"
-                        >
-                          Jobs
-                        </th>
-                      )}
-                      {cols.isVisible("joined") && (
-                        <th scope="col" className="px-5 py-3 font-semibold">
-                          Joined
-                        </th>
-                      )}
-                      {cols.isVisible("approval") && (
-                        <th scope="col" className="px-5 py-3 font-semibold">
-                          Approval
-                        </th>
-                      )}
-                      {cols.isVisible("status") && (
-                        <th scope="col" className="px-5 py-3 font-semibold">
-                          Status
-                        </th>
-                      )}
-                      {cols.isVisible("avgFee") && (
-                        <th
-                          scope="col"
-                          className="px-5 py-3 text-right font-semibold"
-                        >
-                          Avg fee
-                        </th>
-                      )}
-                      <th
-                        scope="col"
-                        className="px-5 py-3 text-right font-semibold"
-                      >
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.data.map((c) => (
-                      <tr key={c.userId} className={BODY_ROW_CLASS}>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <CompanyLogo
-                              companyProfileId={c.companyProfileId}
-                              hasLogo={c.hasLogo}
-                              name={c.companyName}
-                              size="sm"
-                            />
-                            <div className="min-w-0">
-                              <Link
-                                href={`/admin/companies/${c.userId}`}
-                                className="font-semibold text-navy hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
-                              >
-                                {c.companyName}
-                              </Link>
-                              <p
-                                className="max-w-[240px] truncate text-xs text-muted-foreground"
-                                title={c.email}
-                              >
-                                {c.email}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        {cols.isVisible("wallet") && (
-                          <td
+      {isPending ? (
+        <TableSkeleton />
+      ) : isError ? (
+        <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+          <div className="flex items-center gap-2.5 font-[550]">
+            <AlertCircle className="size-[15px] shrink-0" />
+            Could not load companies.
+          </div>
+          <div>
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      ) : data.data.length === 0 ? (
+        <div className={TABLE_CARD}>
+          <EmptyState
+            icon={Building2}
+            title="No companies found"
+            description="Try a different search or filter."
+          />
+        </div>
+      ) : (
+        <div className={TABLE_CARD}>
+          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+            <table className={TABLE_EL}>
+              <thead className={TABLE_HEAD}>
+                <tr className={TABLE_HEAD_ROW}>
+                  <th scope="col" className={cn(TABLE_TH, "w-[26%]")}>
+                    Company
+                  </th>
+                  {cols.isVisible("wallet") && (
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Wallet
+                    </th>
+                  )}
+                  {cols.isVisible("jobs") && (
+                    <th scope="col" className={cn(TABLE_TH, "text-center")}>
+                      Jobs
+                    </th>
+                  )}
+                  {cols.isVisible("joined") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Joined
+                    </th>
+                  )}
+                  {cols.isVisible("approval") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Approval
+                    </th>
+                  )}
+                  {cols.isVisible("status") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
+                  )}
+                  {cols.isVisible("avgFee") && (
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Avg fee
+                    </th>
+                  )}
+                  <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={TABLE_BODY}>
+                {data.data.map((c) => (
+                  <tr key={c.userId} className={TABLE_ROW}>
+                    <td className={TABLE_TD_STACKED}>
+                      <div className="flex items-center gap-2.5">
+                        <CompanyLogo
+                          companyProfileId={c.companyProfileId}
+                          hasLogo={c.hasLogo}
+                          name={c.companyName}
+                          size="sm"
+                        />
+                        <div className="min-w-0">
+                          <Link
+                            href={`/admin/companies/${c.userId}`}
                             className={cn(
-                              "whitespace-nowrap px-5 py-3 text-right tabular-nums",
-                              walletToneClass(c.balanceMinor),
+                              TABLE_CELL_MAIN,
+                              "transition-colors hover:text-blue focus-visible:underline focus-visible:outline-none",
                             )}
                           >
-                            {formatMinor(c.balanceMinor)}
-                          </td>
+                            {c.companyName}
+                          </Link>
+                          <p
+                            className={cn(
+                              TABLE_CELL_SUB,
+                              "max-w-[240px] truncate",
+                            )}
+                            title={c.email}
+                          >
+                            {c.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    {cols.isVisible("wallet") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right tabular-nums",
+                          walletToneClass(c.balanceMinor),
                         )}
-                        {cols.isVisible("jobs") && (
-                          <td className="px-5 py-3 text-center tabular-nums">
-                            <CompanyJobCount company={c} />
-                          </td>
+                      >
+                        {formatMinor(c.balanceMinor)}
+                      </td>
+                    )}
+                    {cols.isVisible("jobs") && (
+                      <td className={cn(TABLE_TD, "text-center")}>
+                        <CompanyJobCount company={c} />
+                      </td>
+                    )}
+                    {cols.isVisible("joined") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap tabular-nums text-ink-muted",
                         )}
-                        {cols.isVisible("joined") && (
-                          <td className="whitespace-nowrap px-5 py-3 text-muted-foreground">
-                            {formatDate(c.joinedAt)}
-                          </td>
+                      >
+                        {formatDate(c.joinedAt)}
+                      </td>
+                    )}
+                    {cols.isVisible("approval") && (
+                      <td className={TABLE_TD}>
+                        <CompanyApproval company={c} />
+                      </td>
+                    )}
+                    {cols.isVisible("status") && (
+                      <td className={TABLE_TD}>
+                        <CompanyStatus company={c} />
+                      </td>
+                    )}
+                    {cols.isVisible("avgFee") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right tabular-nums text-ink-muted",
                         )}
-                        {cols.isVisible("approval") && (
-                          <td className="px-5 py-3">
-                            <CompanyApproval company={c} />
-                          </td>
-                        )}
-                        {cols.isVisible("status") && (
-                          <td className="px-5 py-3">
-                            <CompanyStatus company={c} />
-                          </td>
-                        )}
-                        {cols.isVisible("avgFee") && (
-                          <td className="whitespace-nowrap px-5 py-3 text-right tabular-nums text-muted-foreground">
-                            {c.avgFeeMinor === null
-                              ? "—"
-                              : formatMinor(c.avgFeeMinor)}
-                          </td>
-                        )}
-                        <td className="px-5 py-3">
-                          <AccountRowActions
-                            userId={c.userId}
-                            status={c.status}
-                            subjectName={c.companyName}
-                            viewHref={`/admin/companies/${c.userId}`}
-                            kind="company"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <MobileRecordList className="sm:hidden">
-                {data.data.map((c) => (
-                  <CompanyCard key={c.userId} company={c} />
+                      >
+                        {c.avgFeeMinor === null
+                          ? "—"
+                          : formatMinor(c.avgFeeMinor)}
+                      </td>
+                    )}
+                    <td className={cn(TABLE_TD, "text-right")}>
+                      <AccountRowActions
+                        userId={c.userId}
+                        status={c.status}
+                        subjectName={c.companyName}
+                        viewHref={`/admin/companies/${c.userId}`}
+                        kind="company"
+                      />
+                    </td>
+                  </tr>
                 ))}
-              </MobileRecordList>
-              <ListPager
-                page={page}
-                totalPages={data.meta.totalPages}
-                total={data.meta.total}
-                onPage={setPage}
-                pageSize={limit}
-                onPageSize={changeLimit}
-              />
-            </CardContent>
-          </Card>
-        )}
-      </div>
+              </tbody>
+            </table>
+          </div>
+          <MobileRecordList className="sm:hidden">
+            {data.data.map((c) => (
+              <CompanyCard key={c.userId} company={c} />
+            ))}
+          </MobileRecordList>
+          <ListPager
+            page={page}
+            totalPages={data.meta.totalPages}
+            total={data.meta.total}
+            onPage={setPage}
+            pageSize={limit}
+            onPageSize={changeLimit}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@ export function TableAvatar({
     <span
       aria-hidden="true"
       className={cn(
-        "flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-xs font-extrabold text-primary",
+        "flex size-8 shrink-0 items-center justify-center rounded-sm border border-line bg-surface text-meta font-bold text-navy",
         className,
       )}
     >

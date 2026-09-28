@@ -8,11 +8,11 @@ import { PublicShell } from "./PublicShell";
 export function PlaceholderPage({ title }: { title: string }) {
   return (
     <PublicShell>
-      <div className="mx-auto flex min-h-[55vh] max-w-2xl flex-col items-center justify-center gap-3 px-5 py-20 text-center">
-        <h1 className="font-heading text-3xl font-extrabold text-navy">
+      <div className="mx-auto flex min-h-[55vh] max-w-2xl flex-col items-center justify-center gap-2 px-6 py-20 text-center">
+        <h1 className="text-[30px] font-extrabold tracking-[-0.022em] text-navy">
           {title}
         </h1>
-        <p className="text-muted-foreground">No requirement yet.</p>
+        <p className="text-sub text-ink-muted">No requirement yet.</p>
       </div>
     </PublicShell>
   );

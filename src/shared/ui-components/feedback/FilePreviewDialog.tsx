@@ -49,12 +49,12 @@ export function FilePreviewDialog({
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex h-[calc(100vh-4rem)] w-[calc(100vw-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-md border border-border bg-card shadow-card-lg focus:outline-none">
-          <div className="flex shrink-0 items-center gap-3 border-b border-border px-3 py-2">
-            <Dialog.Title className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex h-[calc(100vh-4rem)] w-[calc(100vw-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-pop focus:outline-none">
+          <div className="flex shrink-0 items-center gap-3 border-b border-line px-3 py-2">
+            <Dialog.Title className="min-w-0 flex-1 truncate text-sub font-semibold text-ink">
               {fileName}
               {typeof sizeBytes === "number" && (
-                <span className="ml-2 text-xs font-normal tabular-nums text-muted-foreground">
+                <span className="ml-2 text-meta font-normal tabular-nums text-ink-faint">
                   {formatSize(sizeBytes)}
                 </span>
               )}
@@ -69,7 +69,7 @@ export function FilePreviewDialog({
               <button
                 type="button"
                 aria-label="Close"
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                className="rounded-xs p-1 text-ink-muted hover:bg-surface-sub hover:text-ink"
               >
                 <X className="h-4 w-4" />
               </button>

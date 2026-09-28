@@ -38,9 +38,9 @@ function CompanyTopBarActions() {
     <div className="flex items-center gap-2">
       <Link
         href="/company/wallet"
-        className="hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary lg:inline-flex"
+        className="hidden h-8.5 items-center gap-1.5 whitespace-nowrap rounded-sm border border-line-strong bg-surface px-3 text-[12.5px] font-semibold text-ink transition-colors hover:bg-surface-sub lg:inline-flex"
       >
-        <span className="text-muted-foreground">Available</span>
+        <span className="text-ink-muted">Available</span>
         <span className="tabular-nums">
           {formatMinor(data?.availableMinor)}
         </span>
@@ -48,9 +48,9 @@ function CompanyTopBarActions() {
       <Link
         href="/company/jobs/new"
         aria-label="Post a Job"
-        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:px-3"
+        className="inline-flex h-7.5 items-center justify-center gap-[7px] rounded-xs bg-blue px-2.5 text-[12.5px] font-semibold text-white shadow-e1 transition-colors hover:bg-blue-deep"
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="size-[15px]" strokeWidth={2.2} />
         <span className="hidden sm:inline">Post a Job</span>
       </Link>
     </div>
@@ -72,9 +72,9 @@ function RecruiterTopBarActions() {
     <Link
       href="/recruiter/wallet"
       title="Commission earned year to date"
-      className="hidden items-center gap-1.5 whitespace-nowrap rounded-md border border-input px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-brand-primary hover:text-primary lg:inline-flex"
+      className="hidden h-8.5 items-center gap-1.5 whitespace-nowrap rounded-sm border border-line-strong bg-surface px-3 text-[12.5px] font-semibold text-ink transition-colors hover:bg-surface-sub lg:inline-flex"
     >
-      <span className="text-muted-foreground">Commission</span>
+      <span className="text-ink-muted">Commission</span>
       <span className="tabular-nums">{formatMinor(data?.earnedYtdMinor)}</span>
     </Link>
   );
@@ -103,11 +103,11 @@ function NotificationBell() {
           aria-label={
             count > 0 ? `Notifications, ${count} unread` : "Notifications"
           }
-          className="relative flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="relative flex size-8.5 items-center justify-center rounded-sm text-ink-muted transition-colors hover:bg-surface-sub hover:text-ink"
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="size-[17px]" />
           {count > 0 && (
-            <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground">
+            <span className="absolute right-[5px] top-[5px] flex h-[15px] min-w-[15px] items-center justify-center rounded-full border-2 border-surface bg-bad px-1 text-[9.5px] font-bold leading-none text-white">
               {count > 9 ? "9+" : count}
             </span>
           )}
@@ -117,10 +117,10 @@ function NotificationBell() {
         align="end"
         className="w-[24rem] max-w-[calc(100vw-1.5rem)] p-0"
       >
-        <div className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="flex items-start justify-between gap-2 border-b border-line px-4 py-3">
           <div className="min-w-0">
-            <p className="text-sm font-bold text-navy">Notifications</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-card font-[650] text-ink">Notifications</p>
+            <p className="text-meta text-ink-muted">
               {count > 0
                 ? `You have ${count} unread notification${count === 1 ? "" : "s"}`
                 : "You're all caught up"}
@@ -130,7 +130,7 @@ function NotificationBell() {
             <button
               type="button"
               onClick={() => markAllRead.mutate()}
-              className="shrink-0 text-xs font-semibold text-primary transition-colors hover:underline"
+              className="shrink-0 text-meta font-semibold text-blue-ink transition-colors hover:underline"
             >
               Mark all read
             </button>
@@ -138,15 +138,15 @@ function NotificationBell() {
         </div>
         <div className="max-h-[24rem] overflow-y-auto">
           {list.isLoading ? (
-            <div className="flex items-center justify-center py-10 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" />
+            <div className="flex items-center justify-center py-10 text-ink-faint">
+              <Loader2 className="size-[17px] animate-spin" />
             </div>
           ) : items.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+            <p className="px-4 py-10 text-center text-sub text-ink-muted">
               No notifications yet.
             </p>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-line">
               {items.map((item) => {
                 const href = user ? notificationHref(item, user.role) : null;
                 const isUnread = !item.readAt;
@@ -155,25 +155,25 @@ function NotificationBell() {
                   setOpen(false);
                 };
                 const body = (
-                  <div className="flex items-start gap-2 px-4 py-3">
+                  <div className="flex items-start gap-2 px-4 py-2.5">
                     <div className="min-w-0 flex-1">
                       <p
                         className={cn(
-                          "text-sm text-navy",
-                          isUnread ? "font-semibold" : "font-medium",
+                          "text-sub text-ink",
+                          isUnread ? "font-[650]" : "font-[450]",
                         )}
                       >
                         {item.title}
                       </p>
-                      <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                      <p className="mt-0.5 flex items-center gap-1 text-meta text-ink-faint">
                         {formatDistanceToNow(item.createdAt, {
                           addSuffix: true,
                         })}
-                        {href && <ExternalLink className="h-3 w-3" />}
+                        {href && <ExternalLink className="size-3" />}
                       </p>
                     </div>
                     {isUnread && (
-                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      <span className="mt-1.5 size-[7px] shrink-0 rounded-full bg-blue" />
                     )}
                   </div>
                 );
@@ -183,7 +183,7 @@ function NotificationBell() {
                       <Link
                         href={href}
                         onClick={onSelect}
-                        className="block transition-colors hover:bg-accent"
+                        className="block transition-colors hover:bg-surface-sub"
                       >
                         {body}
                       </Link>
@@ -191,7 +191,7 @@ function NotificationBell() {
                       <button
                         type="button"
                         onClick={onSelect}
-                        className="block w-full text-left transition-colors hover:bg-accent"
+                        className="block w-full text-left transition-colors hover:bg-surface-sub"
                       >
                         {body}
                       </button>

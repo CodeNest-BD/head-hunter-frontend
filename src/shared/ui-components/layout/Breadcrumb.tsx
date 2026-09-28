@@ -15,7 +15,7 @@ export interface Crumb {
 export function Breadcrumb({ items }: { items: Crumb[] }) {
   return (
     <nav aria-label="Breadcrumb" className="[animation:fadeUp_.4s_ease_both]">
-      <ol className="flex flex-wrap items-center gap-1.5 text-sm">
+      <ol className="flex flex-wrap items-center gap-1.5 text-meta text-ink-faint">
         {items.map((crumb, index) => {
           const isLast = index === items.length - 1;
           return (
@@ -26,7 +26,7 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
               {crumb.href && !isLast ? (
                 <Link
                   href={crumb.href}
-                  className="font-medium text-muted-foreground transition-colors hover:text-primary focus-visible:text-primary focus-visible:outline-none"
+                  className="text-ink-muted transition-colors hover:text-blue-ink focus-visible:text-blue-ink focus-visible:outline-none"
                 >
                   {crumb.label}
                 </Link>
@@ -34,9 +34,7 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
                 <span
                   aria-current={isLast ? "page" : undefined}
                   className={cn(
-                    isLast
-                      ? "font-semibold text-navy"
-                      : "text-muted-foreground",
+                    isLast ? "font-[550] text-ink" : "text-ink-muted",
                   )}
                 >
                   {crumb.label}
@@ -44,7 +42,7 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
               )}
               {!isLast && (
                 <ChevronRight
-                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50"
+                  className="size-3 shrink-0 text-ink-faint"
                   aria-hidden="true"
                 />
               )}

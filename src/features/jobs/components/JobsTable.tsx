@@ -6,10 +6,12 @@ import {
   AlertCircle,
   Briefcase,
   Eye,
+  Lock,
   MoreHorizontal,
   Plus,
   SquarePen,
   Trash2,
+  TriangleAlert,
 } from "lucide-react";
 
 // Deep-imported (not via the feature barrels): JobsTable is exported from the
@@ -19,7 +21,11 @@ import { useWallet } from "@/features/billing/hooks/useBilling";
 import { useInboxJobs } from "@/features/inbox/hooks/useInbox";
 import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
 import { PageHeader } from "@/shared/ui-components/brand";
-import type { PillTone } from "@/shared/ui-components/badges/Pill";
+import { CountChip } from "@/shared/ui-components/badges/CountChip";
+import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
+import { Alert } from "@/shared/ui-components/feedback/Alert";
+import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
+import { StatCard } from "@/shared/ui-components/dashboard/DashboardParts";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
@@ -32,12 +38,15 @@ import {
 import {
   TABLE_BODY,
   TABLE_CARD,
+  TABLE_CELL_MAIN,
+  TABLE_CELL_SUB,
   TABLE_EL,
   TABLE_HEAD,
   TABLE_HEAD_ROW,
   TABLE_ROW,
   TABLE_SCROLL,
   TABLE_TD,
+  TABLE_TD_STACKED,
   TABLE_TH,
   TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
@@ -117,13 +126,18 @@ function JobStatusBadge({ status }: { status: Job["status"] }) {
   );
 }
 
+/**
+ * The reference reads a fee as money — tabular, full-strength ink — and flips a
+ * fee of nothing into a plain amber pill, because a zero here is a problem to
+ * fix rather than an amount to compare.
+ */
 function RecruiterFee({ feeMinor }: { feeMinor: number }) {
   return feeMinor === 0 ? (
-    <span className="inline-flex items-center rounded-full bg-[#FBF3DF] px-2 py-0.5 text-xs font-semibold text-[#7A5109]">
+    <Pill tone="warn" plain>
       $0
-    </span>
+    </Pill>
   ) : (
-    <span className="font-bold tabular-nums text-navy">
+    <span className="font-[650] tabular-nums text-ink">
       {formatMinor(feeMinor)}
     </span>
   );
@@ -151,12 +165,12 @@ function CandidateCount({
   return count !== undefined && count > 0 ? (
     <Link
       href={`/company/inbox/job/${jobId}`}
-      className="inline-flex items-center gap-1.5 transition-colors hover:underline"
+      className="font-[550] tabular-nums text-blue-ink transition-colors hover:underline"
     >
-      <span className="font-semibold text-navy">{count}</span>
+      {count}
     </Link>
   ) : (
-    <span className="text-brand-gray">0</span>
+    <span className="tabular-nums text-ink-faint">0</span>
   );
 }
 
@@ -171,7 +185,7 @@ function JobRowActions({ jobId, title }: { jobId: string; title: string }) {
   const del = useDeleteJob();
 
   const itemClass =
-    "flex w-full items-center gap-2.5 rounded-sm px-2.5 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent";
+    "flex w-full items-center gap-2.5 rounded-xs px-2.5 py-2 text-left text-sub text-ink-body transition-colors hover:bg-surface-sub hover:text-ink";
 
   return (
     <Popover
@@ -185,15 +199,15 @@ function JobRowActions({ jobId, title }: { jobId: string; title: string }) {
         <button
           type="button"
           aria-label="Job actions"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="inline-flex size-7 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
         >
-          <MoreHorizontal className="h-[18px] w-[18px]" />
+          <MoreHorizontal className="size-[17px]" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-44 p-1">
         {confirming ? (
           <div className="p-2">
-            <p className="mb-2.5 text-xs text-muted-foreground">
+            <p className="mb-2.5 text-meta text-ink-muted">
               Delete this job? This can&apos;t be undone.
             </p>
             <div className="flex justify-end gap-2">
@@ -225,7 +239,7 @@ function JobRowActions({ jobId, title }: { jobId: string; title: string }) {
               onClick={() => setOpen(false)}
               className={itemClass}
             >
-              <Eye className="h-4 w-4 text-muted-foreground" />
+              <Eye className="size-[15px] text-ink-faint" />
               View
             </Link>
             <Link
@@ -233,18 +247,15 @@ function JobRowActions({ jobId, title }: { jobId: string; title: string }) {
               onClick={() => setOpen(false)}
               className={itemClass}
             >
-              <SquarePen className="h-4 w-4 text-muted-foreground" />
+              <SquarePen className="size-[15px] text-ink-faint" />
               Edit
             </Link>
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className={cn(
-                itemClass,
-                "text-destructive hover:bg-destructive/10",
-              )}
+              className={cn(itemClass, "text-bad hover:bg-bad-bg hover:text-bad")}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-[15px]" />
               Delete
             </button>
           </>
@@ -316,224 +327,221 @@ export function JobsTable() {
           }}
         />
       </div>
-      <ColumnsToggle
-        columns={cols.columns}
-        isVisible={cols.isVisible}
-        onToggle={cols.toggle}
-      />
+      <div className="sm:ml-auto">
+        <ColumnsToggle
+          columns={cols.columns}
+          isVisible={cols.isVisible}
+          onToggle={cols.toggle}
+        />
+      </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
         title="Jobs"
+        badge={<CountChip>{data?.meta.total ?? 0}</CountChip>}
         subtitle="Create a job, then publish it to open it to recruiters."
-        metrics={[
-          { label: "Published", value: publishedTotal },
-          {
-            label: "No fee set",
-            value: (
-              <span className={noFeeCount > 0 ? "text-[#F3C24B]" : undefined}>
-                {noFeeCount}
-              </span>
-            ),
-          },
-          {
-            label: "Held in escrow",
-            value: formatMinor(wallet.data?.reservedMinor),
-          },
-        ]}
       />
 
-      <div className="flex flex-col gap-4">
-        {toolbar}
+      {/* The reference's 3-up stat strip: the same three readouts the header
+          used to carry, given the room their figures deserve. */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="Published" value={publishedTotal} icon={Briefcase} />
+        <StatCard
+          label="No fee set"
+          value={
+            <span className={noFeeCount > 0 ? "text-warn" : undefined}>
+              {noFeeCount}
+            </span>
+          }
+          icon={TriangleAlert}
+        />
+        <StatCard
+          label="Held in escrow"
+          value={formatMinor(wallet.data?.reservedMinor)}
+          icon={Lock}
+        />
+      </div>
 
-        {isError ? (
-          <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-            <div className="flex items-center gap-2 font-medium">
-              <AlertCircle className="h-[18px] w-[18px]" />
-              Could not load jobs.
-            </div>
-            <button
+      {noFeeCount > 0 && (
+        <Alert tone="warn">
+          {noFeeCount} published job{noFeeCount === 1 ? "" : "s"} have no
+          recruiter fee. Recruiters sort by fee, so these rank last.
+        </Alert>
+      )}
+
+      {toolbar}
+
+      {isError ? (
+        <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+          <div className="flex items-center gap-2.5 font-[550]">
+            <AlertCircle className="size-[15px] shrink-0" />
+            Could not load jobs.
+          </div>
+          <div>
+            <Button
               type="button"
-              className="self-start rounded-md border border-destructive/40 px-3 py-1 text-xs font-medium transition-colors hover:bg-destructive/10"
+              variant="outline"
+              size="sm"
               onClick={() => void refetch()}
             >
               Retry
-            </button>
+            </Button>
           </div>
-        ) : isPending ? (
-          <TableSkeleton />
-        ) : data.data.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-input bg-card px-6 py-14 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-              <Briefcase className="h-6 w-6" />
-            </span>
-            <div className="flex flex-col gap-1">
-              <p className="font-heading text-base font-semibold text-navy">
-                No jobs found
-              </p>
-              <p className="max-w-sm text-sm text-muted-foreground">
-                Try a different search or filter, or post a new role.
-              </p>
-            </div>
-            <Link
-              href="/company/jobs/new"
-              className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              <Plus className="h-[18px] w-[18px]" />
-              New job
-            </Link>
-          </div>
-        ) : (
-          <>
-            <div className={TABLE_CARD}>
-              <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
-                <table className={TABLE_EL}>
-                  <thead className={TABLE_HEAD}>
-                    <tr className={TABLE_HEAD_ROW}>
-                      <th className={TABLE_TH}>Title</th>
+        </div>
+      ) : isPending ? (
+        <TableSkeleton />
+      ) : data.data.length === 0 ? (
+        <div className={TABLE_CARD}>
+          <EmptyState
+            icon={Briefcase}
+            title="No jobs found"
+            description="Try a different search or filter, or post a new role."
+            action={
+              <Button asChild type="button">
+                <Link href="/company/jobs/new">
+                  <Plus />
+                  New job
+                </Link>
+              </Button>
+            }
+          />
+        </div>
+      ) : (
+        <div className={TABLE_CARD}>
+          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+            <table className={TABLE_EL}>
+              <thead className={TABLE_HEAD}>
+                <tr className={TABLE_HEAD_ROW}>
+                  <th className={cn(TABLE_TH, "w-[32%]")}>Title</th>
+                  {cols.isVisible("status") && (
+                    <th className={TABLE_TH}>Status</th>
+                  )}
+                  {cols.isVisible("category") && (
+                    <th className={TABLE_TH}>Category</th>
+                  )}
+                  {cols.isVisible("fee") && (
+                    <th className={cn(TABLE_TH, "text-right")}>Recruiter fee</th>
+                  )}
+                  {cols.isVisible("expiry") && (
+                    <th className={TABLE_TH}>Expiry</th>
+                  )}
+                  {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
+                    <th className={cn(TABLE_TH, "text-center")}>Candidates</th>
+                  )}
+                  <th className={cn(TABLE_TH, "w-11 text-right")}>Actions</th>
+                </tr>
+              </thead>
+              <tbody className={TABLE_BODY}>
+                {data.data.map((job) => {
+                  const candidateCount = candidatesByJob.get(job.id);
+                  const dateLabel = formatDate(job.publishedAt ?? job.createdAt);
+                  return (
+                    <tr key={job.id} className={TABLE_ROW}>
+                      <td className={TABLE_TD_STACKED}>
+                        {/* Title opens the job's public-style detail view;
+                            the row's Edit action is where you change it. */}
+                        <Link
+                          href={jobPath(job)}
+                          className={cn(
+                            TABLE_CELL_MAIN,
+                            "transition-colors hover:text-blue",
+                          )}
+                        >
+                          {job.title}
+                        </Link>
+                        <p className={TABLE_CELL_SUB}>{dateLabel}</p>
+                      </td>
                       {cols.isVisible("status") && (
-                        <th className={TABLE_TH}>Status</th>
+                        <td className={TABLE_TD}>
+                          <JobStatusBadge status={job.status} />
+                        </td>
                       )}
                       {cols.isVisible("category") && (
-                        <th className={TABLE_TH}>Category</th>
+                        <td className={cn(TABLE_TD, "text-ink-muted")}>
+                          {ROLE_CATEGORY_LABELS[job.roleCategory]}
+                        </td>
                       )}
                       {cols.isVisible("fee") && (
-                        <th className={TABLE_TH}>Recruiter fee</th>
+                        <td className={cn(TABLE_TD, "text-right")}>
+                          <RecruiterFee feeMinor={job.recruiterFeeMinor} />
+                        </td>
                       )}
                       {cols.isVisible("expiry") && (
-                        <th className={TABLE_TH}>Expiry</th>
+                        <td className={cn(TABLE_TD, "text-ink-muted")}>
+                          <JobExpiry expiresAt={job.expiresAt} />
+                        </td>
                       )}
-                      {!HIDE_PHASE2_FEATURES &&
-                        cols.isVisible("candidates") && (
-                          <th className={TABLE_TH}>Candidates</th>
-                        )}
-                      <th className={`${TABLE_TH} text-right`}>Actions</th>
+                      {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
+                        <td className={cn(TABLE_TD, "text-center")}>
+                          <CandidateCount
+                            jobId={job.id}
+                            count={candidateCount}
+                          />
+                        </td>
+                      )}
+                      <td className={cn(TABLE_TD, "text-right")}>
+                        <div className="flex justify-end">
+                          <JobRowActions jobId={job.id} title={job.title} />
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className={TABLE_BODY}>
-                    {data.data.map((job) => {
-                      const candidateCount = candidatesByJob.get(job.id);
-                      const dateLabel = formatDate(
-                        job.publishedAt ?? job.createdAt,
-                      );
-                      return (
-                        <tr key={job.id} className={TABLE_ROW}>
-                          <td className={TABLE_TD}>
-                            {/* Title opens the job's public-style detail view;
-                                the row's Edit action is where you change it. */}
-                            <Link
-                              href={jobPath(job)}
-                              className="font-semibold text-navy transition-colors hover:text-primary"
-                            >
-                              {job.title}
-                            </Link>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              {dateLabel}
-                            </p>
-                          </td>
-                          {cols.isVisible("status") && (
-                            <td className={TABLE_TD}>
-                              <JobStatusBadge status={job.status} />
-                            </td>
-                          )}
-                          {cols.isVisible("category") && (
-                            <td className={`${TABLE_TD} text-brand-gray`}>
-                              {ROLE_CATEGORY_LABELS[job.roleCategory]}
-                            </td>
-                          )}
-                          {cols.isVisible("fee") && (
-                            <td className={TABLE_TD}>
-                              <RecruiterFee feeMinor={job.recruiterFeeMinor} />
-                            </td>
-                          )}
-                          {cols.isVisible("expiry") && (
-                            <td className={`${TABLE_TD} text-brand-gray`}>
-                              <JobExpiry expiresAt={job.expiresAt} />
-                            </td>
-                          )}
-                          {!HIDE_PHASE2_FEATURES &&
-                            cols.isVisible("candidates") && (
-                              <td className={`${TABLE_TD} tabular-nums`}>
-                                <CandidateCount
-                                  jobId={job.id}
-                                  count={candidateCount}
-                                />
-                              </td>
-                            )}
-                          <td className={`${TABLE_TD} text-right`}>
-                            <div className="flex justify-end">
-                              <JobRowActions jobId={job.id} title={job.title} />
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <MobileRecordList className="sm:hidden">
-                {data.data.map((job) => (
-                  <MobileRecordCard
-                    key={job.id}
-                    href={jobPath(job)}
-                    title={job.title}
-                    subtitle={formatDate(job.publishedAt ?? job.createdAt)}
-                    trailing={<JobStatusBadge status={job.status} />}
-                    fields={[
-                      {
-                        label: "Category",
-                        value: ROLE_CATEGORY_LABELS[job.roleCategory],
-                      },
-                      {
-                        label: "Recruiter fee",
-                        value: (
-                          <RecruiterFee feeMinor={job.recruiterFeeMinor} />
-                        ),
-                      },
-                      {
-                        label: "Expiry",
-                        value: <JobExpiry expiresAt={job.expiresAt} />,
-                      },
-                      ...(HIDE_PHASE2_FEATURES
-                        ? []
-                        : [
-                            {
-                              label: "Candidates",
-                              value: (
-                                <CandidateCount
-                                  jobId={job.id}
-                                  count={candidatesByJob.get(job.id)}
-                                />
-                              ),
-                            },
-                          ]),
-                    ]}
-                    actions={<JobRowActions jobId={job.id} title={job.title} />}
-                  />
-                ))}
-              </MobileRecordList>
-              <TablePager
-                page={page}
-                totalPages={data.meta.totalPages}
-                total={data.meta.total}
-                pageSize={limit}
-                onPage={setPage}
-                onPageSize={changeLimit}
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <MobileRecordList className="sm:hidden">
+            {data.data.map((job) => (
+              <MobileRecordCard
+                key={job.id}
+                href={jobPath(job)}
+                title={job.title}
+                subtitle={formatDate(job.publishedAt ?? job.createdAt)}
+                trailing={<JobStatusBadge status={job.status} />}
+                fields={[
+                  {
+                    label: "Category",
+                    value: ROLE_CATEGORY_LABELS[job.roleCategory],
+                  },
+                  {
+                    label: "Recruiter fee",
+                    value: <RecruiterFee feeMinor={job.recruiterFeeMinor} />,
+                  },
+                  {
+                    label: "Expiry",
+                    value: <JobExpiry expiresAt={job.expiresAt} />,
+                  },
+                  ...(HIDE_PHASE2_FEATURES
+                    ? []
+                    : [
+                        {
+                          label: "Candidates",
+                          value: (
+                            <CandidateCount
+                              jobId={job.id}
+                              count={candidatesByJob.get(job.id)}
+                            />
+                          ),
+                        },
+                      ]),
+                ]}
+                actions={<JobRowActions jobId={job.id} title={job.title} />}
               />
-            </div>
-
-            {noFeeCount > 0 && (
-              <p className="rounded-md border border-[#F0E2B8] bg-[#FBF3DF] px-4 py-3 text-sm text-[#7A5109]">
-                {noFeeCount} published job{noFeeCount === 1 ? "" : "s"} have no
-                recruiter fee. Recruiters sort by fee, so these rank last.
-              </p>
-            )}
-          </>
-        )}
-      </div>
+            ))}
+          </MobileRecordList>
+          <TablePager
+            page={page}
+            totalPages={data.meta.totalPages}
+            total={data.meta.total}
+            pageSize={limit}
+            onPage={setPage}
+            onPageSize={changeLimit}
+          />
+        </div>
+      )}
     </div>
   );
 }

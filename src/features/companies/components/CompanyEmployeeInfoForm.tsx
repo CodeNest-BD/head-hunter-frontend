@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 
+import { Card } from "@/shared/ui-components/controls/card";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
@@ -59,32 +60,32 @@ export function CompanyEmployeeInfoForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <div className="rounded-md border border-border bg-card shadow-card">
+      <Card>
         <FormSection
           title="Contact"
           hint="Head-Hunters.com user at your organization."
         >
-          <div className="grid gap-4 sm:max-w-lg sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
+          <div className="grid gap-3 sm:max-w-lg sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="firstName">First Name</Label>
               <Input id="firstName" {...register("firstName")} />
               {errors.firstName && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.firstName.message}
                 </p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="lastName">Last Name</Label>
               <Input id="lastName" {...register("lastName")} />
               {errors.lastName && (
-                <p className="text-xs text-destructive">
+                <p className="text-meta font-medium text-bad">
                   {errors.lastName.message}
                 </p>
               )}
             </div>
           </div>
-          <div className="flex flex-col gap-2 sm:max-w-sm">
+          <div className="flex flex-col gap-1.5 sm:max-w-sm">
             <Label htmlFor="phone">Phone</Label>
             <Controller
               control={control}
@@ -100,11 +101,13 @@ export function CompanyEmployeeInfoForm({
               )}
             />
             {errors.phone && (
-              <p className="text-xs text-destructive">{errors.phone.message}</p>
+              <p className="text-meta font-medium text-bad">
+                {errors.phone.message}
+              </p>
             )}
           </div>
         </FormSection>
-      </div>
+      </Card>
 
       <CompanyFormSaveBar
         isDirty={isDirty}
