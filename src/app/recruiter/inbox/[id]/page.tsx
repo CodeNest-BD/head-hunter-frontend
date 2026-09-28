@@ -38,13 +38,14 @@ function ErrorCallout({
       </div>
       {onRetry && (
         <div>
-          <button
+          <Button
             type="button"
-            className="inline-flex h-7.5 items-center rounded-xs border border-bad-line px-2.5 text-[12.5px] font-semibold transition-colors hover:bg-bad/10"
+            variant="destructive"
+            size="sm"
             onClick={() => void onRetry()}
           >
             Retry
-          </button>
+          </Button>
         </div>
       )}
     </div>

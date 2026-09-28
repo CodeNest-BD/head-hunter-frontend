@@ -43,6 +43,11 @@ import {
   SUBSCRIPTION_STATUS_TONES,
   VERIFICATION_STATUS_TONES,
 } from "./statusStyles";
+import { cn } from "@/shared/libs/shadCnConfig";
+import {
+  DIALOG_OVERLAY,
+  DIALOG_PANEL_PADDED,
+} from "@/shared/ui-components/feedback/dialogStyles";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -150,8 +155,8 @@ function DeleteRecruiterButton({
         </Button>
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface p-5 shadow-pop focus:outline-none">
+        <AlertDialog.Overlay className={DIALOG_OVERLAY} />
+        <AlertDialog.Content className={cn(DIALOG_PANEL_PADDED, "max-w-md")}>
           <AlertDialog.Title className="text-card font-[650] text-ink">
             Delete {name}?
           </AlertDialog.Title>

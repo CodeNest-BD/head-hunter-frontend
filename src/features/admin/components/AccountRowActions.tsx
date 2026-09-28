@@ -15,6 +15,7 @@ import {
   useSuspendAccount,
 } from "../hooks/useAdmin";
 import type { AccountStatus } from "../schemas";
+import { DIALOG_OVERLAY } from "@/shared/ui-components/feedback/dialogStyles";
 
 interface AccountRowActionsProps {
   userId: string;
@@ -139,7 +140,7 @@ export function AccountRowActions({
       {/* Hold / reinstate confirm */}
       <AlertDialog.Root open={holdOpen} onOpenChange={setHoldOpen}>
         <AlertDialog.Portal>
-          <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
+          <AlertDialog.Overlay className={DIALOG_OVERLAY} />
           <AlertDialog.Content className={DIALOG_CLASS}>
             <AlertDialog.Title className="text-card font-[650] text-ink">
               {isHeld
@@ -178,7 +179,7 @@ export function AccountRowActions({
       {kind === "recruiter" && (
         <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
           <AlertDialog.Portal>
-            <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
+            <AlertDialog.Overlay className={DIALOG_OVERLAY} />
             <AlertDialog.Content className={DIALOG_CLASS}>
               <AlertDialog.Title className="text-card font-[650] text-ink">
                 Delete {subjectName}?

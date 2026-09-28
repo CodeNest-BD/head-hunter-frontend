@@ -15,6 +15,11 @@ import {
   useUpdateReview,
 } from "../hooks/useReviews";
 import { StarRatingInput } from "./StarRatingInput";
+import { cn } from "@/shared/libs/shadCnConfig";
+import {
+  DIALOG_OVERLAY,
+  DIALOG_PANEL_PADDED,
+} from "@/shared/ui-components/feedback/dialogStyles";
 
 interface ReviewCtaProps {
   /** The accepted offer (the hire) this review is about. */
@@ -79,8 +84,8 @@ export function ReviewCta({ offerId }: ReviewCtaProps) {
           </Button>
         </Dialog.Trigger>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border border-line bg-surface p-4 shadow-pop focus:outline-none">
+          <Dialog.Overlay className={DIALOG_OVERLAY} />
+          <Dialog.Content className={cn(DIALOG_PANEL_PADDED, "max-w-md")}>
             <div className="flex items-start justify-between">
               <div>
                 <Dialog.Title className="text-section font-bold text-ink">

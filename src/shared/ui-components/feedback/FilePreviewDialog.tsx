@@ -7,6 +7,7 @@ import { Download, X } from "lucide-react";
 
 import { Button } from "@/shared/ui-components/controls/button";
 import { formatSize } from "@/shared/utils/formatSize";
+import { DIALOG_OVERLAY } from "./dialogStyles";
 
 interface FilePreviewDialogProps {
   /** Signed link with no content disposition — renders inline in the frame. */
@@ -48,7 +49,7 @@ export function FilePreviewDialog({
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
+        <Dialog.Overlay className={DIALOG_OVERLAY} />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex h-[calc(100vh-4rem)] w-[calc(100vw-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-pop focus:outline-none">
           <div className="flex shrink-0 items-center gap-3 border-b border-line px-3 py-2">
             <Dialog.Title className="min-w-0 flex-1 truncate text-sub font-semibold text-ink">

@@ -118,9 +118,15 @@ export function StatCard({
   /** Grid placement from the caller, e.g. a lead card spanning both columns. */
   className?: string;
 }) {
+  // Every stat card lifts a little on hover, and its glyph tile warms and
+  // leans in. A card that also links somewhere lifts further and draws its
+  // border — so the motion tells you what is clickable rather than decorating
+  // everything equally. `group` lets the tile react to the card, not itself.
   const className = cn(
-    "flex items-start gap-3 rounded-md border border-line bg-surface px-4 py-3.5 shadow-e1",
-    href && "transition-shadow hover:border-line-strong hover:shadow-e2",
+    "group flex items-start gap-3 rounded-md border border-line bg-surface px-4 py-3.5 shadow-e1",
+    "transition-[box-shadow,transform,border-color] duration-200 ease-out",
+    "hover:-translate-y-px hover:shadow-e2 motion-reduce:transform-none",
+    href && "hover:border-line-strong hover:-translate-y-0.5",
     classNameProp,
   );
   const body = (
@@ -148,7 +154,11 @@ export function StatCard({
       {Icon && (
         <span
           aria-hidden="true"
-          className="flex size-8.5 shrink-0 items-center justify-center rounded-sm bg-tint text-blue"
+          className={cn(
+            "flex size-8.5 shrink-0 items-center justify-center rounded-sm bg-tint text-blue",
+            "transition-[background-color,transform] duration-200 ease-out",
+            "group-hover:bg-tint-strong group-hover:scale-105 motion-reduce:transform-none",
+          )}
         >
           <Icon className="size-[17px]" />
         </span>

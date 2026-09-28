@@ -17,6 +17,11 @@ import {
   ColumnFilter,
   FilterableHead,
 } from "@/shared/ui-components/data/ColumnFilter";
+import {
+  ColumnsToggle,
+  useVisibleColumns,
+  type ColumnDef,
+} from "@/shared/ui-components/data/Columns";
 import { MobileFilters } from "@/shared/ui-components/data/MobileFilters";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
@@ -65,6 +70,20 @@ const STATUS_VIEWS: {
   },
 ];
 
+const COLUMNS: ColumnDef[] = [
+  // Company carries the unread rail, so the row loses its "new activity" cue
+  // without it; Actions holds the only way into the dispute.
+  { key: "company", label: "Company", required: true },
+  { key: "recruiter", label: "Recruiter" },
+  { key: "candidate", label: "Candidate / Role" },
+  { key: "raisedBy", label: "Raised By" },
+  { key: "subject", label: "Subject" },
+  { key: "fee", label: "Fee" },
+  { key: "status", label: "Status" },
+  { key: "opened", label: "Opened" },
+  { key: "actions", label: "Actions", required: true },
+];
+
 const RAISED_BY_LABELS: Record<DisputeChannel, string> = {
   company: "Company",
   recruiter: "Recruiter",
@@ -87,6 +106,7 @@ export function AdminDisputesTable() {
   const [raisedBy, setRaisedBy] = useState<DisputeChannel | undefined>(
     undefined,
   );
+  const cols = useVisibleColumns("admin.disputes.columns", COLUMNS);
   const statuses = STATUS_VIEWS.find((v) => v.value === statusView)?.statuses;
   const { data, isPending, isError, refetch } = useAdminDisputes(
     page,
@@ -110,6 +130,13 @@ export function AdminDisputesTable() {
     <Card>
       <CardHeader>
         <CardTitle>Disputes</CardTitle>
+        <div className="ml-auto">
+          <ColumnsToggle
+            columns={cols.columns}
+            isVisible={cols.isVisible}
+            onToggle={cols.toggle}
+          />
+        </div>
       </CardHeader>
 
       {/* This table has no toolbar, and its filters live in a header row a
@@ -177,43 +204,57 @@ export function AdminDisputesTable() {
                   <th scope="col" className={TABLE_TH}>
                     Company
                   </th>
-                  <th scope="col" className={TABLE_TH}>
-                    Recruiter
-                  </th>
-                  <th scope="col" className={TABLE_TH}>
-                    Candidate / Role
-                  </th>
-                  <FilterableHead label="Raised By">
-                    <ColumnFilter
-                      label="Raised By"
-                      options={RAISED_BY_OPTIONS}
-                      value={raisedBy ?? null}
-                      onChange={(next) => {
-                        setRaisedBy(toRaisedBy(next));
-                        setPage(1);
-                      }}
-                    />
-                  </FilterableHead>
-                  <th scope="col" className={TABLE_TH}>
-                    Subject
-                  </th>
-                  <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                    Fee
-                  </th>
-                  <FilterableHead label="Status">
-                    <ColumnFilter
-                      label="Status"
-                      options={STATUS_VIEWS}
-                      value={statusView}
-                      onChange={(next) => {
-                        setStatusView(next);
-                        setPage(1);
-                      }}
-                    />
-                  </FilterableHead>
-                  <th scope="col" className={TABLE_TH}>
-                    Opened
-                  </th>
+                  {cols.isVisible("recruiter") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Recruiter
+                    </th>
+                  )}
+                  {cols.isVisible("candidate") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Candidate / Role
+                    </th>
+                  )}
+                  {cols.isVisible("raisedBy") && (
+                    <FilterableHead label="Raised By">
+                      <ColumnFilter
+                        label="Raised By"
+                        options={RAISED_BY_OPTIONS}
+                        value={raisedBy ?? null}
+                        onChange={(next) => {
+                          setRaisedBy(toRaisedBy(next));
+                          setPage(1);
+                        }}
+                      />
+                    </FilterableHead>
+                  )}
+                  {cols.isVisible("subject") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Subject
+                    </th>
+                  )}
+                  {cols.isVisible("fee") && (
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Fee
+                    </th>
+                  )}
+                  {cols.isVisible("status") && (
+                    <FilterableHead label="Status">
+                      <ColumnFilter
+                        label="Status"
+                        options={STATUS_VIEWS}
+                        value={statusView}
+                        onChange={(next) => {
+                          setStatusView(next);
+                          setPage(1);
+                        }}
+                      />
+                    </FilterableHead>
+                  )}
+                  {cols.isVisible("opened") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Opened
+                    </th>
+                  )}
                   <th scope="col" className={TABLE_TH} />
                 </tr>
               </thead>
@@ -242,39 +283,53 @@ export function AdminDisputesTable() {
                         {d.companyName}
                       </span>
                     </td>
-                    <td className={cn(TABLE_TD, "text-ink-body")}>
-                      {d.recruiterName}
-                    </td>
-                    <td className={cn(TABLE_TD, "text-ink-muted")}>
-                      <span className="block max-w-[220px] truncate">
-                        {d.candidateName} · {d.jobTitle}
-                      </span>
-                    </td>
-                    <td className={cn(TABLE_TD, "text-ink-body")}>
-                      {RAISED_BY_LABELS[d.raisedBy]}
-                    </td>
-                    <td className={cn(TABLE_TD, "text-ink-body")}>
-                      {DISPUTE_SUBJECT_LABELS[d.subject]}
-                    </td>
-                    <td
-                      className={cn(
-                        TABLE_TD,
-                        "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
-                      )}
-                    >
-                      {formatMinor(d.amountMinor)}
-                    </td>
-                    <td className={TABLE_TD}>
-                      <DisputeStatusBadge status={d.status} />
-                    </td>
-                    <td
-                      className={cn(
-                        TABLE_TD,
-                        "whitespace-nowrap tabular-nums text-ink-muted",
-                      )}
-                    >
-                      {formatDate(d.createdAt)}
-                    </td>
+                    {cols.isVisible("recruiter") && (
+                      <td className={cn(TABLE_TD, "text-ink-body")}>
+                        {d.recruiterName}
+                      </td>
+                    )}
+                    {cols.isVisible("candidate") && (
+                      <td className={cn(TABLE_TD, "text-ink-muted")}>
+                        <span className="block max-w-[220px] truncate">
+                          {d.candidateName} · {d.jobTitle}
+                        </span>
+                      </td>
+                    )}
+                    {cols.isVisible("raisedBy") && (
+                      <td className={cn(TABLE_TD, "text-ink-body")}>
+                        {RAISED_BY_LABELS[d.raisedBy]}
+                      </td>
+                    )}
+                    {cols.isVisible("subject") && (
+                      <td className={cn(TABLE_TD, "text-ink-body")}>
+                        {DISPUTE_SUBJECT_LABELS[d.subject]}
+                      </td>
+                    )}
+                    {cols.isVisible("fee") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                        )}
+                      >
+                        {formatMinor(d.amountMinor)}
+                      </td>
+                    )}
+                    {cols.isVisible("status") && (
+                      <td className={TABLE_TD}>
+                        <DisputeStatusBadge status={d.status} />
+                      </td>
+                    )}
+                    {cols.isVisible("opened") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap tabular-nums text-ink-muted",
+                        )}
+                      >
+                        {formatDate(d.createdAt)}
+                      </td>
+                    )}
                     <td className={cn(TABLE_TD, "text-right")}>
                       <Button asChild variant="outline" size="sm">
                         <Link href={`/admin/disputes/${d.id}`}>Review</Link>

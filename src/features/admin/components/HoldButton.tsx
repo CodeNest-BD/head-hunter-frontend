@@ -8,6 +8,11 @@ import { toast } from "sonner";
 import { Button } from "@/shared/ui-components/controls/button";
 import { useReinstateAccount, useSuspendAccount } from "../hooks/useAdmin";
 import type { AccountStatus } from "../schemas";
+import { cn } from "@/shared/libs/shadCnConfig";
+import {
+  DIALOG_OVERLAY,
+  DIALOG_PANEL_PADDED,
+} from "@/shared/ui-components/feedback/dialogStyles";
 
 interface HoldButtonProps {
   userId: string;
@@ -67,8 +72,18 @@ export function HoldButton({
         </Button>
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
-        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface p-5 shadow-pop data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95">
+        <AlertDialog.Overlay
+          className={cn(
+            DIALOG_OVERLAY,
+            "data-[state=open]:animate-in data-[state=open]:fade-in-0",
+          )}
+        />
+        <AlertDialog.Content
+          className={cn(
+            DIALOG_PANEL_PADDED,
+            "max-w-md data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+          )}
+        >
           <AlertDialog.Title className="text-card font-[650] text-ink">
             {isHeld ? `Reinstate ${subjectName}?` : `Suspend ${subjectName}?`}
           </AlertDialog.Title>

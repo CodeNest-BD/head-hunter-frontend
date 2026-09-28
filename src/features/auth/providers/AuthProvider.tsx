@@ -2,9 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
+import { BrandLoader } from "@/shared/ui-components/feedback/BrandLoader";
 import { bootFailed } from "../store/authSlice";
 import { refreshAccessToken } from "../lib/refreshClient";
 import { expiryMillisFromToken } from "../lib/jwt";
@@ -116,11 +116,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (status === "booting") {
       return (
         /* Which page is coming is not known until the session settles, so
-           there is no shape to trace — the house spinner, not a skeleton. */
-        <div className="flex min-h-screen items-center justify-center gap-2 bg-canvas text-sub text-ink-muted">
-          <Loader2 className="size-[15px] animate-spin text-ink-faint" />
-          Loading…
-        </div>
+           there is no shape to trace — the brand lockup, not a skeleton. */
+        <BrandLoader className="min-h-screen" />
       );
     }
     // Redirect effect is already navigating — don't flash a shell.

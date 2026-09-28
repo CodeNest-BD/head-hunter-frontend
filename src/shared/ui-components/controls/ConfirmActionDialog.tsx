@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 
 import { Button } from "./button";
+import { DIALOG_OVERLAY } from "../feedback/dialogStyles";
 
 interface ConfirmActionDialogProps {
   open: boolean;
@@ -47,7 +48,7 @@ export function ConfirmActionDialog({
       }}
     >
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
+        <AlertDialog.Overlay className={DIALOG_OVERLAY} />
         <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface p-5 shadow-pop focus:outline-none">
           <AlertDialog.Title className="text-card font-[650] text-ink">
             {title}

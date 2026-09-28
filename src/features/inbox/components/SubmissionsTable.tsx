@@ -19,6 +19,11 @@ import {
   ColumnFilter,
   FilterableHead,
 } from "@/shared/ui-components/data/ColumnFilter";
+import {
+  ColumnsToggle,
+  useVisibleColumns,
+  type ColumnDef,
+} from "@/shared/ui-components/data/Columns";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
@@ -85,6 +90,24 @@ const SORT_OPTIONS: { value: Sort; label: string }[] = [
 /** Narrows the select's plain string back to a sort this table understands. */
 const isSort = (value: string): value is Sort =>
   SORT_OPTIONS.some((option) => option.value === value);
+
+/**
+ * Candidate carries the row's identity and its quick-view eye; Thread carries
+ * the only link into the conversation. Neither can be hidden.
+ */
+const COLUMNS: ColumnDef[] = [
+  { key: "candidate", label: "Candidate", required: true },
+  { key: "company", label: "Company" },
+  { key: "job", label: "Job title" },
+  { key: "submitted", label: "Submitted" },
+  { key: "status", label: "Status" },
+  { key: "fee", label: "Recruiter fee" },
+  { key: "thread", label: "Thread", required: true },
+];
+
+/** Empties a selection without churning state when it is already empty. */
+const cleared = (previous: Set<string>): Set<string> =>
+  previous.size === 0 ? previous : new Set<string>();
 
 /** Distinct values of one field across the rows, as {value,label} options. */
 function distinct(
@@ -188,6 +211,23 @@ export function SubmissionsTable({
   const [sort, setSort] = useState<Sort>("newest");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
+  const cols = useVisibleColumns(
+    "recruiter.inbox.submissions.columns",
+    COLUMNS,
+  );
+
+  const showsCompany = cols.isVisible("company");
+  const showsJob = cols.isVisible("job");
+  const showsStatus = cols.isVisible("status");
+
+  // Filtering is client-side, so a hidden column's filter would keep narrowing
+  // the list with its control off screen — a shorter list and nothing to
+  // explain it. Hiding a column drops its filter along with its header.
+  useEffect(() => {
+    if (!showsCompany) setCompanySel(cleared);
+    if (!showsJob) setJobSel(cleared);
+    if (!showsStatus) setStatusSel(cleared);
+  }, [showsCompany, showsJob, showsStatus]);
 
   const fetched = useMemo(() => data?.data ?? [], [data]);
   const rows = useMemo(
@@ -279,6 +319,13 @@ export function SubmissionsTable({
           ))}
         </SelectContent>
       </Select>
+      <div className="sm:ml-auto">
+        <ColumnsToggle
+          columns={cols.columns}
+          isVisible={cols.isVisible}
+          onToggle={cols.toggle}
+        />
+      </div>
     </div>
   );
 
@@ -341,35 +388,47 @@ export function SubmissionsTable({
                       onChange={setCandidateSel}
                     />
                   </FilterableHead>
-                  <FilterableHead label="Company">
-                    <ColumnFilter
-                      multiple
-                      label="Company"
-                      options={companyOptions}
-                      value={companySel}
-                      onChange={setCompanySel}
-                    />
-                  </FilterableHead>
-                  <FilterableHead label="Job title">
-                    <ColumnFilter
-                      multiple
-                      label="Job"
-                      options={jobOptions}
-                      value={jobSel}
-                      onChange={setJobSel}
-                    />
-                  </FilterableHead>
-                  <th className={TABLE_TH}>Submitted</th>
-                  <FilterableHead label="Status">
-                    <ColumnFilter
-                      multiple
-                      label="Status"
-                      options={statusOptions}
-                      value={statusSel}
-                      onChange={setStatusSel}
-                    />
-                  </FilterableHead>
-                  <th className={cn(TABLE_TH, "text-right")}>Recruiter fee</th>
+                  {showsCompany && (
+                    <FilterableHead label="Company">
+                      <ColumnFilter
+                        multiple
+                        label="Company"
+                        options={companyOptions}
+                        value={companySel}
+                        onChange={setCompanySel}
+                      />
+                    </FilterableHead>
+                  )}
+                  {showsJob && (
+                    <FilterableHead label="Job title">
+                      <ColumnFilter
+                        multiple
+                        label="Job"
+                        options={jobOptions}
+                        value={jobSel}
+                        onChange={setJobSel}
+                      />
+                    </FilterableHead>
+                  )}
+                  {cols.isVisible("submitted") && (
+                    <th className={TABLE_TH}>Submitted</th>
+                  )}
+                  {showsStatus && (
+                    <FilterableHead label="Status">
+                      <ColumnFilter
+                        multiple
+                        label="Status"
+                        options={statusOptions}
+                        value={statusSel}
+                        onChange={setStatusSel}
+                      />
+                    </FilterableHead>
+                  )}
+                  {cols.isVisible("fee") && (
+                    <th className={cn(TABLE_TH, "text-right")}>
+                      Recruiter fee
+                    </th>
+                  )}
                   <th className={cn(TABLE_TH, "text-right")}>Thread</th>
                 </tr>
               </thead>
@@ -410,30 +469,40 @@ export function SubmissionsTable({
                         </span>
                       </span>
                     </td>
-                    <td className={`${TABLE_TD} text-ink-body`}>
-                      {row.counterpartyName}
-                    </td>
-                    <td className={TABLE_TD}>
-                      <JobLink jobId={row.jobId} title={row.jobTitle} />
-                    </td>
-                    <td className={cn(TABLE_TD_STACKED, "whitespace-nowrap")}>
-                      <span className="block tabular-nums text-ink">
-                        {formatDate(submittedOf(row))}
-                      </span>
-                      <span className={cn("block", TABLE_CELL_SUB)}>
-                        {formatRelativeDay(submittedOf(row))}
-                      </span>
-                    </td>
-                    <td className={TABLE_TD}>
-                      <StatusPill row={row} />
-                    </td>
-                    <td
-                      className={`${TABLE_TD} whitespace-nowrap text-right font-[650] tabular-nums text-ink`}
-                    >
-                      {row.recruiterFeeMinor != null
-                        ? formatMinor(row.recruiterFeeMinor)
-                        : "—"}
-                    </td>
+                    {showsCompany && (
+                      <td className={`${TABLE_TD} text-ink-body`}>
+                        {row.counterpartyName}
+                      </td>
+                    )}
+                    {showsJob && (
+                      <td className={TABLE_TD}>
+                        <JobLink jobId={row.jobId} title={row.jobTitle} />
+                      </td>
+                    )}
+                    {cols.isVisible("submitted") && (
+                      <td className={cn(TABLE_TD_STACKED, "whitespace-nowrap")}>
+                        <span className="block tabular-nums text-ink">
+                          {formatDate(submittedOf(row))}
+                        </span>
+                        <span className={cn("block", TABLE_CELL_SUB)}>
+                          {formatRelativeDay(submittedOf(row))}
+                        </span>
+                      </td>
+                    )}
+                    {showsStatus && (
+                      <td className={TABLE_TD}>
+                        <StatusPill row={row} />
+                      </td>
+                    )}
+                    {cols.isVisible("fee") && (
+                      <td
+                        className={`${TABLE_TD} whitespace-nowrap text-right font-[650] tabular-nums text-ink`}
+                      >
+                        {row.recruiterFeeMinor != null
+                          ? formatMinor(row.recruiterFeeMinor)
+                          : "—"}
+                      </td>
+                    )}
                     <td className={`${TABLE_TD} text-right`}>
                       <ThreadCell row={row} />
                     </td>

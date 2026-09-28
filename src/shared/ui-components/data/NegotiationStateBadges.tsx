@@ -3,7 +3,7 @@ import type {
   OfferBadge,
 } from "@/features/conversations/utils/candidateNegotiationState";
 import type { OfferParty } from "@/features/offers";
-import { cn } from "@/shared/libs/shadCnConfig";
+import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 
@@ -15,16 +15,16 @@ export interface NegotiationStateBadgesProps {
 }
 
 /**
- * The same four semantic tones the status pills use, applied to a third,
- * separate fact — no new visual primitive, and no palette of its own.
+ * The same semantic tones the status pills use, applied to a third, separate
+ * fact — no new visual primitive, and no palette of its own.
  */
-const TONE_STYLES = {
-  neutral: { dot: "bg-neutral", pill: "bg-neutral-bg text-neutral" },
-  pending: { dot: "bg-warn", pill: "bg-warn-bg text-warn" },
-  positive: { dot: "bg-ok", pill: "bg-ok-bg text-ok" },
-  active: { dot: "bg-info", pill: "bg-info-bg text-info" },
-} as const;
-type Tone = keyof typeof TONE_STYLES;
+const TONES = {
+  neutral: "neutral",
+  pending: "warn",
+  positive: "ok",
+  active: "info",
+} as const satisfies Record<string, PillTone>;
+type Tone = keyof typeof TONES;
 
 interface BadgeContent {
   phrase: string;
@@ -79,20 +79,10 @@ interface NegotiationBadgeProps {
 }
 
 function NegotiationBadge({ label, content }: NegotiationBadgeProps) {
-  const tone = TONE_STYLES[content.tone];
   return (
-    <span
-      className={cn(
-        "inline-flex h-5.25 items-center gap-[5px] whitespace-nowrap rounded-full px-2 text-[11px] font-[650] tracking-[0.02em]",
-        tone.pill,
-      )}
-    >
-      <span
-        className={cn("size-[5px] shrink-0 rounded-full", tone.dot)}
-        aria-hidden="true"
-      />
+    <Pill tone={TONES[content.tone]}>
       {label}: <span className="font-[450]">{content.phrase}</span>
-    </span>
+    </Pill>
   );
 }
 

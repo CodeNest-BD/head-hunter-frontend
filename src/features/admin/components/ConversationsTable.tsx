@@ -10,6 +10,11 @@ import {
   ColumnFilter,
   FilterableHead,
 } from "@/shared/ui-components/data/ColumnFilter";
+import {
+  ColumnsToggle,
+  useVisibleColumns,
+  type ColumnDef,
+} from "@/shared/ui-components/data/Columns";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   MobileRecordCard,
@@ -32,6 +37,7 @@ import {
   TABLE_SCROLL,
   TABLE_TD,
   TABLE_TH,
+  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 
 const STATUS_FILTER_OPTIONS = [
@@ -41,6 +47,15 @@ const STATUS_FILTER_OPTIONS = [
   { value: "rejected", label: "Rejected" },
   { value: "withdrawn", label: "Withdrawn" },
 ] as const;
+
+const COLUMNS: ColumnDef[] = [
+  { key: "company", label: "Company", required: true },
+  { key: "recruiter", label: "Recruiter" },
+  { key: "job", label: "Job" },
+  { key: "messages", label: "Messages" },
+  { key: "status", label: "Status" },
+  { key: "lastActivity", label: "Last activity" },
+];
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -106,6 +121,7 @@ export function ConversationsTable() {
     changeStatus("");
     setPage(1);
   };
+  const cols = useVisibleColumns("admin.conversations.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminConversations({
     page,
     limit,
@@ -115,17 +131,28 @@ export function ConversationsTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      <ListToolbar
-        query={qInput}
-        onQueryChange={setQInput}
-        placeholder="Search by job, company or recruiter…"
-        filter={{
-          value: status,
-          onChange: changeStatus,
-          allLabel: "All statuses",
-          options: [...STATUS_FILTER_OPTIONS],
-        }}
-      />
+      <div className={TABLE_TOOLBAR}>
+        <div className="flex-1">
+          <ListToolbar
+            query={qInput}
+            onQueryChange={setQInput}
+            placeholder="Search by job, company or recruiter…"
+            filter={{
+              value: status,
+              onChange: changeStatus,
+              allLabel: "All statuses",
+              options: [...STATUS_FILTER_OPTIONS],
+            }}
+          />
+        </div>
+        <div className="sm:ml-auto">
+          <ColumnsToggle
+            columns={cols.columns}
+            isVisible={cols.isVisible}
+            onToggle={cols.toggle}
+          />
+        </div>
+      </div>
 
       {isPending ? (
         <TableSkeleton />
@@ -170,26 +197,36 @@ export function ConversationsTable() {
                   <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
                     Company
                   </th>
-                  <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
-                    Recruiter
-                  </th>
-                  <th scope="col" className={cn(TABLE_TH, "w-[24%]")}>
-                    Job
-                  </th>
-                  <th scope="col" className={cn(TABLE_TH, "text-center")}>
-                    Messages
-                  </th>
-                  <FilterableHead label="Status">
-                    <ColumnFilter
-                      label="Status"
-                      options={STATUS_FILTER_OPTIONS}
-                      value={status === "" ? null : status}
-                      onChange={(next) => changeStatus(next ?? "")}
-                    />
-                  </FilterableHead>
-                  <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                    Last activity
-                  </th>
+                  {cols.isVisible("recruiter") && (
+                    <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
+                      Recruiter
+                    </th>
+                  )}
+                  {cols.isVisible("job") && (
+                    <th scope="col" className={cn(TABLE_TH, "w-[24%]")}>
+                      Job
+                    </th>
+                  )}
+                  {cols.isVisible("messages") && (
+                    <th scope="col" className={cn(TABLE_TH, "text-center")}>
+                      Messages
+                    </th>
+                  )}
+                  {cols.isVisible("status") && (
+                    <FilterableHead label="Status">
+                      <ColumnFilter
+                        label="Status"
+                        options={STATUS_FILTER_OPTIONS}
+                        value={status === "" ? null : status}
+                        onChange={(next) => changeStatus(next ?? "")}
+                      />
+                    </FilterableHead>
+                  )}
+                  {cols.isVisible("lastActivity") && (
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Last activity
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className={TABLE_BODY}>
@@ -206,35 +243,45 @@ export function ConversationsTable() {
                         {c.companyName}
                       </Link>
                     </td>
-                    <td className={cn(TABLE_TD, "text-ink-body")}>
-                      <span className="block max-w-[200px] truncate">
-                        {c.recruiterName}
-                      </span>
-                    </td>
-                    <td className={cn(TABLE_TD, "text-ink-muted")}>
-                      <span className="block max-w-[220px] truncate">
-                        {c.jobTitle}
-                      </span>
-                    </td>
-                    <td
-                      className={cn(
-                        TABLE_TD,
-                        "text-center tabular-nums text-ink",
-                      )}
-                    >
-                      {c.messageCount}
-                    </td>
-                    <td className={TABLE_TD}>
-                      <ConversationStatus conversation={c} />
-                    </td>
-                    <td
-                      className={cn(
-                        TABLE_TD,
-                        "whitespace-nowrap text-right tabular-nums text-ink-muted",
-                      )}
-                    >
-                      {formatDateTime(c.lastActivityAt)}
-                    </td>
+                    {cols.isVisible("recruiter") && (
+                      <td className={cn(TABLE_TD, "text-ink-body")}>
+                        <span className="block max-w-[200px] truncate">
+                          {c.recruiterName}
+                        </span>
+                      </td>
+                    )}
+                    {cols.isVisible("job") && (
+                      <td className={cn(TABLE_TD, "text-ink-muted")}>
+                        <span className="block max-w-[220px] truncate">
+                          {c.jobTitle}
+                        </span>
+                      </td>
+                    )}
+                    {cols.isVisible("messages") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "text-center tabular-nums text-ink",
+                        )}
+                      >
+                        {c.messageCount}
+                      </td>
+                    )}
+                    {cols.isVisible("status") && (
+                      <td className={TABLE_TD}>
+                        <ConversationStatus conversation={c} />
+                      </td>
+                    )}
+                    {cols.isVisible("lastActivity") && (
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                        )}
+                      >
+                        {formatDateTime(c.lastActivityAt)}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

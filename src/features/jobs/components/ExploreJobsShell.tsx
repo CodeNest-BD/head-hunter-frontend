@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { BrandLoader } from "@/shared/ui-components/feedback/BrandLoader";
 import { PublicShell } from "@/components/landing/PublicShell";
 import { Button } from "@/shared/ui-components/controls/button";
 
@@ -51,11 +51,9 @@ export function ExploreJobsShell() {
   if (status === "booting") {
     return (
       /* Guest chrome or account chrome is not known until the session
-         settles, so there is no shape to trace — spinner, not skeleton. */
-      <div className="flex min-h-screen items-center justify-center gap-2 bg-canvas text-sub text-ink-muted">
-        <Loader2 className="size-[15px] animate-spin text-ink-faint" />
-        Loading…
-      </div>
+         settles, so there is no shape to trace — the brand lockup, not a
+         skeleton. Same wait as the app boot, so the same loader. */
+      <BrandLoader className="min-h-screen" />
     );
   }
 

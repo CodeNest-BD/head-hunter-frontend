@@ -29,6 +29,7 @@ import {
   useSubmitPayoutIdentity,
 } from "../hooks/useBilling";
 import { type PayoutAccount } from "../schemas";
+import { DIALOG_OVERLAY } from "@/shared/ui-components/feedback/dialogStyles";
 
 function submitErrorMessage(error: unknown): string {
   if (isApiError(error)) return allMessages(error);
@@ -485,7 +486,7 @@ export function AddBankAccountDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Trigger asChild>{children}</Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-sm" />
+        <Dialog.Overlay className={DIALOG_OVERLAY} />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[92vh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-line bg-surface shadow-pop focus:outline-none">
           <div className="flex items-center justify-between gap-2.5 border-b border-line px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
