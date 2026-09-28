@@ -6,8 +6,6 @@ import {
   AlertCircle,
   ArrowRight,
   Briefcase,
-  Check,
-  ListFilter,
   Search,
   Users,
 } from "lucide-react";
@@ -17,6 +15,10 @@ import {
   CANDIDATE_STATUS_LABELS,
 } from "@/features/candidates/schemas";
 import { CandidateQuickView } from "@/features/candidates/components/CandidateQuickView";
+import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
@@ -30,11 +32,6 @@ import { Input } from "@/shared/ui-components/controls/input";
 import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/shared/ui-components/controls/popover";
 import {
   Select,
   SelectContent,
@@ -109,127 +106,6 @@ function distinct(
  * multi-select value list. Empty selection means "all". The icon reads as
  * active once anything is picked, so a narrowed column is never silent.
  */
-function ColumnFilter({
-  label,
-  options,
-  selected,
-  onChange,
-}: {
-  label: string;
-  options: Option[];
-  selected: Set<string>;
-  onChange: (next: Set<string>) => void;
-}) {
-  const [search, setSearch] = useState("");
-  const active = selected.size > 0;
-  const shown = options.filter((option) =>
-    option.label.toLowerCase().includes(search.trim().toLowerCase()),
-  );
-
-  const toggle = (value: string): void => {
-    const next = new Set(selected);
-    if (next.has(value)) next.delete(value);
-    else next.add(value);
-    onChange(next);
-  };
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Filter by ${label}`}
-          className={cn(
-            "inline-flex size-5 items-center justify-center rounded-xs transition-colors",
-            active
-              ? "bg-tint text-blue"
-              : "text-ink-faint hover:bg-surface-sunken hover:text-ink",
-          )}
-        >
-          <ListFilter className="size-3.5" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-60 p-0">
-        <div className="border-b border-line p-2">
-          <div className="relative">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
-            />
-            <input
-              autoFocus
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={`Search ${label.toLowerCase()}…`}
-              className="h-7.5 w-full rounded-sm border border-line-strong bg-surface pl-7 pr-2 text-meta text-ink outline-none transition-colors placeholder:text-ink-faint focus-visible:border-blue focus-visible:shadow-focus"
-            />
-          </div>
-        </div>
-        <div className="max-h-56 overflow-y-auto p-1">
-          {shown.length === 0 ? (
-            <p className="px-2 py-3 text-center text-meta text-ink-muted">
-              No matches
-            </p>
-          ) : (
-            shown.map((option) => {
-              const checked = selected.has(option.value);
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => toggle(option.value)}
-                  className="flex w-full items-center gap-2 rounded-xs px-2 py-1.5 text-left text-meta text-ink-body transition-colors hover:bg-surface-sub"
-                >
-                  <span
-                    className={cn(
-                      "flex size-4 shrink-0 items-center justify-center rounded-[4px] border",
-                      checked
-                        ? "border-blue bg-blue text-white"
-                        : "border-line-strong",
-                    )}
-                  >
-                    {checked && <Check className="size-3" strokeWidth={3} />}
-                  </span>
-                  <span className="truncate">{option.label}</span>
-                </button>
-              );
-            })
-          )}
-        </div>
-        {active && (
-          <div className="border-t border-line p-1">
-            <button
-              type="button"
-              onClick={() => onChange(new Set())}
-              className="w-full rounded-xs px-2 py-1.5 text-left text-meta font-[550] text-blue-ink transition-colors hover:bg-surface-sub"
-            >
-              Clear ({selected.size})
-            </button>
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-/** A column header cell with its label and an inline filter control. */
-function FilterableHead({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <th className={TABLE_TH}>
-      <span className="inline-flex items-center gap-1.5">
-        {label}
-        {children}
-      </span>
-    </th>
-  );
-}
-
 function JobLink({ jobId, title }: { jobId: string; title: string }) {
   return (
     <Link
@@ -458,34 +334,38 @@ export function SubmissionsTable({
                 <tr>
                   <FilterableHead label="Candidate">
                     <ColumnFilter
+                      multiple
                       label="Candidate"
                       options={candidateOptions}
-                      selected={candidateSel}
+                      value={candidateSel}
                       onChange={setCandidateSel}
                     />
                   </FilterableHead>
                   <FilterableHead label="Company">
                     <ColumnFilter
+                      multiple
                       label="Company"
                       options={companyOptions}
-                      selected={companySel}
+                      value={companySel}
                       onChange={setCompanySel}
                     />
                   </FilterableHead>
                   <FilterableHead label="Job title">
                     <ColumnFilter
+                      multiple
                       label="Job"
                       options={jobOptions}
-                      selected={jobSel}
+                      value={jobSel}
                       onChange={setJobSel}
                     />
                   </FilterableHead>
                   <th className={TABLE_TH}>Submitted</th>
                   <FilterableHead label="Status">
                     <ColumnFilter
+                      multiple
                       label="Status"
                       options={statusOptions}
-                      selected={statusSel}
+                      value={statusSel}
                       onChange={setStatusSel}
                     />
                   </FilterableHead>

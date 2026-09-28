@@ -28,6 +28,14 @@ interface ListToolbarProps {
   query: string;
   onQueryChange: (value: string) => void;
   placeholder: string;
+  /**
+   * The same filters the column headers carry, for phones only.
+   *
+   * Below `sm` the table is replaced by a card list, so there is no header row
+   * to hang a filter off — without these, a filter would simply be unreachable
+   * on a phone. They share the caller's state with the column filters, so the
+   * two presentations can never disagree.
+   */
   filter?: FilterConfig;
   /** A second dropdown (e.g. a category beside a status filter). */
   extraFilter?: FilterConfig;
@@ -38,16 +46,15 @@ interface ListToolbarProps {
 const ALL = "all";
 
 /**
- * The reference's `.toolbar`: a 36px `.search` box capped at 360px, then the
- * filter dropdowns, sitting directly on the canvas above a table. Shared by
- * every table (admin / recruiter / company) so search + filter look and behave
- * identically across the platform.
+ * The reference's `.toolbar`: a 36px `.search` box capped at 360px, sitting
+ * directly on the canvas above a table. Shared by every table (admin /
+ * recruiter / company) so search looks and behaves identically everywhere.
  *
- * On a phone the dropdowns would stack into three full-width rows above the
- * list and outweigh it, so they collapse behind a Filters toggle and the
- * search box keeps the row to itself. The toggle carries a count of the
- * filters currently applied — a collapsed filter that is silently narrowing
- * the list is worse than no filter at all.
+ * On desktop, filtering lives in the column headers. A phone has no header row
+ * to put it in — the table becomes a card list — so the same filters appear
+ * here instead, collapsed behind a Filters toggle so they do not outweigh the
+ * list. The toggle carries a count of the filters currently applied: a
+ * collapsed filter silently narrowing the list is worse than no filter at all.
  */
 export function ListToolbar({
   query,
@@ -61,7 +68,8 @@ export function ListToolbar({
     (config): config is FilterConfig => config !== undefined,
   );
   const appliedCount = filters.filter((config) => config.value !== "").length;
-  const hiddenOnMobile = filtersOpen ? undefined : "hidden sm:flex";
+  // Mobile-only: the column headers own filtering from `sm` up.
+  const mobileOnly = filtersOpen ? "flex sm:hidden" : "hidden";
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
@@ -103,9 +111,9 @@ export function ListToolbar({
           </button>
         )}
       </div>
-      {filter && <FilterSelect config={filter} className={hiddenOnMobile} />}
+      {filter && <FilterSelect config={filter} className={mobileOnly} />}
       {extraFilter && (
-        <FilterSelect config={extraFilter} className={hiddenOnMobile} />
+        <FilterSelect config={extraFilter} className={mobileOnly} />
       )}
     </div>
   );
