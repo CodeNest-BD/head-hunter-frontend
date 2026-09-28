@@ -40,7 +40,6 @@ import {
   TABLE_CELL_SUB,
   TABLE_EL,
   TABLE_HEAD,
-  TABLE_HEAD_ROW,
   TABLE_ROW,
   TABLE_SCROLL,
   TABLE_TD,
@@ -275,7 +274,7 @@ export function CompaniesTable() {
           <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
             <table className={TABLE_EL}>
               <thead className={TABLE_HEAD}>
-                <tr className={TABLE_HEAD_ROW}>
+                <tr>
                   <th scope="col" className={cn(TABLE_TH, "w-[26%]")}>
                     Company
                   </th>

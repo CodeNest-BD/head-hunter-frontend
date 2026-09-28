@@ -51,7 +51,6 @@ import {
   TABLE_CELL_SUB,
   TABLE_EL,
   TABLE_HEAD,
-  TABLE_HEAD_ROW,
   TABLE_ROW,
   TABLE_ROW_UNREAD,
   TABLE_SCROLL,
@@ -481,7 +480,7 @@ export function CompanySubmissionsQueue() {
           <div className={cn(TABLE_SCROLL, "hidden overflow-x-auto sm:block")}>
             <table className={TABLE_EL}>
               <thead className={TABLE_HEAD}>
-                <tr className={TABLE_HEAD_ROW}>
+                <tr>
                   <th className={TABLE_TH}>Candidate</th>
                   <FilterableHead label="Job">
                     <HeaderFilter

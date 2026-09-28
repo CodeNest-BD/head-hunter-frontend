@@ -16,7 +16,6 @@ import {
   TABLE_CARD,
   TABLE_EL,
   TABLE_HEAD,
-  TABLE_HEAD_ROW,
   TABLE_ROW,
   TABLE_ROW_UNREAD,
   TABLE_SCROLL,
@@ -93,7 +92,7 @@ export function MyDisputesList() {
       <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
         <table className={TABLE_EL}>
           <thead className={TABLE_HEAD}>
-            <tr className={TABLE_HEAD_ROW}>
+            <tr>
               <th scope="col" className={TABLE_TH}>
                 Role
               </th>
