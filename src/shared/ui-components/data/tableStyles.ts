@@ -58,9 +58,14 @@ export const TABLE_ROW = "transition-colors hover:bg-surface-sub";
 /** An unread row: a cobalt wash with a matching hover. */
 export const TABLE_ROW_UNREAD = "bg-unread bg-unread-hover transition-colors";
 export const TABLE_TD = "h-11 border-b border-line px-3.5 py-1.5 align-middle";
-/** `.cell-2l` — a two-line cell (title over its timestamp) needs more room. */
+/**
+ * `.cell-2l` — a two-line cell (title over its timestamp). It keeps the row's
+ * own 6px padding and only tightens the leading: in the reference `.table td`
+ * outranks `.cell-2l`, so the padding it declares never applies and a stacked
+ * row is the same height there as here.
+ */
 export const TABLE_TD_STACKED =
-  "border-b border-line px-3.5 py-2 align-middle leading-[1.3]";
+  "border-b border-line px-3.5 py-1.5 align-middle leading-[1.3]";
 /** `.cell-main` / `.cell-sub` — the primary value and its quiet second line. */
 export const TABLE_CELL_MAIN = "font-semibold text-ink";
 export const TABLE_CELL_SUB = "mt-px text-[11.5px] text-ink-faint";

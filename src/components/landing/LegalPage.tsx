@@ -159,7 +159,7 @@ export function LegalPage({
                   id={section.id}
                   className="scroll-mt-20 border-t border-line pt-6"
                 >
-                  <h2 className="flex items-baseline gap-2 text-section font-bold text-ink">
+                  <h2 className="flex items-baseline gap-2 text-[16px] font-bold text-ink">
                     <span className="tabular-nums text-blue">
                       {section.number}.
                     </span>
