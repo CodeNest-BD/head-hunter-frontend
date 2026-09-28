@@ -124,17 +124,17 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
               type="button"
               variant="ghost"
               size="icon"
-              className="size-7 [&_svg]:size-[15px]"
+              className="size-7"
               aria-label="Edit candidate"
               onClick={() => setMode("edit")}
             >
-              <Pencil aria-hidden="true" />
+              <Pencil aria-hidden="true" className="size-[15px]" />
             </Button>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="size-7 hover:bg-bad-bg hover:text-bad [&_svg]:size-[15px]"
+              className="size-7 hover:bg-bad-bg hover:text-bad"
               aria-label="Remove candidate"
               aria-pressed={mode === "confirm-remove"}
               onClick={() =>
@@ -143,7 +143,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
                 )
               }
             >
-              <Trash2 aria-hidden="true" />
+              <Trash2 aria-hidden="true" className="size-[15px]" />
             </Button>
           </>
         )

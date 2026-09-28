@@ -27,7 +27,7 @@ const STATUS_TONES: Record<string, PillTone> = {
   expired: "bad",
   paused: "warn",
   filled: "info",
-  closed: "neutral",
+  closed: "bad",
 };
 
 function FormSkeleton() {

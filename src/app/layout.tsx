@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body
-        className={`${inter.className} bg-background text-foreground antialiased`}
+        className={`${inter.className} bg-canvas text-ink-body antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

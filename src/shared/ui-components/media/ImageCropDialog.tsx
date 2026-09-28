@@ -54,7 +54,7 @@ function ControlSlider({
       </Slider.Track>
       <Slider.Thumb
         aria-label={ariaLabel}
-        className="block h-4 w-4 rounded-full border border-primary bg-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="block size-4 rounded-full border border-blue bg-surface shadow-e1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     </Slider.Root>
   );

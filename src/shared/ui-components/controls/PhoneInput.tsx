@@ -96,7 +96,7 @@ export function PhoneInput({
             const code = selected ? toCountryCode(selected.value) : country;
             return (
               <span className="flex items-center gap-1.5">
-                <span className="text-base leading-none">
+                <span className="text-[15px] leading-none">
                   {countryFlag(code)}
                 </span>
                 <span className="text-ink-faint">{callingCode(code)}</span>
@@ -115,7 +115,7 @@ export function PhoneInput({
         onChange={(event) => onNationalChange(event.target.value)}
         onBlur={onBlur}
         placeholder="Phone number"
-        className={cn("flex-1", invalid && "border-destructive", className)}
+        className={cn("flex-1", invalid && "border-bad", className)}
       />
     </div>
   );

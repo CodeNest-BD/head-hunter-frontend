@@ -85,8 +85,8 @@ export function RichTextEditor({
         id: id ?? "",
         class:
           "prose prose-sm max-w-none min-h-[180px] px-3.5 py-3 focus:outline-none " +
-          "prose-headings:font-heading prose-headings:text-foreground prose-p:text-foreground " +
-          "prose-a:text-primary prose-li:text-foreground",
+          "prose-headings:font-heading prose-headings:text-ink prose-p:text-ink-body " +
+          "prose-a:text-blue-ink prose-li:text-ink-body",
       },
     },
     onUpdate: ({ editor: current }) => {
@@ -241,8 +241,8 @@ function ToolbarButton({
       onClick={onClick}
       className={cn(
         "inline-flex size-7 items-center justify-center rounded-xs text-ink-muted transition-colors",
-        "hover:bg-accent hover:text-primary disabled:pointer-events-none disabled:opacity-40",
-        isActive && "bg-accent text-primary",
+        "hover:bg-surface-sub hover:text-ink disabled:pointer-events-none disabled:opacity-40",
+        isActive && "bg-tint text-blue-ink",
       )}
     >
       <Icon className="h-4 w-4" />
