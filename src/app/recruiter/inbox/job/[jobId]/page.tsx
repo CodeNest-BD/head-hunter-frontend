@@ -7,8 +7,14 @@ import { Plus } from "lucide-react";
 import { RequireApprovedRecruiter, RequireRole } from "@/features/auth";
 import { useMyCandidatesForJob } from "@/features/candidates";
 import { SubmissionsTable } from "@/features/inbox";
+import { useJob } from "@/features/jobs";
+import type { Job } from "@/features/jobs/schemas";
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+import { inboxJobPath, submitCandidatePath } from "@/shared/utils/entityPaths";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
+import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
+import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 /** The server's cap: five candidates per recruiter per job. */
@@ -18,8 +24,8 @@ const MAX_CANDIDATES = 5;
  * Level 2 of the recruiter inbox: your candidates on one job, each with its own
  * conversation. Sending another is its own page — see ./submit.
  */
-function JobCandidates({ jobId }: { jobId: string }) {
-  const mine = useMyCandidatesForJob(jobId);
+function JobCandidates({ job }: { job: Job }) {
+  const mine = useMyCandidatesForJob(job.id);
   const count = mine.data?.length ?? 0;
   const atCap = count >= MAX_CANDIDATES;
   // With nobody on this job yet the only thing to do is add someone, so the
@@ -36,7 +42,7 @@ function JobCandidates({ jobId }: { jobId: string }) {
     </Button>
   ) : (
     <Button asChild type="button" disabled={mine.isPending}>
-      <Link href={`/recruiter/inbox/job/${jobId}/submit`}>
+      <Link href={submitCandidatePath(job)}>
         <Plus aria-hidden="true" />
         {isEmpty ? "Submit a candidate" : "Submit another candidate"}
       </Link>
@@ -55,11 +61,31 @@ function JobCandidates({ jobId }: { jobId: string }) {
       </div>
 
       <SubmissionsTable
-        jobId={jobId}
+        jobId={job.id}
         emptyAction={isEmpty ? submitAction : undefined}
       />
     </div>
   );
+}
+
+/**
+ * The recruiter inbox's conversation list filters by the job's UUID, so the
+ * URL's ref is resolved to the job first.
+ */
+function JobCandidatesByRef({ jobRef }: { jobRef: string }) {
+  const { data: job, isPending, isError, refetch } = useJob(jobRef);
+  useCanonicalPath(job && inboxJobPath("recruiter", job));
+
+  if (isPending) return <TableSkeleton />;
+  if (isError) {
+    return (
+      <ErrorRetryCallout
+        message="Could not load this job."
+        onRetry={() => void refetch()}
+      />
+    );
+  }
+  return <JobCandidates job={job} />;
 }
 
 export default function RecruiterInboxJobPage() {
@@ -69,7 +95,7 @@ export default function RecruiterInboxJobPage() {
     <RequireRole role="recruiter">
       <DashboardLayout wide>
         <RequireApprovedRecruiter>
-          <JobCandidates jobId={params.jobId} />
+          <JobCandidatesByRef jobRef={params.jobId} />
         </RequireApprovedRecruiter>
       </DashboardLayout>
     </RequireRole>

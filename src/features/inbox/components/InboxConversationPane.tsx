@@ -6,6 +6,7 @@ import { Briefcase, Search } from "lucide-react";
 
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { inboxThreadPath } from "@/shared/utils/entityPaths";
 import { formatDate } from "@/shared/utils/formatDate";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
@@ -30,7 +31,8 @@ export function InboxConversationPane({
   selectedId,
 }: {
   side: InboxSide;
-  selectedId: string;
+  /** The open thread's candidate UUID; absent while it is still loading. */
+  selectedId?: string;
 }) {
   const [search, setSearch] = useState("");
   const q = useDebouncedValue(search.trim(), 300);
@@ -97,7 +99,10 @@ export function InboxConversationPane({
               className="border-b border-line last:border-b-0"
             >
               <Link
-                href={`/${side}/inbox/${row.candidateId}`}
+                href={inboxThreadPath(side, {
+                  id: row.candidateId,
+                  serialNumber: row.candidateSerialNumber,
+                })}
                 className="block"
               >
                 <ListRow

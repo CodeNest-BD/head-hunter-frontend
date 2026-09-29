@@ -12,6 +12,7 @@ import { Card } from "@/shared/ui-components/controls/card";
 import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { ListRow } from "@/shared/ui-components/list/ListRow";
+import { inboxJobPath } from "@/shared/utils/entityPaths";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { InboxSide } from "../api/inbox";
 import { useInboxJobs } from "../hooks/useInbox";
@@ -25,7 +26,6 @@ const COPY: Record<
     subtitle: string;
     emptyHint: { href: string; label: string; before: string; after: string };
     cta: string;
-    hrefFor: (jobId: string) => string;
     freshLabel: string;
   }
 > = {
@@ -38,7 +38,6 @@ const COPY: Record<
       after: ".",
     },
     cta: "Review candidates",
-    hrefFor: (jobId) => `/company/inbox/job/${jobId}`,
     freshLabel: "new",
   },
   recruiter: {
@@ -51,7 +50,6 @@ const COPY: Record<
       after: " to start a conversation.",
     },
     cta: "View candidates",
-    hrefFor: (jobId) => `/recruiter/inbox/job/${jobId}`,
     freshLabel: "awaiting review",
   },
 };
@@ -174,7 +172,13 @@ export function InboxJobsTable({ side }: { side: InboxSide }) {
                     key={row.jobId}
                     className="border-b border-line last:border-b-0"
                   >
-                    <Link href={copy.hrefFor(row.jobId)} className="block">
+                    <Link
+                      href={inboxJobPath(side, {
+                        id: row.jobId,
+                        serialNumber: row.jobSerialNumber,
+                      })}
+                      className="block"
+                    >
                       <ListRow
                         unread={fresh}
                         interactive

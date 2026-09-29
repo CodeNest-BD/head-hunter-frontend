@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertCircle, ShieldAlert } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { disputePath } from "@/shared/utils/entityPaths";
 import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
@@ -285,7 +286,7 @@ export function MyDisputesList() {
                 )}
                 <td className={cn(TABLE_TD, "text-right")}>
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/disputes/${d.id}`}>View</Link>
+                    <Link href={disputePath(d)}>View</Link>
                   </Button>
                 </td>
               </tr>
@@ -306,7 +307,7 @@ export function MyDisputesList() {
                 <DisputeStatusBadge status={d.status} />
               </span>
             }
-            href={`/disputes/${d.id}`}
+            href={disputePath(d)}
             className={cn(d.hasUpdate && "bg-unread shadow-rail")}
             fields={[
               { label: "Subject", value: DISPUTE_SUBJECT_LABELS[d.subject] },

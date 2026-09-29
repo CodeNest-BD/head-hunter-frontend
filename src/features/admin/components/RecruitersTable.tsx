@@ -51,7 +51,14 @@ import {
   TABLE_TH,
   TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
+import { adminRecruiterPath } from "@/shared/utils/entityPaths";
 import { formatMinor } from "@/shared/utils/money";
+
+const recruiterDetailHref = (recruiter: RecruiterListItem): string =>
+  adminRecruiterPath({
+    id: recruiter.userId,
+    serialNumber: recruiter.recruiterSerialNumber,
+  });
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -141,7 +148,7 @@ function RecruiterCard({ recruiter }: { recruiter: RecruiterListItem }) {
     <MobileRecordCard
       title={recruiterName(recruiter)}
       subtitle={recruiter.email}
-      href={`/admin/recruiters/${recruiter.userId}`}
+      href={recruiterDetailHref(recruiter)}
       trailing={<RecruiterStatus recruiter={recruiter} />}
       fields={fields}
       actions={
@@ -149,7 +156,7 @@ function RecruiterCard({ recruiter }: { recruiter: RecruiterListItem }) {
           userId={recruiter.userId}
           status={recruiter.status}
           subjectName={recruiterName(recruiter)}
-          viewHref={`/admin/recruiters/${recruiter.userId}`}
+          viewHref={recruiterDetailHref(recruiter)}
           kind="recruiter"
         />
       }
@@ -350,7 +357,7 @@ export function RecruitersTable() {
                         <TableAvatar name={recruiterName(r)} />
                         <div className="min-w-0">
                           <Link
-                            href={`/admin/recruiters/${r.userId}`}
+                            href={recruiterDetailHref(r)}
                             className={cn(
                               TABLE_CELL_MAIN,
                               "transition-colors hover:text-blue focus-visible:underline focus-visible:outline-none",
@@ -428,7 +435,7 @@ export function RecruitersTable() {
                         userId={r.userId}
                         status={r.status}
                         subjectName={recruiterName(r)}
-                        viewHref={`/admin/recruiters/${r.userId}`}
+                        viewHref={recruiterDetailHref(r)}
                         kind="recruiter"
                       />
                     </td>

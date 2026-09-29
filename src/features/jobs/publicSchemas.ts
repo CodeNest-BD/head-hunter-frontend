@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { serialNumberSchema } from "@/shared/utils/entityPaths";
 import {
   interviewStageSchema,
   offerTimelineSchema,
@@ -16,6 +17,7 @@ import {
  */
 export const publicJobCardSchema = z.object({
   id: z.string(),
+  serialNumber: serialNumberSchema.optional(),
   title: z.string().catch(""),
   companyProfileId: z.string().catch(""),
   companyName: z.string().catch(""),

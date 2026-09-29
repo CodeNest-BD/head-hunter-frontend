@@ -11,15 +11,18 @@ import { ConfirmActionDialog } from "@/shared/ui-components/controls/ConfirmActi
 import { BackLink, PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+import { adminJobEditPath } from "@/shared/utils/entityPaths";
 
 /**
  * Admin job editor. An admin can read any job through the authed detail
  * endpoint (admin visibility returns everything), so this reuses the same
  * JobForm the company uses and saves through the admin job endpoint.
  */
-function EditContent({ jobId }: { jobId: string }) {
+function EditContent({ jobRef }: { jobRef: string }) {
   const router = useRouter();
-  const { data: job, isPending, isError, refetch } = useJob(jobId);
+  const { data: job, isPending, isError, refetch } = useJob(jobRef);
+  useCanonicalPath(job && adminJobEditPath(job));
   const update = useUpdateAdminJob();
   const repost = useRepostAdminJob();
   const [confirmRepost, setConfirmRepost] = useState(false);
@@ -82,7 +85,7 @@ function EditContent({ jobId }: { jobId: string }) {
         pendingLabel="Re-posting…"
         isPending={repost.isPending}
         onConfirm={() =>
-          repost.mutate(jobId, { onSuccess: () => setConfirmRepost(false) })
+          repost.mutate(job.id, { onSuccess: () => setConfirmRepost(false) })
         }
       />
       <JobForm
@@ -97,7 +100,7 @@ function EditContent({ jobId }: { jobId: string }) {
           update.mutate(
             // `JobWriteInput` is an interface, so it carries no implicit index
             // signature for the mutation's `Record<string, unknown>` payload.
-            { jobId, input: { ...input } },
+            { jobId: job.id, input: { ...input } },
             { onSuccess: () => router.push("/admin/jobs") },
           )
         }
@@ -126,7 +129,7 @@ export default function AdminEditJobPage() {
               subtitle="Admin edit — changes apply to the company's live listing."
             />
           </div>
-          <EditContent jobId={params.jobId} />
+          <EditContent jobRef={params.jobId} />
         </div>
       </DashboardLayout>
     </RequireRole>

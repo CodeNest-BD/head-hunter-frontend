@@ -1,4 +1,15 @@
 import type { Role } from "@/features/auth";
+import {
+  adminCompanyPath,
+  adminDisputePath,
+  adminRecruiterPath,
+  companyJobPath,
+  disputePath,
+  inboxThreadPath,
+  jobPath,
+  serialNumberSchema,
+  type EntityRef,
+} from "@/shared/utils/entityPaths";
 import type { Notification } from "../schemas";
 
 /** Types that resolve to the candidate thread both parties share. */
@@ -31,9 +42,18 @@ const PROFILE_TYPES = new Set([
 ]);
 
 /** Admin approval queue — the account's admin detail page. */
-const ADMIN_APPROVAL_ROUTES: Record<string, string> = {
-  recruiter_awaiting_approval: "/admin/recruiters",
-  company_awaiting_approval: "/admin/companies",
+const ADMIN_APPROVAL_ROUTES: Record<
+  string,
+  { queue: string; detail: (subject: EntityRef) => string }
+> = {
+  recruiter_awaiting_approval: {
+    queue: "/admin/recruiters",
+    detail: adminRecruiterPath,
+  },
+  company_awaiting_approval: {
+    queue: "/admin/companies",
+    detail: adminCompanyPath,
+  },
 };
 
 /** Dispute events route to the ticket — the admin's or the participant's view. */
@@ -52,6 +72,22 @@ const readId = (
 };
 
 /**
+ * The UUID under `<entity>Id` plus the serial under `<entity>SerialNumber`.
+ * Rows written before serials existed carry only the UUID; their link still
+ * loads and the page swaps it for the serial URL.
+ */
+const readRef = (
+  data: Record<string, unknown> | null,
+  idKey: string,
+  serialKey: string,
+): EntityRef | null => {
+  const id = readId(data, idKey);
+  if (!id) return null;
+  const serial = serialNumberSchema.safeParse(data?.[serialKey]);
+  return { id, serialNumber: serial.success ? serial.data : undefined };
+};
+
+/**
  * Where a notification takes you, or null when it takes you nowhere.
  *
  * Returning null rather than a best guess is deliberate: routing to a page the
@@ -66,19 +102,19 @@ export function notificationHref(
   const { type, data } = notification;
 
   if (CANDIDATE_TYPES.has(type)) {
-    const candidateId = readId(data, "candidateId");
-    if (!candidateId) return null;
+    const candidate = readRef(data, "candidateId", "candidateSerialNumber");
+    if (!candidate) return null;
     // Explicit per-role branches rather than a binary ternary: an admin (or
     // any future non-company, non-recruiter role) must fall through to null
     // rather than silently landing on the recruiter's route.
-    if (role === "company") return `/company/inbox/${candidateId}`;
-    if (role === "recruiter") return `/recruiter/inbox/${candidateId}`;
+    if (role === "company") return inboxThreadPath("company", candidate);
+    if (role === "recruiter") return inboxThreadPath("recruiter", candidate);
     return null;
   }
 
   if (type === "followed_company_posted_job") {
-    const jobId = readId(data, "jobId");
-    return role === "recruiter" && jobId ? `/jobs/${jobId}` : null;
+    const job = readRef(data, "jobId", "jobSerialNumber");
+    return role === "recruiter" && job ? jobPath(job) : null;
   }
 
   if (type === "subscription_past_due") {
@@ -98,26 +134,26 @@ export function notificationHref(
   }
 
   if (type === "job_expired") {
-    const jobId = readId(data, "jobId");
-    return role === "company" && jobId ? `/company/jobs/${jobId}` : null;
+    const job = readRef(data, "jobId", "jobSerialNumber");
+    return role === "company" && job ? companyJobPath(job) : null;
   }
 
   const approvalRoute = ADMIN_APPROVAL_ROUTES[type];
   if (approvalRoute) {
     if (role !== "admin") return null;
     // Older rows predate `subjectUserId`; the queue still gets them there.
-    const userId = readId(data, "subjectUserId");
-    return userId ? `${approvalRoute}/${userId}` : approvalRoute;
+    const subject = readRef(data, "subjectUserId", "subjectSerialNumber");
+    return subject ? approvalRoute.detail(subject) : approvalRoute.queue;
   }
 
   if (DISPUTE_TYPES.has(type)) {
-    const disputeId = readId(data, "disputeId");
+    const dispute = readRef(data, "disputeId", "disputeSerialNumber");
     if (role === "admin") {
-      return disputeId ? `/admin/disputes/${disputeId}` : "/admin/disputes";
+      return dispute ? adminDisputePath(dispute) : "/admin/disputes";
     }
     // Company and recruiter share the participant view.
     if (role === "company" || role === "recruiter") {
-      return disputeId ? `/disputes/${disputeId}` : "/disputes";
+      return dispute ? disputePath(dispute) : "/disputes";
     }
     return null;
   }

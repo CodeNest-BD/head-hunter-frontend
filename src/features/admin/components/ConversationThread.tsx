@@ -11,6 +11,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+import { adminConversationPath } from "@/shared/utils/entityPaths";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -81,7 +83,7 @@ function orderedEvents(pages: ConversationThreadPage[]): ConversationEvent[] {
   return pages.flatMap((page) => page.events.data).reverse();
 }
 
-export function ConversationThread({ submissionId }: { submissionId: string }) {
+export function ConversationThread({ candidateRef }: { candidateRef: string }) {
   const {
     data,
     isPending,
@@ -90,7 +92,9 @@ export function ConversationThread({ submissionId }: { submissionId: string }) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useAdminConversation(submissionId);
+  } = useAdminConversation(candidateRef);
+  const candidate = data?.pages[0]?.candidate;
+  useCanonicalPath(candidate && adminConversationPath(candidate));
 
   if (isPending) return <DetailSkeleton />;
   if (isError) {

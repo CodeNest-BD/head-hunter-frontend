@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { serialNumberSchema } from "@/shared/utils/entityPaths";
 import { MAX_MONEY_MAJOR, MAX_MONEY_MAJOR_LABEL } from "@/shared/utils/money";
 
 export const JOB_STATUSES = [
@@ -412,6 +413,7 @@ export type RoleCategory = z.infer<typeof roleCategorySchema>;
 
 export const jobSchema = z.object({
   id: z.string(),
+  serialNumber: serialNumberSchema.optional(),
   title: z.string(),
   description: z.string().nullable(),
   // `.catch(null)` so a row still holding the retired `contract` value reads as

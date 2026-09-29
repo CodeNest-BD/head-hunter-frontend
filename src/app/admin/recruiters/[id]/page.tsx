@@ -19,7 +19,7 @@ export default function AdminRecruiterDetailPage({
           { label: "Profile" },
         ]}
       >
-        <RecruiterDetail userId={params.id} />
+        <RecruiterDetail recruiterRef={params.id} />
       </DashboardLayout>
     </RequireRole>
   );

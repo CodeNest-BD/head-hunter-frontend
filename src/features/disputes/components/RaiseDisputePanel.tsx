@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, ShieldAlert } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+import { disputePath } from "@/shared/utils/entityPaths";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
@@ -123,7 +124,7 @@ export function RaiseDisputePanel() {
                 placementId={selected.placementId}
                 party={role}
                 onCancel={() => setPlacementId("")}
-                onRaised={(id) => router.push(`/disputes/${id}`)}
+                onRaised={(dispute) => router.push(disputePath(dispute))}
               />
             ) : null}
           </div>

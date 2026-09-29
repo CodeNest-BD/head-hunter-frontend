@@ -4,6 +4,7 @@ import { z } from "zod";
 // barrel pulls in components and hooks, and this file only needs the
 // dependency-free candidate shape (candidates/schemas.ts imports nothing but
 // zod and the money helpers).
+import { serialNumberSchema } from "@/shared/utils/entityPaths";
 import { titleCase } from "@/shared/utils/titleCase";
 
 import { candidateSchema } from "@/features/candidates/schemas";
@@ -132,6 +133,7 @@ export const conversationThreadHeaderSchema = z.object({
   }),
   job: z.object({
     id: z.string(),
+    serialNumber: serialNumberSchema.optional(),
     title: z.string(),
     recruiterFeeMinor: z.number(),
   }),

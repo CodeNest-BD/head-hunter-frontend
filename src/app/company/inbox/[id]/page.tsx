@@ -8,12 +8,19 @@ import {
   CandidateCard,
   CandidateRailSkeleton,
   useCandidate,
+  type Candidate,
 } from "@/features/candidates";
-import { Thread, useMessageUnreadCounts } from "@/features/conversations";
+import {
+  Thread,
+  ThreadSkeleton,
+  useMessageUnreadCounts,
+} from "@/features/conversations";
 import { InboxConversationPane, InboxMessageWorkspace } from "@/features/inbox";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+import { inboxThreadPath } from "@/shared/utils/entityPaths";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 import { Button } from "@/shared/ui-components/controls/button";
 
@@ -56,30 +63,20 @@ function ErrorCallout({
  * and every badge degrades to "none yet", rather than blocking the column the
  * way a failed candidate fetch does.
  */
-function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
-  const candidateQuery = useCandidate(candidateId);
-  const interviewsQuery = useInterviews({ candidateId, limit: 100 });
-  const offersQuery = useOffers({ candidateId, limit: 100 });
+function CandidateDetailColumn({ candidate }: { candidate: Candidate }) {
+  const interviewsQuery = useInterviews({
+    candidateId: candidate.id,
+    limit: 100,
+  });
+  const offersQuery = useOffers({ candidateId: candidate.id, limit: 100 });
 
   // Interviews and offers gate the skeleton too: until they resolve,
   // `negotiationState` is empty, so every action would render enabled and a
   // click on a candidate who already has a live offer would earn a raw 409
   // instead of the readable reason those controls exist to give. `isPending`
   // is false on error, so a failure still degrades rather than sticking.
-  if (
-    candidateQuery.isPending ||
-    interviewsQuery.isPending ||
-    offersQuery.isPending
-  ) {
+  if (interviewsQuery.isPending || offersQuery.isPending) {
     return <CandidateRailSkeleton />;
-  }
-  if (candidateQuery.isError) {
-    return (
-      <ErrorCallout
-        message="Could not load this candidate."
-        onRetry={() => void candidateQuery.refetch()}
-      />
-    );
   }
 
   const negotiationState = candidateNegotiationState(
@@ -89,30 +86,70 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
 
   return (
     <CandidateCard
-      candidate={candidateQuery.data}
-      negotiationState={negotiationState.get(candidateId) ?? null}
+      candidate={candidate}
+      negotiationState={negotiationState.get(candidate.id) ?? null}
       className="lg:h-full lg:overflow-y-auto"
+    />
+  );
+}
+
+/**
+ * The URL carries the candidate's serial, but the thread, its mark-read, the
+ * realtime match and every UUID-keyed map below need the UUID — so the
+ * candidate is read first and everything past it uses `candidate.id`.
+ */
+function CandidateWorkspace({ candidateRef }: { candidateRef: string }) {
+  const candidateQuery = useCandidate(candidateRef);
+  const unreadCounts = useMessageUnreadCounts();
+  const candidate = candidateQuery.data;
+  useCanonicalPath(candidate && inboxThreadPath("company", candidate));
+
+  const retry = () => void candidateQuery.refetch();
+
+  return (
+    <InboxMessageWorkspace
+      backHref="/company/inbox"
+      list={<InboxConversationPane side="company" selectedId={candidate?.id} />}
+      conversation={
+        candidate ? (
+          <Thread candidateId={candidate.id} />
+        ) : candidateQuery.isError ? (
+          <ErrorCallout
+            message="Could not load this conversation."
+            onRetry={retry}
+          />
+        ) : (
+          <ThreadSkeleton />
+        )
+      }
+      candidate={
+        candidateQuery.isError ? (
+          <ErrorCallout
+            message="Could not load this candidate."
+            onRetry={retry}
+          />
+        ) : candidate ? (
+          <CandidateDetailColumn candidate={candidate} />
+        ) : (
+          <CandidateRailSkeleton />
+        )
+      }
+      candidateUnread={
+        candidate !== undefined &&
+        (unreadCounts.data?.get(candidate.id) ?? 0) > 0
+      }
     />
   );
 }
 
 export default function CandidateReviewPage() {
   const params = useParams<{ id: string }>();
-  const unreadCounts = useMessageUnreadCounts();
 
   return (
     <RequireRole role="company">
       <RequireApprovedCompany>
         <DashboardLayout wide="detail">
-          <InboxMessageWorkspace
-            backHref="/company/inbox"
-            list={
-              <InboxConversationPane side="company" selectedId={params.id} />
-            }
-            conversation={<Thread candidateId={params.id} />}
-            candidate={<CandidateDetailColumn candidateId={params.id} />}
-            candidateUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
-          />
+          <CandidateWorkspace candidateRef={params.id} />
         </DashboardLayout>
       </RequireApprovedCompany>
     </RequireRole>

@@ -52,7 +52,7 @@ import { useStateCities } from "@/shared/hooks/useStateCities";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
-import { jobPath } from "../utils/jobPath";
+import { jobPath } from "@/shared/utils/entityPaths";
 import { PublicJobCard } from "./PublicJobCard";
 import { UsJobMap, type MapSelection } from "./UsJobMap";
 

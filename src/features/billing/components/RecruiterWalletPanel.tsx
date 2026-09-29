@@ -9,6 +9,7 @@ import { RaiseDisputeForm } from "@/features/disputes";
 import { ENABLE_RECRUITER_PAYOUTS } from "@/shared/config/featureFlags";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { disputePath } from "@/shared/utils/entityPaths";
 import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
@@ -287,9 +288,9 @@ function PlacementsTable({
             placementId={disputing.placementId}
             party="recruiter"
             onCancel={() => setDisputingId(null)}
-            onRaised={(id) => {
+            onRaised={(dispute) => {
               setDisputingId(null);
-              router.push(`/disputes/${id}`);
+              router.push(disputePath(dispute));
             }}
           />
         </div>
