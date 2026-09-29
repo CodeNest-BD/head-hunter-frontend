@@ -35,7 +35,6 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
-  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -75,6 +74,7 @@ import {
 } from "../schemas";
 import { useDeleteJob, useJobs } from "../hooks/useJobs";
 import { jobPath } from "../utils/jobPath";
+import { entriesOf } from "@/shared/utils/entriesOf";
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
@@ -113,9 +113,9 @@ const COLUMNS: ColumnDef[] = [
   { key: "actions", label: "Actions", required: true },
 ];
 
-const CATEGORY_OPTIONS = (
-  Object.entries(ROLE_CATEGORY_LABELS) as [RoleCategory, string][]
-).map(([value, label]) => ({ value, label }));
+const CATEGORY_OPTIONS = entriesOf(ROLE_CATEGORY_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 // The four value cells below are rendered by both the desktop table and the
 // mobile card, so they live here rather than inline in either one.
@@ -293,16 +293,12 @@ export function JobsTable() {
     setCategory("");
     setPage(1);
   };
-  const cols = useVisibleColumns("company.jobs.columns", COLUMNS);
-  // A filter control lives in its column header, so hiding the column would
-  // leave the filter narrowing the list with nothing to explain it — and
-  // column visibility is persisted, so that would survive a reload.
-  useClearFilterWhenHidden(cols.isVisible("status"), () => {
-    changeStatus("");
-  });
-  useClearFilterWhenHidden(cols.isVisible("category"), () => {
-    setCategory("");
-    setPage(1);
+  const cols = useVisibleColumns("company.jobs.columns", COLUMNS, (key) => {
+    if (key === "status") changeStatus("");
+    if (key === "category") {
+      setCategory("");
+      setPage(1);
+    }
   });
   const parsedStatus = jobStatusSchema.safeParse(status);
   const { data, isPending, isError, refetch } = useJobs({

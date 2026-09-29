@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertCircle, ShieldAlert } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Pill } from "@/shared/ui-components/badges/Pill";
@@ -12,7 +13,6 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   ColumnsToggle,
-  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -51,13 +51,13 @@ import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
 /** Each filter's options are the row's own labels, so the popover reads exactly
  * as the cell it filters. */
-const STATUS_OPTIONS = (
-  Object.entries(DISPUTE_STATUS_LABELS) as [DisputeStatus, string][]
-).map(([value, label]) => ({ value, label }));
+const STATUS_OPTIONS = entriesOf(DISPUTE_STATUS_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
-const SUBJECT_OPTIONS = (
-  Object.entries(DISPUTE_SUBJECT_LABELS) as [DisputeSubject, string][]
-).map(([value, label]) => ({ value, label }));
+const SUBJECT_OPTIONS = entriesOf(DISPUTE_SUBJECT_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 const COLUMNS: ColumnDef[] = [
   // Role carries the update rail and the Pending pill, so the row loses its
@@ -100,7 +100,10 @@ export function MyDisputesList() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string | null>(null);
   const [subject, setSubject] = useState<string | null>(null);
-  const cols = useVisibleColumns("disputes.mine.columns", COLUMNS);
+  const cols = useVisibleColumns("disputes.mine.columns", COLUMNS, (key) => {
+    if (key === "status") changeStatus(null);
+    if (key === "subject") changeSubject(null);
+  });
   const { data, isPending, isError, refetch } = useMyDisputes(
     page,
     status ?? undefined,
@@ -113,12 +116,6 @@ export function MyDisputesList() {
     };
   const changeStatus = setFilter(setStatus);
   const changeSubject = setFilter(setSubject);
-  // A filter control lives in its column header, so hiding the column would
-  // leave the filter narrowing the list with nothing to explain it.
-  useClearFilterWhenHidden(cols.isVisible("status"), () => changeStatus(null));
-  useClearFilterWhenHidden(cols.isVisible("subject"), () =>
-    changeSubject(null),
-  );
   const hasFilters = status !== null || subject !== null;
   const resetFilters = () => {
     setStatus(null);

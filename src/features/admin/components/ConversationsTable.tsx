@@ -121,7 +121,15 @@ export function ConversationsTable() {
     changeStatus("");
     setPage(1);
   };
-  const cols = useVisibleColumns("admin.conversations.columns", COLUMNS);
+  // A filter lives in its column header, so hiding the column would leave it
+  // narrowing the list with nothing on screen to explain it.
+  const cols = useVisibleColumns(
+    "admin.conversations.columns",
+    COLUMNS,
+    (key) => {
+      if (key === "status") changeStatus("");
+    },
+  );
   const { data, isPending, isError, refetch } = useAdminConversations({
     page,
     limit,
@@ -155,7 +163,7 @@ export function ConversationsTable() {
       </div>
 
       {isPending ? (
-        <TableSkeleton />
+        <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
       ) : isError ? (
         <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
           <div className="flex items-center gap-2.5 font-[550]">

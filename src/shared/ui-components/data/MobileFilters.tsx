@@ -77,8 +77,11 @@ export function MobileFilters({
         )}
       </button>
       {open &&
-        filters.map((config) => (
-          <FilterSelect key={config.allLabel} config={config} />
+        filters.map((config, index) => (
+          // Keyed by position: nothing in `FilterConfig` stops two filters on
+          // one table from sharing an `allLabel`, and a collision would have
+          // React hand one select's state to the other.
+          <FilterSelect key={index} config={config} />
         ))}
     </div>
   );

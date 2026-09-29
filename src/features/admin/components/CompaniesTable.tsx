@@ -14,7 +14,6 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
-  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -199,14 +198,12 @@ export function CompaniesTable() {
     setVerificationFilter("");
     setPage(1);
   };
-  const cols = useVisibleColumns("admin.companies.columns", COLUMNS);
-  // A filter control lives in its column header, so hiding the column would
-  // leave the filter narrowing the list with nothing to explain it — and
-  // column visibility is persisted, so that would survive a reload.
-  useClearFilterWhenHidden(cols.isVisible("status"), () => changeStatus(""));
-  useClearFilterWhenHidden(cols.isVisible("approval"), () => {
-    setVerificationFilter("");
-    setPage(1);
+  const cols = useVisibleColumns("admin.companies.columns", COLUMNS, (key) => {
+    if (key === "status") changeStatus("");
+    if (key === "approval") {
+      setVerificationFilter("");
+      setPage(1);
+    }
   });
   const { data, isPending, isError, refetch } = useAdminCompanies({
     page,

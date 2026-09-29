@@ -5,6 +5,7 @@ import { FileText, Receipt } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -31,9 +32,9 @@ import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
 import { PurchaseReceiptDialog } from "./PurchaseReceiptDialog";
 
 /** Each kind of wallet movement, labelled as the Activity cell labels it. */
-const LEDGER_TYPE_OPTIONS = (
-  Object.entries(LEDGER_TYPE_LABELS) as [LedgerEntry["entryType"], string][]
-).map(([value, label]) => ({ value, label }));
+const LEDGER_TYPE_OPTIONS = entriesOf(LEDGER_TYPE_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 const COLUMNS: ColumnDef[] = [
   // When it happened and what it was are what a history row is; the running

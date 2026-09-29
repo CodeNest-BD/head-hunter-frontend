@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { RaiseDisputeForm } from "@/features/disputes";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { entriesOf } from "@/shared/utils/entriesOf";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
@@ -33,7 +34,6 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
-  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -47,9 +47,9 @@ import {
 import { PLACEMENT_STATUS_TONES } from "../statusTones";
 
 /** Every escrow state, labelled exactly as the row's own pill labels it. */
-const PLACEMENT_STATUS_OPTIONS = (
-  Object.entries(PLACEMENT_STATUS_LABELS) as [PlacementStatus, string][]
-).map(([value, label]) => ({ value, label }));
+const PLACEMENT_STATUS_OPTIONS = entriesOf(PLACEMENT_STATUS_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 const COLUMNS: ColumnDef[] = [
   // The candidate names the row, and the last column is where a company acts
@@ -148,13 +148,13 @@ export function CompanyPlacementsPanel() {
     setPage(1);
   };
   const reject = useRejectPlacement();
-  const cols = useVisibleColumns("company.placements.columns", COLUMNS);
-  // A filter control lives in its column header, so hiding the column would
-  // leave the filter narrowing the list with nothing to explain it — and
-  // column visibility is persisted, so that would survive a reload.
-  useClearFilterWhenHidden(cols.isVisible("status"), () => {
-    changeStatus(null);
-  });
+  const cols = useVisibleColumns(
+    "company.placements.columns",
+    COLUMNS,
+    (key) => {
+      if (key === "status") changeStatus(null);
+    },
+  );
 
   if (isError) {
     return (

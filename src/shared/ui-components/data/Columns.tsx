@@ -15,10 +15,25 @@ export interface ColumnDef {
 /**
  * Per-table column visibility, persisted in localStorage so a user's choice
  * survives navigation. Returns a Set of visible keys plus a toggle.
+ *
+ * `onHide` fires when the reader switches a column **off** — and only then.
+ * Filters live in their column header, so a hidden column takes its control off
+ * screen while the filter goes on narrowing the list; tables use this to clear
+ * that filter. It is deliberately driven by the toggle rather than by watching
+ * visibility: a column that is *already* hidden when the page loads must not
+ * clear a filter that arrived with the URL, which is how `?status=` deep links
+ * reach this table.
  */
-export function useVisibleColumns(storageKey: string, columns: ColumnDef[]) {
+export function useVisibleColumns(
+  storageKey: string,
+  columns: ColumnDef[],
+  onHide?: (key: string) => void,
+) {
   const allKeys = columns.map((c) => c.key);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+  // Held in a ref so a caller can pass an inline arrow without re-binding.
+  const onHideRef = useRef(onHide);
+  onHideRef.current = onHide;
 
   // Read once on mount (client only) so SSR markup stays deterministic.
   useEffect(() => {
@@ -43,37 +58,18 @@ export function useVisibleColumns(storageKey: string, columns: ColumnDef[]) {
     const column = columns.find((c) => c.key === key);
     if (column?.required) return;
     const next = new Set(hidden);
-    if (next.has(key)) next.delete(key);
-    else next.add(key);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+      onHideRef.current?.(key);
+    }
     persist(next);
   };
 
   const isVisible = (key: string): boolean => !hidden.has(key);
 
   return { columns, isVisible, toggle, allKeys };
-}
-
-/**
- * Clears a column's filter when the reader hides that column.
- *
- * A filter control lives in its column header, so hiding the column takes the
- * control off screen — while the filter it set goes on narrowing the list, with
- * nothing left to explain why. Column visibility is persisted, so that state
- * survives a reload: without this, hiding a filtered column can silently strand
- * a reader on a partial list for good.
- *
- * `clear` is held in a ref, so a caller can pass an inline arrow without the
- * effect re-running on every render.
- */
-export function useClearFilterWhenHidden(
-  visible: boolean,
-  clear: () => void,
-): void {
-  const clearRef = useRef(clear);
-  clearRef.current = clear;
-  useEffect(() => {
-    if (!visible) clearRef.current();
-  }, [visible]);
 }
 
 /** The "Columns" dropdown (checkbox list) matching the reference's toggle. */

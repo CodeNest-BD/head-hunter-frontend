@@ -19,7 +19,6 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
-  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -112,17 +111,15 @@ export function AdminDisputesTable() {
   const [raisedBy, setRaisedBy] = useState<DisputeChannel | undefined>(
     undefined,
   );
-  const cols = useVisibleColumns("admin.disputes.columns", COLUMNS);
-  // A filter control lives in its column header, so hiding the column would
-  // leave the filter narrowing the list with nothing to explain it — and
-  // column visibility is persisted, so that would survive a reload.
-  useClearFilterWhenHidden(cols.isVisible("status"), () => {
-    setStatusView(null);
-    setPage(1);
-  });
-  useClearFilterWhenHidden(cols.isVisible("raisedBy"), () => {
-    setRaisedBy(undefined);
-    setPage(1);
+  const cols = useVisibleColumns("admin.disputes.columns", COLUMNS, (key) => {
+    if (key === "status") {
+      setStatusView(null);
+      setPage(1);
+    }
+    if (key === "raisedBy") {
+      setRaisedBy(undefined);
+      setPage(1);
+    }
   });
   const statuses = STATUS_VIEWS.find((v) => v.value === statusView)?.statuses;
   const { data, isPending, isError, refetch } = useAdminDisputes(
@@ -196,7 +193,7 @@ export function AdminDisputesTable() {
         </div>
       ) : isPending ? (
         <div className="p-4">
-          <TableSkeleton />
+          <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
         </div>
       ) : rows.length === 0 ? (
         <div className="flex flex-col items-center gap-3 p-8 text-center">

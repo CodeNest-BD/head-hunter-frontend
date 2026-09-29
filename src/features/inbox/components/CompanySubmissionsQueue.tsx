@@ -214,7 +214,18 @@ export function CompanySubmissionsQueue() {
   const [status, setStatus] = useState<string | null>(null);
   const [recruiterKind, setRecruiterKind] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SubmissionSort>("priority");
-  const cols = useVisibleColumns("company.inbox.submissions.columns", COLUMNS);
+  // A filter lives in its column header, so hiding the column would leave it
+  // narrowing the list with nothing on screen to explain it — including the Job
+  // scope a `?job=` link arrives with.
+  const cols = useVisibleColumns(
+    "company.inbox.submissions.columns",
+    COLUMNS,
+    (key) => {
+      if (key === "job") changeJob(null);
+      if (key === "recruiter") changeRecruiter(null);
+      if (key === "status") changeStatus(null);
+    },
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {

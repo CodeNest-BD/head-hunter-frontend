@@ -4,13 +4,13 @@ import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { CardHeader, CardTitle } from "@/shared/ui-components/controls/card";
 import {
   ColumnsToggle,
-  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -54,23 +54,26 @@ const COLUMNS: ColumnDef[] = [
  * Every row opens its tracking timeline.
  */
 /** Each state, labelled exactly as the row's own pill labels it. */
-const PAYOUT_STATUS_OPTIONS = (
-  Object.entries(PAYOUT_STATUS_LABELS) as [PayoutStatus, string][]
-).map(([value, label]) => ({ value, label }));
+const PAYOUT_STATUS_OPTIONS = entriesOf(PAYOUT_STATUS_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 export function PayoutsTable() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Payout | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const payouts = usePayouts(page, status ?? undefined);
-  const cols = useVisibleColumns("recruiter.payouts.columns", COLUMNS);
+  const cols = useVisibleColumns(
+    "recruiter.payouts.columns",
+    COLUMNS,
+    (key) => {
+      if (key === "status") changeStatus(null);
+    },
+  );
   const changeStatus = (next: string | null) => {
     setStatus(next);
     setPage(1);
   };
-  // A filter control lives in its column header, so hiding the column would
-  // leave the filter narrowing the list with nothing to explain it.
-  useClearFilterWhenHidden(cols.isVisible("status"), () => changeStatus(null));
 
   if (payouts.isError) {
     return (
@@ -82,7 +85,12 @@ export function PayoutsTable() {
   }
 
   const data = payouts.data;
-  if (!data || (data.meta.total === 0 && page === 1)) return null;
+  // A recruiter with no withdrawals at all gets nothing — but one whose filter
+  // matched nothing must keep the card, or the Status control would unmount
+  // with it and the history would never come back.
+  if (!data || (data.meta.total === 0 && page === 1 && status === null)) {
+    return null;
+  }
 
   return (
     <div className={T.TABLE_CARD}>

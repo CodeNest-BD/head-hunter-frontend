@@ -9,6 +9,7 @@ import { RaiseDisputeForm } from "@/features/disputes";
 import { ENABLE_RECRUITER_PAYOUTS } from "@/shared/config/featureFlags";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -43,7 +44,6 @@ import {
 } from "@/shared/ui-components/data/ColumnFilter";
 import {
   ColumnsToggle,
-  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -53,9 +53,9 @@ import { PayoutsCard } from "./PayoutsCard";
 import { PayoutsTable } from "./PayoutsTable";
 
 /** Every escrow state, labelled exactly as the row's own pill labels it. */
-const PLACEMENT_STATUS_OPTIONS = (
-  Object.entries(PLACEMENT_STATUS_LABELS) as [PlacementStatus, string][]
-).map(([value, label]) => ({ value, label }));
+const PLACEMENT_STATUS_OPTIONS = entriesOf(PLACEMENT_STATUS_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
 
 const PLACEMENT_COLUMNS: ColumnDef[] = [
   { key: "company", label: "Company" },
@@ -444,12 +444,14 @@ export function RecruiterWalletPanel() {
   const cols = useVisibleColumns(
     "recruiter.placements.columns",
     PLACEMENT_COLUMNS,
+    (key) => {
+      if (key === "status") changeStatus(null);
+    },
   );
   const changeStatus = (next: string | null) => {
     setStatus(next);
     setPage(1);
   };
-  useClearFilterWhenHidden(cols.isVisible("status"), () => changeStatus(null));
 
   // A filtered list that matches nothing is not the same as having no
   // placements — the first needs a way back, the second an explanation.
