@@ -23,13 +23,4 @@ export const DIALOG_PANEL =
 /** The panel for a dialog that is a single block of content. */
 export const DIALOG_PANEL_PADDED = `${DIALOG_PANEL} p-5`;
 
-/** Header / body / footer bands, for the panels that have them. */
-export const DIALOG_HEADER =
-  "flex shrink-0 items-center gap-3 border-b border-line px-4 py-3";
-export const DIALOG_BODY = "p-4";
-export const DIALOG_FOOTER =
-  "flex shrink-0 items-center gap-2 border-t border-line px-4 py-2.5";
-
-/** `.t-card` on full-strength ink — every dialog title. */
 export const DIALOG_TITLE = "text-card font-[650] text-ink";
-export const DIALOG_DESCRIPTION = "mt-1.5 text-sub text-ink-muted";

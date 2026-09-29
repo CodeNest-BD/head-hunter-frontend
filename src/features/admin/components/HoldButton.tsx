@@ -12,6 +12,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import {
   DIALOG_OVERLAY,
   DIALOG_PANEL_PADDED,
+  DIALOG_TITLE,
 } from "@/shared/ui-components/feedback/dialogStyles";
 
 interface HoldButtonProps {
@@ -84,7 +85,7 @@ export function HoldButton({
             "max-w-md data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           )}
         >
-          <AlertDialog.Title className="text-card font-[650] text-ink">
+          <AlertDialog.Title className={DIALOG_TITLE}>
             {isHeld ? `Reinstate ${subjectName}?` : `Suspend ${subjectName}?`}
           </AlertDialog.Title>
           <AlertDialog.Description className="mt-1.5 text-sub text-ink-muted">

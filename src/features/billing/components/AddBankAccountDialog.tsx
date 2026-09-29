@@ -29,7 +29,10 @@ import {
   useSubmitPayoutIdentity,
 } from "../hooks/useBilling";
 import { type PayoutAccount } from "../schemas";
-import { DIALOG_OVERLAY } from "@/shared/ui-components/feedback/dialogStyles";
+import {
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+} from "@/shared/ui-components/feedback/dialogStyles";
 
 function submitErrorMessage(error: unknown): string {
   if (isApiError(error)) return allMessages(error);
@@ -491,7 +494,7 @@ export function AddBankAccountDialog({
           <div className="flex items-center justify-between gap-2.5 border-b border-line px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <Tile icon={Landmark} tone="blue" />
-              <Dialog.Title className="text-card font-[650] text-ink">
+              <Dialog.Title className={DIALOG_TITLE}>
                 {skipIdentity ? "Update Bank Account" : "Set Up Payouts"}
               </Dialog.Title>
             </div>

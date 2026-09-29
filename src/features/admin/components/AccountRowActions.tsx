@@ -15,7 +15,10 @@ import {
   useSuspendAccount,
 } from "../hooks/useAdmin";
 import type { AccountStatus } from "../schemas";
-import { DIALOG_OVERLAY } from "@/shared/ui-components/feedback/dialogStyles";
+import {
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+} from "@/shared/ui-components/feedback/dialogStyles";
 
 interface AccountRowActionsProps {
   userId: string;
@@ -142,7 +145,7 @@ export function AccountRowActions({
         <AlertDialog.Portal>
           <AlertDialog.Overlay className={DIALOG_OVERLAY} />
           <AlertDialog.Content className={DIALOG_CLASS}>
-            <AlertDialog.Title className="text-card font-[650] text-ink">
+            <AlertDialog.Title className={DIALOG_TITLE}>
               {isHeld
                 ? `Reinstate ${subjectName}?`
                 : `${holdLabel} ${subjectName}?`}
@@ -181,7 +184,7 @@ export function AccountRowActions({
           <AlertDialog.Portal>
             <AlertDialog.Overlay className={DIALOG_OVERLAY} />
             <AlertDialog.Content className={DIALOG_CLASS}>
-              <AlertDialog.Title className="text-card font-[650] text-ink">
+              <AlertDialog.Title className={DIALOG_TITLE}>
                 Delete {subjectName}?
               </AlertDialog.Title>
               <AlertDialog.Description className="mt-1.5 text-sub text-ink-muted">

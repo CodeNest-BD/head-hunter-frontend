@@ -11,7 +11,10 @@ import { Logo } from "@/shared/ui-components/layout/Logo";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
-import { DIALOG_OVERLAY } from "@/shared/ui-components/feedback/dialogStyles";
+import {
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+} from "@/shared/ui-components/feedback/dialogStyles";
 
 interface PurchaseReceiptDialogProps {
   entry: LedgerEntry;
@@ -172,7 +175,7 @@ export function PurchaseReceiptDialog({
         <Dialog.Overlay className={DIALOG_OVERLAY} />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-x-hidden overflow-y-auto rounded-lg border border-line bg-surface shadow-pop focus:outline-none">
           <div className="flex items-center justify-between gap-2.5 border-b border-line px-4 py-3">
-            <Dialog.Title className="text-card font-[650] text-ink">
+            <Dialog.Title className={DIALOG_TITLE}>
               Payment receipt
             </Dialog.Title>
             <Dialog.Close asChild>

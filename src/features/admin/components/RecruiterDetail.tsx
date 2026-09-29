@@ -47,6 +47,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import {
   DIALOG_OVERLAY,
   DIALOG_PANEL_PADDED,
+  DIALOG_TITLE,
 } from "@/shared/ui-components/feedback/dialogStyles";
 
 function formatDate(iso: string | null): string {
@@ -157,7 +158,7 @@ function DeleteRecruiterButton({
       <AlertDialog.Portal>
         <AlertDialog.Overlay className={DIALOG_OVERLAY} />
         <AlertDialog.Content className={cn(DIALOG_PANEL_PADDED, "max-w-md")}>
-          <AlertDialog.Title className="text-card font-[650] text-ink">
+          <AlertDialog.Title className={DIALOG_TITLE}>
             Delete {name}?
           </AlertDialog.Title>
           <AlertDialog.Description className="mt-1.5 text-sub text-ink-muted">
