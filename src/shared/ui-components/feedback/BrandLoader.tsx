@@ -1,23 +1,30 @@
-import Image from "next/image";
-
 import { cn } from "@/shared/libs/shadCnConfig";
 
 /**
- * The full-page wait: the brand's crosshair mark inside a sweeping cobalt ring,
- * with the wordmark settling in beneath it.
+ * The brand mark's own two blues. They predate the semantic palette — the mark
+ * is a fixed asset, so it keeps its colours rather than drifting with the
+ * theme.
+ */
+const RING = "#4F80E6";
+const CORE = "#034AEF";
+
+/**
+ * The full-page wait: the brand's crosshair, drawn rather than imported, so its
+ * outer ring and arms can turn while the core stays put — the mark sighting a
+ * target rather than the whole logo tumbling.
  *
- * Used where the whole app is waiting — booting a session, resolving a route —
- * rather than for a slice of a page. A spinner is right for those cases (the
- * shape of what is coming is unknown, so there is nothing to trace with a
- * skeleton), but a bare circle on an empty canvas reads as a stall; the mark
- * says the product is loading, not that something has gone wrong.
+ * Used where the whole app is waiting: booting a session, resolving a route. A
+ * spinner is right for those (the shape of what is coming is unknown, so there
+ * is nothing for a skeleton to trace), but a bare circle on an empty canvas
+ * reads as a stall; the mark says the product is loading.
  *
- * The ring is one conic gradient masked to its own edge, so it costs no extra
- * DOM and no SVG. Under `prefers-reduced-motion` every animation stops and the
- * lockup simply sits there, which is the honest still frame of the same thing.
+ * Geometry traces `public/assets/brand/logo-mark.png` on a 100-unit square:
+ * ring at r=36 under an 8-wide stroke, four arms 8 wide running r=24→48 so they
+ * cross the ring and poke past it, and a core ring spanning r=8→17.5. Redrawn
+ * instead of animating the PNG because only part of it moves.
  */
 export function BrandLoader({
-  /** Shown under the mark. Pass `null` for a bare lockup. */
+  /** Shown under the mark. Pass `null` for a bare mark. */
   label = "Loading…",
   className,
 }: {
@@ -33,36 +40,51 @@ export function BrandLoader({
         className,
       )}
     >
-      <span className="relative flex size-16 items-center justify-center">
-        {/* The sweeping ring. `mask` cuts the disc into a 2px band, so the
-            gradient reads as an arc chasing the mark. */}
-        <span
-          aria-hidden="true"
-          className="absolute inset-0 animate-spin rounded-full motion-reduce:animate-none"
-          style={{
-            background:
-              "conic-gradient(from 0deg, transparent 0deg, rgb(var(--blue-rgb) / 0.15) 140deg, rgb(var(--blue-rgb)) 340deg, transparent 360deg)",
-            mask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
-            WebkitMask:
-              "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))",
-            animationDuration: "1.1s",
-          }}
+      <svg
+        viewBox="0 0 100 100"
+        aria-hidden="true"
+        className="size-14 select-none"
+      >
+        {/* Ring and arms: the only part that turns. `origin-center` needs the
+            transform box set to the fill box, or SVG rotates about the
+            viewport's origin rather than the shape's. */}
+        <g
+          className="origin-center animate-spin [transform-box:fill-box] motion-reduce:animate-none"
+          style={{ animationDuration: "1.6s" }}
+        >
+          <circle
+            cx="50"
+            cy="50"
+            r="36"
+            fill="none"
+            stroke={RING}
+            strokeWidth="8"
+          />
+          {[0, 90, 180, 270].map((angle) => (
+            <rect
+              key={angle}
+              x="46"
+              y="2"
+              width="8"
+              height="24"
+              fill={RING}
+              transform={`rotate(${angle} 50 50)`}
+            />
+          ))}
+        </g>
+        {/* The core holds still — the mark stays sighted on its target. Drawn
+            as a stroked ring rather than a filled disc over a second one, so
+            its hole is genuinely transparent and the mark sits on any
+            background. */}
+        <circle
+          cx="50"
+          cy="50"
+          r="12.75"
+          fill="none"
+          stroke={CORE}
+          strokeWidth="9.5"
         />
-        {/* A soft tint behind the mark so the ring reads as orbiting it. */}
-        <span
-          aria-hidden="true"
-          className="absolute inset-1.5 rounded-full bg-tint/60"
-        />
-        <Image
-          src="/assets/brand/logo-mark.png"
-          alt=""
-          aria-hidden="true"
-          width={292}
-          height={298}
-          priority
-          className="relative h-7 w-auto animate-[brand-pulse_1.8s_ease-in-out_infinite] select-none motion-reduce:animate-none"
-        />
-      </span>
+      </svg>
 
       {label !== null && (
         <span className="text-sub text-ink-muted">{label}</span>

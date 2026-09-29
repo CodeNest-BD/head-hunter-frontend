@@ -291,11 +291,6 @@ const config: Config = {
           "0%": { transform: "translateX(-100%) skewX(-12deg)" },
           "100%": { transform: "translateX(100%) skewX(-12deg)" },
         },
-        // The brand mark breathing inside BrandLoader's ring.
-        "brand-pulse": {
-          "0%, 100%": { opacity: "0.75", transform: "scale(0.96)" },
-          "50%": { opacity: "1", transform: "scale(1)" },
-        },
         // Landing gradient animation
         "gradient-shift": {
           "0%": { backgroundPosition: "0% 50%" },

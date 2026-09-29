@@ -160,10 +160,10 @@ export function useSubmitPayoutBank() {
   });
 }
 
-export function usePayouts(page: number) {
+export function usePayouts(page: number, status?: string) {
   return useQuery({
-    queryKey: billingKeys.payouts(page),
-    queryFn: () => fetchPayouts(page),
+    queryKey: billingKeys.payouts(page, status),
+    queryFn: () => fetchPayouts(page, status),
     placeholderData: keepPreviousData,
   });
 }

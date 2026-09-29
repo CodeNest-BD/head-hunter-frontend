@@ -183,9 +183,12 @@ export async function createPayout(
 }
 
 /** GET /v1/recruiter/payouts — withdrawal history, newest first. */
-export async function fetchPayouts(page: number): Promise<Paginated<Payout>> {
+export async function fetchPayouts(
+  page: number,
+  status?: string,
+): Promise<Paginated<Payout>> {
   const { data } = await apiClient.get<unknown>("/recruiter/payouts", {
-    params: { page, limit: 20 },
+    params: { page, limit: 20, ...(status ? { status } : {}) },
   });
   return paginatedSchema(payoutSchema).parse(data);
 }

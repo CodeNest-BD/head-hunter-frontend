@@ -10,6 +10,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { CardHeader, CardTitle } from "@/shared/ui-components/controls/card";
 import {
   ColumnsToggle,
+  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -19,9 +20,17 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
+import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
 import { usePayouts } from "../hooks/useBilling";
 import { payoutDetail } from "../payoutTracking";
-import { type Payout } from "../schemas";
+import {
+  PAYOUT_STATUS_LABELS,
+  type Payout,
+  type PayoutStatus,
+} from "../schemas";
 import { BillingTableFooter } from "./BillingTable";
 import {
   PayoutStatusBadge,
@@ -44,11 +53,24 @@ const COLUMNS: ColumnDef[] = [
  * failure surfaces as an error card rather than silently vanishing history.
  * Every row opens its tracking timeline.
  */
+/** Each state, labelled exactly as the row's own pill labels it. */
+const PAYOUT_STATUS_OPTIONS = (
+  Object.entries(PAYOUT_STATUS_LABELS) as [PayoutStatus, string][]
+).map(([value, label]) => ({ value, label }));
+
 export function PayoutsTable() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Payout | null>(null);
-  const payouts = usePayouts(page);
+  const [status, setStatus] = useState<string | null>(null);
+  const payouts = usePayouts(page, status ?? undefined);
   const cols = useVisibleColumns("recruiter.payouts.columns", COLUMNS);
+  const changeStatus = (next: string | null) => {
+    setStatus(next);
+    setPage(1);
+  };
+  // A filter control lives in its column header, so hiding the column would
+  // leave the filter narrowing the list with nothing to explain it.
+  useClearFilterWhenHidden(cols.isVisible("status"), () => changeStatus(null));
 
   if (payouts.isError) {
     return (
@@ -87,9 +109,14 @@ export function PayoutsTable() {
                 Amount
               </th>
               {cols.isVisible("status") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Status
-                </th>
+                <FilterableHead label="Status">
+                  <ColumnFilter
+                    label="Status"
+                    options={PAYOUT_STATUS_OPTIONS}
+                    value={status}
+                    onChange={changeStatus}
+                  />
+                </FilterableHead>
               )}
               {cols.isVisible("detail") && (
                 <th scope="col" className={T.TABLE_TH}>

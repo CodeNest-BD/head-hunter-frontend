@@ -37,10 +37,10 @@ import type {
 /** Polls like the nav badge: an admin reply or a decision produces no event
  * this client listens for, and the list's order and "new" marker move with
  * them. */
-export function useMyDisputes(page: number) {
+export function useMyDisputes(page: number, status?: string, subject?: string) {
   return useQuery({
-    queryKey: disputeKeys.list(page),
-    queryFn: () => fetchMyDisputes(page),
+    queryKey: disputeKeys.list(page, status, subject),
+    queryFn: () => fetchMyDisputes(page, status, subject),
     placeholderData: keepPreviousData,
     refetchInterval: REALTIME_POLL_MS,
     refetchOnWindowFocus: true,

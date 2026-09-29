@@ -12,6 +12,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   ColumnsToggle,
+  useClearFilterWhenHidden,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -30,13 +31,33 @@ import {
   TABLE_TH,
 } from "@/shared/ui-components/data/tableStyles";
 import {
+  ColumnFilter,
+  FilterableHead,
+} from "@/shared/ui-components/data/ColumnFilter";
+import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 
 import { useMyDisputes } from "../hooks/useDisputes";
-import { DISPUTE_SUBJECT_LABELS, isDisputeOpen } from "../schemas";
+import {
+  DISPUTE_STATUS_LABELS,
+  DISPUTE_SUBJECT_LABELS,
+  isDisputeOpen,
+  type DisputeStatus,
+  type DisputeSubject,
+} from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
+
+/** Each filter's options are the row's own labels, so the popover reads exactly
+ * as the cell it filters. */
+const STATUS_OPTIONS = (
+  Object.entries(DISPUTE_STATUS_LABELS) as [DisputeStatus, string][]
+).map(([value, label]) => ({ value, label }));
+
+const SUBJECT_OPTIONS = (
+  Object.entries(DISPUTE_SUBJECT_LABELS) as [DisputeSubject, string][]
+).map(([value, label]) => ({ value, label }));
 
 const COLUMNS: ColumnDef[] = [
   // Role carries the update rail and the Pending pill, so the row loses its
@@ -77,8 +98,33 @@ const MY_DISPUTES_PAGE_SIZE = 20;
 
 export function MyDisputesList() {
   const [page, setPage] = useState(1);
+  const [status, setStatus] = useState<string | null>(null);
+  const [subject, setSubject] = useState<string | null>(null);
   const cols = useVisibleColumns("disputes.mine.columns", COLUMNS);
-  const { data, isPending, isError, refetch } = useMyDisputes(page);
+  const { data, isPending, isError, refetch } = useMyDisputes(
+    page,
+    status ?? undefined,
+    subject ?? undefined,
+  );
+  const setFilter =
+    (apply: (next: string | null) => void) => (next: string | null) => {
+      apply(next);
+      setPage(1);
+    };
+  const changeStatus = setFilter(setStatus);
+  const changeSubject = setFilter(setSubject);
+  // A filter control lives in its column header, so hiding the column would
+  // leave the filter narrowing the list with nothing to explain it.
+  useClearFilterWhenHidden(cols.isVisible("status"), () => changeStatus(null));
+  useClearFilterWhenHidden(cols.isVisible("subject"), () =>
+    changeSubject(null),
+  );
+  const hasFilters = status !== null || subject !== null;
+  const resetFilters = () => {
+    setStatus(null);
+    setSubject(null);
+    setPage(1);
+  };
 
   if (isError) {
     return (
@@ -105,6 +151,20 @@ export function MyDisputesList() {
           icon={ShieldAlert}
           title="No disputes"
           description="Use “Raise a Dispute” above to open one on a placement held in escrow."
+          // The header row carrying the filters is replaced by this card, so
+          // filtering to something you have none of would otherwise dead-end.
+          action={
+            hasFilters ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={resetFilters}
+              >
+                Reset filters
+              </Button>
+            ) : undefined
+          }
         />
       </div>
     );
@@ -133,9 +193,14 @@ export function MyDisputesList() {
                 Role
               </th>
               {cols.isVisible("subject") && (
-                <th scope="col" className={TABLE_TH}>
-                  Subject
-                </th>
+                <FilterableHead label="Subject">
+                  <ColumnFilter
+                    label="Subject"
+                    options={SUBJECT_OPTIONS}
+                    value={subject}
+                    onChange={changeSubject}
+                  />
+                </FilterableHead>
               )}
               {cols.isVisible("counterparty") && (
                 <th scope="col" className={TABLE_TH}>
@@ -148,9 +213,14 @@ export function MyDisputesList() {
                 </th>
               )}
               {cols.isVisible("status") && (
-                <th scope="col" className={TABLE_TH}>
-                  Status
-                </th>
+                <FilterableHead label="Status">
+                  <ColumnFilter
+                    label="Status"
+                    options={STATUS_OPTIONS}
+                    value={status}
+                    onChange={changeStatus}
+                  />
+                </FilterableHead>
               )}
               {cols.isVisible("opened") && (
                 <th scope="col" className={TABLE_TH}>

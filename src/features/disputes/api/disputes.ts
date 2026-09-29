@@ -73,9 +73,16 @@ export async function fetchDisputeAttentionCount(): Promise<number> {
 /** GET /v1/disputes — my disputes. */
 export async function fetchMyDisputes(
   page: number,
+  status?: string,
+  subject?: string,
 ): Promise<Paginated<ParticipantDispute>> {
   const { data } = await apiClient.get<unknown>("/disputes", {
-    params: { page, limit: 20 },
+    params: {
+      page,
+      limit: 20,
+      ...(status ? { status } : {}),
+      ...(subject ? { subject } : {}),
+    },
   });
   return paginatedSchema(participantDisputeSchema).parse(data);
 }
