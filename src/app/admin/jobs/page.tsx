@@ -11,7 +11,7 @@ function JobsContent() {
   const searchParams = useSearchParams();
   return (
     <JobsTable
-      companyProfileId={searchParams.get("companyProfileId") ?? undefined}
+      company={searchParams.get("company") ?? undefined}
       companyName={searchParams.get("companyName") ?? undefined}
       initialStatus={searchParams.get("status") ?? ""}
     />

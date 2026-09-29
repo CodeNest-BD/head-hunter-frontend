@@ -7,6 +7,8 @@ import { AlertCircle, BadgeCheck, BadgeX } from "lucide-react";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+import { adminCompanyPath, urlRef } from "@/shared/utils/entityPaths";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
@@ -189,8 +191,15 @@ function WalletStat({
   );
 }
 
-export function CompanyDetail({ userId }: { userId: string }) {
-  const { data, isPending, isError, refetch } = useAdminCompany(userId);
+export function CompanyDetail({ companyRef }: { companyRef: string }) {
+  const { data, isPending, isError, refetch } = useAdminCompany(companyRef);
+  useCanonicalPath(
+    data &&
+      adminCompanyPath({
+        id: data.userId,
+        serialNumber: data.companySerialNumber,
+      }),
+  );
 
   if (isPending) return <DetailSkeleton />;
   if (isError) {
@@ -216,7 +225,10 @@ export function CompanyDetail({ userId }: { userId: string }) {
       ? null
       : formatRevenue(data.revenue);
   const jobsHref = `/admin/jobs?${new URLSearchParams({
-    companyProfileId: data.companyProfileId,
+    company: urlRef({
+      id: data.companyProfileId,
+      serialNumber: data.companySerialNumber,
+    }),
     companyName: data.companyName,
   }).toString()}`;
 

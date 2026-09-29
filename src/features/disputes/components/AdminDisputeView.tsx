@@ -4,7 +4,12 @@ import Link from "next/link";
 import { AlertCircle, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
+import {
+  adminConversationPath,
+  adminDisputePath,
+} from "@/shared/utils/entityPaths";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { BackLink, PageHeader } from "@/shared/ui-components/brand";
@@ -29,9 +34,10 @@ import { DisputeStatusBadge } from "./DisputeStatusBadge";
 import { ResolveDisputeCard } from "./ResolveDisputeCard";
 
 /** Full admin adjudication view: context, both channels, and resolution. */
-export function AdminDisputeView({ id }: { id: string }) {
-  const { data, isPending, isError, refetch } = useAdminDispute(id);
-  const post = usePostAdminDisputeMessage(id);
+export function AdminDisputeView({ disputeRef }: { disputeRef: string }) {
+  const { data, isPending, isError, refetch } = useAdminDispute(disputeRef);
+  const post = usePostAdminDisputeMessage();
+  useCanonicalPath(data && adminDisputePath(data));
 
   if (isError) {
     return (
@@ -62,7 +68,7 @@ export function AdminDisputeView({ id }: { id: string }) {
 
   const sendTo = (channel: "company" | "recruiter") => (body: string) => {
     post.mutate(
-      { channel, body },
+      { disputeId: data.id, channel, body },
       {
         onError: (error) =>
           toast.error(
@@ -135,7 +141,10 @@ export function AdminDisputeView({ id }: { id: string }) {
                 the external-link affordance already promised. */}
             <Button asChild variant="outline" size="sm">
               <Link
-                href={`/admin/conversations/${data.candidateId}`}
+                href={adminConversationPath({
+                  id: data.candidateId,
+                  serialNumber: data.candidateSerialNumber,
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
               >

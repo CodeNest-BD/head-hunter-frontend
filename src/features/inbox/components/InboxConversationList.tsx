@@ -10,9 +10,14 @@ import {
   CANDIDATE_STATUS_LABELS,
   type CandidateStatus,
 } from "@/features/candidates/schemas";
-import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
+import {
+  companyJobPath,
+  inboxThreadPath,
+  jobPath,
+  type EntityRef,
+} from "@/shared/utils/entityPaths";
 import { formatDate } from "@/shared/utils/formatDate";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
@@ -34,14 +39,14 @@ const COPY: Record<
   InboxSide,
   {
     subtitle: string;
-    jobHref: (jobId: string, jobTitle: string) => string;
+    jobHref: (job: EntityRef) => string;
     emptyHint: { href: string; label: string; before: string; after: string };
   }
 > = {
   company: {
     subtitle:
       "Conversations with recruiters about the candidates they submitted.",
-    jobHref: (jobId) => `/company/jobs/${jobId}`,
+    jobHref: companyJobPath,
     emptyHint: {
       before: "Recruiters submit candidates to your ",
       href: "/company/jobs",
@@ -52,7 +57,7 @@ const COPY: Record<
   recruiter: {
     subtitle:
       "Conversations with companies about the candidates you submitted.",
-    jobHref: (jobId, jobTitle) => jobPath({ id: jobId, title: jobTitle }),
+    jobHref: jobPath,
     emptyHint: {
       before: "Submit a candidate from the ",
       href: "/explore-jobs",
@@ -215,8 +220,18 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
                 key={row.candidateId}
                 row={row}
                 side={side}
-                onOpen={() => router.push(`/${side}/inbox/${row.candidateId}`)}
-                jobHref={copy.jobHref(row.jobId, row.jobTitle)}
+                onOpen={() =>
+                  router.push(
+                    inboxThreadPath(side, {
+                      id: row.candidateId,
+                      serialNumber: row.candidateSerialNumber,
+                    }),
+                  )
+                }
+                jobHref={copy.jobHref({
+                  id: row.jobId,
+                  serialNumber: row.jobSerialNumber,
+                })}
               />
             ))}
           </ul>

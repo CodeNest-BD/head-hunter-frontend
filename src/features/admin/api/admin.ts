@@ -44,9 +44,7 @@ function listParams(params: AdminListParams): Record<string, unknown> {
     ...(params.verificationStatus
       ? { verificationStatus: params.verificationStatus }
       : {}),
-    ...(params.companyProfileId
-      ? { companyProfileId: params.companyProfileId }
-      : {}),
+    ...(params.company ? { company: params.company } : {}),
     ...(params.recruiterProfileId
       ? { recruiterProfileId: params.recruiterProfileId }
       : {}),

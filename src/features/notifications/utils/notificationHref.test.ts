@@ -95,6 +95,51 @@ describe("notificationHref", () => {
     ).toBe("/admin/companies");
   });
 
+  it("links by serial number when the payload carries one", () => {
+    expect(
+      notificationHref(
+        notification("offer_accepted", {
+          candidateId: "cand-1",
+          candidateSerialNumber: 14,
+        }),
+        "company",
+      ),
+    ).toBe("/company/inbox/14");
+    expect(
+      notificationHref(
+        notification("dispute_message", {
+          disputeId: "d-1",
+          disputeSerialNumber: 3,
+        }),
+        "admin",
+      ),
+    ).toBe("/admin/disputes/3");
+    expect(
+      notificationHref(
+        notification("company_awaiting_approval", {
+          subjectUserId: "u-1",
+          subjectSerialNumber: 12,
+        }),
+        "admin",
+      ),
+    ).toBe("/admin/companies/12");
+  });
+
+  it("falls back to the UUID when the serial is missing or malformed", () => {
+    expect(
+      notificationHref(
+        notification("job_expired", { jobId: "job-1", jobSerialNumber: "7" }),
+        "company",
+      ),
+    ).toBe("/company/jobs/job-1");
+    expect(
+      notificationHref(
+        notification("dispute_opened", { disputeId: "d-1" }),
+        "recruiter",
+      ),
+    ).toBe("/disputes/d-1");
+  });
+
   it("returns null for an admin rather than falling back to the recruiter route", () => {
     expect(
       notificationHref(

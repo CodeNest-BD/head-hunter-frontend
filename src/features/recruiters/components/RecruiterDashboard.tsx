@@ -31,6 +31,7 @@ import {
 import { ListRow } from "@/shared/ui-components/list/ListRow";
 import { activityGlyph } from "@/features/notifications/utils/activityGlyph";
 import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
+import { jobPath } from "@/shared/utils/entityPaths";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { useMyRecruiterProfile } from "../hooks/useRecruiterProfile";
@@ -106,7 +107,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
         latestRole.recruiterFeeMinor,
       )} recruiter fee`,
       actionLabel: "Submit",
-      href: `/jobs/${latestRole.id}`,
+      href: jobPath(latestRole),
     });
   }
   if (unreadMessages > 0) {

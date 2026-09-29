@@ -8,7 +8,7 @@ export { OfferCard } from "./components/OfferCard";
 export type { OfferEventData } from "./components/OfferCard";
 export { ProposalCard } from "./components/ProposalCard";
 export type { ProposalEventData } from "./components/ProposalCard";
-export { Thread } from "./components/Thread";
+export { Thread, ThreadSkeleton } from "./components/Thread";
 export { UnreadBadge } from "./components/UnreadBadge";
 export {
   useConversationThread,

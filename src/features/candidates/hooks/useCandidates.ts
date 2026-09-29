@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
 import { isApiError } from "@/shared/libs/errorHandler";
+import { cacheUnderSerialKey } from "@/shared/libs/queryClient";
 import {
   createCandidate,
   deleteCandidate,
@@ -39,10 +40,21 @@ export function useMyCandidatesForJob(jobId: string) {
  * fire fifty requests for panels nobody opened.
  */
 export function useCandidate(candidateId: string, enabled = true) {
+  const queryClient = useQueryClient();
   return useQuery({
     enabled,
     queryKey: candidateKeys.detail(candidateId),
-    queryFn: () => fetchCandidate(candidateId),
+    queryFn: async () => {
+      const candidate = await fetchCandidate(candidateId);
+      cacheUnderSerialKey(
+        queryClient,
+        candidateId,
+        candidate.serialNumber,
+        candidateKeys.detail,
+        candidate,
+      );
+      return candidate;
+    },
     // The company moves the status, so the recruiter's copy has to learn about
     // a change it did not make.
     refetchInterval: REALTIME_POLL_MS,

@@ -18,7 +18,7 @@ export default function DisputeDetailPage({
           { label: "Detail" },
         ]}
       >
-        <ParticipantDisputeView id={params.id} />
+        <ParticipantDisputeView disputeRef={params.id} />
       </DashboardLayout>
     </RequireRole>
   );

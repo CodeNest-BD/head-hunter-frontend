@@ -26,7 +26,7 @@ import {
   type RoleCategory,
 } from "../schemas";
 import { formatSalaryRange } from "../utils/formatSalaryRange";
-import { jobPath } from "../utils/jobPath";
+import { jobPath } from "@/shared/utils/entityPaths";
 
 function locationLine(job: PublicJobCardData): string {
   if (job.isRemote) return "Remote";

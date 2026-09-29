@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { adminDisputePath } from "@/shared/utils/entityPaths";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -346,7 +347,7 @@ export function AdminDisputesTable() {
                     )}
                     <td className={cn(TABLE_TD, "text-right")}>
                       <Button asChild variant="outline" size="sm">
-                        <Link href={`/admin/disputes/${d.id}`}>Review</Link>
+                        <Link href={adminDisputePath(d)}>Review</Link>
                       </Button>
                     </td>
                   </tr>
@@ -362,7 +363,7 @@ export function AdminDisputesTable() {
                 title={`${d.candidateName} · ${d.jobTitle}`}
                 subtitle={`${d.companyName} ↔ ${d.recruiterName}`}
                 trailing={<DisputeStatusBadge status={d.status} />}
-                href={`/admin/disputes/${d.id}`}
+                href={adminDisputePath(d)}
                 className={cn(d.unread && "bg-unread shadow-rail")}
                 fields={[
                   { label: "Raised By", value: RAISED_BY_LABELS[d.raisedBy] },

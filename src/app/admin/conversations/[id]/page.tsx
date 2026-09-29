@@ -19,7 +19,7 @@ export default function AdminConversationThreadPage({
           { label: "Thread" },
         ]}
       >
-        <ConversationThread submissionId={params.id} />
+        <ConversationThread candidateRef={params.id} />
       </DashboardLayout>
     </RequireRole>
   );

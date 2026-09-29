@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, ChevronLeft, Send, SquarePen } from "lucide-react";
 
 import { RequireApprovedRecruiter, useAuth } from "@/features/auth";
@@ -10,11 +9,17 @@ import { useJob, usePublishJob } from "@/features/jobs";
 import type { Job } from "@/features/jobs/schemas";
 import { useMyCompanyProfile } from "@/features/companies";
 import { JobDetailBody } from "@/features/jobs/components/JobDetailView";
-import { jobIdFromSlug, jobPath } from "@/features/jobs/utils/jobPath";
 import { jobToJobView } from "@/features/jobs/utils/toJobView";
 import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { PublicShell } from "@/components/landing/PublicShell";
 import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+import {
+  companyJobPath,
+  inboxJobPath,
+  jobPath,
+  jobRefFromSegment,
+} from "@/shared/utils/entityPaths";
 import { BackLink, PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
@@ -34,7 +39,7 @@ function DetailSkeleton() {
  * where the thread with the company lives — so this one button serves both
  * intents.
  */
-function SubmitCandidatesButton({ jobId }: { jobId: string }) {
+function SubmitCandidatesButton({ job }: { job: Job }) {
   // Candidate submission is phase-2 — disable the button for the phase-1
   // delivery (see HIDE_PHASE2_FEATURES / docs/phase-1-hidden-features.md).
   if (HIDE_PHASE2_FEATURES) {
@@ -50,7 +55,7 @@ function SubmitCandidatesButton({ jobId }: { jobId: string }) {
   // candidate list, where the form to add one lives.
   return (
     <Button asChild type="button" className="w-full">
-      <Link href={`/recruiter/inbox/job/${jobId}`}>
+      <Link href={inboxJobPath("recruiter", job)}>
         <Send className="size-[15px]" />
         Submit candidates
       </Link>
@@ -73,7 +78,7 @@ function CompanyJobActions({ job }: { job: Job }) {
   return (
     <div className="flex flex-wrap gap-2">
       <Button asChild type="button" variant="outline" size="sm">
-        <Link href={`/company/jobs/${job.id}`}>
+        <Link href={companyJobPath(job)}>
           <SquarePen className="size-[15px]" />
           Edit
         </Link>
@@ -87,7 +92,7 @@ function CompanyJobActions({ job }: { job: Job }) {
   );
 }
 
-function RecruiterCta({ jobId }: { jobId: string }) {
+function RecruiterCta({ job }: { job: Job }) {
   const { isVerified, verificationStatus, isLoading } =
     useIsVerifiedRecruiter();
   // Hold the button's footprint: this CTA leads the job's sidebar, and popping
@@ -100,7 +105,7 @@ function RecruiterCta({ jobId }: { jobId: string }) {
       />
     );
   }
-  if (isVerified) return <SubmitCandidatesButton jobId={jobId} />;
+  if (isVerified) return <SubmitCandidatesButton job={job} />;
   return (
     <div className="flex flex-col gap-1.5">
       <Button type="button" className="w-full" disabled>
@@ -124,30 +129,15 @@ function RecruiterCta({ jobId }: { jobId: string }) {
 }
 
 /**
- * Rewrites a bare-uuid link, or one whose slug went stale after a rename, to
- * the job's current `/jobs/<slug>-<uuid>` — `replace` so Back doesn't bounce
- * through the old URL.
- */
-function useCanonicalJobPath(job: Job | undefined): void {
-  const router = useRouter();
-  const pathname = usePathname();
-  useEffect(() => {
-    if (!job) return;
-    const canonical = jobPath(job);
-    if (pathname !== canonical) router.replace(canonical);
-  }, [job, pathname, router]);
-}
-
-/**
  * Fetches and renders the job itself. Deliberately kept as a child mounted
  * only inside `RequireApprovedRecruiter` (see `AuthedJobDetail`) rather than
  * called at that component's own top level — an unapproved recruiter must
  * never fire this request at all, not just have its result hidden, or they'd
  * still eat a 403 toast on every visit.
  */
-function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
-  const { data: job, isPending, isError, refetch } = useJob(jobId);
-  useCanonicalJobPath(job);
+function AuthedJobBody({ jobRef, role }: { jobRef: string; role: string }) {
+  const { data: job, isPending, isError, refetch } = useJob(jobRef);
+  useCanonicalPath(job && jobPath(job));
 
   return (
     <>
@@ -180,7 +170,7 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
       ) : (
         <JobDetailBody
           job={jobToJobView(job)}
-          cta={role === "recruiter" ? <RecruiterCta jobId={jobId} /> : null}
+          cta={role === "recruiter" ? <RecruiterCta job={job} /> : null}
         />
       )}
     </>
@@ -190,7 +180,7 @@ function AuthedJobBody({ jobId, role }: { jobId: string; role: string }) {
 /** Signed-in view: authed endpoint (role visibility rules), dashboard chrome.
  * `RequireApprovedRecruiter` is a no-op for company/admin callers (it always
  * reports approved for non-recruiters). */
-function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
+function AuthedJobDetail({ jobRef, role }: { jobRef: string; role: string }) {
   const router = useRouter();
   // A generic "Back" that returns wherever the viewer came from — the inbox,
   // the map, a search — rather than always the map. Falls back to the map when
@@ -217,7 +207,7 @@ function AuthedJobDetail({ jobId, role }: { jobId: string; role: string }) {
           Back
         </button>
         <RequireApprovedRecruiter>
-          <AuthedJobBody jobId={jobId} role={role} />
+          <AuthedJobBody jobRef={jobRef} role={role} />
         </RequireApprovedRecruiter>
       </div>
     </DashboardLayout>
@@ -259,7 +249,7 @@ function GuestJobDetail() {
 }
 
 export default function JobDetailPage() {
-  const params = useParams<{ slug: string }>();
+  const params = useParams<{ id: string }>();
   const { status, user } = useAuth();
 
   // While the session boots, stay chrome-neutral — avoids a guest→dashboard
@@ -274,7 +264,7 @@ export default function JobDetailPage() {
 
   if (status === "authenticated" && user) {
     return (
-      <AuthedJobDetail jobId={jobIdFromSlug(params.slug)} role={user.role} />
+      <AuthedJobDetail jobRef={jobRefFromSegment(params.id)} role={user.role} />
     );
   }
   return <GuestJobDetail />;

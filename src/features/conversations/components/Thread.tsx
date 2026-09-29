@@ -7,7 +7,7 @@ import { AlertCircle, Briefcase } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { CANDIDATE_STATUS_LABELS } from "@/features/candidates/schemas";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
-import { jobPath } from "@/features/jobs/utils/jobPath";
+import { companyJobPath, jobPath } from "@/shared/utils/entityPaths";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
@@ -49,7 +49,7 @@ export interface ThreadProps {
 const THREAD_PANEL_CLASSNAME =
   "flex h-[32rem] flex-col overflow-hidden rounded-md border border-line bg-surface shadow-e1 lg:h-full";
 
-function ThreadSkeleton() {
+export function ThreadSkeleton() {
   return (
     <div className={THREAD_PANEL_CLASSNAME}>
       <div className="flex flex-1 flex-col gap-4 p-4">
@@ -276,13 +276,9 @@ export function Thread({ candidateId }: ThreadProps) {
   // name falls back the same as a missing one.
   const counterpartyHeading = counterpartyName?.trim() || counterpartyFallback;
 
+  const job = threadHeader?.job ?? { id: "" };
   const jobHref =
-    viewerParty === "company"
-      ? `/company/jobs/${threadHeader?.job.id ?? ""}`
-      : jobPath({
-          id: threadHeader?.job.id ?? "",
-          title: threadHeader?.job.title,
-        });
+    viewerParty === "company" ? companyJobPath(job) : jobPath(job);
 
   return (
     <div className={THREAD_PANEL_CLASSNAME}>

@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { serialNumberSchema } from "@/shared/utils/entityPaths";
 import { MAX_SALARY_MAJOR, MAX_SALARY_MAJOR_LABEL } from "@/shared/utils/money";
 
 export const CANDIDATE_STATUSES = [
@@ -24,6 +25,7 @@ export const CANDIDATE_STATUS_LABELS: Record<CandidateStatus, string> = {
 
 export const candidateSchema = z.object({
   id: z.string(),
+  serialNumber: serialNumberSchema.optional(),
   jobId: z.string(),
   recruiterProfileId: z.string(),
   fullName: z.string(),
