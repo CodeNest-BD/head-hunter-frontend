@@ -10,6 +10,7 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { CurrentUserAvatar } from "./CurrentUserAvatar";
 import { NavBadge } from "./NavBadge";
 import { navForRole } from "./dashboardNav";
+import { MENU_OPTION_LIST } from "@/shared/ui-components/controls/menuStyles";
 
 /**
  * Signed-in identity control: an avatar + name that opens a dropdown of the
@@ -45,7 +46,7 @@ export function UserMenu({ className }: { className?: string }) {
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="z-50 w-64 overflow-hidden rounded-sm border border-line bg-surface p-1 shadow-pop data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className={`z-50 w-64 overflow-hidden rounded-sm border border-line bg-surface p-1 shadow-pop data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 ${MENU_OPTION_LIST}`}
         >
           {/* Identity header */}
           <div className="flex items-center gap-2.5 px-3 py-2.5">

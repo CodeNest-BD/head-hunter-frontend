@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/shared/ui-components/controls/popover";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { MENU_OPTION_LIST } from "./menuStyles";
 
 export interface SelectOption {
   readonly value: string;
@@ -239,7 +240,7 @@ export function SearchableSelect({
           id={listboxId}
           ref={listRef}
           role="listbox"
-          className="max-h-64 overflow-y-auto p-1"
+          className={cn("max-h-64 overflow-y-auto p-1", MENU_OPTION_LIST)}
         >
           {entries.map((entry, index) => (
             <Option

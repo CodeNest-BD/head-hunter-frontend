@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { Check, SlidersHorizontal } from "lucide-react";
+import { MENU_OPTION_LIST } from "@/shared/ui-components/controls/menuStyles";
 
 export interface ColumnDef {
   key: string;
@@ -102,7 +103,7 @@ export function ColumnsToggle({
         <Dropdown.Content
           align="end"
           sideOffset={4}
-          className="z-50 min-w-[200px] rounded-sm border border-line bg-surface p-1 shadow-pop"
+          className={`z-50 min-w-[200px] rounded-sm border border-line bg-surface p-1 shadow-pop ${MENU_OPTION_LIST}`}
         >
           <p className="px-2.5 py-1.5 text-label font-[650] uppercase text-ink-muted">
             Toggle columns

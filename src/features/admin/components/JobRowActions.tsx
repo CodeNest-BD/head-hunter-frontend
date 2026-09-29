@@ -10,6 +10,7 @@ import { ConfirmActionDialog } from "@/shared/ui-components/controls/ConfirmActi
 
 import { useDeleteAdminJob, useRepostAdminJob } from "../hooks/useAdmin";
 import type { JobStatus } from "../schemas";
+import { MENU_OPTION_LIST } from "@/shared/ui-components/controls/menuStyles";
 
 /** Which confirmation is open — the actions are mutually exclusive. */
 type PendingAction = "delete" | "repost" | null;
@@ -56,7 +57,7 @@ export function JobRowActions({
           <Dropdown.Content
             align="end"
             sideOffset={4}
-            className="z-50 min-w-[160px] rounded-sm border border-line bg-surface p-1 shadow-pop"
+            className={`z-50 min-w-[160px] rounded-sm border border-line bg-surface p-1 shadow-pop ${MENU_OPTION_LIST}`}
           >
             <Dropdown.Item asChild>
               <Link href={`/admin/jobs/${jobId}/edit`} className={ITEM_CLASS}>

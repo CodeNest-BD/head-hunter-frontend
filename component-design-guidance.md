@@ -87,7 +87,7 @@ halo). Never `shadow-md` / `shadow-lg`.
 sizes `default` `sm` `lg` `icon`) · `Input` · `Textarea` · `Label` · `Select`
 (Radix) · `NativeSelect` (forwards a ref, so `react-hook-form` registers on it)
 · `Checkbox` · `Tabs` · `FilterChip` · `Card` + `CardHeader` / `CardTitle` /
-`CardDescription` / `CardContent` / `CardFooter` · `Popover` · `Tooltip` ·
+`CardDescription` / `CardContent` / `CardFooter` · `Popover` · `Tooltip` · `menuStyles` (`MENU_OPTION_LIST`) ·
 `Slider` · `Calendar` · `PasswordInput` · `PhoneInput` · `NumericInput` ·
 `StateSelect` · `CityCombobox` · `SearchableSelect` · `DayPickerField` ·
 `ChipListField` · `RichTextEditor` · `ConfirmAction` (inline) ·
@@ -166,6 +166,14 @@ text-bad` error; sticky save bar at the foot.
 `DIALOG_HEADER` / `DIALOG_BODY` / `DIALOG_FOOTER` and `DIALOG_TITLE`. Add only
 a `max-w-*` of your own.
 
+### An option list
+
+Any dropdown, select or menu puts `MENU_OPTION_LIST` on its list container — a
+hairline between rows, so a stack of same-weight labels can be scanned. It goes
+on the container, not the rows, so it draws only _between_ options and no
+`last:` rule can mis-fire on a wrapped row. The container's `p-1` insets the
+rules from the panel border.
+
 ### A status
 
 Name a **`PillTone`**, never a colour. Tone maps live in each feature's
@@ -209,6 +217,7 @@ further and draws its border, so the movement marks what is clickable.
 - [ ] Numbers are `tabular-nums`
 - [ ] Every table has `ColumnsToggle`, column filters, and a reachable reset
 - [ ] Loading state is the right one of skeleton / spinner / `BrandLoader`
+- [ ] Any option list carries `MENU_OPTION_LIST`
 - [ ] Motion is paired with `motion-reduce:`
 - [ ] Interactive elements have an accessible name; icon-only ones have
       `aria-label`

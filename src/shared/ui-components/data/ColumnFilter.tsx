@@ -11,6 +11,7 @@ import {
 } from "@/shared/ui-components/controls/popover";
 
 import { TABLE_TH } from "./tableStyles";
+import { MENU_OPTION_LIST } from "@/shared/ui-components/controls/menuStyles";
 
 export interface ColumnFilterOption {
   value: string;
@@ -137,7 +138,7 @@ export function ColumnFilter(props: ColumnFilterProps) {
             </div>
           </div>
         )}
-        <div className="max-h-56 overflow-y-auto p-1">
+        <div className={cn("max-h-56 overflow-y-auto p-1", MENU_OPTION_LIST)}>
           {shown.length === 0 ? (
             <p className="px-2 py-3 text-center text-meta text-ink-muted">
               No matches

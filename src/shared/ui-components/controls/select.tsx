@@ -4,6 +4,7 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { MENU_OPTION_LIST } from "./menuStyles";
 
 /**
  * Radix's Select, with one guard on the way out.
@@ -78,6 +79,7 @@ const SelectContent = React.forwardRef<
       <SelectPrimitive.Viewport
         className={cn(
           "p-1",
+          MENU_OPTION_LIST,
           position === "popper" &&
             "w-full min-w-[var(--radix-select-trigger-width)]",
         )}
