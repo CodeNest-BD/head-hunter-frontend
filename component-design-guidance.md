@@ -9,8 +9,8 @@ defines the system, `pages/*.html` show it applied. Tokens live in
 `src/app/globals.css` and are exposed as Tailwind utilities in
 `tailwind.config.ts`.
 
-**Inventory:** 65 shared components across 11 folders, 112 feature components,
-46 routes.
+**Inventory** (at the time of writing — re-count rather than trust it): 65
+shared components across 11 folders, 111 feature components, 46 routes.
 
 ---
 
