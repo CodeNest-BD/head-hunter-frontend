@@ -1,10 +1,15 @@
 /**
- * Option lists — every dropdown, select and menu in the app.
+ * Option lists — a dropdown you pick a *value* from.
  *
- * A stack of same-weight rows with nothing between them is hard to scan: the
- * eye has no anchor between one label and the next, and the longer labels in
- * this product ("Resolved — Countdown Resumed", "Placement Wrongly Rejected")
- * run together. A hairline between rows gives each one an edge.
+ * A stack of same-weight text rows with nothing between them is hard to scan:
+ * the eye has no anchor between one label and the next, and the longer labels
+ * in this product ("Resolved — Countdown Resumed", "Placement Wrongly
+ * Rejected") run together. A hairline between rows gives each one an edge.
+ *
+ * **Not for menus of destinations or actions** — an account menu or a row
+ * kebab. Those carry an icon per row, which already separates them, and they
+ * are usually ruled into groups already; adding hairlines makes them read as a
+ * table rather than a menu.
  *
  * Applied to the list container rather than to each row, so it draws only
  * *between* options — no stray rule under the last one, and no `last:` rule to

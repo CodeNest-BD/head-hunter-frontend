@@ -168,10 +168,16 @@ a `max-w-*` of your own.
 
 ### An option list
 
-Any dropdown, select or menu puts `MENU_OPTION_LIST` on its list container — a
-hairline between rows, so a stack of same-weight labels can be scanned. It goes
-on the container, not the rows, so it draws only _between_ options and no
-`last:` rule can mis-fire on a wrapped row. The container's `p-1` insets the
+A dropdown you pick a **value** from — a column filter, a select, a searchable
+picker, the Columns list — puts `MENU_OPTION_LIST` on its list container: a
+hairline between rows, so a stack of same-weight labels can be scanned.
+
+A menu of **destinations or actions** — an account menu, a row kebab, a nav
+dropdown — does not. Those carry an icon per row, which already separates them,
+and hairlines make them read as a table rather than a menu.
+
+It goes on the container, not the rows, so it draws only _between_ options and
+no `last:` rule can mis-fire on a wrapped row. The container's `p-1` insets the
 rules from the panel border.
 
 ### A status
@@ -217,7 +223,8 @@ further and draws its border, so the movement marks what is clickable.
 - [ ] Numbers are `tabular-nums`
 - [ ] Every table has `ColumnsToggle`, column filters, and a reachable reset
 - [ ] Loading state is the right one of skeleton / spinner / `BrandLoader`
-- [ ] Any option list carries `MENU_OPTION_LIST`
+- [ ] A value picker carries `MENU_OPTION_LIST`; a menu of destinations or
+      actions does not
 - [ ] Motion is paired with `motion-reduce:`
 - [ ] Interactive elements have an accessible name; icon-only ones have
       `aria-label`

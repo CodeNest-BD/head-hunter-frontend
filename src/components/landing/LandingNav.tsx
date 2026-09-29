@@ -11,7 +11,6 @@ import { UserMenu } from "@/shared/ui-components/layout/UserMenu";
 import { NAV_BY_ROLE } from "@/shared/ui-components/layout/dashboardNav";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
-import { MENU_OPTION_LIST } from "@/shared/ui-components/controls/menuStyles";
 
 interface NavItemLink {
   href: string;
@@ -95,7 +94,7 @@ function NavDropdown({
         <Dropdown.Content
           align="start"
           sideOffset={12}
-          className={`z-50 min-w-[210px] rounded-sm border border-line bg-surface p-1 shadow-pop ${MENU_OPTION_LIST}`}
+          className="z-50 min-w-[210px] rounded-sm border border-line bg-surface p-1 shadow-pop"
         >
           {items.map((item) => (
             <Dropdown.Item key={item.href} asChild>
@@ -232,7 +231,7 @@ export function LandingNav() {
                     <Dropdown.Content
                       align="end"
                       sideOffset={8}
-                      className={`z-50 min-w-[180px] rounded-sm border border-line bg-surface p-1 shadow-pop ${MENU_OPTION_LIST}`}
+                      className="z-50 min-w-[180px] rounded-sm border border-line bg-surface p-1 shadow-pop"
                     >
                       {SIGNUP_AUDIENCES.map((item) => (
                         <Dropdown.Item key={item.href} asChild>

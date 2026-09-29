@@ -8,7 +8,6 @@ import { Ban, Eye, MoreVertical, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/shared/libs/shadCnConfig";
-import { MENU_OPTION_LIST } from "@/shared/ui-components/controls/menuStyles";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   useDeleteRecruiter,
@@ -31,7 +30,8 @@ interface AccountRowActionsProps {
 const KEBAB_CLASS =
   "inline-flex size-7 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-const MENU_CLASS = `z-50 min-w-[170px] rounded-sm border border-line bg-surface p-1 shadow-pop ${MENU_OPTION_LIST}`;
+const MENU_CLASS =
+  "z-50 min-w-[170px] rounded-sm border border-line bg-surface p-1 shadow-pop";
 
 const ITEM_CLASS =
   "flex cursor-pointer items-center gap-2.5 rounded-xs px-2.5 py-1.5 text-sub text-ink-body outline-none transition-colors hover:bg-surface-sub focus:bg-surface-sub [&_svg]:size-[15px] [&_svg]:shrink-0";

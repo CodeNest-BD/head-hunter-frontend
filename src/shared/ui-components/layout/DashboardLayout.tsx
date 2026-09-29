@@ -16,7 +16,6 @@ import { useAuth } from "@/features/auth";
 import { useUnreadRealtime } from "@/features/conversations";
 import { useAccountApproval } from "@/shared/hooks/useAccountApproval";
 import { cn } from "@/shared/libs/shadCnConfig";
-import { MENU_OPTION_LIST } from "@/shared/ui-components/controls/menuStyles";
 import {
   Popover,
   PopoverContent,
@@ -79,7 +78,7 @@ function UserMenu() {
           </p>
         </div>
         {/* The full role navigation, mirroring the rail. */}
-        <div className={cn("p-1", MENU_OPTION_LIST)}>
+        <div className="p-1">
           {items.map((item) => {
             const Icon = item.icon;
             return (
