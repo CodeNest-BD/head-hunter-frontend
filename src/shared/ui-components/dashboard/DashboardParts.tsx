@@ -46,10 +46,12 @@ export function PanelGroup({
 
   return (
     <div>
-      {/* `.tabs` — the same underline bar the rest of the app uses. */}
+      {/* `.tabs` — the same underline bar the rest of the app uses, rule and
+          all: an inset shadow rather than a border, so no trigger has to hang a
+          pixel below the bar and raise a scrollbar inside its own scroll port. */}
       <div
         role="tablist"
-        className="flex items-center gap-0.5 overflow-x-auto border-b border-line lg:hidden"
+        className="flex items-center gap-0.5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)] lg:hidden"
       >
         {tabs.map((panel) => (
           <button
@@ -59,7 +61,7 @@ export function PanelGroup({
             aria-selected={panel.id === active}
             onClick={() => setActive(panel.id)}
             className={cn(
-              "-mb-px whitespace-nowrap border-b-2 px-[13px] py-[9px] text-sub font-semibold transition-colors",
+              "whitespace-nowrap border-b-2 px-[13px] py-[9px] text-sub font-semibold transition-colors",
               panel.id === active
                 ? "border-blue text-blue"
                 : "border-transparent text-ink-muted hover:text-ink",

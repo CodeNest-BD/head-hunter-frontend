@@ -17,8 +17,14 @@ const TabsList = React.forwardRef<
     ref={ref}
     // Triggers are `whitespace-nowrap`, so a three-tab bar is wider than a
     // phone: scroll the bar itself rather than letting it widen the page.
+    //
+    // The bar's rule is an inset shadow, not a border. `overflow-x-auto` forces
+    // `overflow-y` to compute as `auto` too, so the 1px a `-mb-px` trigger used
+    // to hang below the bar was enough to raise a vertical scrollbar for a
+    // single pixel. An inset shadow adds no height, and the active trigger's
+    // own 2px border paints over it — same look, nothing to scroll.
     className={cn(
-      "flex items-center gap-0.5 overflow-x-auto border-b border-line",
+      "flex items-center gap-0.5 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)]",
       className,
     )}
     {...props}
@@ -35,7 +41,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "-mb-px inline-flex items-center gap-[7px] whitespace-nowrap border-b-2 border-transparent px-[13px] py-[9px] text-sub font-semibold text-ink-muted transition-colors hover:text-ink focus-visible:outline-none data-[state=active]:border-blue data-[state=active]:text-blue [&_svg]:size-[15px]",
+      "inline-flex items-center gap-[7px] whitespace-nowrap border-b-2 border-transparent px-[13px] py-[9px] text-sub font-semibold text-ink-muted transition-colors hover:text-ink focus-visible:outline-none data-[state=active]:border-blue data-[state=active]:text-blue [&_svg]:size-[15px]",
       className,
     )}
     {...props}
