@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import {
+  FilledJobDetails,
   JobForm,
   JobFormPublishButton,
   useJob,
@@ -65,6 +66,26 @@ function EditJobContent({ jobRef }: { jobRef: string }) {
             Retry
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (job.status === "filled") {
+    return (
+      <div className="flex flex-col gap-4">
+        <PageHeader
+          title={
+            <span className="flex flex-wrap items-center gap-3">
+              Job Details
+              <StatusBadge
+                label={job.status}
+                tone={STATUS_TONES[job.status] ?? "neutral"}
+                className="capitalize"
+              />
+            </span>
+          }
+        />
+        <FilledJobDetails job={job} />
       </div>
     );
   }

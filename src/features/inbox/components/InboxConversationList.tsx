@@ -3,8 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Briefcase, Inbox, Search } from "lucide-react";
+import {
+  AlertCircle,
+  Briefcase,
+  CheckCheck,
+  Inbox,
+  Search,
+} from "lucide-react";
 
+import { useMarkAllThreadsRead } from "@/features/conversations/hooks/useConversation";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import {
   CANDIDATE_STATUS_LABELS,
@@ -32,7 +39,10 @@ import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { ListRow } from "@/shared/ui-components/list/ListRow";
 
 import type { InboxSide } from "../api/inbox";
-import { useInboxConversations } from "../hooks/useInbox";
+import {
+  useInboxAttentionCount,
+  useInboxConversations,
+} from "../hooks/useInbox";
 import type { InboxConversationRow } from "../schemas";
 
 const COPY: Record<
@@ -103,6 +113,9 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
       unreadOnly: filter === "unread",
     });
 
+  const attentionCount = useInboxAttentionCount(side).data ?? 0;
+  const markAllRead = useMarkAllThreadsRead();
+
   const rows = data?.data ?? [];
   const meta = data?.meta;
   // Counts what the page highlights, so the readout matches the tinted rows —
@@ -113,7 +126,21 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Inbox" subtitle={copy.subtitle} />
+      <PageHeader
+        title="Inbox"
+        subtitle={copy.subtitle}
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            disabled={markAllRead.isPending || attentionCount === 0}
+            onClick={() => markAllRead.mutate()}
+          >
+            <CheckCheck />
+            Mark all as read
+          </Button>
+        }
+      />
 
       {/* `.toolbar` — the 36px search box and the All/Unread segmented control
        * sit directly on the canvas, left-aligned as one group. */}

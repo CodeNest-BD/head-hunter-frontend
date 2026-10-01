@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, RotateCcw } from "lucide-react";
 
 import { RequireRole } from "@/features/auth";
-import { JobForm, useJob } from "@/features/jobs";
+import { FilledJobDetails, JobForm, useJob } from "@/features/jobs";
 import { useRepostAdminJob, useUpdateAdminJob } from "@/features/admin";
 import { ConfirmActionDialog } from "@/shared/ui-components/controls/ConfirmActionDialog";
 import { BackLink, PageHeader } from "@/shared/ui-components/brand";
@@ -55,6 +55,9 @@ function EditContent({ jobRef }: { jobRef: string }) {
         </Button>
       </div>
     );
+  }
+  if (job.status === "filled") {
+    return <FilledJobDetails job={job} />;
   }
 
   return (

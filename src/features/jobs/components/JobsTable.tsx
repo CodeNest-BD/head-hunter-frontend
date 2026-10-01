@@ -245,25 +245,29 @@ function JobRowActions({ job }: { job: Job }) {
               <Eye className="size-[15px] text-ink-faint" />
               View
             </Link>
-            <Link
-              href={companyJobPath(job)}
-              onClick={() => setOpen(false)}
-              className={itemClass}
-            >
-              <SquarePen className="size-[15px] text-ink-faint" />
-              Edit
-            </Link>
-            <button
-              type="button"
-              onClick={() => setConfirming(true)}
-              className={cn(
-                itemClass,
-                "text-bad hover:bg-bad-bg hover:text-bad",
-              )}
-            >
-              <Trash2 className="size-[15px]" />
-              Delete
-            </button>
+            {job.status !== "filled" && (
+              <>
+                <Link
+                  href={companyJobPath(job)}
+                  onClick={() => setOpen(false)}
+                  className={itemClass}
+                >
+                  <SquarePen className="size-[15px] text-ink-faint" />
+                  Edit
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setConfirming(true)}
+                  className={cn(
+                    itemClass,
+                    "text-bad hover:bg-bad-bg hover:text-bad",
+                  )}
+                >
+                  <Trash2 className="size-[15px]" />
+                  Delete
+                </button>
+              </>
+            )}
           </>
         )}
       </PopoverContent>
