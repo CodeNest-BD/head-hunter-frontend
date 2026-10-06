@@ -10,6 +10,7 @@ import {
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { adminConversationPath } from "@/shared/utils/entityPaths";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
@@ -58,12 +59,18 @@ function SubmissionStatus({
   );
 }
 
+const conversationHref = (submission: ConversationListItem): string =>
+  adminConversationPath({
+    id: submission.candidateId,
+    serialNumber: submission.candidateSerialNumber,
+  });
+
 function SubmissionCard({ submission }: { submission: ConversationListItem }) {
   return (
     <MobileRecordCard
       title={submission.jobTitle}
       subtitle={submission.companyName}
-      href={`/admin/conversations/${submission.candidateId}`}
+      href={conversationHref(submission)}
       trailing={<SubmissionStatus submission={submission} />}
       fields={[
         { label: "Messages", value: submission.messageCount },
@@ -159,7 +166,7 @@ export function RecruiterSubmissions({
                     >
                       <td className={TABLE_TD}>
                         <Link
-                          href={`/admin/conversations/${c.candidateId}`}
+                          href={conversationHref(c)}
                           className={cn(
                             TABLE_CELL_MAIN,
                             "transition-colors after:absolute after:inset-0 hover:text-blue focus-visible:underline focus-visible:outline-none",

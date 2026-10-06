@@ -19,7 +19,7 @@ export default function AdminCompanyDetailPage({
           { label: "Profile" },
         ]}
       >
-        <CompanyDetail userId={params.id} />
+        <CompanyDetail companyRef={params.id} />
       </DashboardLayout>
     </RequireRole>
   );

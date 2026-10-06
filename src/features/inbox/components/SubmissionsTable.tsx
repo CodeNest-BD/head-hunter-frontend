@@ -14,9 +14,9 @@ import {
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
-import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { inboxThreadPath, jobPath } from "@/shared/utils/entityPaths";
 import { formatDate, formatRelativeDay } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
@@ -108,24 +108,30 @@ function distinct(
     .map((value) => ({ value, label: value }));
 }
 
-function JobLink({ jobId, title }: { jobId: string; title: string }) {
+function JobLink({ row }: { row: InboxConversationRow }) {
   return (
     <Link
-      href={jobPath({ id: jobId, title })}
+      href={jobPath({ id: row.jobId, serialNumber: row.jobSerialNumber })}
       className="inline-flex min-w-0 max-w-full"
     >
       <RefChip className="transition-colors hover:bg-info-line">
         <Briefcase aria-hidden="true" />
-        <span className="truncate">{title}</span>
+        <span className="truncate">{row.jobTitle}</span>
       </RefChip>
     </Link>
   );
 }
 
-function OpenConversationLink({ candidateId }: { candidateId: string }) {
+const threadHref = (row: InboxConversationRow): string =>
+  inboxThreadPath("recruiter", {
+    id: row.candidateId,
+    serialNumber: row.candidateSerialNumber,
+  });
+
+function OpenConversationLink({ row }: { row: InboxConversationRow }) {
   return (
     <Link
-      href={`/recruiter/inbox/${candidateId}`}
+      href={threadHref(row)}
       className="inline-flex items-center gap-1.5 whitespace-nowrap text-sub font-[550] text-blue-ink underline-offset-2 transition-colors hover:underline"
     >
       Open conversation
@@ -138,7 +144,7 @@ function OpenConversationLink({ candidateId }: { candidateId: string }) {
 function ThreadCell({ row }: { row: InboxConversationRow }) {
   return (
     <Link
-      href={`/recruiter/inbox/${row.candidateId}`}
+      href={threadHref(row)}
       aria-label="Open conversation"
       className="inline-flex size-7 items-center justify-center rounded-xs text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink"
     >
@@ -468,7 +474,7 @@ export function SubmissionsTable({
                       )}
                       {showsJob && (
                         <td className={TABLE_TD}>
-                          <JobLink jobId={row.jobId} title={row.jobTitle} />
+                          <JobLink row={row} />
                         </td>
                       )}
                       {cols.isVisible("submitted") && (
@@ -524,7 +530,7 @@ export function SubmissionsTable({
                   fields={[
                     {
                       label: "Job",
-                      value: <JobLink jobId={row.jobId} title={row.jobTitle} />,
+                      value: <JobLink row={row} />,
                     },
                     {
                       label: "Submitted",
@@ -538,9 +544,7 @@ export function SubmissionsTable({
                           : "—",
                     },
                   ]}
-                  actions={
-                    <OpenConversationLink candidateId={row.candidateId} />
-                  }
+                  actions={<OpenConversationLink row={row} />}
                 />
               ))}
             </MobileRecordList>

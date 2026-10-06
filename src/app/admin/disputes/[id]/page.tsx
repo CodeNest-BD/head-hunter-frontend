@@ -19,7 +19,7 @@ export default function AdminDisputeDetailPage({
           { label: "Review" },
         ]}
       >
-        <AdminDisputeView id={params.id} />
+        <AdminDisputeView disputeRef={params.id} />
       </DashboardLayout>
     </RequireRole>
   );

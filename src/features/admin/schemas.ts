@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { serialNumberSchema } from "@/shared/utils/entityPaths";
 import { titleCase } from "@/shared/utils/titleCase";
 
 // Imported from the conversations feature's schemas module directly, not its
@@ -39,6 +40,7 @@ export type AdminVerificationStatus = z.infer<typeof verificationStatusSchema>;
 export const recruiterListItemSchema = z.object({
   userId: z.string(),
   recruiterProfileId: z.string(),
+  recruiterSerialNumber: serialNumberSchema.optional(),
   firstName: z.string().transform(titleCase),
   lastName: z.string().transform(titleCase),
   email: z.string(),
@@ -100,6 +102,7 @@ export type RecruiterDetail = z.infer<typeof recruiterDetailSchema>;
 export const companyListItemSchema = z.object({
   userId: z.string(),
   companyProfileId: z.string(),
+  companySerialNumber: serialNumberSchema.optional(),
   companyName: z.string(),
   hasLogo: z.boolean().catch(false),
   email: z.string(),
@@ -168,12 +171,14 @@ export type AdminCandidateStatus = z.infer<typeof candidateStatusSchema>;
 
 export const conversationListItemSchema = z.object({
   candidateId: z.string(),
+  candidateSerialNumber: serialNumberSchema.optional(),
   candidateName: z.string().transform(titleCase),
   companyProfileId: z.string(),
   companyName: z.string(),
   recruiterProfileId: z.string(),
   recruiterName: z.string().transform(titleCase),
   jobId: z.string(),
+  jobSerialNumber: serialNumberSchema.optional(),
   jobTitle: z.string(),
   status: candidateStatusSchema,
   messageCount: z.number(),
@@ -263,9 +268,11 @@ export type JobStatus = z.infer<typeof jobStatusSchema>;
 
 export const adminJobListItemSchema = z.object({
   jobId: z.string(),
+  jobSerialNumber: serialNumberSchema.optional(),
   title: z.string(),
   companyProfileId: z.string(),
   companyUserId: z.string().catch(""),
+  companySerialNumber: serialNumberSchema.optional(),
   companyName: z.string(),
   hasLogo: z.boolean().catch(false),
   status: jobStatusSchema,

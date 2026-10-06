@@ -20,6 +20,7 @@ import {
   type MobileRecordField,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { adminCompanyPath, urlRef } from "@/shared/utils/entityPaths";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { useAdminCompanies, useAdminStats } from "../hooks/useAdmin";
@@ -77,16 +78,22 @@ const COLUMNS: ColumnDef[] = [
 ];
 
 /** Deep-link to the jobs list filtered to one company. */
-function companyJobsHref(
-  companyProfileId: string,
-  companyName: string,
-): string {
+function companyJobsHref(company: CompanyListItem): string {
   const params = new URLSearchParams({
-    companyProfileId,
-    companyName,
+    company: urlRef({
+      id: company.companyProfileId,
+      serialNumber: company.companySerialNumber,
+    }),
+    companyName: company.companyName,
   });
   return `/admin/jobs?${params.toString()}`;
 }
+
+const companyDetailHref = (company: CompanyListItem): string =>
+  adminCompanyPath({
+    id: company.userId,
+    serialNumber: company.companySerialNumber,
+  });
 
 /**
  * Money ink: a funded wallet reads as a figure that matters, an unfunded one
@@ -99,7 +106,7 @@ function walletToneClass(balanceMinor: number): string {
 function CompanyJobCount({ company }: { company: CompanyListItem }) {
   return company.jobCount > 0 ? (
     <Link
-      href={companyJobsHref(company.companyProfileId, company.companyName)}
+      href={companyJobsHref(company)}
       className="font-[550] tabular-nums text-blue-ink hover:underline focus-visible:underline focus-visible:outline-none"
     >
       {company.jobCount}
@@ -153,7 +160,7 @@ function CompanyCard({ company }: { company: CompanyListItem }) {
     <MobileRecordCard
       title={company.companyName}
       subtitle={company.email}
-      href={`/admin/companies/${company.userId}`}
+      href={companyDetailHref(company)}
       trailing={<CompanyStatus company={company} />}
       fields={fields}
       actions={
@@ -161,7 +168,7 @@ function CompanyCard({ company }: { company: CompanyListItem }) {
           userId={company.userId}
           status={company.status}
           subjectName={company.companyName}
-          viewHref={`/admin/companies/${company.userId}`}
+          viewHref={companyDetailHref(company)}
           kind="company"
         />
       }
@@ -356,7 +363,7 @@ export function CompaniesTable() {
                           />
                           <div className="min-w-0">
                             <Link
-                              href={`/admin/companies/${c.userId}`}
+                              href={companyDetailHref(c)}
                               className={cn(
                                 TABLE_CELL_MAIN,
                                 "transition-colors hover:text-blue focus-visible:underline focus-visible:outline-none",
@@ -429,7 +436,7 @@ export function CompaniesTable() {
                           userId={c.userId}
                           status={c.status}
                           subjectName={c.companyName}
-                          viewHref={`/admin/companies/${c.userId}`}
+                          viewHref={companyDetailHref(c)}
                           kind="company"
                         />
                       </td>

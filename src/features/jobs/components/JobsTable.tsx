@@ -62,7 +62,7 @@ import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { ROLE_CATEGORY_LABELS, jobStatusSchema, type Job } from "../schemas";
 import { useDeleteJob, useJobs } from "../hooks/useJobs";
-import { jobPath } from "../utils/jobPath";
+import { companyJobPath, jobPath, urlRef } from "@/shared/utils/entityPaths";
 import { entriesOf } from "@/shared/utils/entriesOf";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -148,15 +148,15 @@ function JobExpiry({ expiresAt }: { expiresAt: Job["expiresAt"] }) {
  * act on it, and the number links straight there.
  */
 function CandidateCount({
-  jobId,
+  job,
   count,
 }: {
-  jobId: string;
+  job: Job;
   count: number | undefined;
 }) {
   return count !== undefined && count > 0 ? (
     <Link
-      href={`/company/inbox?job=${jobId}`}
+      href={`/company/inbox?job=${urlRef(job)}`}
       className="font-[550] tabular-nums text-blue-ink transition-colors hover:underline"
     >
       {count}
@@ -171,7 +171,7 @@ function CandidateCount({
  * and a two-step Delete (soft-delete) so the destructive action needs a
  * deliberate confirm.
  */
-function JobRowActions({ jobId, title }: { jobId: string; title: string }) {
+function JobRowActions({ job }: { job: Job }) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const del = useDeleteJob();
@@ -217,7 +217,7 @@ function JobRowActions({ jobId, title }: { jobId: string; title: string }) {
                 size="sm"
                 disabled={del.isPending}
                 onClick={() =>
-                  del.mutate(jobId, { onSuccess: () => setOpen(false) })
+                  del.mutate(job.id, { onSuccess: () => setOpen(false) })
                 }
               >
                 {del.isPending ? "Deleting…" : "Delete"}
@@ -227,32 +227,36 @@ function JobRowActions({ jobId, title }: { jobId: string; title: string }) {
         ) : (
           <>
             <Link
-              href={jobPath({ id: jobId, title })}
+              href={jobPath(job)}
               onClick={() => setOpen(false)}
               className={itemClass}
             >
               <Eye className="size-[15px] text-ink-faint" />
               View
             </Link>
-            <Link
-              href={`/company/jobs/${jobId}`}
-              onClick={() => setOpen(false)}
-              className={itemClass}
-            >
-              <SquarePen className="size-[15px] text-ink-faint" />
-              Edit
-            </Link>
-            <button
-              type="button"
-              onClick={() => setConfirming(true)}
-              className={cn(
-                itemClass,
-                "text-bad hover:bg-bad-bg hover:text-bad",
-              )}
-            >
-              <Trash2 className="size-[15px]" />
-              Delete
-            </button>
+            {job.status !== "filled" && (
+              <>
+                <Link
+                  href={companyJobPath(job)}
+                  onClick={() => setOpen(false)}
+                  className={itemClass}
+                >
+                  <SquarePen className="size-[15px] text-ink-faint" />
+                  Edit
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setConfirming(true)}
+                  className={cn(
+                    itemClass,
+                    "text-bad hover:bg-bad-bg hover:text-bad",
+                  )}
+                >
+                  <Trash2 className="size-[15px]" />
+                  Delete
+                </button>
+              </>
+            )}
           </>
         )}
       </PopoverContent>
@@ -514,14 +518,14 @@ export function JobsTable() {
                           cols.isVisible("candidates") && (
                             <td className={cn(TABLE_TD, "text-center")}>
                               <CandidateCount
-                                jobId={job.id}
+                                job={job}
                                 count={candidateCount}
                               />
                             </td>
                           )}
                         <td className={cn(TABLE_TD, "text-right")}>
                           <div className="flex justify-end">
-                            <JobRowActions jobId={job.id} title={job.title} />
+                            <JobRowActions job={job} />
                           </div>
                         </td>
                       </tr>
@@ -558,14 +562,14 @@ export function JobsTable() {
                             label: "Candidates",
                             value: (
                               <CandidateCount
-                                jobId={job.id}
+                                job={job}
                                 count={candidatesByJob.get(job.id)}
                               />
                             ),
                           },
                         ]),
                   ]}
-                  actions={<JobRowActions jobId={job.id} title={job.title} />}
+                  actions={<JobRowActions job={job} />}
                 />
               ))}
             </MobileRecordList>

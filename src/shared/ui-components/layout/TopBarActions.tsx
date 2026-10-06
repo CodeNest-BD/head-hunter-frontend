@@ -105,12 +105,16 @@ function NotificationBell() {
           }
           className="relative flex size-8.5 items-center justify-center rounded-sm text-ink-muted transition-colors hover:bg-surface-sub hover:text-ink"
         >
-          <Bell className="size-[17px]" />
-          {count > 0 && (
-            <span className="absolute right-[5px] top-[5px] flex h-[15px] min-w-[15px] items-center justify-center rounded-full border-2 border-surface bg-bad px-1 text-[9.5px] font-bold leading-none text-white">
-              {count > 9 ? "9+" : count}
-            </span>
-          )}
+          {/* Anchored to the icon, not the button, so the badge sits on the
+           * bell's shoulder instead of covering it or floating off the corner. */}
+          <span className="relative flex">
+            <Bell className="size-[17px]" />
+            {count > 0 && (
+              <span className="absolute -top-[5px] left-[10px] flex h-[15px] min-w-[15px] items-center justify-center rounded-full border-2 border-surface bg-bad px-1 text-[9.5px] font-bold leading-none text-white">
+                {count > 9 ? "9+" : count}
+              </span>
+            )}
+          </span>
         </button>
       </PopoverTrigger>
       <PopoverContent

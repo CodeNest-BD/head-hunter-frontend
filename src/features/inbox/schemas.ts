@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { candidateStatusSchema } from "@/features/candidates/schemas";
+import { serialNumberSchema } from "@/shared/utils/entityPaths";
 
 /** The submitting recruiter, as the company's inbox rows carry them. */
 export const recruiterSummarySchema = z.object({
@@ -32,6 +33,7 @@ export const JOB_STATUSES_IN_INBOX = [
 /** Level 1: one row per job that has candidates on it. */
 export const inboxJobRowSchema = z.object({
   jobId: z.string(),
+  jobSerialNumber: serialNumberSchema.optional(),
   jobTitle: z.string(),
   jobStatus: z.enum(JOB_STATUSES_IN_INBOX).catch("published"),
   candidateCount: z.number(),
@@ -51,6 +53,7 @@ export type InboxJobRow = z.infer<typeof inboxJobRowSchema>;
  */
 export const inboxCandidateRowSchema = z.object({
   candidateId: z.string(),
+  candidateSerialNumber: serialNumberSchema.optional(),
   candidateName: z.string(),
   status: candidateStatusSchema,
   submittedAt: z.coerce.date(),
@@ -68,9 +71,11 @@ export type InboxCandidateRow = z.infer<typeof inboxCandidateRowSchema>;
  */
 export const inboxConversationRowSchema = z.object({
   candidateId: z.string(),
+  candidateSerialNumber: serialNumberSchema.optional(),
   candidateName: z.string(),
   status: candidateStatusSchema,
   jobId: z.string(),
+  jobSerialNumber: serialNumberSchema.optional(),
   jobTitle: z.string(),
   counterpartyName: z.string(),
   recruiter: recruiterSummarySchema.nullable().optional(),
@@ -120,9 +125,11 @@ export const candidateNeedsAttention = (
 /** One row of the company submissions queue. */
 export const inboxSubmissionRowSchema = z.object({
   candidateId: z.string(),
+  candidateSerialNumber: serialNumberSchema.optional(),
   candidateName: z.string(),
   status: candidateStatusSchema,
   jobId: z.string(),
+  jobSerialNumber: serialNumberSchema.optional(),
   jobTitle: z.string(),
   submittedAt: z.coerce.date(),
   unreadMessages: z.number(),

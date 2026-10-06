@@ -3,16 +3,22 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Briefcase, Inbox } from "lucide-react";
+import { AlertCircle, Briefcase, CheckCheck, Inbox } from "lucide-react";
 
+import { useMarkAllThreadsRead } from "@/features/conversations/hooks/useConversation";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import {
   CANDIDATE_STATUS_LABELS,
   type CandidateStatus,
 } from "@/features/candidates/schemas";
-import { jobPath } from "@/features/jobs/utils/jobPath";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
+import {
+  companyJobPath,
+  inboxThreadPath,
+  jobPath,
+  type EntityRef,
+} from "@/shared/utils/entityPaths";
 import { formatDate } from "@/shared/utils/formatDate";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
@@ -31,21 +37,24 @@ import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { ListRow } from "@/shared/ui-components/list/ListRow";
 
 import type { InboxSide } from "../api/inbox";
-import { useInboxConversations } from "../hooks/useInbox";
+import {
+  useInboxAttentionCount,
+  useInboxConversations,
+} from "../hooks/useInbox";
 import type { InboxConversationRow } from "../schemas";
 
 const COPY: Record<
   InboxSide,
   {
     subtitle: string;
-    jobHref: (jobId: string, jobTitle: string) => string;
+    jobHref: (job: EntityRef) => string;
     emptyHint: { href: string; label: string; before: string; after: string };
   }
 > = {
   company: {
     subtitle:
       "Conversations with recruiters about the candidates they submitted.",
-    jobHref: (jobId) => `/company/jobs/${jobId}`,
+    jobHref: companyJobPath,
     emptyHint: {
       before: "Recruiters submit candidates to your ",
       href: "/company/jobs",
@@ -56,7 +65,7 @@ const COPY: Record<
   recruiter: {
     subtitle:
       "Conversations with companies about the candidates you submitted.",
-    jobHref: (jobId, jobTitle) => jobPath({ id: jobId, title: jobTitle }),
+    jobHref: jobPath,
     emptyHint: {
       before: "Submit a candidate from the ",
       href: "/explore-jobs",
@@ -102,6 +111,9 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
       unreadOnly: filter === "unread",
     });
 
+  const attentionCount = useInboxAttentionCount(side).data ?? 0;
+  const markAllRead = useMarkAllThreadsRead();
+
   const rows = data?.data ?? [];
   const meta = data?.meta;
   // Counts what the page highlights, so the readout matches the tinted rows —
@@ -112,7 +124,21 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Inbox" subtitle={copy.subtitle} />
+      <PageHeader
+        title="Inbox"
+        subtitle={copy.subtitle}
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            disabled={markAllRead.isPending || attentionCount === 0}
+            onClick={() => markAllRead.mutate()}
+          >
+            <CheckCheck />
+            Mark all as read
+          </Button>
+        }
+      />
 
       <TableFilterBar
         filters={[
@@ -224,8 +250,18 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
                 key={row.candidateId}
                 row={row}
                 side={side}
-                onOpen={() => router.push(`/${side}/inbox/${row.candidateId}`)}
-                jobHref={copy.jobHref(row.jobId, row.jobTitle)}
+                onOpen={() =>
+                  router.push(
+                    inboxThreadPath(side, {
+                      id: row.candidateId,
+                      serialNumber: row.candidateSerialNumber,
+                    }),
+                  )
+                }
+                jobHref={copy.jobHref({
+                  id: row.jobId,
+                  serialNumber: row.jobSerialNumber,
+                })}
               />
             ))}
           </ul>

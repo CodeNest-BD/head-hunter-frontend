@@ -16,6 +16,7 @@ import {
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { adminConversationPath } from "@/shared/utils/entityPaths";
 import { Button } from "@/shared/ui-components/controls/button";
 import { useAdminConversations } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
@@ -73,6 +74,12 @@ function ConversationStatus({
   );
 }
 
+const conversationHref = (conversation: ConversationListItem): string =>
+  adminConversationPath({
+    id: conversation.candidateId,
+    serialNumber: conversation.candidateSerialNumber,
+  });
+
 function ConversationCard({
   conversation,
 }: {
@@ -82,7 +89,7 @@ function ConversationCard({
     <MobileRecordCard
       title={conversation.jobTitle}
       subtitle={`${conversation.companyName} · ${conversation.recruiterName}`}
-      href={`/admin/conversations/${conversation.candidateId}`}
+      href={conversationHref(conversation)}
       trailing={<ConversationStatus conversation={conversation} />}
       fields={[
         { label: "Messages", value: conversation.messageCount },
@@ -229,7 +236,7 @@ export function ConversationsTable() {
                     >
                       <td className={TABLE_TD}>
                         <Link
-                          href={`/admin/conversations/${c.candidateId}`}
+                          href={conversationHref(c)}
                           className={cn(
                             TABLE_CELL_MAIN,
                             "transition-colors after:absolute after:inset-0 hover:text-blue focus-visible:underline focus-visible:outline-none",

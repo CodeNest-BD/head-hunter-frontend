@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { RaiseDisputeForm } from "@/features/disputes";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { disputePath } from "@/shared/utils/entityPaths";
 import { entriesOf } from "@/shared/utils/entriesOf";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -246,9 +247,9 @@ export function CompanyPlacementsPanel() {
             placementId={disputing.placementId}
             party="company"
             onCancel={() => setDisputingId(null)}
-            onRaised={(id) => {
+            onRaised={(dispute) => {
               setDisputingId(null);
-              router.push(`/disputes/${id}`);
+              router.push(disputePath(dispute));
             }}
           />
         </div>

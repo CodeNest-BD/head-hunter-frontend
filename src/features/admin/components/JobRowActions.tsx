@@ -6,6 +6,7 @@ import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { MoreVertical, Pencil, RotateCcw, Trash2 } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { adminJobEditPath } from "@/shared/utils/entityPaths";
 import { ConfirmActionDialog } from "@/shared/ui-components/controls/ConfirmActionDialog";
 
 import { useDeleteAdminJob, useRepostAdminJob } from "../hooks/useAdmin";
@@ -29,10 +30,12 @@ const ITEM_CLASS =
  */
 export function JobRowActions({
   jobId,
+  jobSerialNumber,
   jobTitle,
   status,
 }: {
   jobId: string;
+  jobSerialNumber?: number;
   jobTitle: string;
   status: JobStatus;
 }) {
@@ -58,12 +61,20 @@ export function JobRowActions({
             sideOffset={4}
             className="z-50 min-w-[160px] rounded-sm border border-line bg-surface p-1 shadow-pop"
           >
-            <Dropdown.Item asChild>
-              <Link href={`/admin/jobs/${jobId}/edit`} className={ITEM_CLASS}>
-                <Pencil className="text-ink-faint" />
-                Edit job
-              </Link>
-            </Dropdown.Item>
+            {status !== "filled" && (
+              <Dropdown.Item asChild>
+                <Link
+                  href={adminJobEditPath({
+                    id: jobId,
+                    serialNumber: jobSerialNumber,
+                  })}
+                  className={ITEM_CLASS}
+                >
+                  <Pencil className="text-ink-faint" />
+                  Edit job
+                </Link>
+              </Dropdown.Item>
+            )}
             {status === "expired" && (
               <Dropdown.Item
                 onSelect={(event) => {

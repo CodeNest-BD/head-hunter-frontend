@@ -17,6 +17,7 @@ import { inboxKeys } from "@/features/inbox/keys";
 import {
   fetchConversationThread,
   fetchMessageUnreadCount,
+  markAllThreadsRead,
   markThreadRead,
   sendMessage,
   type SendMessageInput,
@@ -196,6 +197,24 @@ export function useMarkThreadRead(candidateId: string) {
       });
       void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
       void queryClient.invalidateQueries({ queryKey: candidateKeys.all });
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+    },
+  });
+}
+
+/** Every thread at once. Moves no candidate off `submitted`, unlike opening one. */
+export function useMarkAllThreadsRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: markAllThreadsRead,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: conversationKeys.unreadCount,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: conversationKeys.unreadCounts,
+      });
+      void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
       void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });

@@ -4,6 +4,7 @@
 // use client-only React APIs, so a Server Component importing this file must
 // not pull them into the server graph.
 /** Public surface of the jobs feature. */
+export { FilledJobDetails } from "./components/FilledJobDetails";
 export { JobForm, JobFormPublishButton } from "./components/JobForm";
 export { JobsTable } from "./components/JobsTable";
 export {

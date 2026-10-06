@@ -63,6 +63,12 @@ export async function markThreadRead(candidateId: string): Promise<number> {
   return markReadResponseSchema.parse(data).updated;
 }
 
+/** PATCH /v1/conversations/read — every thread the caller is in. */
+export async function markAllThreadsRead(): Promise<number> {
+  const { data } = await apiClient.patch<unknown>("/conversations/read");
+  return markReadResponseSchema.parse(data).updated;
+}
+
 /** GET /v1/conversations/unread-count */
 export async function fetchMessageUnreadCount(): Promise<number> {
   const { data } = await apiClient.get<unknown>("/conversations/unread-count");

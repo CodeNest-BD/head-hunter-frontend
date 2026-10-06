@@ -24,6 +24,7 @@ import {
 } from "../api/disputes";
 import { uploadToPresignedUrl } from "@/shared/libs/documentUpload";
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
+import { cacheUnderSerialKey } from "@/shared/libs/queryClient";
 import { disputeKeys } from "../keys";
 import type {
   DisputeChannel,
@@ -74,6 +75,13 @@ export function useMyDispute(id: string) {
     queryKey: disputeKeys.detail(id),
     queryFn: async () => {
       const dispute = await fetchMyDispute(id);
+      cacheUnderSerialKey(
+        queryClient,
+        id,
+        dispute.serialNumber,
+        disputeKeys.detail,
+        dispute,
+      );
       void queryClient.invalidateQueries({ queryKey: disputeKeys.lists });
       void queryClient.invalidateQueries({
         queryKey: disputeKeys.attentionCount,
@@ -139,12 +147,17 @@ export function useRaiseDispute() {
   });
 }
 
-export function usePostDisputeMessage(id: string) {
+/**
+ * Takes the dispute's UUID, while the page's detail query is keyed by the URL
+ * ref it was read with — so the refresh goes by the detail prefix, not by id.
+ */
+export function usePostDisputeMessage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: string) => postDisputeMessage(id, body),
+    mutationFn: ({ disputeId, body }: { disputeId: string; body: string }) =>
+      postDisputeMessage(disputeId, body),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: disputeKeys.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: disputeKeys.details });
     },
   });
 }
@@ -185,6 +198,13 @@ export function useAdminDispute(id: string) {
     queryKey: disputeKeys.adminDetail(id),
     queryFn: async () => {
       const dispute = await fetchAdminDispute(id);
+      cacheUnderSerialKey(
+        queryClient,
+        id,
+        dispute.serialNumber,
+        disputeKeys.adminDetail,
+        dispute,
+      );
       void queryClient.invalidateQueries({
         queryKey: disputeKeys.adminAttentionCount,
       });
@@ -208,14 +228,18 @@ export function useResolveDispute(id: string) {
   });
 }
 
-export function usePostAdminDisputeMessage(id: string) {
+/** Same keying split as `usePostDisputeMessage`: UUID in, detail prefix out. */
+export function usePostAdminDisputeMessage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { channel: DisputeChannel; body: string }) =>
-      postAdminDisputeMessage(id, input.channel, input.body),
+    mutationFn: (input: {
+      disputeId: string;
+      channel: DisputeChannel;
+      body: string;
+    }) => postAdminDisputeMessage(input.disputeId, input.channel, input.body),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: disputeKeys.adminDetail(id),
+        queryKey: disputeKeys.adminDetails,
       });
     },
   });

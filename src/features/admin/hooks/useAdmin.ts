@@ -6,6 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { cacheUnderSerialKey } from "@/shared/libs/queryClient";
 
 import {
   changeAdminPassword,
@@ -54,10 +55,21 @@ export function useAdminRecruiters(params: AdminListParams) {
   });
 }
 
-export function useAdminRecruiter(userId: string) {
+export function useAdminRecruiter(recruiterRef: string) {
+  const queryClient = useQueryClient();
   return useQuery({
-    queryKey: adminKeys.recruiter(userId),
-    queryFn: () => fetchRecruiter(userId),
+    queryKey: adminKeys.recruiter(recruiterRef),
+    queryFn: async () => {
+      const recruiter = await fetchRecruiter(recruiterRef);
+      cacheUnderSerialKey(
+        queryClient,
+        recruiterRef,
+        recruiter.recruiterSerialNumber,
+        adminKeys.recruiter,
+        recruiter,
+      );
+      return recruiter;
+    },
   });
 }
 
@@ -71,7 +83,7 @@ export function useDecideRecruiterVerification() {
         queryKey: ["admin", "recruiters"],
       });
       void queryClient.invalidateQueries({
-        queryKey: adminKeys.recruiter(input.userId),
+        queryKey: adminKeys.recruiterDetails,
       });
       toast.success(
         input.status === "verified"
@@ -90,7 +102,7 @@ export function useDecideCompanyVerification() {
     onSuccess: (_, input) => {
       void queryClient.invalidateQueries({ queryKey: ["admin", "companies"] });
       void queryClient.invalidateQueries({
-        queryKey: adminKeys.company(input.userId),
+        queryKey: adminKeys.companyDetails,
       });
       toast.success(
         input.status === "verified"
@@ -127,10 +139,21 @@ export function useAdminCompanies(params: AdminListParams) {
   });
 }
 
-export function useAdminCompany(userId: string) {
+export function useAdminCompany(companyRef: string) {
+  const queryClient = useQueryClient();
   return useQuery({
-    queryKey: adminKeys.company(userId),
-    queryFn: () => fetchCompany(userId),
+    queryKey: adminKeys.company(companyRef),
+    queryFn: async () => {
+      const company = await fetchCompany(companyRef);
+      cacheUnderSerialKey(
+        queryClient,
+        companyRef,
+        company.companySerialNumber,
+        adminKeys.company,
+        company,
+      );
+      return company;
+    },
   });
 }
 

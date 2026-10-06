@@ -17,9 +17,11 @@ const submissionsMock = vi.fn();
 function row(overrides: Partial<InboxSubmissionRow>): InboxSubmissionRow {
   return {
     candidateId: "cand-1",
+    candidateSerialNumber: 7,
     candidateName: "Sarah Ahmed",
     status: "submitted",
     jobId: "job-1",
+    jobSerialNumber: 22,
     jobTitle: "Product Designer",
     submittedAt: new Date(Date.now() - 10 * 60_000),
     unreadMessages: 0,
@@ -85,6 +87,7 @@ vi.mock("../hooks/useInbox", () => ({
       data: [
         {
           jobId: "job-1",
+          jobSerialNumber: 22,
           jobTitle: "Product Designer",
           jobStatus: "published",
           candidateCount: 20,
@@ -166,7 +169,23 @@ describe("CompanySubmissionsQueue", () => {
     renderWithProviders(<CompanySubmissionsQueue />);
 
     const jobLinks = screen.getAllByRole("link", { name: /Product Designer/ });
-    expect(jobLinks[0]).toHaveAttribute("href", "/jobs/product-designer-job-1");
+    expect(jobLinks[0]).toHaveAttribute("href", "/jobs/22");
+  });
+
+  it("scopes the list by the job's serial from the filter bar", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<CompanySubmissionsQueue />);
+
+    // The Job list is long enough to earn the searchable picker, so its
+    // trigger is a button rather than a Radix combobox.
+    await user.click(screen.getByRole("button", { name: "Job" }));
+    await user.click(
+      screen.getByRole("button", { name: "Product Designer (12 new)" }),
+    );
+
+    expect(submissionsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ jobId: "22", page: 1 }),
+    );
   });
 
   it("opens the conversation from the row and the View link", async () => {
@@ -174,9 +193,9 @@ describe("CompanySubmissionsQueue", () => {
     renderWithProviders(<CompanySubmissionsQueue />);
 
     await user.click(screen.getAllByText("Sarah Ahmed")[0]);
-    expect(pushMock).toHaveBeenCalledWith("/company/inbox/cand-1");
+    expect(pushMock).toHaveBeenCalledWith("/company/inbox/7");
 
     const viewLinks = screen.getAllByRole("link", { name: "View" });
-    expect(viewLinks[0]).toHaveAttribute("href", "/company/inbox/cand-1");
+    expect(viewLinks[0]).toHaveAttribute("href", "/company/inbox/7");
   });
 });

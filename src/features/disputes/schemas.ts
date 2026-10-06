@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { serialNumberSchema } from "@/shared/utils/entityPaths";
+
 export const disputeStatusSchema = z.enum([
   "open",
   "under_review",
@@ -137,6 +139,7 @@ export type DisputeAttachment = z.infer<typeof disputeAttachmentSchema>;
 /** A dispute as a participant (company or recruiter) sees it. */
 export const participantDisputeSchema = z.object({
   id: z.string(),
+  serialNumber: serialNumberSchema.optional(),
   placementId: z.string(),
   offerId: z.string(),
   jobTitle: z.string(),
@@ -167,6 +170,7 @@ export type ParticipantDisputeDetail = z.infer<
 /** A dispute row in the admin inbox. */
 export const adminDisputeListItemSchema = z.object({
   id: z.string(),
+  serialNumber: serialNumberSchema.optional(),
   status: disputeStatusSchema,
   raisedBy: disputeChannelSchema,
   companyName: z.string(),
@@ -174,6 +178,7 @@ export const adminDisputeListItemSchema = z.object({
   jobTitle: z.string(),
   candidateName: z.string(),
   candidateId: z.string(),
+  candidateSerialNumber: serialNumberSchema.optional(),
   offerId: z.string(),
   placementId: z.string(),
   placementStatus: z.string(),

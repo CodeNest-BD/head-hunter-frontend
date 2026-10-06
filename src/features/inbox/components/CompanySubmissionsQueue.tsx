@@ -25,7 +25,7 @@ import {
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
-import { jobPath } from "@/features/jobs/utils/jobPath";
+import { inboxThreadPath, jobPath, urlRef } from "@/shared/utils/entityPaths";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatTimeAgo, formatDateTime } from "@/shared/utils/formatDate";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -167,11 +167,20 @@ function RecruiterCell({ row }: { row: InboxSubmissionRow }) {
   );
 }
 
+const jobHref = (row: InboxSubmissionRow): string =>
+  jobPath({ id: row.jobId, serialNumber: row.jobSerialNumber });
+
+const threadHref = (row: InboxSubmissionRow): string =>
+  inboxThreadPath("company", {
+    id: row.candidateId,
+    serialNumber: row.candidateSerialNumber,
+  });
+
 /** The job cell — a link to the job's detail page. */
 function JobLink({ row }: { row: InboxSubmissionRow }) {
   return (
     <Link
-      href={jobPath({ id: row.jobId, title: row.jobTitle })}
+      href={jobHref(row)}
       onClick={(event) => event.stopPropagation()}
       className="inline-flex min-w-0 max-w-[220px]"
     >
@@ -199,8 +208,9 @@ export function CompanySubmissionsQueue() {
   // `?job=` scopes the queue to one job — how a job's candidate count opens it.
   // Read once as the initial value rather than synced: once here, the Job
   // column filter owns the choice, so clearing it must not be undone by the
-  // URL it arrived from.
-  const [jobId, setJobId] = useState<string | null>(
+  // URL it arrived from. It holds the job's URL ref (serial, or the UUID on an
+  // old link), which the submissions endpoint resolves itself.
+  const [jobRef, setJobRef] = useState<string | null>(
     () => searchParams?.get("job") ?? null,
   );
   const [status, setStatus] = useState<string | null>(null);
@@ -229,7 +239,7 @@ export function CompanySubmissionsQueue() {
     page,
     limit: PAGE_SIZE,
     q: q || undefined,
-    jobId: jobId ?? undefined,
+    jobId: jobRef ?? undefined,
     status: statusFilter(status),
     recruiterKind: recruiterKindFilter(recruiterKind),
     sortBy,
@@ -238,7 +248,7 @@ export function CompanySubmissionsQueue() {
   const jobOptions = useMemo<FilterBarOption[]>(
     () =>
       (jobs.data?.data ?? []).map((job) => ({
-        value: job.jobId,
+        value: urlRef({ id: job.jobId, serialNumber: job.jobSerialNumber }),
         label:
           job.newCandidateCount > 0
             ? `${job.jobTitle} (${job.newCandidateCount} new)`
@@ -246,19 +256,25 @@ export function CompanySubmissionsQueue() {
       })),
     [jobs.data],
   );
+  // An old `?job=<uuid>` link still scopes the list, but the options are keyed
+  // by serial, so show it as the matching option rather than "All jobs".
+  const legacyJob = jobs.data?.data.find((job) => job.jobId === jobRef);
+  const selectedJob = legacyJob
+    ? urlRef({ id: legacyJob.jobId, serialNumber: legacyJob.jobSerialNumber })
+    : jobRef;
 
   const setFilter =
     (setter: (next: string | null) => void) => (next: string | null) => {
       setter(next);
       setPage(1);
     };
-  const changeJob = setFilter(setJobId);
+  const changeJob = setFilter(setJobRef);
   const changeStatus = setFilter(setStatus);
   const changeRecruiter = setFilter(setRecruiterKind);
 
   const hasFilters =
     q !== "" ||
-    jobId !== null ||
+    jobRef !== null ||
     status !== null ||
     recruiterKind !== null ||
     sortBy !== "priority";
@@ -266,15 +282,12 @@ export function CompanySubmissionsQueue() {
   const resetFilters = () => {
     setQInput("");
     setQ("");
-    setJobId(null);
+    setJobRef(null);
     setStatus(null);
     setRecruiterKind(null);
     setSortBy("priority");
     setPage(1);
   };
-
-  const openThread = (candidateId: string) =>
-    router.push(`/company/inbox/${candidateId}`);
 
   return (
     <div className="flex flex-col gap-6">
@@ -310,7 +323,7 @@ export function CompanySubmissionsQueue() {
             label: "Job",
             placeholder: "All jobs",
             options: jobOptions,
-            value: jobId ?? "",
+            value: selectedJob ?? "",
             onChange: (next) => changeJob(next === "" ? null : next),
             searchable: true,
             width: "190px",
@@ -450,7 +463,7 @@ export function CompanySubmissionsQueue() {
                           "cursor-pointer",
                           attention && TABLE_ROW_UNREAD,
                         )}
-                        onClick={() => openThread(row.candidateId)}
+                        onClick={() => router.push(threadHref(row))}
                       >
                         <td
                           className={cn(TABLE_TD, attention && TABLE_TD_RAIL)}
@@ -510,7 +523,7 @@ export function CompanySubmissionsQueue() {
                         )}
                         <td className={cn(TABLE_TD, "text-right")}>
                           <Link
-                            href={`/company/inbox/${row.candidateId}`}
+                            href={threadHref(row)}
                             onClick={(event) => event.stopPropagation()}
                             className="inline-flex h-7.5 items-center rounded-xs border border-line-strong bg-surface px-2.5 text-[12.5px] font-semibold text-ink transition-colors hover:bg-surface-sub"
                           >
@@ -529,7 +542,7 @@ export function CompanySubmissionsQueue() {
                   key={row.candidateId}
                   title={row.candidateName}
                   subtitle={row.jobTitle}
-                  href={`/company/inbox/${row.candidateId}`}
+                  href={threadHref(row)}
                   trailing={
                     <StatusBadge
                       label={QUEUE_STATUS_LABELS[row.status]}
@@ -544,7 +557,7 @@ export function CompanySubmissionsQueue() {
                       label: "Job",
                       value: (
                         <Link
-                          href={jobPath({ id: row.jobId, title: row.jobTitle })}
+                          href={jobHref(row)}
                           className="font-[550] text-blue-ink underline-offset-2 hover:underline"
                         >
                           {row.jobTitle}
@@ -574,7 +587,7 @@ export function CompanySubmissionsQueue() {
                   ]}
                   actions={
                     <Link
-                      href={`/company/inbox/${row.candidateId}`}
+                      href={threadHref(row)}
                       className="text-sub font-[550] text-blue-ink underline-offset-2 hover:underline"
                     >
                       View conversation

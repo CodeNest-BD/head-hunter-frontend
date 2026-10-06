@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { uploadToPresignedUrl } from "@/shared/libs/documentUpload";
 import { isApiError } from "@/shared/libs/errorHandler";
+import { cacheUnderSerialKey } from "@/shared/libs/queryClient";
+import { companyJobPath } from "@/shared/utils/entityPaths";
 import {
   createJob,
   deleteJob,
@@ -109,9 +111,20 @@ export function useJobMap(params: JobFilterParams) {
 }
 
 export function useJob(id: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: jobKeys.detail(id),
-    queryFn: () => fetchJob(id),
+    queryFn: async () => {
+      const job = await fetchJob(id);
+      cacheUnderSerialKey(
+        queryClient,
+        id,
+        job.serialNumber,
+        jobKeys.detail,
+        job,
+      );
+      return job;
+    },
   });
 }
 
@@ -141,7 +154,7 @@ export function useCreateJob() {
       if (benefitsDocumentFailed) {
         // The edit page is where re-attaching works, against the real job id.
         toast.error(BENEFITS_DOCUMENT_FAILED);
-        router.push(`/company/jobs/${job.id}`);
+        router.push(companyJobPath(job));
         return;
       }
       toast.success("Draft saved");
@@ -184,7 +197,7 @@ export function useCreateAndPublishJob() {
       void queryClient.invalidateQueries({ queryKey: jobKeys.all });
       if (benefitsDocumentFailed) {
         toast.error(BENEFITS_DOCUMENT_FAILED);
-        router.push(`/company/jobs/${job.id}`);
+        router.push(companyJobPath(job));
         return;
       }
       toast.success("Job published. Recruiters can see it now.");

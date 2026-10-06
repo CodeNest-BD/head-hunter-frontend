@@ -7,6 +7,8 @@ import { AlertCircle, BadgeCheck, BadgeX, Trash2 } from "lucide-react";
 
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+import { adminRecruiterPath } from "@/shared/utils/entityPaths";
 import { formatMinor } from "@/shared/utils/money";
 import { getSpecializationLabel } from "@/shared/utils/specializations";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -193,8 +195,15 @@ function DeleteRecruiterButton({
   );
 }
 
-export function RecruiterDetail({ userId }: { userId: string }) {
-  const { data, isPending, isError, refetch } = useAdminRecruiter(userId);
+export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
+  const { data, isPending, isError, refetch } = useAdminRecruiter(recruiterRef);
+  useCanonicalPath(
+    data &&
+      adminRecruiterPath({
+        id: data.userId,
+        serialNumber: data.recruiterSerialNumber,
+      }),
+  );
 
   if (isPending) return <DetailSkeleton />;
   if (isError) {

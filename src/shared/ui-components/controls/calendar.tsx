@@ -57,7 +57,7 @@ export function Calendar({
         // treatment is pushed down onto the button it wraps.
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "size-8 rounded-xs p-0 text-sub font-normal tabular-nums",
+          "size-8 rounded-xs p-0 text-sub font-medium text-ink tabular-nums",
         ),
         selected:
           "[&>button]:bg-blue [&>button]:text-white [&>button]:hover:bg-blue-deep",
@@ -65,8 +65,11 @@ export function Calendar({
         // `selected`'s foreground on the day that is both.
         today:
           "[&>button]:font-semibold [&>button]:underline [&>button]:decoration-primary [&>button]:decoration-2 [&>button]:underline-offset-4",
-        outside: "[&>button]:text-ink-faint",
-        disabled: "[&>button]:pointer-events-none [&>button]:opacity-40",
+        outside: "[&>button]:font-normal [&>button]:text-ink-faint",
+        // Weight and colour as well as opacity: opacity alone left disabled
+        // days reading almost the same as pickable ones.
+        disabled:
+          "[&>button]:pointer-events-none [&>button]:font-normal [&>button]:text-ink-faint [&>button]:opacity-50",
         hidden: "invisible",
         ...classNames,
       }}

@@ -6,12 +6,16 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
 import {
+  FilledJobDetails,
   JobForm,
   JobFormPublishButton,
   useJob,
   useUpdateJob,
   type JobWriteInput,
 } from "@/features/jobs";
+import type { Job } from "@/features/jobs/schemas";
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+import { companyJobPath } from "@/shared/utils/entityPaths";
 import { BackLink, PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import type { PillTone } from "@/shared/ui-components/badges/Pill";
@@ -39,10 +43,9 @@ function FormSkeleton() {
   );
 }
 
-function EditJobContent({ jobId }: { jobId: string }) {
-  const router = useRouter();
-  const { data: job, isPending, isError, refetch } = useJob(jobId);
-  const update = useUpdateJob(jobId);
+function EditJobContent({ jobRef }: { jobRef: string }) {
+  const { data: job, isPending, isError, refetch } = useJob(jobRef);
+  useCanonicalPath(job && companyJobPath(job));
   if (isPending) {
     return <FormSkeleton />;
   }
@@ -66,6 +69,33 @@ function EditJobContent({ jobId }: { jobId: string }) {
       </div>
     );
   }
+
+  if (job.status === "filled") {
+    return (
+      <div className="flex flex-col gap-4">
+        <PageHeader
+          title={
+            <span className="flex flex-wrap items-center gap-3">
+              Job Details
+              <StatusBadge
+                label={job.status}
+                tone={STATUS_TONES[job.status] ?? "neutral"}
+                className="capitalize"
+              />
+            </span>
+          }
+        />
+        <FilledJobDetails job={job} />
+      </div>
+    );
+  }
+
+  return <EditJobForm job={job} />;
+}
+
+function EditJobForm({ job }: { job: Job }) {
+  const router = useRouter();
+  const update = useUpdateJob(job.id);
 
   const isDraft = job.status === "draft";
   // Expired listings republish through the same transition: re-reserves the
@@ -174,7 +204,7 @@ export default function EditJobPage() {
         <RequireApprovedCompany>
           <div className="flex w-full flex-col">
             <BackLink href="/company/jobs">Back to jobs</BackLink>
-            <EditJobContent jobId={params.id} />
+            <EditJobContent jobRef={params.id} />
           </div>
         </RequireApprovedCompany>
       </DashboardLayout>

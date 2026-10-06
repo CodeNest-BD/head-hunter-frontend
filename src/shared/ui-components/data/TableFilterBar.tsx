@@ -197,7 +197,8 @@ function SelectFilter({
     return (
       <OptionPicker
         multiple={false}
-        label={filter.placeholder ?? filter.label}
+        label={filter.label}
+        placeholder={filter.placeholder}
         options={filter.options}
         width={filter.width}
         searchable={filter.searchable}
@@ -255,6 +256,7 @@ function SelectFilter({
  */
 function OptionPicker({
   label,
+  placeholder,
   options,
   width,
   searchable,
@@ -263,7 +265,10 @@ function OptionPicker({
   onPick,
   onClear,
 }: {
+  /** The control's accessible name — what the filter IS ("Job"). */
   label: string;
+  /** What the closed trigger says while nothing is chosen ("All jobs"). */
+  placeholder?: string;
   options: readonly FilterBarOption[];
   width?: string;
   searchable?: boolean;
@@ -315,7 +320,9 @@ function OptionPicker({
           )}
           style={{ width: width ?? "160px" }}
         >
-          <span className="truncate">{chosen ? chosen.label : label}</span>
+          <span className="truncate">
+            {chosen ? chosen.label : (placeholder ?? label)}
+          </span>
           {multiple && count > 0 ? (
             <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-blue px-1 text-[10px] font-bold leading-none tabular-nums text-white">
               {count}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
+import type { EntityRef } from "@/shared/utils/entityPaths";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Label } from "@/shared/ui-components/controls/label";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
@@ -35,7 +36,7 @@ export function RaiseDisputeForm({
   placementId: string;
   party: DisputeChannel;
   onCancel: () => void;
-  onRaised: (disputeId: string) => void;
+  onRaised: (dispute: EntityRef) => void;
 }) {
   const [subject, setSubject] = useState<DisputeSubject | null>(null);
   const [reason, setReason] = useState("");
@@ -50,7 +51,7 @@ export function RaiseDisputeForm({
     if (!subject) return;
     raise.mutate(
       { placementId, subject, reason: reason.trim(), proof },
-      { onSuccess: (dispute) => onRaised(dispute.id) },
+      { onSuccess: (dispute) => onRaised(dispute) },
     );
   };
 

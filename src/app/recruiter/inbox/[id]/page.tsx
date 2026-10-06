@@ -13,8 +13,13 @@ import {
   useDeleteCandidate,
   CANDIDATE_STATUS_LABELS,
   CANDIDATE_STATUS_TONES,
+  type Candidate,
 } from "@/features/candidates";
-import { Thread, useMessageUnreadCounts } from "@/features/conversations";
+import {
+  Thread,
+  ThreadSkeleton,
+  useMessageUnreadCounts,
+} from "@/features/conversations";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { InboxConversationPane, InboxMessageWorkspace } from "@/features/inbox";
 import { useInterviews } from "@/features/interviews";
@@ -23,6 +28,8 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+import { inboxThreadPath } from "@/shared/utils/entityPaths";
 function ErrorCallout({
   message,
   onRetry,
@@ -56,26 +63,15 @@ function ErrorCallout({
  * The recruiter's mirror of the company's candidate pane: the same person,
  * plus the edit and remove controls only the submitting recruiter has.
  */
-function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
+function CandidateDetailColumn({ candidate }: { candidate: Candidate }) {
   const [mode, setMode] = useState<"view" | "edit" | "confirm-remove">("view");
-  const candidateQuery = useCandidate(candidateId);
-  const deleteCandidate = useDeleteCandidate(candidateQuery.data?.jobId ?? "");
-  const interviewsQuery = useInterviews({ candidateId, limit: 100 });
-  const offersQuery = useOffers({ candidateId, limit: 100 });
+  const deleteCandidate = useDeleteCandidate(candidate.jobId);
+  const interviewsQuery = useInterviews({
+    candidateId: candidate.id,
+    limit: 100,
+  });
+  const offersQuery = useOffers({ candidateId: candidate.id, limit: 100 });
 
-  if (candidateQuery.isPending) {
-    return <CandidateRailSkeleton />;
-  }
-  if (candidateQuery.isError) {
-    return (
-      <ErrorCallout
-        message="Could not load this candidate."
-        onRetry={() => void candidateQuery.refetch()}
-      />
-    );
-  }
-
-  const candidate = candidateQuery.data;
   // Read-only here, unlike the company card: shown once both lists resolve so
   // it never flashes "none yet" over a live offer.
   const negotiationState =
@@ -83,7 +79,7 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
       ? (candidateNegotiationState(
           interviewsQuery.data.data,
           offersQuery.data.data,
-        ).get(candidateId) ?? null)
+        ).get(candidate.id) ?? null)
       : undefined;
 
   // Once the company starts reviewing, the details it is judging must hold
@@ -167,27 +163,69 @@ function CandidateDetailColumn({ candidateId }: { candidateId: string }) {
   );
 }
 
+/**
+ * The URL carries the candidate's serial, but the thread, its mark-read, the
+ * realtime match and every UUID-keyed map below need the UUID — so the
+ * candidate is read first and everything past it uses `candidate.id`.
+ */
+function CandidateWorkspace({ candidateRef }: { candidateRef: string }) {
+  const candidateQuery = useCandidate(candidateRef);
+  const unreadCounts = useMessageUnreadCounts();
+  const candidate = candidateQuery.data;
+  useCanonicalPath(candidate && inboxThreadPath("recruiter", candidate));
+
+  const retry = () => void candidateQuery.refetch();
+
+  return (
+    <InboxMessageWorkspace
+      backHref="/recruiter/inbox"
+      list={
+        <InboxConversationPane side="recruiter" selectedId={candidate?.id} />
+      }
+      conversation={
+        candidate ? (
+          <Thread candidateId={candidate.id} />
+        ) : candidateQuery.isError ? (
+          <ErrorCallout
+            message="Could not load this conversation."
+            onRetry={retry}
+          />
+        ) : (
+          <ThreadSkeleton />
+        )
+      }
+      candidate={
+        candidateQuery.isError ? (
+          <ErrorCallout
+            message="Could not load this candidate."
+            onRetry={retry}
+          />
+        ) : candidate ? (
+          <CandidateDetailColumn candidate={candidate} />
+        ) : (
+          <CandidateRailSkeleton />
+        )
+      }
+      candidateUnread={
+        candidate !== undefined &&
+        (unreadCounts.data?.get(candidate.id) ?? 0) > 0
+      }
+    />
+  );
+}
+
 export default function RecruiterCandidatePage() {
   const params = useParams<{ id: string }>();
-  const unreadCounts = useMessageUnreadCounts();
 
   return (
     <RequireRole role="recruiter">
       <DashboardLayout wide="detail">
         {/* Keeps the candidate query and the conversation socket from ever
          * mounting for an unapproved recruiter — both live inside
-         * `left`/`right` below, which `RequireApprovedRecruiter` swaps out
+         * `CandidateWorkspace`, which `RequireApprovedRecruiter` swaps out
          * entirely rather than rendering hidden. */}
         <RequireApprovedRecruiter>
-          <InboxMessageWorkspace
-            backHref="/recruiter/inbox"
-            list={
-              <InboxConversationPane side="recruiter" selectedId={params.id} />
-            }
-            conversation={<Thread candidateId={params.id} />}
-            candidate={<CandidateDetailColumn candidateId={params.id} />}
-            candidateUnread={(unreadCounts.data?.get(params.id) ?? 0) > 0}
-          />
+          <CandidateWorkspace candidateRef={params.id} />
         </RequireApprovedRecruiter>
       </DashboardLayout>
     </RequireRole>

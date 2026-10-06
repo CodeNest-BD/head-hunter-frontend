@@ -37,7 +37,7 @@ import { useListState } from "../hooks/useListState";
 import { JOB_STATUS_LABELS, type AdminJobListItem } from "../schemas";
 import { JobRowActions } from "./JobRowActions";
 import { ListPager } from "./ListPager";
-import { jobPath } from "@/features/jobs/utils/jobPath";
+import { adminCompanyPath, jobPath } from "@/shared/utils/entityPaths";
 import { JOB_STATUS_TONES } from "./statusStyles";
 import {
   TABLE_BODY,
@@ -90,6 +90,9 @@ function JobStatus({ status }: { status: AdminJobListItem["status"] }) {
   );
 }
 
+const publicJobHref = (job: AdminJobListItem): string =>
+  jobPath({ id: job.jobId, serialNumber: job.jobSerialNumber });
+
 /** Logo + company name → its admin profile. */
 function JobCompany({ job }: { job: AdminJobListItem }) {
   return (
@@ -102,7 +105,10 @@ function JobCompany({ job }: { job: AdminJobListItem }) {
       />
       {job.companyUserId ? (
         <Link
-          href={`/admin/companies/${job.companyUserId}`}
+          href={adminCompanyPath({
+            id: job.companyUserId,
+            serialNumber: job.companySerialNumber,
+          })}
           className="block max-w-[200px] truncate font-[550] text-blue-ink hover:underline"
         >
           {job.companyName}
@@ -138,7 +144,7 @@ function JobFee({
 function JobCandidates({ job }: { job: AdminJobListItem }) {
   return job.candidateCount > 0 ? (
     <Link
-      href={`/admin/conversations?jobId=${job.jobId}`}
+      href="/admin/conversations"
       className="font-[550] tabular-nums text-blue-ink hover:underline"
     >
       {job.candidateCount}
@@ -171,12 +177,13 @@ function JobCard({
     <MobileRecordCard
       title={job.title}
       subtitle={job.locationState || undefined}
-      href={jobPath({ id: job.jobId, title: job.title })}
+      href={publicJobHref(job)}
       trailing={<JobStatus status={job.status} />}
       fields={fields}
       actions={
         <JobRowActions
           jobId={job.jobId}
+          jobSerialNumber={job.jobSerialNumber}
           jobTitle={job.title}
           status={job.status}
         />
@@ -187,14 +194,14 @@ function JobCard({
 
 interface JobsTableProps {
   /** When set, the list is restricted to one company (a deep-link). */
-  companyProfileId?: string;
+  company?: string;
   companyName?: string;
   /** Pre-selected status filter (e.g. deep-linking to a company's open jobs). */
   initialStatus?: string;
 }
 
 export function JobsTable({
-  companyProfileId,
+  company,
   companyName,
   initialStatus = "",
 }: JobsTableProps) {
@@ -223,7 +230,7 @@ export function JobsTable({
     limit,
     q: q || undefined,
     status: status || undefined,
-    companyProfileId: companyProfileId || undefined,
+    company: company || undefined,
   });
 
   // Multi-select is visible-rows-scoped: acting on rows you can no longer see
@@ -302,7 +309,7 @@ export function JobsTable({
         ]}
       />
 
-      {companyProfileId && (
+      {company && (
         <div className="flex items-center gap-2">
           {/* `.chip is-active` — the active company filter, with its own clear. */}
           <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-blue bg-blue px-[11px] text-[12.5px] font-[550] text-white">
@@ -478,7 +485,7 @@ export function JobsTable({
                       <td className={TABLE_TD_STACKED}>
                         {/* Job title → the public job view. */}
                         <Link
-                          href={jobPath({ id: job.jobId, title: job.title })}
+                          href={publicJobHref(job)}
                           className={cn(
                             TABLE_CELL_MAIN,
                             "block max-w-[260px] truncate transition-colors hover:text-blue",
@@ -529,6 +536,7 @@ export function JobsTable({
                       <td className={cn(TABLE_TD, "text-right")}>
                         <JobRowActions
                           jobId={job.jobId}
+                          jobSerialNumber={job.jobSerialNumber}
                           jobTitle={job.title}
                           status={job.status}
                         />

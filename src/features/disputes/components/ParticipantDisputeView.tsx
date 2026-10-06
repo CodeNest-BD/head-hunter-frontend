@@ -3,7 +3,9 @@
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
+import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
+import { disputePath } from "@/shared/utils/entityPaths";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { BackLink, PageHeader } from "@/shared/ui-components/brand";
@@ -24,9 +26,10 @@ import { DisputeProofList } from "./DisputeProofList";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
 /** A participant's view of one dispute: the facts, and their private channel. */
-export function ParticipantDisputeView({ id }: { id: string }) {
-  const { data, isPending, isError, refetch } = useMyDispute(id);
-  const post = usePostDisputeMessage(id);
+export function ParticipantDisputeView({ disputeRef }: { disputeRef: string }) {
+  const { data, isPending, isError, refetch } = useMyDispute(disputeRef);
+  const post = usePostDisputeMessage();
+  useCanonicalPath(data && disputePath(data));
 
   if (isError) {
     return (
@@ -50,14 +53,17 @@ export function ParticipantDisputeView({ id }: { id: string }) {
   const open = isDisputeOpen(data.status);
 
   const send = (body: string): void => {
-    post.mutate(body, {
-      onError: (error) =>
-        toast.error(
-          isApiError(error)
-            ? allMessages(error)
-            : "Could not send your message.",
-        ),
-    });
+    post.mutate(
+      { disputeId: data.id, body },
+      {
+        onError: (error) =>
+          toast.error(
+            isApiError(error)
+              ? allMessages(error)
+              : "Could not send your message.",
+          ),
+      },
+    );
   };
 
   return (
