@@ -1031,7 +1031,7 @@ function ResultsBody({
            * in step. Salary earns its own column only from `xl`: the filters
            * rail leaves the results about 600px at `lg`, which four columns
            * already fill. */}
-          <div className="hidden grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] gap-6 border-b border-line bg-surface-sub px-3.5 py-2.5 text-label font-[650] uppercase tracking-[0.06em] text-ink-muted md:grid xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
+          <div className="hidden h-10 grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] items-center gap-6 border-b border-line bg-surface-sub px-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-ink-muted md:grid xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
             <span>Role</span>
             <span>Terms</span>
             <span className="hidden xl:block">Pay</span>
@@ -1046,17 +1046,15 @@ function ResultsBody({
         </div>
       )}
 
-      <div className="rounded-sm border border-line bg-surface [&>div]:border-t-0">
-        <TablePager
-          page={page}
-          totalPages={totalPages}
-          total={total}
-          pageSize={pageSize}
-          onPage={onPage}
-          onPageSize={onPageSize}
-          pageSizeOptions={PAGE_SIZE_OPTIONS}
-        />
-      </div>
+      <TablePager
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        pageSize={pageSize}
+        onPage={onPage}
+        onPageSize={onPageSize}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+      />
     </div>
   );
 }
@@ -1076,7 +1074,7 @@ function JobRow({ job }: { job: PublicJobCardData }) {
   const salary = formatSalaryRange(job);
 
   return (
-    <li className="grid grid-cols-1 gap-2.5 px-3.5 py-3 sm:gap-3 sm:py-3.5 md:grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] md:items-center md:gap-6 xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
+    <li className="grid grid-cols-1 gap-2.5 px-4 py-3 sm:gap-3 sm:py-3.5 md:grid-cols-[minmax(0,1fr)_12rem_10rem_8rem] md:items-center md:gap-6 xl:grid-cols-[minmax(0,1fr)_9.5rem_10.5rem_9rem_7rem]">
       <div className="min-w-0">
         <p className="text-[10px] font-[650] uppercase tracking-[0.07em] text-ink-muted">
           {category}

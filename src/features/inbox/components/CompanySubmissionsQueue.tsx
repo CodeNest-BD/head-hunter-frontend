@@ -10,7 +10,6 @@ import {
   Eye,
   FileText,
   Inbox,
-  Search,
   Sparkles,
   UserCheck,
   type LucideIcon,
@@ -23,21 +22,13 @@ import {
 import { CandidateQuickView } from "@/features/candidates/components/CandidateQuickView";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import {
-  ColumnFilter,
-  FilterableHead,
-  type ColumnFilterOption,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
-import { MobileFilters } from "@/shared/ui-components/data/MobileFilters";
 import { jobPath } from "@/features/jobs/utils/jobPath";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatTimeAgo, formatDateTime } from "@/shared/utils/formatDate";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Input } from "@/shared/ui-components/controls/input";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
@@ -48,6 +39,10 @@ import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCal
 import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
+import {
+  TableFilterBar,
+  type FilterBarOption,
+} from "@/shared/ui-components/data/TableFilterBar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   TABLE_BODY,
@@ -63,7 +58,6 @@ import {
   TABLE_TD,
   TABLE_TD_STACKED,
   TABLE_TH,
-  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 import {
   MobileRecordCard,
@@ -99,14 +93,12 @@ const QUEUE_STATUS_LABELS: Record<CandidateStatus, string> = {
   passed: "Passed",
 };
 
-const STATUS_OPTIONS: ColumnFilterOption[] = CANDIDATE_STATUSES.map(
-  (value) => ({
-    value,
-    label: QUEUE_STATUS_LABELS[value],
-  }),
-);
+const STATUS_OPTIONS: FilterBarOption[] = CANDIDATE_STATUSES.map((value) => ({
+  value,
+  label: QUEUE_STATUS_LABELS[value],
+}));
 
-const RECRUITER_OPTIONS: ColumnFilterOption[] = [
+const RECRUITER_OPTIONS: FilterBarOption[] = [
   { value: "rated", label: "Rated recruiters" },
   { value: "unrated", label: "Unrated recruiters" },
 ];
@@ -195,8 +187,8 @@ function JobLink({ row }: { row: InboxSubmissionRow }) {
  * The company inbox as the requirements doc frames it — a Job-based Candidate
  * Submission Queue. Job scopes the list, Status filters it, recruiter Rating
  * sets the default priority and submission Time breaks ties; a row opens its
- * conversation thread. Stat cards are read-only; filtering lives in the
- * column headers (like the recruiter submissions table).
+ * conversation thread. Stat cards are read-only; every filter lives in the
+ * bar above the table.
  */
 export function CompanySubmissionsQueue() {
   const router = useRouter();
@@ -214,18 +206,7 @@ export function CompanySubmissionsQueue() {
   const [status, setStatus] = useState<string | null>(null);
   const [recruiterKind, setRecruiterKind] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SubmissionSort>("priority");
-  // A filter lives in its column header, so hiding the column would leave it
-  // narrowing the list with nothing on screen to explain it — including the Job
-  // scope a `?job=` link arrives with.
-  const cols = useVisibleColumns(
-    "company.inbox.submissions.columns",
-    COLUMNS,
-    (key) => {
-      if (key === "job") changeJob(null);
-      if (key === "recruiter") changeRecruiter(null);
-      if (key === "status") changeStatus(null);
-    },
-  );
+  const cols = useVisibleColumns("company.inbox.submissions.columns", COLUMNS);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -254,7 +235,7 @@ export function CompanySubmissionsQueue() {
     sortBy,
   });
 
-  const jobOptions = useMemo<ColumnFilterOption[]>(
+  const jobOptions = useMemo<FilterBarOption[]>(
     () =>
       (jobs.data?.data ?? []).map((job) => ({
         value: job.jobId,
@@ -313,87 +294,83 @@ export function CompanySubmissionsQueue() {
         ))}
       </div>
 
-      <div className={TABLE_TOOLBAR}>
-        <div className="relative min-w-[220px] flex-1 sm:max-w-[360px]">
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
-          />
-          <Input
-            value={qInput}
-            onChange={(event) => setQInput(event.target.value)}
-            placeholder="Search candidate, recruiter or job…"
-            className="pl-8 text-sub"
-            aria-label="Search submissions"
-          />
-        </div>
-        <NativeSelect
-          aria-label="Sort submissions"
-          value={sortBy}
-          onChange={(event) => {
-            setSortBy(sortValue(event.target.value));
-            setPage(1);
-          }}
-          className="text-sub sm:w-64"
-        >
-          {SUBMISSION_SORTS.map((value) => (
-            <option key={value} value={value}>
-              Sort: {SUBMISSION_SORT_LABELS[value]}
-            </option>
-          ))}
-        </NativeSelect>
-        <div className="sm:ml-auto">
-          <ColumnsToggle
-            columns={cols.columns}
-            isVisible={cols.isVisible}
-            onToggle={cols.toggle}
-          />
-        </div>
-      </div>
-
-      {/* The Job, Recruiter and Status filters live in a header row a phone
-          never renders, so they get their own phone-only control. */}
-      <MobileFilters
+      <TableFilterBar
         filters={[
           {
+            kind: "search",
+            key: "q",
+            label: "Search submissions",
+            placeholder: "Search candidate, recruiter or job…",
+            value: qInput,
+            onChange: setQInput,
+          },
+          {
+            kind: "select",
+            key: "job",
+            label: "Job",
+            placeholder: "All jobs",
+            options: jobOptions,
             value: jobId ?? "",
             onChange: (next) => changeJob(next === "" ? null : next),
-            allLabel: "All jobs",
-            options: jobOptions,
+            searchable: true,
+            width: "190px",
           },
           {
+            kind: "select",
+            key: "status",
+            label: "Status",
+            placeholder: "All statuses",
+            options: STATUS_OPTIONS,
             value: status ?? "",
             onChange: (next) => changeStatus(next === "" ? null : next),
-            allLabel: "All statuses",
-            options: STATUS_OPTIONS,
           },
           {
+            kind: "select",
+            key: "recruiter",
+            label: "Recruiter",
+            placeholder: "All recruiters",
+            options: RECRUITER_OPTIONS,
             value: recruiterKind ?? "",
             onChange: (next) => changeRecruiter(next === "" ? null : next),
-            allLabel: "All recruiters",
-            options: RECRUITER_OPTIONS,
+            width: "180px",
+          },
+          {
+            // The sort is not a filter, but it belongs with the controls that
+            // decide what the table shows rather than floating above them.
+            kind: "custom",
+            key: "sort",
+            active: sortBy !== "priority",
+            render: () => (
+              <NativeSelect
+                aria-label="Sort submissions"
+                value={sortBy}
+                onChange={(event) => {
+                  setSortBy(sortValue(event.target.value));
+                  setPage(1);
+                }}
+                className="w-full text-sub sm:w-56"
+              >
+                {SUBMISSION_SORTS.map((value) => (
+                  <option key={value} value={value}>
+                    Sort: {SUBMISSION_SORT_LABELS[value]}
+                  </option>
+                ))}
+              </NativeSelect>
+            ),
           },
         ]}
+        columns={cols.columns}
+        isColumnVisible={cols.isVisible}
+        onToggleColumn={cols.toggle}
+        onClearFilters={resetFilters}
       />
 
-      <div className="flex items-center justify-between gap-3 text-sub">
-        <span className="tabular-nums text-ink-muted">
-          {submissions.data
-            ? `${submissions.data.meta.total.toLocaleString()} submission${
-                submissions.data.meta.total === 1 ? "" : "s"
-              } found`
-            : "Loading submissions…"}
-        </span>
-        {hasFilters && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={resetFilters}
-          >
-            Reset filters
-          </Button>
-        )}
+      <div className="text-sub tabular-nums text-ink-muted">
+        {submissions.data
+          ? `${submissions.data.meta.total.toLocaleString()} submission${
+              submissions.data.meta.total === 1 ? "" : "s"
+            } found`
+          : "Loading submissions…"}
       </div>
 
       {submissions.isPending ? (
@@ -431,189 +408,182 @@ export function CompanySubmissionsQueue() {
           />
         </div>
       ) : (
-        <div className={TABLE_CARD}>
-          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
-            <table className={TABLE_EL}>
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <th className={TABLE_TH}>Candidate</th>
-                  {cols.isVisible("job") && (
-                    <FilterableHead label="Job">
-                      <ColumnFilter
-                        label="Job"
-                        options={jobOptions}
-                        value={jobId}
-                        onChange={changeJob}
-                        searchable
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("recruiter") && (
-                    <FilterableHead label="Recruiter">
-                      <ColumnFilter
-                        label="Recruiter"
-                        options={RECRUITER_OPTIONS}
-                        value={recruiterKind}
-                        onChange={changeRecruiter}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("rating") && (
-                    <th className={TABLE_TH}>Rating</th>
-                  )}
-                  {cols.isVisible("submitted") && (
-                    <th className={TABLE_TH}>Submitted</th>
-                  )}
-                  {cols.isVisible("status") && (
-                    <FilterableHead label="Status">
-                      <ColumnFilter
-                        label="Status"
-                        options={STATUS_OPTIONS}
-                        value={status}
-                        onChange={changeStatus}
-                      />
-                    </FilterableHead>
-                  )}
-                  <th className={cn(TABLE_TH, "text-right")}>Actions</th>
-                </tr>
-              </thead>
-              <tbody className={TABLE_BODY}>
-                {submissions.data.data.map((row) => {
-                  const attention = candidateNeedsAttention(row);
-                  return (
-                    <tr
-                      key={row.candidateId}
-                      className={cn(
-                        TABLE_ROW,
-                        "cursor-pointer",
-                        attention && TABLE_ROW_UNREAD,
-                      )}
-                      onClick={() => openThread(row.candidateId)}
-                    >
-                      <td className={cn(TABLE_TD, attention && TABLE_TD_RAIL)}>
-                        <span className="flex items-center gap-2">
-                          {attention && (
-                            <span
-                              className="size-[7px] shrink-0 rounded-full bg-blue"
-                              aria-label="Has unseen activity"
-                            />
-                          )}
-                          <Avatar name={row.candidateName} size="sm" />
-                          <span className={TABLE_CELL_MAIN}>
-                            {row.candidateName}
-                          </span>
-                          <CandidateQuickView
-                            candidateId={row.candidateId}
-                            name={row.candidateName}
-                          />
-                        </span>
-                      </td>
-                      {cols.isVisible("job") && (
-                        <td className={TABLE_TD}>
-                          <JobLink row={row} />
-                        </td>
-                      )}
-                      {cols.isVisible("recruiter") && (
-                        <td className={TABLE_TD_STACKED}>
-                          <RecruiterCell row={row} />
-                        </td>
-                      )}
-                      {cols.isVisible("rating") && (
-                        <td className={TABLE_TD}>
-                          <RatingStars
-                            value={row.recruiter?.ratingAvg ?? null}
-                            count={row.recruiter?.ratingCount}
-                          />
-                        </td>
-                      )}
-                      {cols.isVisible("submitted") && (
-                        <td className={TABLE_TD}>
-                          <span
-                            className="whitespace-nowrap tabular-nums text-ink-muted"
-                            title={formatDateTime(row.submittedAt)}
-                          >
-                            {formatTimeAgo(row.submittedAt)}
-                          </span>
-                        </td>
-                      )}
-                      {cols.isVisible("status") && (
-                        <td className={TABLE_TD}>
-                          <StatusBadge
-                            label={QUEUE_STATUS_LABELS[row.status]}
-                            tone={CANDIDATE_STATUS_TONES[row.status]}
-                          />
-                        </td>
-                      )}
-                      <td className={cn(TABLE_TD, "text-right")}>
-                        <Link
-                          href={`/company/inbox/${row.candidateId}`}
-                          onClick={(event) => event.stopPropagation()}
-                          className="inline-flex h-7.5 items-center rounded-xs border border-line-strong bg-surface px-2.5 text-[12.5px] font-semibold text-ink transition-colors hover:bg-surface-sub"
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <MobileRecordList className="sm:hidden">
-            {submissions.data.data.map((row) => (
-              <MobileRecordCard
-                key={row.candidateId}
-                title={row.candidateName}
-                subtitle={row.jobTitle}
-                href={`/company/inbox/${row.candidateId}`}
-                trailing={
-                  <StatusBadge
-                    label={QUEUE_STATUS_LABELS[row.status]}
-                    tone={CANDIDATE_STATUS_TONES[row.status]}
-                  />
-                }
-                className={cn(candidateNeedsAttention(row) && TABLE_ROW_UNREAD)}
-                fields={[
-                  {
-                    label: "Job",
-                    value: (
-                      <Link
-                        href={jobPath({ id: row.jobId, title: row.jobTitle })}
-                        className="font-[550] text-blue-ink underline-offset-2 hover:underline"
+        <>
+          <div className={TABLE_CARD}>
+            <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr>
+                    <th className={TABLE_TH}>Candidate</th>
+                    {cols.isVisible("job") && (
+                      <th scope="col" className={TABLE_TH}>
+                        Job
+                      </th>
+                    )}
+                    {cols.isVisible("recruiter") && (
+                      <th scope="col" className={TABLE_TH}>
+                        Recruiter
+                      </th>
+                    )}
+                    {cols.isVisible("rating") && (
+                      <th className={TABLE_TH}>Rating</th>
+                    )}
+                    {cols.isVisible("submitted") && (
+                      <th className={TABLE_TH}>Submitted</th>
+                    )}
+                    {cols.isVisible("status") && (
+                      <th scope="col" className={TABLE_TH}>
+                        Status
+                      </th>
+                    )}
+                    <th className={cn(TABLE_TH, "text-right")}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody className={TABLE_BODY}>
+                  {submissions.data.data.map((row) => {
+                    const attention = candidateNeedsAttention(row);
+                    return (
+                      <tr
+                        key={row.candidateId}
+                        className={cn(
+                          TABLE_ROW,
+                          "cursor-pointer",
+                          attention && TABLE_ROW_UNREAD,
+                        )}
+                        onClick={() => openThread(row.candidateId)}
                       >
-                        {row.jobTitle}
-                      </Link>
-                    ),
-                  },
-                  {
-                    label: "Recruiter",
-                    value: row.recruiter
-                      ? `${row.recruiter.firstName} ${row.recruiter.lastName}`
-                      : "—",
-                  },
-                  {
-                    label: "Rating",
-                    value: (
-                      <RatingStars
-                        value={row.recruiter?.ratingAvg ?? null}
-                        count={row.recruiter?.ratingCount}
-                        size="sm"
-                      />
-                    ),
-                  },
-                  { label: "Submitted", value: formatTimeAgo(row.submittedAt) },
-                ]}
-                actions={
-                  <Link
-                    href={`/company/inbox/${row.candidateId}`}
-                    className="text-sub font-[550] text-blue-ink underline-offset-2 hover:underline"
-                  >
-                    View conversation
-                  </Link>
-                }
-              />
-            ))}
-          </MobileRecordList>
+                        <td
+                          className={cn(TABLE_TD, attention && TABLE_TD_RAIL)}
+                        >
+                          <span className="flex items-center gap-2">
+                            {attention && (
+                              <span
+                                className="size-[7px] shrink-0 rounded-full bg-blue"
+                                aria-label="Has unseen activity"
+                              />
+                            )}
+                            <Avatar name={row.candidateName} size="sm" />
+                            <span className={TABLE_CELL_MAIN}>
+                              {row.candidateName}
+                            </span>
+                            <CandidateQuickView
+                              candidateId={row.candidateId}
+                              name={row.candidateName}
+                            />
+                          </span>
+                        </td>
+                        {cols.isVisible("job") && (
+                          <td className={TABLE_TD}>
+                            <JobLink row={row} />
+                          </td>
+                        )}
+                        {cols.isVisible("recruiter") && (
+                          <td className={TABLE_TD_STACKED}>
+                            <RecruiterCell row={row} />
+                          </td>
+                        )}
+                        {cols.isVisible("rating") && (
+                          <td className={TABLE_TD}>
+                            <RatingStars
+                              value={row.recruiter?.ratingAvg ?? null}
+                              count={row.recruiter?.ratingCount}
+                            />
+                          </td>
+                        )}
+                        {cols.isVisible("submitted") && (
+                          <td className={TABLE_TD}>
+                            <span
+                              className="whitespace-nowrap tabular-nums text-ink-muted"
+                              title={formatDateTime(row.submittedAt)}
+                            >
+                              {formatTimeAgo(row.submittedAt)}
+                            </span>
+                          </td>
+                        )}
+                        {cols.isVisible("status") && (
+                          <td className={TABLE_TD}>
+                            <StatusBadge
+                              label={QUEUE_STATUS_LABELS[row.status]}
+                              tone={CANDIDATE_STATUS_TONES[row.status]}
+                            />
+                          </td>
+                        )}
+                        <td className={cn(TABLE_TD, "text-right")}>
+                          <Link
+                            href={`/company/inbox/${row.candidateId}`}
+                            onClick={(event) => event.stopPropagation()}
+                            className="inline-flex h-7.5 items-center rounded-xs border border-line-strong bg-surface px-2.5 text-[12.5px] font-semibold text-ink transition-colors hover:bg-surface-sub"
+                          >
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <MobileRecordList className="sm:hidden">
+              {submissions.data.data.map((row) => (
+                <MobileRecordCard
+                  key={row.candidateId}
+                  title={row.candidateName}
+                  subtitle={row.jobTitle}
+                  href={`/company/inbox/${row.candidateId}`}
+                  trailing={
+                    <StatusBadge
+                      label={QUEUE_STATUS_LABELS[row.status]}
+                      tone={CANDIDATE_STATUS_TONES[row.status]}
+                    />
+                  }
+                  className={cn(
+                    candidateNeedsAttention(row) && TABLE_ROW_UNREAD,
+                  )}
+                  fields={[
+                    {
+                      label: "Job",
+                      value: (
+                        <Link
+                          href={jobPath({ id: row.jobId, title: row.jobTitle })}
+                          className="font-[550] text-blue-ink underline-offset-2 hover:underline"
+                        >
+                          {row.jobTitle}
+                        </Link>
+                      ),
+                    },
+                    {
+                      label: "Recruiter",
+                      value: row.recruiter
+                        ? `${row.recruiter.firstName} ${row.recruiter.lastName}`
+                        : "—",
+                    },
+                    {
+                      label: "Rating",
+                      value: (
+                        <RatingStars
+                          value={row.recruiter?.ratingAvg ?? null}
+                          count={row.recruiter?.ratingCount}
+                          size="sm"
+                        />
+                      ),
+                    },
+                    {
+                      label: "Submitted",
+                      value: formatTimeAgo(row.submittedAt),
+                    },
+                  ]}
+                  actions={
+                    <Link
+                      href={`/company/inbox/${row.candidateId}`}
+                      className="text-sub font-[550] text-blue-ink underline-offset-2 hover:underline"
+                    >
+                      View conversation
+                    </Link>
+                  }
+                />
+              ))}
+            </MobileRecordList>
+          </div>
           <TablePager
             page={page}
             totalPages={submissions.data.meta.totalPages}
@@ -621,7 +591,7 @@ export function CompanySubmissionsQueue() {
             onPage={setPage}
             pageSize={PAGE_SIZE}
           />
-        </div>
+        </>
       )}
     </div>
   );

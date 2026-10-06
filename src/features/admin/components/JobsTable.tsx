@@ -7,13 +7,8 @@ import { AlertCircle, Briefcase, RotateCcw, Trash2, X } from "lucide-react";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
-import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -56,7 +51,6 @@ import {
   TABLE_TD,
   TABLE_TD_STACKED,
   TABLE_TH,
-  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 
 function formatDate(iso: string): string {
@@ -215,18 +209,15 @@ export function JobsTable({
     limit,
     changeLimit,
   } = useListState(initialStatus);
-  // A filter that matches nothing hides the header row it lives in, so the
-  // empty state carries its own way back out. The company scope is a deep-link
-  // with its own chip to clear, so it stays put.
+  // Drives the filter bar's Clear, and the way back out of an empty list. The
+  // company scope is a deep-link with its own chip to clear, so it stays put.
   const hasFilters = qInput !== "" || status !== "";
   const resetFilters = () => {
     setQInput("");
     changeStatus("");
     setPage(1);
   };
-  const cols = useVisibleColumns("admin.jobs.columns", COLUMNS, (key) => {
-    if (key === "status") changeStatus("");
-  });
+  const cols = useVisibleColumns("admin.jobs.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminJobs({
     page,
     limit,
@@ -327,28 +318,31 @@ export function JobsTable({
         </div>
       )}
 
-      <div className={TABLE_TOOLBAR}>
-        <div className="flex-1">
-          <ListToolbar
-            query={qInput}
-            onQueryChange={setQInput}
-            placeholder="Search jobs by title…"
-            filter={{
-              value: status,
-              onChange: changeStatus,
-              allLabel: "All statuses",
-              options: [...STATUS_FILTER_OPTIONS],
-            }}
-          />
-        </div>
-        <div className="sm:ml-auto">
-          <ColumnsToggle
-            columns={cols.columns}
-            isVisible={cols.isVisible}
-            onToggle={cols.toggle}
-          />
-        </div>
-      </div>
+      <TableFilterBar
+        filters={[
+          {
+            kind: "search",
+            key: "q",
+            label: "Search jobs",
+            placeholder: "Search jobs by title…",
+            value: qInput,
+            onChange: setQInput,
+          },
+          {
+            kind: "select",
+            key: "status",
+            label: "Status",
+            placeholder: "All statuses",
+            options: STATUS_FILTER_OPTIONS,
+            value: status,
+            onChange: changeStatus,
+          },
+        ]}
+        columns={cols.columns}
+        isColumnVisible={cols.isVisible}
+        onToggleColumn={cols.toggle}
+        onClearFilters={resetFilters}
+      />
 
       {selected.size > 0 && (
         <div className="hidden flex-wrap items-center gap-3 rounded-sm border border-blue bg-tint px-3.5 py-2.5 sm:flex">
@@ -421,134 +415,137 @@ export function JobsTable({
           />
         </div>
       ) : (
-        <div className={TABLE_CARD}>
-          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
-            <table className={TABLE_EL}>
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <th scope="col" className={cn(TABLE_TH, "w-10 px-0 pl-3.5")}>
-                    <Checkbox
-                      aria-label="Select all jobs on this page"
-                      checked={allOnPageSelected}
-                      onCheckedChange={(checked) =>
-                        toggleAllOnPage(checked === true)
-                      }
-                    />
-                  </th>
-                  <th scope="col" className={cn(TABLE_TH, "w-[28%]")}>
-                    Job
-                  </th>
-                  {cols.isVisible("company") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Company
-                    </th>
-                  )}
-                  {cols.isVisible("status") && (
-                    <FilterableHead label="Status">
-                      <ColumnFilter
-                        label="Status"
-                        options={STATUS_FILTER_OPTIONS}
-                        value={status === "" ? null : status}
-                        onChange={(next) => changeStatus(next ?? "")}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("fee") && (
-                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                      Recruiter fee
-                    </th>
-                  )}
-                  {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
-                    <th scope="col" className={cn(TABLE_TH, "text-center")}>
-                      Candidates
-                    </th>
-                  )}
-                  {cols.isVisible("posted") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Posted
-                    </th>
-                  )}
-                  <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={TABLE_BODY}>
-                {data.data.map((job) => (
-                  <tr key={job.jobId} className={TABLE_ROW}>
-                    <td className={cn(TABLE_TD, "w-10 px-0 pl-3.5")}>
+        <>
+          <div className={TABLE_CARD}>
+            <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr>
+                    <th scope="col" className={cn(TABLE_TH, "w-10")}>
                       <Checkbox
-                        aria-label={`Select ${job.title}`}
-                        checked={selected.has(job.jobId)}
+                        aria-label="Select all jobs on this page"
+                        checked={allOnPageSelected}
                         onCheckedChange={(checked) =>
-                          toggleOne(job.jobId, checked === true)
+                          toggleAllOnPage(checked === true)
                         }
                       />
-                    </td>
-                    <td className={TABLE_TD_STACKED}>
-                      {/* Job title → the public job view. */}
-                      <Link
-                        href={jobPath({ id: job.jobId, title: job.title })}
-                        className={cn(
-                          TABLE_CELL_MAIN,
-                          "block max-w-[260px] truncate transition-colors hover:text-blue",
-                        )}
-                      >
-                        {job.title}
-                      </Link>
-                      <p className={TABLE_CELL_SUB}>
-                        {job.locationState || "—"}
-                      </p>
-                    </td>
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "w-[28%]")}>
+                      Job
+                    </th>
                     {cols.isVisible("company") && (
-                      <td className={TABLE_TD}>
-                        <JobCompany job={job} />
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Company
+                      </th>
                     )}
                     {cols.isVisible("status") && (
-                      <td className={TABLE_TD}>
-                        <JobStatus status={job.status} />
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Status
+                      </th>
                     )}
                     {cols.isVisible("fee") && (
-                      <td
-                        className={cn(TABLE_TD, "whitespace-nowrap text-right")}
-                      >
-                        <JobFee job={job} minFeeMinor={minFeeMinor} />
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                        Recruiter fee
+                      </th>
                     )}
                     {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
-                      <td className={cn(TABLE_TD, "text-center")}>
-                        <JobCandidates job={job} />
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "text-center")}>
+                        Candidates
+                      </th>
                     )}
                     {cols.isVisible("posted") && (
-                      <td
-                        className={cn(
-                          TABLE_TD,
-                          "whitespace-nowrap tabular-nums text-ink-muted",
-                        )}
-                      >
-                        {formatDate(job.createdAt)}
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Posted
+                      </th>
                     )}
-                    <td className={cn(TABLE_TD, "text-right")}>
-                      <JobRowActions
-                        jobId={job.jobId}
-                        jobTitle={job.title}
-                        status={job.status}
-                      />
-                    </td>
+                    <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className={TABLE_BODY}>
+                  {data.data.map((job) => (
+                    <tr key={job.jobId} className={TABLE_ROW}>
+                      <td className={cn(TABLE_TD, "w-10")}>
+                        <Checkbox
+                          aria-label={`Select ${job.title}`}
+                          checked={selected.has(job.jobId)}
+                          onCheckedChange={(checked) =>
+                            toggleOne(job.jobId, checked === true)
+                          }
+                        />
+                      </td>
+                      <td className={TABLE_TD_STACKED}>
+                        {/* Job title → the public job view. */}
+                        <Link
+                          href={jobPath({ id: job.jobId, title: job.title })}
+                          className={cn(
+                            TABLE_CELL_MAIN,
+                            "block max-w-[260px] truncate transition-colors hover:text-blue",
+                          )}
+                        >
+                          {job.title}
+                        </Link>
+                        <p className={TABLE_CELL_SUB}>
+                          {job.locationState || "—"}
+                        </p>
+                      </td>
+                      {cols.isVisible("company") && (
+                        <td className={TABLE_TD}>
+                          <JobCompany job={job} />
+                        </td>
+                      )}
+                      {cols.isVisible("status") && (
+                        <td className={TABLE_TD}>
+                          <JobStatus status={job.status} />
+                        </td>
+                      )}
+                      {cols.isVisible("fee") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap text-right",
+                          )}
+                        >
+                          <JobFee job={job} minFeeMinor={minFeeMinor} />
+                        </td>
+                      )}
+                      {!HIDE_PHASE2_FEATURES &&
+                        cols.isVisible("candidates") && (
+                          <td className={cn(TABLE_TD, "text-center")}>
+                            <JobCandidates job={job} />
+                          </td>
+                        )}
+                      {cols.isVisible("posted") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap tabular-nums text-ink-muted",
+                          )}
+                        >
+                          {formatDate(job.createdAt)}
+                        </td>
+                      )}
+                      <td className={cn(TABLE_TD, "text-right")}>
+                        <JobRowActions
+                          jobId={job.jobId}
+                          jobTitle={job.title}
+                          status={job.status}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <MobileRecordList className="sm:hidden">
+              {data.data.map((job) => (
+                <JobCard key={job.jobId} job={job} minFeeMinor={minFeeMinor} />
+              ))}
+            </MobileRecordList>
           </div>
-          <MobileRecordList className="sm:hidden">
-            {data.data.map((job) => (
-              <JobCard key={job.jobId} job={job} minFeeMinor={minFeeMinor} />
-            ))}
-          </MobileRecordList>
+          {/* Below the card, on the canvas: the card holds the data, and moving
+            through it is a separate control. */}
           <ListPager
             page={page}
             totalPages={data.meta.totalPages}
@@ -557,7 +554,7 @@ export function JobsTable({
             pageSize={limit}
             onPageSize={changeLimit}
           />
-        </div>
+        </>
       )}
 
       <ConfirmActionDialog

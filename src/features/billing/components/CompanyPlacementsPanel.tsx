@@ -15,11 +15,13 @@ import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import * as T from "@/shared/ui-components/data/tableStyles";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
@@ -29,11 +31,6 @@ import {
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -148,13 +145,7 @@ export function CompanyPlacementsPanel() {
     setPage(1);
   };
   const reject = useRejectPlacement();
-  const cols = useVisibleColumns(
-    "company.placements.columns",
-    COLUMNS,
-    (key) => {
-      if (key === "status") changeStatus(null);
-    },
-  );
+  const cols = useVisibleColumns("company.placements.columns", COLUMNS);
 
   if (isError) {
     return (
@@ -207,19 +198,32 @@ export function CompanyPlacementsPanel() {
     <div className={T.TABLE_CARD}>
       <CardHeader>
         <CardTitle>Placements &amp; Escrow</CardTitle>
-        <div className="ml-auto">
-          <ColumnsToggle
-            columns={cols.columns}
-            isVisible={cols.isVisible}
-            onToggle={cols.toggle}
-          />
-        </div>
         <CardDescription>
           Fees held for your hires. Each releases to the recruiter 30 days after
           the joining date. Reject a hire before the joining date to refund it;
           after that, raise a dispute.
         </CardDescription>
       </CardHeader>
+
+      <TableFilterBar
+        surface="card"
+        filters={[
+          {
+            kind: "select",
+            key: "status",
+            label: "Status",
+            placeholder: "All statuses",
+            options: PLACEMENT_STATUS_OPTIONS,
+            value: status ?? "",
+            onChange: (next) => changeStatus(next === "" ? null : next),
+            width: "180px",
+          },
+        ]}
+        columns={cols.columns}
+        isColumnVisible={cols.isVisible}
+        onToggleColumn={cols.toggle}
+        onClearFilters={() => changeStatus(null)}
+      />
 
       {confirming ? (
         <div className="border-b border-line p-4">
@@ -273,14 +277,9 @@ export function CompanyPlacementsPanel() {
                 </th>
               )}
               {cols.isVisible("status") && (
-                <FilterableHead label="Status">
-                  <ColumnFilter
-                    label="Status"
-                    options={PLACEMENT_STATUS_OPTIONS}
-                    value={status}
-                    onChange={changeStatus}
-                  />
-                </FilterableHead>
+                <th scope="col" className={T.TABLE_TH}>
+                  Status
+                </th>
               )}
               {cols.isVisible("settle") && (
                 <th scope="col" className={T.TABLE_TH}>
@@ -427,12 +426,15 @@ export function CompanyPlacementsPanel() {
         ))}
       </MobileRecordList>
 
-      <BillingTableFooter
-        total={data.meta.total}
-        page={page}
-        totalPages={data.meta.totalPages}
-        onPage={setPage}
-      />
+      <CardFooter>
+        <BillingTableFooter
+          total={data.meta.total}
+          page={page}
+          totalPages={data.meta.totalPages}
+          onPage={setPage}
+          className="w-full"
+        />
+      </CardFooter>
     </div>
   );
 }

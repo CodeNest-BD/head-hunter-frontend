@@ -10,20 +10,16 @@ import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
-import { MobileFilters } from "@/shared/ui-components/data/MobileFilters";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   TABLE_BODY,
@@ -111,16 +107,7 @@ export function AdminDisputesTable() {
   const [raisedBy, setRaisedBy] = useState<DisputeChannel | undefined>(
     undefined,
   );
-  const cols = useVisibleColumns("admin.disputes.columns", COLUMNS, (key) => {
-    if (key === "status") {
-      setStatusView(null);
-      setPage(1);
-    }
-    if (key === "raisedBy") {
-      setRaisedBy(undefined);
-      setPage(1);
-    }
-  });
+  const cols = useVisibleColumns("admin.disputes.columns", COLUMNS);
   const statuses = STATUS_VIEWS.find((v) => v.value === statusView)?.statuses;
   const { data, isPending, isError, refetch } = useAdminDisputes(
     page,
@@ -130,9 +117,8 @@ export function AdminDisputesTable() {
 
   const rows = data?.data ?? [];
 
-  // The Status filter starts on Open, and it lives in a header row the empty
-  // state replaces — so an admin with nothing open would have no way back to
-  // the full list without this.
+  // The Status filter starts on Open, so an admin whose queue is clear needs a
+  // way back to the full list from an otherwise empty table.
   const hasFilters = statusView !== null || raisedBy !== undefined;
   const resetFilters = () => {
     setStatusView(null);
@@ -144,42 +130,44 @@ export function AdminDisputesTable() {
     <Card>
       <CardHeader>
         <CardTitle>Disputes</CardTitle>
-        <div className="ml-auto">
-          <ColumnsToggle
-            columns={cols.columns}
-            isVisible={cols.isVisible}
-            onToggle={cols.toggle}
-          />
-        </div>
       </CardHeader>
 
-      {/* This table has no toolbar, and its filters live in a header row a
-          phone never renders — so they get their own phone-only control. */}
-      <div className="px-4 pt-4 sm:hidden">
-        <MobileFilters
+      <div className="p-4 pb-0">
+        <TableFilterBar
           filters={[
             {
+              kind: "select",
+              key: "status",
+              label: "Status",
+              placeholder: "All statuses",
+              options: STATUS_VIEWS.map(({ label, value }) => ({
+                label,
+                value,
+              })),
               value: statusView ?? "",
               onChange: (next) => {
                 setStatusView(next === "" ? null : next);
                 setPage(1);
               },
-              allLabel: "All statuses",
-              options: STATUS_VIEWS.map(({ label, value }) => ({
-                label,
-                value,
-              })),
             },
             {
+              kind: "select",
+              key: "raisedBy",
+              label: "Raised by",
+              placeholder: "Raised by anyone",
+              options: RAISED_BY_OPTIONS,
               value: raisedBy ?? "",
               onChange: (next) => {
                 setRaisedBy(toRaisedBy(next === "" ? null : next));
                 setPage(1);
               },
-              allLabel: "Raised by anyone",
-              options: RAISED_BY_OPTIONS,
+              width: "190px",
             },
           ]}
+          columns={cols.columns}
+          isColumnVisible={cols.isVisible}
+          onToggleColumn={cols.toggle}
+          onClearFilters={resetFilters}
         />
       </div>
 
@@ -229,17 +217,9 @@ export function AdminDisputesTable() {
                     </th>
                   )}
                   {cols.isVisible("raisedBy") && (
-                    <FilterableHead label="Raised By">
-                      <ColumnFilter
-                        label="Raised By"
-                        options={RAISED_BY_OPTIONS}
-                        value={raisedBy ?? null}
-                        onChange={(next) => {
-                          setRaisedBy(toRaisedBy(next));
-                          setPage(1);
-                        }}
-                      />
-                    </FilterableHead>
+                    <th scope="col" className={TABLE_TH}>
+                      Raised By
+                    </th>
                   )}
                   {cols.isVisible("subject") && (
                     <th scope="col" className={TABLE_TH}>
@@ -252,17 +232,9 @@ export function AdminDisputesTable() {
                     </th>
                   )}
                   {cols.isVisible("status") && (
-                    <FilterableHead label="Status">
-                      <ColumnFilter
-                        label="Status"
-                        options={STATUS_VIEWS}
-                        value={statusView}
-                        onChange={(next) => {
-                          setStatusView(next);
-                          setPage(1);
-                        }}
-                      />
-                    </FilterableHead>
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
                   )}
                   {cols.isVisible("opened") && (
                     <th scope="col" className={TABLE_TH}>
@@ -377,13 +349,16 @@ export function AdminDisputesTable() {
             ))}
           </MobileRecordList>
 
-          <TablePager
-            page={page}
-            totalPages={data.meta.totalPages}
-            total={data.meta.total}
-            onPage={setPage}
-            pageSize={ADMIN_DISPUTES_PAGE_SIZE}
-          />
+          <CardFooter>
+            <TablePager
+              page={page}
+              totalPages={data.meta.totalPages}
+              total={data.meta.total}
+              onPage={setPage}
+              pageSize={ADMIN_DISPUTES_PAGE_SIZE}
+              className="w-full"
+            />
+          </CardFooter>
         </>
       )}
     </Card>

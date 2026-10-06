@@ -7,13 +7,8 @@ import { AlertCircle, Building2 } from "lucide-react";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
-import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -49,7 +44,6 @@ import {
   TABLE_TD,
   TABLE_TD_STACKED,
   TABLE_TH,
-  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 
 function formatDate(iso: string): string {
@@ -188,8 +182,7 @@ export function CompaniesTable() {
     changeLimit,
   } = useListState();
   const [verificationFilter, setVerificationFilter] = useState("");
-  // A filter that matches nothing hides the header row it lives in, so the
-  // empty state carries its own way back out.
+  // Drives the filter bar's Clear, and the way back out of an empty list.
   const hasFilters =
     qInput !== "" || status !== "" || verificationFilter !== "";
   const resetFilters = () => {
@@ -198,13 +191,7 @@ export function CompaniesTable() {
     setVerificationFilter("");
     setPage(1);
   };
-  const cols = useVisibleColumns("admin.companies.columns", COLUMNS, (key) => {
-    if (key === "status") changeStatus("");
-    if (key === "approval") {
-      setVerificationFilter("");
-      setPage(1);
-    }
-  });
+  const cols = useVisibleColumns("admin.companies.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminCompanies({
     page,
     limit,
@@ -239,37 +226,43 @@ export function CompaniesTable() {
         ]}
       />
 
-      <div className={TABLE_TOOLBAR}>
-        <div className="flex-1">
-          <ListToolbar
-            query={qInput}
-            onQueryChange={setQInput}
-            placeholder="Search companies by name or email…"
-            filter={{
-              value: status,
-              onChange: changeStatus,
-              allLabel: "All statuses",
-              options: [...STATUS_FILTER_OPTIONS],
-            }}
-            extraFilter={{
-              value: verificationFilter,
-              onChange: (next) => {
-                setVerificationFilter(next);
-                setPage(1);
-              },
-              allLabel: "All approvals",
-              options: [...APPROVAL_FILTER_OPTIONS],
-            }}
-          />
-        </div>
-        <div className="sm:ml-auto">
-          <ColumnsToggle
-            columns={cols.columns}
-            isVisible={cols.isVisible}
-            onToggle={cols.toggle}
-          />
-        </div>
-      </div>
+      <TableFilterBar
+        filters={[
+          {
+            kind: "search",
+            key: "q",
+            label: "Search companies",
+            placeholder: "Search companies by name or email…",
+            value: qInput,
+            onChange: setQInput,
+          },
+          {
+            kind: "select",
+            key: "status",
+            label: "Status",
+            placeholder: "All statuses",
+            options: STATUS_FILTER_OPTIONS,
+            value: status,
+            onChange: changeStatus,
+          },
+          {
+            kind: "select",
+            key: "approval",
+            label: "Approval",
+            placeholder: "All approvals",
+            options: APPROVAL_FILTER_OPTIONS,
+            value: verificationFilter,
+            onChange: (next) => {
+              setVerificationFilter(next);
+              setPage(1);
+            },
+          },
+        ]}
+        columns={cols.columns}
+        isColumnVisible={cols.isVisible}
+        onToggleColumn={cols.toggle}
+        onClearFilters={resetFilters}
+      />
 
       {isPending ? (
         <TableSkeleton />
@@ -306,164 +299,151 @@ export function CompaniesTable() {
           />
         </div>
       ) : (
-        <div className={TABLE_CARD}>
-          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
-            <table className={TABLE_EL}>
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <th scope="col" className={cn(TABLE_TH, "w-[26%]")}>
-                    Company
-                  </th>
-                  {cols.isVisible("wallet") && (
-                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                      Wallet
+        <>
+          <div className={TABLE_CARD}>
+            <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr>
+                    <th scope="col" className={cn(TABLE_TH, "w-[26%]")}>
+                      Company
                     </th>
-                  )}
-                  {cols.isVisible("jobs") && (
-                    <th scope="col" className={cn(TABLE_TH, "text-center")}>
-                      Jobs
-                    </th>
-                  )}
-                  {cols.isVisible("joined") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Joined
-                    </th>
-                  )}
-                  {cols.isVisible("approval") && (
-                    <FilterableHead label="Approval">
-                      <ColumnFilter
-                        label="Approval"
-                        options={APPROVAL_FILTER_OPTIONS}
-                        value={
-                          verificationFilter === "" ? null : verificationFilter
-                        }
-                        onChange={(next) => {
-                          setVerificationFilter(next ?? "");
-                          setPage(1);
-                        }}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("status") && (
-                    <FilterableHead label="Status">
-                      <ColumnFilter
-                        label="Status"
-                        options={STATUS_FILTER_OPTIONS}
-                        value={status === "" ? null : status}
-                        onChange={(next) => changeStatus(next ?? "")}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("avgFee") && (
-                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                      Avg fee
-                    </th>
-                  )}
-                  <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={TABLE_BODY}>
-                {data.data.map((c) => (
-                  <tr key={c.userId} className={TABLE_ROW}>
-                    <td className={TABLE_TD_STACKED}>
-                      <div className="flex items-center gap-2.5">
-                        <CompanyLogo
-                          companyProfileId={c.companyProfileId}
-                          hasLogo={c.hasLogo}
-                          name={c.companyName}
-                          size="sm"
-                        />
-                        <div className="min-w-0">
-                          <Link
-                            href={`/admin/companies/${c.userId}`}
-                            className={cn(
-                              TABLE_CELL_MAIN,
-                              "transition-colors hover:text-blue focus-visible:underline focus-visible:outline-none",
-                            )}
-                          >
-                            {c.companyName}
-                          </Link>
-                          <p
-                            className={cn(
-                              TABLE_CELL_SUB,
-                              "max-w-[240px] truncate",
-                            )}
-                            title={c.email}
-                          >
-                            {c.email}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
                     {cols.isVisible("wallet") && (
-                      <td
-                        className={cn(
-                          TABLE_TD,
-                          "whitespace-nowrap text-right tabular-nums",
-                          walletToneClass(c.balanceMinor),
-                        )}
-                      >
-                        {formatMinor(c.balanceMinor)}
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                        Wallet
+                      </th>
                     )}
                     {cols.isVisible("jobs") && (
-                      <td className={cn(TABLE_TD, "text-center")}>
-                        <CompanyJobCount company={c} />
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "text-center")}>
+                        Jobs
+                      </th>
                     )}
                     {cols.isVisible("joined") && (
-                      <td
-                        className={cn(
-                          TABLE_TD,
-                          "whitespace-nowrap tabular-nums text-ink-muted",
-                        )}
-                      >
-                        {formatDate(c.joinedAt)}
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Joined
+                      </th>
                     )}
                     {cols.isVisible("approval") && (
-                      <td className={TABLE_TD}>
-                        <CompanyApproval company={c} />
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Approval
+                      </th>
                     )}
                     {cols.isVisible("status") && (
-                      <td className={TABLE_TD}>
-                        <CompanyStatus company={c} />
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Status
+                      </th>
                     )}
                     {cols.isVisible("avgFee") && (
-                      <td
-                        className={cn(
-                          TABLE_TD,
-                          "whitespace-nowrap text-right tabular-nums text-ink-muted",
-                        )}
-                      >
-                        {c.avgFeeMinor === null
-                          ? "—"
-                          : formatMinor(c.avgFeeMinor)}
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                        Avg fee
+                      </th>
                     )}
-                    <td className={cn(TABLE_TD, "text-right")}>
-                      <AccountRowActions
-                        userId={c.userId}
-                        status={c.status}
-                        subjectName={c.companyName}
-                        viewHref={`/admin/companies/${c.userId}`}
-                        kind="company"
-                      />
-                    </td>
+                    <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className={TABLE_BODY}>
+                  {data.data.map((c) => (
+                    <tr key={c.userId} className={TABLE_ROW}>
+                      <td className={TABLE_TD_STACKED}>
+                        <div className="flex items-center gap-2.5">
+                          <CompanyLogo
+                            companyProfileId={c.companyProfileId}
+                            hasLogo={c.hasLogo}
+                            name={c.companyName}
+                            size="sm"
+                          />
+                          <div className="min-w-0">
+                            <Link
+                              href={`/admin/companies/${c.userId}`}
+                              className={cn(
+                                TABLE_CELL_MAIN,
+                                "transition-colors hover:text-blue focus-visible:underline focus-visible:outline-none",
+                              )}
+                            >
+                              {c.companyName}
+                            </Link>
+                            <p
+                              className={cn(
+                                TABLE_CELL_SUB,
+                                "max-w-[240px] truncate",
+                              )}
+                              title={c.email}
+                            >
+                              {c.email}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      {cols.isVisible("wallet") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap text-right tabular-nums",
+                            walletToneClass(c.balanceMinor),
+                          )}
+                        >
+                          {formatMinor(c.balanceMinor)}
+                        </td>
+                      )}
+                      {cols.isVisible("jobs") && (
+                        <td className={cn(TABLE_TD, "text-center")}>
+                          <CompanyJobCount company={c} />
+                        </td>
+                      )}
+                      {cols.isVisible("joined") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap tabular-nums text-ink-muted",
+                          )}
+                        >
+                          {formatDate(c.joinedAt)}
+                        </td>
+                      )}
+                      {cols.isVisible("approval") && (
+                        <td className={TABLE_TD}>
+                          <CompanyApproval company={c} />
+                        </td>
+                      )}
+                      {cols.isVisible("status") && (
+                        <td className={TABLE_TD}>
+                          <CompanyStatus company={c} />
+                        </td>
+                      )}
+                      {cols.isVisible("avgFee") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                          )}
+                        >
+                          {c.avgFeeMinor === null
+                            ? "—"
+                            : formatMinor(c.avgFeeMinor)}
+                        </td>
+                      )}
+                      <td className={cn(TABLE_TD, "text-right")}>
+                        <AccountRowActions
+                          userId={c.userId}
+                          status={c.status}
+                          subjectName={c.companyName}
+                          viewHref={`/admin/companies/${c.userId}`}
+                          kind="company"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <MobileRecordList className="sm:hidden">
+              {data.data.map((c) => (
+                <CompanyCard key={c.userId} company={c} />
+              ))}
+            </MobileRecordList>
           </div>
-          <MobileRecordList className="sm:hidden">
-            {data.data.map((c) => (
-              <CompanyCard key={c.userId} company={c} />
-            ))}
-          </MobileRecordList>
           <ListPager
             page={page}
             totalPages={data.meta.totalPages}
@@ -472,7 +452,7 @@ export function CompaniesTable() {
             pageSize={limit}
             onPageSize={changeLimit}
           />
-        </div>
+        </>
       )}
     </div>
   );

@@ -28,13 +28,8 @@ import { StatCard } from "@/shared/ui-components/dashboard/DashboardParts";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
-import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -50,7 +45,6 @@ import {
   TABLE_TD,
   TABLE_TD_STACKED,
   TABLE_TH,
-  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 import {
   MobileRecordCard,
@@ -66,12 +60,7 @@ import {
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
-import {
-  ROLE_CATEGORY_LABELS,
-  jobStatusSchema,
-  type Job,
-  type RoleCategory,
-} from "../schemas";
+import { ROLE_CATEGORY_LABELS, jobStatusSchema, type Job } from "../schemas";
 import { useDeleteJob, useJobs } from "../hooks/useJobs";
 import { jobPath } from "../utils/jobPath";
 import { entriesOf } from "@/shared/utils/entriesOf";
@@ -284,8 +273,7 @@ export function JobsTable() {
     changeLimit,
   } = useListState();
   const [category, setCategory] = useState("");
-  // A filter that matches nothing hides the header row it lives in, so the
-  // empty state carries its own way back out.
+  // Drives the filter bar's Clear, and the way back out of an empty list.
   const hasFilters = qInput !== "" || status !== "" || category !== "";
   const resetFilters = () => {
     setQInput("");
@@ -293,13 +281,7 @@ export function JobsTable() {
     setCategory("");
     setPage(1);
   };
-  const cols = useVisibleColumns("company.jobs.columns", COLUMNS, (key) => {
-    if (key === "status") changeStatus("");
-    if (key === "category") {
-      setCategory("");
-      setPage(1);
-    }
-  });
+  const cols = useVisibleColumns("company.jobs.columns", COLUMNS);
   const parsedStatus = jobStatusSchema.safeParse(status);
   const { data, isPending, isError, refetch } = useJobs({
     page,
@@ -329,37 +311,43 @@ export function JobsTable() {
   );
 
   const toolbar = (
-    <div className={TABLE_TOOLBAR}>
-      <div className="flex-1">
-        <ListToolbar
-          query={qInput}
-          onQueryChange={setQInput}
-          placeholder="Search jobs by title…"
-          filter={{
-            value: status,
-            onChange: changeStatus,
-            allLabel: "All statuses",
-            options: [...STATUS_FILTER_OPTIONS],
-          }}
-          extraFilter={{
-            value: category,
-            onChange: (next) => {
-              setCategory(next);
-              setPage(1);
-            },
-            allLabel: "All categories",
-            options: CATEGORY_OPTIONS,
-          }}
-        />
-      </div>
-      <div className="sm:ml-auto">
-        <ColumnsToggle
-          columns={cols.columns}
-          isVisible={cols.isVisible}
-          onToggle={cols.toggle}
-        />
-      </div>
-    </div>
+    <TableFilterBar
+      filters={[
+        {
+          kind: "search",
+          key: "q",
+          label: "Search jobs",
+          placeholder: "Search jobs by title…",
+          value: qInput,
+          onChange: setQInput,
+        },
+        {
+          kind: "select",
+          key: "status",
+          label: "Status",
+          placeholder: "All statuses",
+          options: STATUS_FILTER_OPTIONS,
+          value: status,
+          onChange: changeStatus,
+        },
+        {
+          kind: "select",
+          key: "category",
+          label: "Category",
+          placeholder: "All categories",
+          options: CATEGORY_OPTIONS,
+          value: category,
+          onChange: (next) => {
+            setCategory(next);
+            setPage(1);
+          },
+        },
+      ]}
+      columns={cols.columns}
+      isColumnVisible={cols.isVisible}
+      onToggleColumn={cols.toggle}
+      onClearFilters={resetFilters}
+    />
   );
 
   return (
@@ -447,150 +435,141 @@ export function JobsTable() {
           />
         </div>
       ) : (
-        <div className={TABLE_CARD}>
-          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
-            <table className={TABLE_EL}>
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <th className={cn(TABLE_TH, "w-[32%]")}>Title</th>
-                  {cols.isVisible("status") && (
-                    <FilterableHead label="Status">
-                      <ColumnFilter
-                        label="Status"
-                        options={STATUS_FILTER_OPTIONS}
-                        value={status === "" ? null : status}
-                        onChange={(next) => changeStatus(next ?? "")}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("category") && (
-                    <FilterableHead label="Category">
-                      <ColumnFilter
-                        label="Category"
-                        options={CATEGORY_OPTIONS}
-                        value={category === "" ? null : category}
-                        onChange={(next) => {
-                          setCategory(next ?? "");
-                          setPage(1);
-                        }}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("fee") && (
-                    <th className={cn(TABLE_TH, "text-right")}>
-                      Recruiter fee
-                    </th>
-                  )}
-                  {cols.isVisible("expiry") && (
-                    <th className={TABLE_TH}>Expiry</th>
-                  )}
-                  {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
-                    <th className={cn(TABLE_TH, "text-center")}>Candidates</th>
-                  )}
-                  <th className={cn(TABLE_TH, "w-11 text-right")}>Actions</th>
-                </tr>
-              </thead>
-              <tbody className={TABLE_BODY}>
-                {data.data.map((job) => {
-                  const candidateCount = candidatesByJob.get(job.id);
-                  const dateLabel = formatDate(
-                    job.publishedAt ?? job.createdAt,
-                  );
-                  return (
-                    <tr key={job.id} className={TABLE_ROW}>
-                      <td className={TABLE_TD_STACKED}>
-                        {/* Title opens the job's public-style detail view;
+        <>
+          <div className={TABLE_CARD}>
+            <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr>
+                    <th className={cn(TABLE_TH, "w-[32%]")}>Title</th>
+                    {cols.isVisible("status") && (
+                      <th scope="col" className={TABLE_TH}>
+                        Status
+                      </th>
+                    )}
+                    {cols.isVisible("category") && (
+                      <th scope="col" className={TABLE_TH}>
+                        Category
+                      </th>
+                    )}
+                    {cols.isVisible("fee") && (
+                      <th className={cn(TABLE_TH, "text-right")}>
+                        Recruiter fee
+                      </th>
+                    )}
+                    {cols.isVisible("expiry") && (
+                      <th className={TABLE_TH}>Expiry</th>
+                    )}
+                    {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
+                      <th className={cn(TABLE_TH, "text-center")}>
+                        Candidates
+                      </th>
+                    )}
+                    <th className={cn(TABLE_TH, "w-11 text-right")}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody className={TABLE_BODY}>
+                  {data.data.map((job) => {
+                    const candidateCount = candidatesByJob.get(job.id);
+                    const dateLabel = formatDate(
+                      job.publishedAt ?? job.createdAt,
+                    );
+                    return (
+                      <tr key={job.id} className={TABLE_ROW}>
+                        <td className={TABLE_TD_STACKED}>
+                          {/* Title opens the job's public-style detail view;
                             the row's Edit action is where you change it. */}
-                        <Link
-                          href={jobPath(job)}
-                          className={cn(
-                            TABLE_CELL_MAIN,
-                            "transition-colors hover:text-blue",
-                          )}
-                        >
-                          {job.title}
-                        </Link>
-                        <p className={TABLE_CELL_SUB}>{dateLabel}</p>
-                      </td>
-                      {cols.isVisible("status") && (
-                        <td className={TABLE_TD}>
-                          <JobStatusBadge status={job.status} />
+                          <Link
+                            href={jobPath(job)}
+                            className={cn(
+                              TABLE_CELL_MAIN,
+                              "transition-colors hover:text-blue",
+                            )}
+                          >
+                            {job.title}
+                          </Link>
+                          <p className={TABLE_CELL_SUB}>{dateLabel}</p>
                         </td>
-                      )}
-                      {cols.isVisible("category") && (
-                        <td className={cn(TABLE_TD, "text-ink-muted")}>
-                          {ROLE_CATEGORY_LABELS[job.roleCategory]}
-                        </td>
-                      )}
-                      {cols.isVisible("fee") && (
-                        <td className={cn(TABLE_TD, "text-right")}>
-                          <RecruiterFee feeMinor={job.recruiterFeeMinor} />
-                        </td>
-                      )}
-                      {cols.isVisible("expiry") && (
-                        <td className={cn(TABLE_TD, "text-ink-muted")}>
-                          <JobExpiry expiresAt={job.expiresAt} />
-                        </td>
-                      )}
-                      {!HIDE_PHASE2_FEATURES &&
-                        cols.isVisible("candidates") && (
-                          <td className={cn(TABLE_TD, "text-center")}>
-                            <CandidateCount
-                              jobId={job.id}
-                              count={candidateCount}
-                            />
+                        {cols.isVisible("status") && (
+                          <td className={TABLE_TD}>
+                            <JobStatusBadge status={job.status} />
                           </td>
                         )}
-                      <td className={cn(TABLE_TD, "text-right")}>
-                        <div className="flex justify-end">
-                          <JobRowActions jobId={job.id} title={job.title} />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        {cols.isVisible("category") && (
+                          <td className={cn(TABLE_TD, "text-ink-muted")}>
+                            {ROLE_CATEGORY_LABELS[job.roleCategory]}
+                          </td>
+                        )}
+                        {cols.isVisible("fee") && (
+                          <td className={cn(TABLE_TD, "text-right")}>
+                            <RecruiterFee feeMinor={job.recruiterFeeMinor} />
+                          </td>
+                        )}
+                        {cols.isVisible("expiry") && (
+                          <td className={cn(TABLE_TD, "text-ink-muted")}>
+                            <JobExpiry expiresAt={job.expiresAt} />
+                          </td>
+                        )}
+                        {!HIDE_PHASE2_FEATURES &&
+                          cols.isVisible("candidates") && (
+                            <td className={cn(TABLE_TD, "text-center")}>
+                              <CandidateCount
+                                jobId={job.id}
+                                count={candidateCount}
+                              />
+                            </td>
+                          )}
+                        <td className={cn(TABLE_TD, "text-right")}>
+                          <div className="flex justify-end">
+                            <JobRowActions jobId={job.id} title={job.title} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <MobileRecordList className="sm:hidden">
+              {data.data.map((job) => (
+                <MobileRecordCard
+                  key={job.id}
+                  href={jobPath(job)}
+                  title={job.title}
+                  subtitle={formatDate(job.publishedAt ?? job.createdAt)}
+                  trailing={<JobStatusBadge status={job.status} />}
+                  fields={[
+                    {
+                      label: "Category",
+                      value: ROLE_CATEGORY_LABELS[job.roleCategory],
+                    },
+                    {
+                      label: "Recruiter fee",
+                      value: <RecruiterFee feeMinor={job.recruiterFeeMinor} />,
+                    },
+                    {
+                      label: "Expiry",
+                      value: <JobExpiry expiresAt={job.expiresAt} />,
+                    },
+                    ...(HIDE_PHASE2_FEATURES
+                      ? []
+                      : [
+                          {
+                            label: "Candidates",
+                            value: (
+                              <CandidateCount
+                                jobId={job.id}
+                                count={candidatesByJob.get(job.id)}
+                              />
+                            ),
+                          },
+                        ]),
+                  ]}
+                  actions={<JobRowActions jobId={job.id} title={job.title} />}
+                />
+              ))}
+            </MobileRecordList>
           </div>
-          <MobileRecordList className="sm:hidden">
-            {data.data.map((job) => (
-              <MobileRecordCard
-                key={job.id}
-                href={jobPath(job)}
-                title={job.title}
-                subtitle={formatDate(job.publishedAt ?? job.createdAt)}
-                trailing={<JobStatusBadge status={job.status} />}
-                fields={[
-                  {
-                    label: "Category",
-                    value: ROLE_CATEGORY_LABELS[job.roleCategory],
-                  },
-                  {
-                    label: "Recruiter fee",
-                    value: <RecruiterFee feeMinor={job.recruiterFeeMinor} />,
-                  },
-                  {
-                    label: "Expiry",
-                    value: <JobExpiry expiresAt={job.expiresAt} />,
-                  },
-                  ...(HIDE_PHASE2_FEATURES
-                    ? []
-                    : [
-                        {
-                          label: "Candidates",
-                          value: (
-                            <CandidateCount
-                              jobId={job.id}
-                              count={candidatesByJob.get(job.id)}
-                            />
-                          ),
-                        },
-                      ]),
-                ]}
-                actions={<JobRowActions jobId={job.id} title={job.title} />}
-              />
-            ))}
-          </MobileRecordList>
           <TablePager
             page={page}
             totalPages={data.meta.totalPages}
@@ -599,7 +578,7 @@ export function JobsTable() {
             onPage={setPage}
             onPageSize={changeLimit}
           />
-        </div>
+        </>
       )}
     </div>
   );

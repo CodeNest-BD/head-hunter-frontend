@@ -37,11 +37,13 @@ export function TableSkeleton({
   const textCells = Math.max(columns - 1, 1);
   return (
     <div className={cn(TABLE_CARD, className)}>
-      <div className="h-9.5 w-full animate-pulse bg-surface-sub" />
+      {/* The 40px header band, then rows on the table's own 8px/12px
+          rhythm, so nothing shifts when the data lands. */}
+      <div className="h-10 w-full animate-pulse bg-surface-sub" />
       {Array.from({ length: rows }).map((_, row) => (
         <div
           key={row}
-          className="flex h-11 items-center gap-4 border-t border-line px-3.5"
+          className="flex h-9 items-center gap-4 border-t border-line px-4"
         >
           {Array.from({ length: textCells }).map((_, cell) => (
             <div

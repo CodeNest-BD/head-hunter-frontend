@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Briefcase, Inbox, Search } from "lucide-react";
+import { AlertCircle, Briefcase, Inbox } from "lucide-react";
 
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import {
@@ -18,10 +18,14 @@ import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardHeader } from "@/shared/ui-components/controls/card";
-import { Input } from "@/shared/ui-components/controls/input";
+import {
+  Card,
+  CardFooter,
+  CardHeader,
+} from "@/shared/ui-components/controls/card";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { ListRow } from "@/shared/ui-components/list/ListRow";
@@ -110,39 +114,44 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
     <div className="flex flex-col gap-4">
       <PageHeader title="Inbox" subtitle={copy.subtitle} />
 
-      {/* `.toolbar` — the 36px search box and the All/Unread segmented control
-       * sit directly on the canvas, left-aligned as one group. */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[220px] max-w-[360px] flex-1">
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
-          />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search company, candidate or job"
-            className="pl-8 text-sub"
-          />
-        </div>
-        <div className="inline-flex shrink-0 rounded-sm border border-line bg-surface-sunken p-0.5">
-          {FILTERS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setFilter(key)}
-              className={cn(
-                "inline-flex h-7 items-center gap-1.5 rounded-xs px-3 text-[12.5px] font-semibold capitalize transition-colors",
-                filter === key
-                  ? "bg-surface text-ink shadow-e1"
-                  : "text-ink-muted hover:text-ink",
-              )}
-            >
-              {key}
-            </button>
-          ))}
-        </div>
-      </div>
+      <TableFilterBar
+        filters={[
+          {
+            kind: "search",
+            key: "q",
+            label: "Search conversations",
+            placeholder: "Search company, candidate or job",
+            value: search,
+            onChange: setSearch,
+          },
+          {
+            // All/Unread is one choice over the same list, so it stays a
+            // segmented control rather than becoming a third dropdown.
+            kind: "custom",
+            key: "unread",
+            active: filter === "unread",
+            render: () => (
+              <div className="inline-flex h-9 shrink-0 items-center rounded-sm border border-line bg-surface-sunken p-0.5">
+                {FILTERS.map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setFilter(key)}
+                    className={cn(
+                      "inline-flex h-full items-center gap-1.5 rounded-xs px-3 text-[12.5px] font-semibold capitalize transition-colors",
+                      filter === key
+                        ? "bg-surface text-ink shadow-e1"
+                        : "text-ink-muted hover:text-ink",
+                    )}
+                  >
+                    {key}
+                  </button>
+                ))}
+              </div>
+            ),
+          },
+        ]}
+      />
 
       {isError ? (
         <Alert tone="bad" icon={AlertCircle}>
@@ -200,7 +209,7 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
           )}
         >
           <CardHeader className="py-2.5">
-            <span className="text-label font-[650] uppercase text-ink-muted">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-ink-muted">
               Conversations
             </span>
             {unreadOnPage > 0 ? (
@@ -220,13 +229,16 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
               />
             ))}
           </ul>
-          <TablePager
-            page={meta?.page ?? 1}
-            totalPages={meta?.totalPages ?? 1}
-            total={meta?.total ?? rows.length}
-            pageSize={PAGE_SIZE}
-            onPage={setPage}
-          />
+          <CardFooter>
+            <TablePager
+              page={meta?.page ?? 1}
+              totalPages={meta?.totalPages ?? 1}
+              total={meta?.total ?? rows.length}
+              pageSize={PAGE_SIZE}
+              onPage={setPage}
+              className="w-full"
+            />
+          </CardFooter>
         </Card>
       )}
     </div>

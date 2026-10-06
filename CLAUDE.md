@@ -69,7 +69,7 @@ React Hook Form for form state; **Zod** for schema validation (shared with parsi
 ## UI & Styling
 
 > **Read [`component-design-guidance.md`](./component-design-guidance.md) before
-> building any UI.** It is the catalogue of the 65 shared components and the
+> building any UI.** It is the catalogue of the 63 shared components and the
 > rules for using them — tokens, the type and density scales, the recipes for a
 > table page / form page / dialog / status, loading states and motion. Nearly
 > every screen here is assembled from parts that already exist; a new one-off is

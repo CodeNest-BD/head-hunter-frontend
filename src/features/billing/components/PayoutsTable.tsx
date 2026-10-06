@@ -8,29 +8,25 @@ import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { CardHeader, CardTitle } from "@/shared/ui-components/controls/card";
 import {
-  ColumnsToggle,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui-components/controls/card";
+import {
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
 import * as T from "@/shared/ui-components/data/tableStyles";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
-import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
 import { usePayouts } from "../hooks/useBilling";
 import { payoutDetail } from "../payoutTracking";
-import {
-  PAYOUT_STATUS_LABELS,
-  type Payout,
-  type PayoutStatus,
-} from "../schemas";
+import { PAYOUT_STATUS_LABELS, type Payout } from "../schemas";
 import { BillingTableFooter } from "./BillingTable";
 import {
   PayoutStatusBadge,
@@ -63,13 +59,7 @@ export function PayoutsTable() {
   const [selected, setSelected] = useState<Payout | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const payouts = usePayouts(page, status ?? undefined);
-  const cols = useVisibleColumns(
-    "recruiter.payouts.columns",
-    COLUMNS,
-    (key) => {
-      if (key === "status") changeStatus(null);
-    },
-  );
+  const cols = useVisibleColumns("recruiter.payouts.columns", COLUMNS);
   const changeStatus = (next: string | null) => {
     setStatus(next);
     setPage(1);
@@ -86,8 +76,8 @@ export function PayoutsTable() {
 
   const data = payouts.data;
   // A recruiter with no withdrawals at all gets nothing — but one whose filter
-  // matched nothing must keep the card, or the Status control would unmount
-  // with it and the history would never come back.
+  // matched nothing keeps the card, so the filter bar stays on screen to be
+  // cleared.
   if (!data || (data.meta.total === 0 && page === 1 && status === null)) {
     return null;
   }
@@ -96,14 +86,25 @@ export function PayoutsTable() {
     <div className={T.TABLE_CARD}>
       <CardHeader>
         <CardTitle>Withdrawals</CardTitle>
-        <div className="ml-auto">
-          <ColumnsToggle
-            columns={cols.columns}
-            isVisible={cols.isVisible}
-            onToggle={cols.toggle}
-          />
-        </div>
       </CardHeader>
+      <TableFilterBar
+        surface="card"
+        filters={[
+          {
+            kind: "select",
+            key: "status",
+            label: "Status",
+            placeholder: "All statuses",
+            options: PAYOUT_STATUS_OPTIONS,
+            value: status ?? "",
+            onChange: (next) => changeStatus(next === "" ? null : next),
+          },
+        ]}
+        columns={cols.columns}
+        isColumnVisible={cols.isVisible}
+        onToggleColumn={cols.toggle}
+        onClearFilters={() => changeStatus(null)}
+      />
       <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
         <table className={T.TABLE_EL}>
           <thead className={T.TABLE_HEAD}>
@@ -117,14 +118,9 @@ export function PayoutsTable() {
                 Amount
               </th>
               {cols.isVisible("status") && (
-                <FilterableHead label="Status">
-                  <ColumnFilter
-                    label="Status"
-                    options={PAYOUT_STATUS_OPTIONS}
-                    value={status}
-                    onChange={changeStatus}
-                  />
-                </FilterableHead>
+                <th scope="col" className={T.TABLE_TH}>
+                  Status
+                </th>
               )}
               {cols.isVisible("detail") && (
                 <th scope="col" className={T.TABLE_TH}>
@@ -214,12 +210,15 @@ export function PayoutsTable() {
           />
         ))}
       </MobileRecordList>
-      <BillingTableFooter
-        total={data.meta.total}
-        page={page}
-        totalPages={data.meta.totalPages}
-        onPage={setPage}
-      />
+      <CardFooter>
+        <BillingTableFooter
+          total={data.meta.total}
+          page={page}
+          totalPages={data.meta.totalPages}
+          onPage={setPage}
+          className="w-full"
+        />
+      </CardFooter>
       <PayoutTrackingDialog
         payout={selected}
         onClose={() => setSelected(null)}

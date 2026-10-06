@@ -9,20 +9,16 @@ import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardHeader } from "@/shared/ui-components/controls/card";
+import { Card, CardFooter } from "@/shared/ui-components/controls/card";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import * as T from "@/shared/ui-components/data/tableStyles";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -97,13 +93,39 @@ export function LedgerTable() {
   const accountName = user ? `${user.firstName} ${user.lastName}`.trim() : "";
   const cols = useVisibleColumns("company.ledger.columns", COLUMNS);
 
+  const filterBar = (
+    <TableFilterBar
+      surface="card"
+      filters={[
+        {
+          kind: "select",
+          key: "activity",
+          label: "Activity",
+          placeholder: "All activity",
+          options: LEDGER_TYPE_OPTIONS,
+          value: entryType ?? "",
+          onChange: (next) => changeEntryType(next === "" ? null : next),
+          width: "200px",
+        },
+      ]}
+      columns={cols.columns}
+      isColumnVisible={cols.isVisible}
+      onToggleColumn={cols.toggle}
+      onClearFilters={() => changeEntryType(null)}
+    />
+  );
+
   if (isLoading) {
-    // Match whatever columns this reader has left switched on.
     return (
-      <TableSkeleton
-        rows={6}
-        columns={cols.allKeys.filter(cols.isVisible).length}
-      />
+      <Card>
+        {filterBar}
+        {/* Match whatever columns this reader has left switched on. */}
+        <TableSkeleton
+          rows={6}
+          columns={cols.allKeys.filter(cols.isVisible).length}
+          className="rounded-none border-0 shadow-none"
+        />
+      </Card>
     );
   }
 
@@ -111,13 +133,11 @@ export function LedgerTable() {
   if (entries.length === 0) {
     return (
       <Card>
+        {filterBar}
         <EmptyState
           icon={Receipt}
           title="No activity yet"
           description="Load funds and your top-ups, reservations and refunds will show up here."
-          // This card replaces the header row that carries the Activity
-          // filter, so a reader who filters to a movement they have none of
-          // would otherwise have no way back.
           action={
             entryType !== null ? (
               <Button
@@ -139,15 +159,7 @@ export function LedgerTable() {
 
   return (
     <div className={T.TABLE_CARD}>
-      {/* The "History" heading belongs to the page, so the card head carries
-          only the picker — and only where there are columns to pick. */}
-      <CardHeader className="hidden justify-end py-2 sm:flex">
-        <ColumnsToggle
-          columns={cols.columns}
-          isVisible={cols.isVisible}
-          onToggle={cols.toggle}
-        />
-      </CardHeader>
+      {filterBar}
       <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
         <table className={T.TABLE_EL}>
           <thead className={T.TABLE_HEAD}>
@@ -155,14 +167,9 @@ export function LedgerTable() {
               <th scope="col" className={T.TABLE_TH}>
                 When
               </th>
-              <FilterableHead label="Activity" className="w-2/5">
-                <ColumnFilter
-                  label="Activity"
-                  options={LEDGER_TYPE_OPTIONS}
-                  value={entryType}
-                  onChange={changeEntryType}
-                />
-              </FilterableHead>
+              <th scope="col" className={cn(T.TABLE_TH, "w-2/5")}>
+                Activity
+              </th>
               {cols.isVisible("amount") && (
                 <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
                   Amount
@@ -283,12 +290,15 @@ export function LedgerTable() {
           />
         ))}
       </MobileRecordList>
-      <BillingTableFooter
-        total={data?.meta.total ?? 0}
-        page={page}
-        totalPages={totalPages}
-        onPage={setPage}
-      />
+      <CardFooter>
+        <BillingTableFooter
+          total={data?.meta.total ?? 0}
+          page={page}
+          totalPages={totalPages}
+          onPage={setPage}
+          className="w-full"
+        />
+      </CardFooter>
     </div>
   );
 }

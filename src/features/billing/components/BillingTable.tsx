@@ -7,6 +7,7 @@ interface BillingTableFooterProps {
   page: number;
   totalPages: number;
   onPage: (page: number) => void;
+  className?: string;
 }
 
 /**
@@ -25,6 +26,7 @@ export function BillingTableFooter({
   page,
   totalPages,
   onPage,
+  className,
 }: BillingTableFooterProps) {
   return (
     <TablePager
@@ -33,6 +35,7 @@ export function BillingTableFooter({
       total={total}
       onPage={onPage}
       pageSize={BILLING_PAGE_SIZE}
+      className={className}
     />
   );
 }

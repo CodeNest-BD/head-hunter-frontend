@@ -14,6 +14,7 @@ import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
@@ -203,15 +204,21 @@ export function RecruiterSubmissions({
                 <SubmissionCard key={c.candidateId} submission={c} />
               ))}
             </MobileRecordList>
-            <ListPager
-              page={page}
-              totalPages={data.meta.totalPages}
-              total={data.meta.total}
-              onPage={setPage}
-              // This list fetches 10 a page, not the admin default — without
-              // it the pager computes its range from 25 and reads wrong.
-              pageSize={PAGE_SIZE}
-            />
+            {/* A list screen's pager sits on the canvas below the table
+                card; inside a panel there is no canvas, so it takes the
+                card's own foot instead. */}
+            <CardFooter>
+              <ListPager
+                page={page}
+                totalPages={data.meta.totalPages}
+                total={data.meta.total}
+                onPage={setPage}
+                // This list fetches 10 a page, not the admin default — without
+                // it the pager computes its range from 25 and reads wrong.
+                pageSize={PAGE_SIZE}
+                className="w-full"
+              />
+            </CardFooter>
           </>
         )}
       </CardContent>

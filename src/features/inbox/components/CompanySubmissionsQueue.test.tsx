@@ -126,27 +126,28 @@ describe("CompanySubmissionsQueue", () => {
     );
   });
 
-  it("filters by status from the status column header", async () => {
+  it("filters by status from the filter bar", async () => {
     const user = userEvent.setup();
     renderWithProviders(<CompanySubmissionsQueue />);
 
-    await user.click(screen.getByRole("button", { name: "Filter by Status" }));
-    // Scope to the popover option (the label and badge also read "Reviewing").
-    await user.click(screen.getByRole("button", { name: "Reviewing" }));
+    await user.click(screen.getByRole("combobox", { name: "Status" }));
+    // Scope to the listbox option — the stat card and the row badge also read
+    // "Reviewing".
+    await user.click(screen.getByRole("option", { name: "Reviewing" }));
 
     expect(submissionsMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ status: "reviewing", page: 1 }),
     );
   });
 
-  it("passes the recruiter-kind filter from the recruiter column header", async () => {
+  it("passes the recruiter-kind filter from the filter bar", async () => {
     const user = userEvent.setup();
     renderWithProviders(<CompanySubmissionsQueue />);
 
+    await user.click(screen.getByRole("combobox", { name: "Recruiter" }));
     await user.click(
-      screen.getByRole("button", { name: "Filter by Recruiter" }),
+      screen.getByRole("option", { name: "Unrated recruiters" }),
     );
-    await user.click(screen.getByText("Unrated recruiters"));
 
     expect(submissionsMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ recruiterKind: "unrated" }),

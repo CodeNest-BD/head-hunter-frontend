@@ -5,13 +5,8 @@ import { AlertCircle, MessagesSquare } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
-import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -37,7 +32,6 @@ import {
   TABLE_SCROLL,
   TABLE_TD,
   TABLE_TH,
-  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 
 const STATUS_FILTER_OPTIONS = [
@@ -113,23 +107,14 @@ export function ConversationsTable() {
     limit,
     changeLimit,
   } = useListState();
-  // A filter that matches nothing hides the header row it lives in, so the
-  // empty state carries its own way back out.
+  // Drives the filter bar's Clear, and the way back out of an empty list.
   const hasFilters = qInput !== "" || status !== "";
   const resetFilters = () => {
     setQInput("");
     changeStatus("");
     setPage(1);
   };
-  // A filter lives in its column header, so hiding the column would leave it
-  // narrowing the list with nothing on screen to explain it.
-  const cols = useVisibleColumns(
-    "admin.conversations.columns",
-    COLUMNS,
-    (key) => {
-      if (key === "status") changeStatus("");
-    },
-  );
+  const cols = useVisibleColumns("admin.conversations.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminConversations({
     page,
     limit,
@@ -139,28 +124,31 @@ export function ConversationsTable() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className={TABLE_TOOLBAR}>
-        <div className="flex-1">
-          <ListToolbar
-            query={qInput}
-            onQueryChange={setQInput}
-            placeholder="Search by job, company or recruiter…"
-            filter={{
-              value: status,
-              onChange: changeStatus,
-              allLabel: "All statuses",
-              options: [...STATUS_FILTER_OPTIONS],
-            }}
-          />
-        </div>
-        <div className="sm:ml-auto">
-          <ColumnsToggle
-            columns={cols.columns}
-            isVisible={cols.isVisible}
-            onToggle={cols.toggle}
-          />
-        </div>
-      </div>
+      <TableFilterBar
+        filters={[
+          {
+            kind: "search",
+            key: "q",
+            label: "Search conversations",
+            placeholder: "Search by job, company or recruiter…",
+            value: qInput,
+            onChange: setQInput,
+          },
+          {
+            kind: "select",
+            key: "status",
+            label: "Status",
+            placeholder: "All statuses",
+            options: STATUS_FILTER_OPTIONS,
+            value: status,
+            onChange: changeStatus,
+          },
+        ]}
+        columns={cols.columns}
+        isColumnVisible={cols.isVisible}
+        onToggleColumn={cols.toggle}
+        onClearFilters={resetFilters}
+      />
 
       {isPending ? (
         <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
@@ -197,109 +185,109 @@ export function ConversationsTable() {
           />
         </div>
       ) : (
-        <div className={TABLE_CARD}>
-          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
-            <table className={TABLE_EL}>
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
-                    Company
-                  </th>
-                  {cols.isVisible("recruiter") && (
+        <>
+          <div className={TABLE_CARD}>
+            <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr>
                     <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
-                      Recruiter
+                      Company
                     </th>
-                  )}
-                  {cols.isVisible("job") && (
-                    <th scope="col" className={cn(TABLE_TH, "w-[24%]")}>
-                      Job
-                    </th>
-                  )}
-                  {cols.isVisible("messages") && (
-                    <th scope="col" className={cn(TABLE_TH, "text-center")}>
-                      Messages
-                    </th>
-                  )}
-                  {cols.isVisible("status") && (
-                    <FilterableHead label="Status">
-                      <ColumnFilter
-                        label="Status"
-                        options={STATUS_FILTER_OPTIONS}
-                        value={status === "" ? null : status}
-                        onChange={(next) => changeStatus(next ?? "")}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("lastActivity") && (
-                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                      Last activity
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className={TABLE_BODY}>
-                {data.data.map((c) => (
-                  <tr key={c.candidateId} className={cn("relative", TABLE_ROW)}>
-                    <td className={TABLE_TD}>
-                      <Link
-                        href={`/admin/conversations/${c.candidateId}`}
-                        className={cn(
-                          TABLE_CELL_MAIN,
-                          "transition-colors after:absolute after:inset-0 hover:text-blue focus-visible:underline focus-visible:outline-none",
-                        )}
-                      >
-                        {c.companyName}
-                      </Link>
-                    </td>
                     {cols.isVisible("recruiter") && (
-                      <td className={cn(TABLE_TD, "text-ink-body")}>
-                        <span className="block max-w-[200px] truncate">
-                          {c.recruiterName}
-                        </span>
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
+                        Recruiter
+                      </th>
                     )}
                     {cols.isVisible("job") && (
-                      <td className={cn(TABLE_TD, "text-ink-muted")}>
-                        <span className="block max-w-[220px] truncate">
-                          {c.jobTitle}
-                        </span>
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "w-[24%]")}>
+                        Job
+                      </th>
                     )}
                     {cols.isVisible("messages") && (
-                      <td
-                        className={cn(
-                          TABLE_TD,
-                          "text-center tabular-nums text-ink",
-                        )}
-                      >
-                        {c.messageCount}
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "text-center")}>
+                        Messages
+                      </th>
                     )}
                     {cols.isVisible("status") && (
-                      <td className={TABLE_TD}>
-                        <ConversationStatus conversation={c} />
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Status
+                      </th>
                     )}
                     {cols.isVisible("lastActivity") && (
-                      <td
-                        className={cn(
-                          TABLE_TD,
-                          "whitespace-nowrap text-right tabular-nums text-ink-muted",
-                        )}
-                      >
-                        {formatDateTime(c.lastActivityAt)}
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                        Last activity
+                      </th>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className={TABLE_BODY}>
+                  {data.data.map((c) => (
+                    <tr
+                      key={c.candidateId}
+                      className={cn("relative", TABLE_ROW)}
+                    >
+                      <td className={TABLE_TD}>
+                        <Link
+                          href={`/admin/conversations/${c.candidateId}`}
+                          className={cn(
+                            TABLE_CELL_MAIN,
+                            "transition-colors after:absolute after:inset-0 hover:text-blue focus-visible:underline focus-visible:outline-none",
+                          )}
+                        >
+                          {c.companyName}
+                        </Link>
+                      </td>
+                      {cols.isVisible("recruiter") && (
+                        <td className={cn(TABLE_TD, "text-ink-body")}>
+                          <span className="block max-w-[200px] truncate">
+                            {c.recruiterName}
+                          </span>
+                        </td>
+                      )}
+                      {cols.isVisible("job") && (
+                        <td className={cn(TABLE_TD, "text-ink-muted")}>
+                          <span className="block max-w-[220px] truncate">
+                            {c.jobTitle}
+                          </span>
+                        </td>
+                      )}
+                      {cols.isVisible("messages") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "text-center tabular-nums text-ink",
+                          )}
+                        >
+                          {c.messageCount}
+                        </td>
+                      )}
+                      {cols.isVisible("status") && (
+                        <td className={TABLE_TD}>
+                          <ConversationStatus conversation={c} />
+                        </td>
+                      )}
+                      {cols.isVisible("lastActivity") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                          )}
+                        >
+                          {formatDateTime(c.lastActivityAt)}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <MobileRecordList className="sm:hidden">
+              {data.data.map((c) => (
+                <ConversationCard key={c.candidateId} conversation={c} />
+              ))}
+            </MobileRecordList>
           </div>
-          <MobileRecordList className="sm:hidden">
-            {data.data.map((c) => (
-              <ConversationCard key={c.candidateId} conversation={c} />
-            ))}
-          </MobileRecordList>
           <ListPager
             page={page}
             totalPages={data.meta.totalPages}
@@ -308,7 +296,7 @@ export function ConversationsTable() {
             pageSize={limit}
             onPageSize={changeLimit}
           />
-        </div>
+        </>
       )}
     </div>
   );

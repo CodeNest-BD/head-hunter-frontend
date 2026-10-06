@@ -15,10 +15,12 @@ import { formatMinor } from "@/shared/utils/money";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import * as T from "@/shared/ui-components/data/tableStyles";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
@@ -39,11 +41,6 @@ import {
   type RecruiterWalletSummary,
 } from "../schemas";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -273,14 +270,26 @@ function PlacementsTable({
     <div className={T.TABLE_CARD}>
       <CardHeader>
         <CardTitle>Placements</CardTitle>
-        <div className="ml-auto">
-          <ColumnsToggle
-            columns={cols.columns}
-            isVisible={cols.isVisible}
-            onToggle={cols.toggle}
-          />
-        </div>
       </CardHeader>
+      <TableFilterBar
+        surface="card"
+        filters={[
+          {
+            kind: "select",
+            key: "status",
+            label: "Status",
+            placeholder: "All statuses",
+            options: PLACEMENT_STATUS_OPTIONS,
+            value: status ?? "",
+            onChange: (next) => onStatus(next === "" ? null : next),
+            width: "180px",
+          },
+        ]}
+        columns={cols.columns}
+        isColumnVisible={cols.isVisible}
+        onToggleColumn={cols.toggle}
+        onClearFilters={() => onStatus(null)}
+      />
       {disputing ? (
         <div className="border-b border-line p-4">
           <RaiseDisputeForm
@@ -317,14 +326,9 @@ function PlacementsTable({
                 </th>
               )}
               {cols.isVisible("status") && (
-                <FilterableHead label="Status">
-                  <ColumnFilter
-                    label="Status"
-                    options={PLACEMENT_STATUS_OPTIONS}
-                    value={status}
-                    onChange={onStatus}
-                  />
-                </FilterableHead>
+                <th scope="col" className={T.TABLE_TH}>
+                  Status
+                </th>
               )}
               {cols.isVisible("released") && (
                 <th scope="col" className={T.TABLE_TH}>
@@ -425,12 +429,15 @@ function PlacementsTable({
           />
         ))}
       </MobileRecordList>
-      <BillingTableFooter
-        total={data.meta.total}
-        page={page}
-        totalPages={data.meta.totalPages}
-        onPage={onPage}
-      />
+      <CardFooter>
+        <BillingTableFooter
+          total={data.meta.total}
+          page={page}
+          totalPages={data.meta.totalPages}
+          onPage={onPage}
+          className="w-full"
+        />
+      </CardFooter>
     </div>
   );
 }
@@ -444,9 +451,6 @@ export function RecruiterWalletPanel() {
   const cols = useVisibleColumns(
     "recruiter.placements.columns",
     PLACEMENT_COLUMNS,
-    (key) => {
-      if (key === "status") changeStatus(null);
-    },
   );
   const changeStatus = (next: string | null) => {
     setStatus(next);

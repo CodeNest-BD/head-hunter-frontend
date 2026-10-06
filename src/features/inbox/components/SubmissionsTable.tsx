@@ -2,13 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import {
-  AlertCircle,
-  ArrowRight,
-  Briefcase,
-  Search,
-  Users,
-} from "lucide-react";
+import { AlertCircle, ArrowRight, Briefcase, Users } from "lucide-react";
 
 import {
   CANDIDATE_STATUSES,
@@ -16,11 +10,6 @@ import {
 } from "@/features/candidates/schemas";
 import { CandidateQuickView } from "@/features/candidates/components/CandidateQuickView";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
-  ColumnsToggle,
   useVisibleColumns,
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
@@ -33,7 +22,6 @@ import { formatMinor } from "@/shared/utils/money";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Input } from "@/shared/ui-components/controls/input";
 import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -45,6 +33,7 @@ import {
   SelectValue,
 } from "@/shared/ui-components/controls/select";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
+import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   TABLE_BODY,
@@ -60,7 +49,6 @@ import {
   TABLE_TD,
   TABLE_TD_STACKED,
   TABLE_TH,
-  TABLE_TOOLBAR,
 } from "@/shared/ui-components/data/tableStyles";
 import {
   MobileRecordCard,
@@ -105,10 +93,6 @@ const COLUMNS: ColumnDef[] = [
   { key: "thread", label: "Thread", required: true },
 ];
 
-/** Empties a selection without churning state when it is already empty. */
-const cleared = (previous: Set<string>): Set<string> =>
-  previous.size === 0 ? previous : new Set<string>();
-
 /** Distinct values of one field across the rows, as {value,label} options. */
 function distinct(
   rows: InboxConversationRow[],
@@ -124,11 +108,6 @@ function distinct(
     .map((value) => ({ value, label: value }));
 }
 
-/**
- * The per-column header control: a filter icon that opens a searchable,
- * multi-select value list. Empty selection means "all". The icon reads as
- * active once anything is picked, so a narrowed column is never silent.
- */
 function JobLink({ jobId, title }: { jobId: string; title: string }) {
   return (
     <Link
@@ -220,15 +199,6 @@ export function SubmissionsTable({
   const showsJob = cols.isVisible("job");
   const showsStatus = cols.isVisible("status");
 
-  // Filtering is client-side, so a hidden column's filter would keep narrowing
-  // the list with its control off screen — a shorter list and nothing to
-  // explain it. Hiding a column drops its filter along with its header.
-  useEffect(() => {
-    if (!showsCompany) setCompanySel(cleared);
-    if (!showsJob) setJobSel(cleared);
-    if (!showsStatus) setStatusSel(cleared);
-  }, [showsCompany, showsJob, showsStatus]);
-
   const fetched = useMemo(() => data?.data ?? [], [data]);
   const rows = useMemo(
     () => (jobId ? fetched.filter((row) => row.jobId === jobId) : fetched),
@@ -288,45 +258,90 @@ export function SubmissionsTable({
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const pageRows = visible.slice((page - 1) * limit, page * limit);
 
+  const resetFilters = () => {
+    setSearchInput("");
+    setCandidateSel(new Set());
+    setCompanySel(new Set());
+    setJobSel(new Set());
+    setStatusSel(new Set());
+    setSort("newest");
+  };
+
   const searchBox = (
-    <div className={TABLE_TOOLBAR}>
-      <div className="relative min-w-[220px] flex-1 sm:max-w-[360px]">
-        <Search
-          aria-hidden="true"
-          className="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
-        />
-        <Input
-          value={searchInput}
-          onChange={(event) => setSearchInput(event.target.value)}
-          placeholder="Search by candidate, company or job title…"
-          className="pl-8 text-sub"
-        />
-      </div>
-      <Select
-        value={sort}
-        onValueChange={(next) => {
-          if (isSort(next)) setSort(next);
-        }}
-      >
-        <SelectTrigger className="w-full sm:w-[168px]" aria-label="Sort">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {SORT_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <div className="sm:ml-auto">
-        <ColumnsToggle
-          columns={cols.columns}
-          isVisible={cols.isVisible}
-          onToggle={cols.toggle}
-        />
-      </div>
-    </div>
+    <TableFilterBar
+      filters={[
+        {
+          kind: "search",
+          key: "q",
+          label: "Search submissions",
+          placeholder: "Search by candidate, company or job title…",
+          value: searchInput,
+          onChange: setSearchInput,
+        },
+        {
+          kind: "multiselect",
+          key: "candidate",
+          label: "Candidate",
+          options: candidateOptions,
+          value: candidateSel,
+          onChange: setCandidateSel,
+        },
+        {
+          kind: "multiselect",
+          key: "company",
+          label: "Company",
+          options: companyOptions,
+          value: companySel,
+          onChange: setCompanySel,
+        },
+        {
+          kind: "multiselect",
+          key: "job",
+          label: "Job",
+          options: jobOptions,
+          value: jobSel,
+          onChange: setJobSel,
+        },
+        {
+          kind: "multiselect",
+          key: "status",
+          label: "Status",
+          options: statusOptions,
+          value: statusSel,
+          onChange: setStatusSel,
+        },
+        {
+          // Not a filter, but it decides what the table shows, so it belongs
+          // with the controls rather than floating above them.
+          kind: "custom",
+          key: "sort",
+          active: sort !== "newest",
+          render: () => (
+            <Select
+              value={sort}
+              onValueChange={(next) => {
+                if (isSort(next)) setSort(next);
+              }}
+            >
+              <SelectTrigger className="w-[168px] text-sub" aria-label="Sort">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ),
+        },
+      ]}
+      columns={cols.columns}
+      isColumnVisible={cols.isVisible}
+      onToggleColumn={cols.toggle}
+      onClearFilters={resetFilters}
+    />
   );
 
   if (isError) {
@@ -374,180 +389,168 @@ export function SubmissionsTable({
           />
         </div>
       ) : (
-        <div className={TABLE_CARD}>
-          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
-            <table className={TABLE_EL}>
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <FilterableHead label="Candidate">
-                    <ColumnFilter
-                      multiple
-                      label="Candidate"
-                      options={candidateOptions}
-                      value={candidateSel}
-                      onChange={setCandidateSel}
-                    />
-                  </FilterableHead>
-                  {showsCompany && (
-                    <FilterableHead label="Company">
-                      <ColumnFilter
-                        multiple
-                        label="Company"
-                        options={companyOptions}
-                        value={companySel}
-                        onChange={setCompanySel}
-                      />
-                    </FilterableHead>
-                  )}
-                  {showsJob && (
-                    <FilterableHead label="Job title">
-                      <ColumnFilter
-                        multiple
-                        label="Job"
-                        options={jobOptions}
-                        value={jobSel}
-                        onChange={setJobSel}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("submitted") && (
-                    <th className={TABLE_TH}>Submitted</th>
-                  )}
-                  {showsStatus && (
-                    <FilterableHead label="Status">
-                      <ColumnFilter
-                        multiple
-                        label="Status"
-                        options={statusOptions}
-                        value={statusSel}
-                        onChange={setStatusSel}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("fee") && (
-                    <th className={cn(TABLE_TH, "text-right")}>
-                      Recruiter fee
+        <>
+          <div className={TABLE_CARD}>
+            <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr>
+                    <th scope="col" className={TABLE_TH}>
+                      Candidate
                     </th>
-                  )}
-                  <th className={cn(TABLE_TH, "text-right")}>Thread</th>
-                </tr>
-              </thead>
-              <tbody className={TABLE_BODY}>
-                {pageRows.map((row) => (
-                  <tr
-                    key={row.candidateId}
-                    className={cn(
-                      TABLE_ROW,
-                      row.unreadMessages > 0 && TABLE_ROW_UNREAD,
-                    )}
-                  >
-                    <td
-                      className={cn(
-                        TABLE_TD,
-                        row.unreadMessages > 0 && TABLE_TD_RAIL,
-                      )}
-                    >
-                      <span className="flex items-center gap-2">
-                        <Avatar name={row.candidateName} size="sm" />
-                        <span
-                          className={cn(
-                            "flex items-center gap-2",
-                            TABLE_CELL_MAIN,
-                          )}
-                        >
-                          {row.candidateName}
-                          {row.unreadMessages > 0 && (
-                            <span
-                              className="size-[7px] rounded-full bg-blue"
-                              aria-label="Unread messages"
-                            />
-                          )}
-                          <CandidateQuickView
-                            candidateId={row.candidateId}
-                            name={row.candidateName}
-                          />
-                        </span>
-                      </span>
-                    </td>
                     {showsCompany && (
-                      <td className={`${TABLE_TD} text-ink-body`}>
-                        {row.counterpartyName}
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Company
+                      </th>
                     )}
                     {showsJob && (
-                      <td className={TABLE_TD}>
-                        <JobLink jobId={row.jobId} title={row.jobTitle} />
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Job title
+                      </th>
                     )}
                     {cols.isVisible("submitted") && (
-                      <td className={cn(TABLE_TD_STACKED, "whitespace-nowrap")}>
-                        <span className="block tabular-nums text-ink">
-                          {formatDate(submittedOf(row))}
-                        </span>
-                        <span className={cn("block", TABLE_CELL_SUB)}>
-                          {formatRelativeDay(submittedOf(row))}
-                        </span>
-                      </td>
+                      <th className={TABLE_TH}>Submitted</th>
                     )}
                     {showsStatus && (
-                      <td className={TABLE_TD}>
-                        <StatusPill row={row} />
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Status
+                      </th>
                     )}
                     {cols.isVisible("fee") && (
-                      <td
-                        className={`${TABLE_TD} whitespace-nowrap text-right font-[650] tabular-nums text-ink`}
-                      >
-                        {row.recruiterFeeMinor != null
-                          ? formatMinor(row.recruiterFeeMinor)
-                          : "—"}
-                      </td>
+                      <th className={cn(TABLE_TH, "text-right")}>
+                        Recruiter fee
+                      </th>
                     )}
-                    <td className={`${TABLE_TD} text-right`}>
-                      <ThreadCell row={row} />
-                    </td>
+                    <th className={cn(TABLE_TH, "text-right")}>Thread</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className={TABLE_BODY}>
+                  {pageRows.map((row) => (
+                    <tr
+                      key={row.candidateId}
+                      className={cn(
+                        TABLE_ROW,
+                        row.unreadMessages > 0 && TABLE_ROW_UNREAD,
+                      )}
+                    >
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          row.unreadMessages > 0 && TABLE_TD_RAIL,
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Avatar name={row.candidateName} size="sm" />
+                          <span
+                            className={cn(
+                              "flex items-center gap-2",
+                              TABLE_CELL_MAIN,
+                            )}
+                          >
+                            {row.candidateName}
+                            {row.unreadMessages > 0 && (
+                              <span
+                                className="size-[7px] rounded-full bg-blue"
+                                aria-label="Unread messages"
+                              />
+                            )}
+                            <CandidateQuickView
+                              candidateId={row.candidateId}
+                              name={row.candidateName}
+                            />
+                          </span>
+                        </span>
+                      </td>
+                      {showsCompany && (
+                        <td className={`${TABLE_TD} text-ink-body`}>
+                          {row.counterpartyName}
+                        </td>
+                      )}
+                      {showsJob && (
+                        <td className={TABLE_TD}>
+                          <JobLink jobId={row.jobId} title={row.jobTitle} />
+                        </td>
+                      )}
+                      {cols.isVisible("submitted") && (
+                        <td
+                          className={cn(TABLE_TD_STACKED, "whitespace-nowrap")}
+                        >
+                          <span className="block tabular-nums text-ink">
+                            {formatDate(submittedOf(row))}
+                          </span>
+                          <span className={cn("block", TABLE_CELL_SUB)}>
+                            {formatRelativeDay(submittedOf(row))}
+                          </span>
+                        </td>
+                      )}
+                      {showsStatus && (
+                        <td className={TABLE_TD}>
+                          <StatusPill row={row} />
+                        </td>
+                      )}
+                      {cols.isVisible("fee") && (
+                        <td
+                          className={`${TABLE_TD} whitespace-nowrap text-right font-[650] tabular-nums text-ink`}
+                        >
+                          {row.recruiterFeeMinor != null
+                            ? formatMinor(row.recruiterFeeMinor)
+                            : "—"}
+                        </td>
+                      )}
+                      <td className={`${TABLE_TD} text-right`}>
+                        <ThreadCell row={row} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <MobileRecordList className="sm:hidden">
+              {pageRows.map((row) => (
+                <MobileRecordCard
+                  key={row.candidateId}
+                  title={row.candidateName}
+                  subtitle={row.counterpartyName}
+                  trailing={
+                    <div className="flex flex-col items-end gap-1.5">
+                      <StatusPill row={row} />
+                      {row.unreadMessages > 0 && (
+                        <span className="text-[11px] font-[550] text-blue-ink">
+                          {row.unreadMessages} unread
+                        </span>
+                      )}
+                    </div>
+                  }
+                  fields={[
+                    {
+                      label: "Job",
+                      value: <JobLink jobId={row.jobId} title={row.jobTitle} />,
+                    },
+                    {
+                      label: "Submitted",
+                      value: `${formatDate(submittedOf(row))} · ${formatRelativeDay(submittedOf(row))}`,
+                    },
+                    {
+                      label: "Recruiter fee",
+                      value:
+                        row.recruiterFeeMinor != null
+                          ? formatMinor(row.recruiterFeeMinor)
+                          : "—",
+                    },
+                  ]}
+                  actions={
+                    <OpenConversationLink candidateId={row.candidateId} />
+                  }
+                />
+              ))}
+            </MobileRecordList>
+            {data && data.meta.total > fetched.length ? (
+              <p className="border-t border-line px-4 py-2 text-meta text-ink-muted">
+                Showing your {fetched.length} most recent submissions of{" "}
+                {data.meta.total}.
+              </p>
+            ) : null}
           </div>
-          <MobileRecordList className="sm:hidden">
-            {pageRows.map((row) => (
-              <MobileRecordCard
-                key={row.candidateId}
-                title={row.candidateName}
-                subtitle={row.counterpartyName}
-                trailing={
-                  <div className="flex flex-col items-end gap-1.5">
-                    <StatusPill row={row} />
-                    {row.unreadMessages > 0 && (
-                      <span className="text-[11px] font-[550] text-blue-ink">
-                        {row.unreadMessages} unread
-                      </span>
-                    )}
-                  </div>
-                }
-                fields={[
-                  {
-                    label: "Job",
-                    value: <JobLink jobId={row.jobId} title={row.jobTitle} />,
-                  },
-                  {
-                    label: "Submitted",
-                    value: `${formatDate(submittedOf(row))} · ${formatRelativeDay(submittedOf(row))}`,
-                  },
-                  {
-                    label: "Recruiter fee",
-                    value:
-                      row.recruiterFeeMinor != null
-                        ? formatMinor(row.recruiterFeeMinor)
-                        : "—",
-                  },
-                ]}
-                actions={<OpenConversationLink candidateId={row.candidateId} />}
-              />
-            ))}
-          </MobileRecordList>
           <TablePager
             page={page}
             totalPages={totalPages}
@@ -556,13 +559,7 @@ export function SubmissionsTable({
             onPage={setPage}
             onPageSize={setLimit}
           />
-          {data && data.meta.total > fetched.length ? (
-            <p className="border-t border-line px-4 py-2 text-meta text-ink-muted">
-              Showing your {fetched.length} most recent submissions of{" "}
-              {data.meta.total}.
-            </p>
-          ) : null}
-        </div>
+        </>
       )}
     </div>
   );

@@ -37,6 +37,31 @@ if (!globalThis.ResizeObserver) {
   };
 }
 
+// Radix's Select opens on a pointerdown and then scrolls the chosen item into
+// view. jsdom implements neither the Pointer Capture API nor scrollIntoView, so
+// without these a trigger simply never opens and every select reads as a dead
+// control under test. Stubs rather than implementations: nothing here asserts
+// on capture or scroll position, only on what opening the list makes reachable.
+for (const method of [
+  "hasPointerCapture",
+  "setPointerCapture",
+  "releasePointerCapture",
+] as const) {
+  if (!Element.prototype[method]) {
+    Object.defineProperty(Element.prototype, method, {
+      writable: true,
+      value: () => false,
+    });
+  }
+}
+
+if (!Element.prototype.scrollIntoView) {
+  Object.defineProperty(Element.prototype, "scrollIntoView", {
+    writable: true,
+    value: () => {},
+  });
+}
+
 // jsdom does not implement real navigation, so clicking a plain <a href>
 // (an unmocked next/link with no router context to intercept it, say) logs
 // "Not implemented: navigation" to stderr on every such click — noise, not a

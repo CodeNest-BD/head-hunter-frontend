@@ -11,11 +11,13 @@ interface ListPagerProps {
   /** Current rows-per-page; when provided, renders the page-size selector. */
   pageSize?: number;
   onPageSize?: (size: number) => void;
+  className?: string;
 }
 
 /**
- * Admin footer pager — a thin adapter over the shared TablePager so every
- * admin table shares the exact numbered-pager pattern used site-wide.
+ * Admin pager — a thin adapter over the shared TablePager that pins the
+ * admin page-size options, so every admin list shares the exact numbered-pager
+ * pattern used site-wide.
  */
 export function ListPager({
   page,
@@ -24,6 +26,7 @@ export function ListPager({
   onPage,
   pageSize,
   onPageSize,
+  className,
 }: ListPagerProps) {
   return (
     <TablePager
@@ -34,6 +37,7 @@ export function ListPager({
       pageSize={pageSize ?? PAGE_SIZE_OPTIONS[0]}
       onPageSize={onPageSize}
       pageSizeOptions={PAGE_SIZE_OPTIONS}
+      className={className}
     />
   );
 }

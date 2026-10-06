@@ -9,7 +9,7 @@ defines the system, `pages/*.html` show it applied. Tokens live in
 `src/app/globals.css` and are exposed as Tailwind utilities in
 `tailwind.config.ts`.
 
-**Inventory** (at the time of writing — re-count rather than trust it): 65
+**Inventory** (at the time of writing — re-count rather than trust it): 63
 shared components across 11 folders, 111 feature components, 46 routes.
 
 ---
@@ -104,8 +104,8 @@ deterministic tint from the name, `variant="logo"`, `round`) · `CountChip` ·
 
 ### Data — `shared/ui-components/data`
 
-`ColumnFilter` + `FilterableHead` · `MobileFilters` · `ListToolbar` ·
-`ColumnsToggle` + `useVisibleColumns` · `TablePager` · `TableSkeleton` ·
+`TableFilterBar` (search / select / multiselect / custom, plus the Columns
+popover and Clear) · `useVisibleColumns` · `TablePager` · `TableSkeleton` ·
 `StatusBadge` · `NegotiationStateBadges` · `RatingStars` · `TableAvatar` ·
 `CompanyLogo` · `RecruiterPhoto` · `RichTextView` · `tableStyles` (the
 `TABLE_*` class constants).
@@ -135,20 +135,30 @@ deterministic tint from the name, `variant="logo"`, `round`) · `CountChip` ·
 ### A table page
 
 ```
-PageHeader → stat strip (grid gap-3) → Alert (if any) → toolbar
-→ TABLE_CARD > TABLE_SCROLL > table > TablePager
+PageHeader → stat strip (grid gap-3) → Alert (if any) → TableFilterBar
+→ TABLE_CARD > TABLE_SCROLL > table
+→ TablePager
 ```
 
-- Toolbar: `ListToolbar` (search) with `ColumnsToggle` pushed right
-  (`sm:ml-auto`).
-- **Filtering lives in the column header** — `FilterableHead` + `ColumnFilter`,
-  on every column whose endpoint has a param. Never a select in the toolbar.
-- **Every table gets `ColumnsToggle`.** Mark `required` the identity column and
-  whichever column holds the row's only action.
+- **Every filter lives in `TableFilterBar`**, the bordered strip above the
+  table — never behind an icon in a column header. A reader sees what is
+  applied without opening anything, and the strip works identically on a phone,
+  where there is no header row to hang a control off.
+- Declare each filter as `{ kind, key, label, value, onChange }`. `search` and
+  `select` cover nearly everything; `select` switches itself to a searchable
+  picker past eight options, so a caller never picks a widget. `multiselect`
+  holds several values; `custom` is for a sort or a date range.
+- Pass `onClearFilters` and the bar grows a **Clear** once anything is applied.
+- **The pager sits below the card, on the canvas** — the card holds the data,
+  moving through it is a separate control. Inside a panel that has its own
+  border and title, wrap it in `CardFooter` and pass `surface="card"` to the
+  bar.
+- **Every table gets the Columns popover** — pass `columns` /
+  `isColumnVisible` / `onToggleColumn` from `useVisibleColumns`. Mark
+  `required` the identity column and whichever column holds the row's only
+  action. Visibility is about what the table _shows_; it never clears a filter.
 - A guarded `<th>` needs its `<td>` guarded identically, or every column right
   of it shifts.
-- **Filters must stay reachable**: the empty state offers "Reset filters", and
-  `MobileFilters` carries them below `sm`, where there is no header row.
 - Rows: first cell `TABLE_TD_STACKED` with `TABLE_CELL_MAIN` over
   `TABLE_CELL_SUB`; money right-aligned; unread rows `TABLE_ROW_UNREAD` plus
   `TABLE_TD_RAIL` **on the first cell** — an inset shadow on a `<tr>` does not
@@ -221,7 +231,7 @@ further and draws its border, so the movement marks what is clickable.
 - [ ] Nothing here already does this
 - [ ] No raw hex, no `text-sm`/`text-base`, no `shadow-md`, no `rounded-xl`
 - [ ] Numbers are `tabular-nums`
-- [ ] Every table has `ColumnsToggle`, column filters, and a reachable reset
+- [ ] Every table has a `TableFilterBar` with its Columns popover and a Clear
 - [ ] Loading state is the right one of skeleton / spinner / `BrandLoader`
 - [ ] A value picker carries `MENU_OPTION_LIST`; a menu of destinations or
       actions does not
