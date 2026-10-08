@@ -61,6 +61,24 @@ function formatDate(iso: string | null): string {
   });
 }
 
+/** One figure in the header card's strip: the number, then what it counts. */
+function HeaderStat({
+  value,
+  label,
+  className,
+}: {
+  value: string;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("min-w-0", className)}>
+      <div className="truncate text-section font-bold text-ink">{value}</div>
+      <div className="mt-0.5 text-meta text-ink-muted">{label}</div>
+    </div>
+  );
+}
+
 /**
  * The admin's verification decision. The note reaches the recruiter either way
  * — it becomes the rejection's notification body, and is appended to the
@@ -227,225 +245,284 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
   const location = [cityState, data.zip].filter(Boolean).join(" ") || "—";
 
   return (
-    <div className="flex w-full max-w-5xl flex-col gap-3">
+    <div className="flex w-full flex-col gap-3">
       <Card>
-        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 items-center gap-4">
-            <span className="flex size-13 shrink-0 items-center justify-center rounded-full bg-tint text-block font-bold text-blue-ink">
-              {initials(data.firstName, data.lastName)}
-            </span>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h2 className="text-page font-bold text-ink">{name}</h2>
-                <StatusBadge
-                  label={ACCOUNT_STATUS_LABELS[data.status]}
-                  tone={ACCOUNT_STATUS_TONES[data.status]}
-                />
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className="flex min-w-0 items-center gap-4">
+              <span className="flex size-13 shrink-0 items-center justify-center rounded-full bg-tint text-block font-bold text-blue-ink">
+                {initials(data.firstName, data.lastName)}
+              </span>
+              <div className="min-w-0">
+                {data.recruiterSerialNumber !== undefined && (
+                  <p className="text-label font-[650] uppercase text-ink-faint">
+                    Recruiter / #{data.recruiterSerialNumber}
+                  </p>
+                )}
+                <div className="mt-[3px] flex flex-wrap items-center gap-2.5">
+                  <h2 className="text-page font-bold text-ink">{name}</h2>
+                  <StatusBadge
+                    label={ACCOUNT_STATUS_LABELS[data.status]}
+                    tone={ACCOUNT_STATUS_TONES[data.status]}
+                  />
+                  <StatusBadge
+                    label={
+                      VERIFICATION_LABELS[data.verificationStatus] ??
+                      data.verificationStatus
+                    }
+                    tone={
+                      VERIFICATION_STATUS_TONES[data.verificationStatus] ??
+                      "neutral"
+                    }
+                  />
+                </div>
+                <p className="mt-[3px] text-sub text-ink-muted">
+                  Recruiter · Joined {formatDate(data.joinedAt)}
+                </p>
               </div>
             </div>
+            <div className="flex items-center gap-2 sm:ml-auto sm:shrink-0">
+              <HoldButton
+                userId={data.userId}
+                status={data.status}
+                subjectName={name}
+              />
+              <DeleteRecruiterButton userId={data.userId} name={name} />
+            </div>
           </div>
-          <div className="flex items-center gap-2 sm:ml-auto sm:shrink-0">
-            <HoldButton
-              userId={data.userId}
-              status={data.status}
-              subjectName={name}
+
+          {/* The four figures that say what this account amounts to, ruled off
+              from the identity above them and from each other. */}
+          <div className="grid grid-cols-2 gap-x-5 gap-y-4 border-t border-line pt-4 sm:grid-cols-4 sm:divide-x sm:divide-line">
+            <HeaderStat
+              value={String(data.placementCount)}
+              label={data.placementCount === 1 ? "Placement" : "Placements"}
             />
-            <DeleteRecruiterButton userId={data.userId} name={name} />
+            <HeaderStat
+              className="sm:pl-5"
+              value={formatMinor(data.releasedEarningsMinor)}
+              label="Total Earnings"
+            />
+            <HeaderStat
+              className="sm:pl-5"
+              value={
+                SUBSCRIPTION_LABELS[data.subscriptionStatus] ??
+                data.subscriptionStatus
+              }
+              label="Marketplace Plan"
+            />
+            <HeaderStat
+              className="sm:pl-5"
+              value={formatDate(data.lastLoginAt)}
+              label="Last Active"
+            />
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <VerificationCard data={data} />
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Contact</CardTitle>
-          </CardHeader>
-          <CardContent className={FACTS_GRID}>
-            <DetailField label="Phone" value={data.phone} />
-            <DetailField
-              label="Phone confirmed"
-              value={data.phoneVerified ? "Yes" : "No"}
-            />
-            <DetailField label="Email" value={data.email} />
-            <DetailField
-              label="Email confirmed"
-              value={data.emailVerified ? "Yes" : "No"}
-            />
-            <DetailField label="Address" value={data.addressLine} />
-            <DetailField label="Location" value={location} />
-            <div className={FACT_FULL}>
-              <div className="text-label font-[650] uppercase text-ink-muted">
-                LinkedIn
-              </div>
-              <div className="mt-[3px] text-body font-[550] text-ink">
-                {data.linkedinUrl ? (
-                  <a
-                    href={data.linkedinUrl}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="break-all text-blue-ink hover:underline"
-                  >
-                    {data.linkedinUrl.replace(/^https?:\/\//, "")}
-                  </a>
-                ) : (
-                  "—"
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Marketplace</CardTitle>
-          </CardHeader>
-          <CardContent className={FACTS_GRID}>
-            <div>
-              <div className="text-label font-[650] uppercase text-ink-muted">
-                Subscription
-              </div>
-              <div className="mt-[3px]">
-                <StatusBadge
-                  label={
-                    SUBSCRIPTION_LABELS[data.subscriptionStatus] ??
-                    data.subscriptionStatus
-                  }
-                  tone={
-                    SUBSCRIPTION_STATUS_TONES[data.subscriptionStatus] ??
-                    "neutral"
-                  }
-                />
-              </div>
-            </div>
-            <DetailField
-              label="Renews"
-              value={formatDate(data.currentPeriodEnd)}
-            />
-            <DetailField
-              label="Placements"
-              value={String(data.placementCount)}
-            />
-            <DetailField
-              label="Total earnings"
-              value={formatMinor(data.releasedEarningsMinor)}
-            />
-            <DetailField
-              label="Experience"
-              value={
-                data.yearsExperience !== null
-                  ? `${data.yearsExperience} yrs`
-                  : null
-              }
-            />
-            <div>
-              <div className="text-label font-[650] uppercase text-ink-muted">
-                Rating
-              </div>
-              <div className="mt-[3px]">
-                <RatingStars value={data.ratingAvg} count={data.ratingCount} />
-              </div>
-            </div>
-            <div className={FACT_FULL}>
-              <div className="text-label font-[650] uppercase text-ink-muted">
-                Specializations
-              </div>
-              <div className="mt-[3px] text-body font-[550] text-ink">
-                {data.specializations && data.specializations.length > 0
-                  ? data.specializations.map(getSpecializationLabel).join(", ")
-                  : "—"}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Account</CardTitle>
-          </CardHeader>
-          <CardContent className={FACTS_GRID}>
-            <DetailField label="Joined" value={formatDate(data.joinedAt)} />
-            <DetailField
-              label="Last login"
-              value={formatDate(data.lastLoginAt)}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Recruiting History ({data.experiences.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data.experiences.length === 0 ? (
-              <p className="text-sub text-ink-muted">No companies listed.</p>
-            ) : (
-              /* Compact `.well` rows rather than a table — the list never runs
-                 past a handful of firms. */
-              <ul className="flex flex-col gap-2">
-                {data.experiences.map((experience) => (
-                  <li
-                    key={experience.id}
-                    className="rounded-sm border border-line bg-surface-sub px-3 py-2.5"
-                  >
-                    <span className="flex flex-wrap items-baseline gap-2 text-block font-[650] text-ink">
-                      {experience.firmName}
-                      {experience.years !== null && (
-                        <span className="text-meta font-[450] tabular-nums text-ink-muted">
-                          {experience.years} yr
-                          {experience.years === 1 ? "" : "s"}
+      {/* The design's shape: the account's own record down the main column,
+          the reference facts about it in a narrower rail beside. */}
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+        <div className="flex min-w-0 flex-col gap-3">
+          <VerificationCard data={data} />
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Recruiting History ({data.experiences.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.experiences.length === 0 ? (
+                <p className="text-sub text-ink-muted">No companies listed.</p>
+              ) : (
+                /* Compact `.well` rows rather than a table — the list never runs
+                   past a handful of firms. */
+                <ul className="flex flex-col gap-2">
+                  {data.experiences.map((experience) => (
+                    <li
+                      key={experience.id}
+                      className="rounded-sm border border-line bg-surface-sub px-3 py-2.5"
+                    >
+                      <span className="flex flex-wrap items-baseline gap-2 text-block font-[650] text-ink">
+                        {experience.firmName}
+                        {experience.years !== null && (
+                          <span className="text-meta font-[450] tabular-nums text-ink-muted">
+                            {experience.years} yr
+                            {experience.years === 1 ? "" : "s"}
+                          </span>
+                        )}
+                      </span>
+                      {experience.specializations.length > 0 && (
+                        <span className="mt-0.5 block text-meta text-ink-muted">
+                          {experience.specializations
+                            .map(getSpecializationLabel)
+                            .join(" · ")}
                         </span>
                       )}
-                    </span>
-                    {experience.specializations.length > 0 && (
-                      <span className="mt-0.5 block text-meta text-ink-muted">
-                        {experience.specializations
-                          .map(getSpecializationLabel)
-                          .join(" · ")}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>References ({data.references.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.references.length === 0 ? (
+                <p className="text-sub text-ink-muted">
+                  No references on file.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-2.5">
+                  {data.references.map((ref) => (
+                    <li
+                      key={ref.id}
+                      className="flex items-center gap-2 text-body font-[550] text-ink"
+                    >
+                      {ref.verified ? (
+                        <BadgeCheck className="size-4 shrink-0 text-ok" />
+                      ) : (
+                        <BadgeX className="size-4 shrink-0 text-bad" />
+                      )}
+                      <span>
+                        {ref.name}
+                        {ref.company ? ` – ${ref.company}` : ""}
                       </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+          <RecruiterSubmissions recruiterProfileId={data.recruiterProfileId} />
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>References ({data.references.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data.references.length === 0 ? (
-              <p className="text-sub text-ink-muted">No references on file.</p>
-            ) : (
-              <ul className="flex flex-col gap-2.5">
-                {data.references.map((ref) => (
-                  <li
-                    key={ref.id}
-                    className="flex items-center gap-2 text-body font-[550] text-ink"
-                  >
-                    {ref.verified ? (
-                      <BadgeCheck className="size-4 shrink-0 text-ok" />
-                    ) : (
-                      <BadgeX className="size-4 shrink-0 text-bad" />
-                    )}
-                    <span>
-                      {ref.name}
-                      {ref.company ? ` – ${ref.company}` : ""}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        {/* The reference facts about the account, in the design's narrower
+            rail beside it. */}
+        <div className="flex min-w-0 flex-col gap-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Contact</CardTitle>
+            </CardHeader>
+            <CardContent className={FACTS_GRID}>
+              <DetailField label="Phone" value={data.phone} />
+              <DetailField
+                label="Phone confirmed"
+                value={data.phoneVerified ? "Yes" : "No"}
+              />
+              <DetailField label="Email" value={data.email} />
+              <DetailField
+                label="Email confirmed"
+                value={data.emailVerified ? "Yes" : "No"}
+              />
+              <DetailField label="Address" value={data.addressLine} />
+              <DetailField label="Location" value={location} />
+              <div className={FACT_FULL}>
+                <div className="text-label font-[650] uppercase text-ink-muted">
+                  LinkedIn
+                </div>
+                <div className="mt-[3px] text-body font-[550] text-ink">
+                  {data.linkedinUrl ? (
+                    <a
+                      href={data.linkedinUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="break-all text-blue-ink hover:underline"
+                    >
+                      {data.linkedinUrl.replace(/^https?:\/\//, "")}
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Marketplace</CardTitle>
+            </CardHeader>
+            <CardContent className={FACTS_GRID}>
+              <div>
+                <div className="text-label font-[650] uppercase text-ink-muted">
+                  Subscription
+                </div>
+                <div className="mt-[3px]">
+                  <StatusBadge
+                    label={
+                      SUBSCRIPTION_LABELS[data.subscriptionStatus] ??
+                      data.subscriptionStatus
+                    }
+                    tone={
+                      SUBSCRIPTION_STATUS_TONES[data.subscriptionStatus] ??
+                      "neutral"
+                    }
+                  />
+                </div>
+              </div>
+              <DetailField
+                label="Renews"
+                value={formatDate(data.currentPeriodEnd)}
+              />
+              <DetailField
+                label="Placements"
+                value={String(data.placementCount)}
+              />
+              <DetailField
+                label="Total earnings"
+                value={formatMinor(data.releasedEarningsMinor)}
+              />
+              <DetailField
+                label="Experience"
+                value={
+                  data.yearsExperience !== null
+                    ? `${data.yearsExperience} yrs`
+                    : null
+                }
+              />
+              <div>
+                <div className="text-label font-[650] uppercase text-ink-muted">
+                  Rating
+                </div>
+                <div className="mt-[3px]">
+                  <RatingStars
+                    value={data.ratingAvg}
+                    count={data.ratingCount}
+                  />
+                </div>
+              </div>
+              <div className={FACT_FULL}>
+                <div className="text-label font-[650] uppercase text-ink-muted">
+                  Specializations
+                </div>
+                <div className="mt-[3px] text-body font-[550] text-ink">
+                  {data.specializations && data.specializations.length > 0
+                    ? data.specializations
+                        .map(getSpecializationLabel)
+                        .join(", ")
+                    : "—"}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Account</CardTitle>
+            </CardHeader>
+            <CardContent className={FACTS_GRID}>
+              <DetailField label="Joined" value={formatDate(data.joinedAt)} />
+              <DetailField
+                label="Last login"
+                value={formatDate(data.lastLoginAt)}
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      <RecruiterSubmissions recruiterProfileId={data.recruiterProfileId} />
     </div>
   );
 }

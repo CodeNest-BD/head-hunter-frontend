@@ -20,8 +20,8 @@
  * `.tablecard` — the white card the table lives in. It clips to its own radius,
  * so the header band's square corners cannot poke past the rounded border and
  * neither the head nor the last row needs corner classes of its own. Safe
- * because every in-row menu (kebab, column picker) renders through a Radix
- * portal and so escapes the clip.
+ * because every in-row menu renders through a Radix portal and so escapes
+ * the clip.
  */
 export const TABLE_CARD =
   "overflow-hidden rounded-md border border-line bg-surface shadow-e1";

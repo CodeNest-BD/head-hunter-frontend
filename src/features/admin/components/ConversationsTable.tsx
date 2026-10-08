@@ -6,10 +6,6 @@ import { AlertCircle, MessagesSquare } from "lucide-react";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   MobileRecordCard,
@@ -42,15 +38,6 @@ const STATUS_FILTER_OPTIONS = [
   { value: "rejected", label: "Rejected" },
   { value: "withdrawn", label: "Withdrawn" },
 ] as const;
-
-const COLUMNS: ColumnDef[] = [
-  { key: "company", label: "Company", required: true },
-  { key: "recruiter", label: "Recruiter" },
-  { key: "job", label: "Job" },
-  { key: "messages", label: "Messages" },
-  { key: "status", label: "Status" },
-  { key: "lastActivity", label: "Last activity" },
-];
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -121,7 +108,6 @@ export function ConversationsTable() {
     changeStatus("");
     setPage(1);
   };
-  const cols = useVisibleColumns("admin.conversations.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminConversations({
     page,
     limit,
@@ -145,20 +131,16 @@ export function ConversationsTable() {
             kind: "select",
             key: "status",
             label: "Status",
-            placeholder: "All statuses",
             options: STATUS_FILTER_OPTIONS,
             value: status,
             onChange: changeStatus,
           },
         ]}
-        columns={cols.columns}
-        isColumnVisible={cols.isVisible}
-        onToggleColumn={cols.toggle}
         onClearFilters={resetFilters}
       />
 
       {isPending ? (
-        <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
+        <TableSkeleton columns={6} />
       ) : isError ? (
         <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
           <div className="flex items-center gap-2.5 font-[550]">
@@ -201,31 +183,21 @@ export function ConversationsTable() {
                     <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
                       Company
                     </th>
-                    {cols.isVisible("recruiter") && (
-                      <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
-                        Recruiter
-                      </th>
-                    )}
-                    {cols.isVisible("job") && (
-                      <th scope="col" className={cn(TABLE_TH, "w-[24%]")}>
-                        Job
-                      </th>
-                    )}
-                    {cols.isVisible("messages") && (
-                      <th scope="col" className={cn(TABLE_TH, "text-center")}>
-                        Messages
-                      </th>
-                    )}
-                    {cols.isVisible("status") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Status
-                      </th>
-                    )}
-                    {cols.isVisible("lastActivity") && (
-                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                        Last activity
-                      </th>
-                    )}
+                    <th scope="col" className={cn(TABLE_TH, "w-[20%]")}>
+                      Recruiter
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "w-[24%]")}>
+                      Job
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "text-center")}>
+                      Messages
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Last activity
+                    </th>
                   </tr>
                 </thead>
                 <tbody className={TABLE_BODY}>
@@ -245,45 +217,35 @@ export function ConversationsTable() {
                           {c.companyName}
                         </Link>
                       </td>
-                      {cols.isVisible("recruiter") && (
-                        <td className={cn(TABLE_TD, "text-ink-body")}>
-                          <span className="block max-w-[200px] truncate">
-                            {c.recruiterName}
-                          </span>
-                        </td>
-                      )}
-                      {cols.isVisible("job") && (
-                        <td className={cn(TABLE_TD, "text-ink-muted")}>
-                          <span className="block max-w-[220px] truncate">
-                            {c.jobTitle}
-                          </span>
-                        </td>
-                      )}
-                      {cols.isVisible("messages") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "text-center tabular-nums text-ink",
-                          )}
-                        >
-                          {c.messageCount}
-                        </td>
-                      )}
-                      {cols.isVisible("status") && (
-                        <td className={TABLE_TD}>
-                          <ConversationStatus conversation={c} />
-                        </td>
-                      )}
-                      {cols.isVisible("lastActivity") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "whitespace-nowrap text-right tabular-nums text-ink-muted",
-                          )}
-                        >
-                          {formatDateTime(c.lastActivityAt)}
-                        </td>
-                      )}
+                      <td className={cn(TABLE_TD, "text-ink-body")}>
+                        <span className="block max-w-[200px] truncate">
+                          {c.recruiterName}
+                        </span>
+                      </td>
+                      <td className={cn(TABLE_TD, "text-ink-muted")}>
+                        <span className="block max-w-[220px] truncate">
+                          {c.jobTitle}
+                        </span>
+                      </td>
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "text-center tabular-nums text-ink",
+                        )}
+                      >
+                        {c.messageCount}
+                      </td>
+                      <td className={TABLE_TD}>
+                        <ConversationStatus conversation={c} />
+                      </td>
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                        )}
+                      >
+                        {formatDateTime(c.lastActivityAt)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

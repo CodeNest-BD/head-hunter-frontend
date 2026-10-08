@@ -88,106 +88,133 @@ export function AdminDisputeView({ disputeRef }: { disputeRef: string }) {
         />
       </div>
 
-      <Card>
-        <CardContent className="grid grid-cols-2 gap-x-5 gap-y-3.5 sm:grid-cols-3">
-          <DisputeFact label="Company" value={data.companyName} />
-          <DisputeFact label="Recruiter" value={data.recruiterName} />
-          <DisputeFact
-            label="Opened By"
-            value={data.raisedBy === "company" ? "Company" : "Recruiter"}
-          />
-          <DisputeFact
-            label="Fee In Escrow"
-            value={formatMinor(data.amountMinor)}
-          />
-          <DisputeFact
-            label="Joining Date"
-            value={formatDate(data.joiningDate)}
-          />
-          <DisputeFact
-            label="Release Date"
-            value={formatDate(data.holdExpiresAt)}
-          />
-          <DisputeFact
-            className="col-span-2 sm:col-span-3"
-            label="Subject"
-            value={DISPUTE_SUBJECT_LABELS[data.subject]}
-          />
-          <DisputeFact
-            className="col-span-2 sm:col-span-3"
-            variant="prose"
-            label="Reason"
-            value={data.reason}
-          />
-          <DisputeFact
-            className="col-span-2 sm:col-span-3"
-            label="Release Countdown"
-            value={describeCountdown(data.countdown)}
-          />
-          {data.resolutionNote ? (
-            <DisputeFact
-              className="col-span-2 sm:col-span-3"
-              variant="prose"
-              label="Resolution Note"
-              value={data.resolutionNote}
-            />
-          ) : null}
-          <div className="col-span-2 sm:col-span-3">
-            <DisputeProofList attachments={data.attachments} />
-          </div>
-          <div className="col-span-2 sm:col-span-3">
-            {/* Opens in its own tab: the admin reads the parties' own thread
-                alongside this adjudication, not instead of it — which is what
-                the external-link affordance already promised. */}
-            <Button asChild variant="outline" size="sm">
-              <Link
-                href={adminConversationPath({
-                  id: data.candidateId,
-                  serialNumber: data.candidateSerialNumber,
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open Company ↔ Recruiter Thread
-                <ExternalLink />
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* The claim and the two channels run down the main column; who and
+          how much, and the decision itself, sit in the rail beside them —
+          where an adjudicator can keep the facts in view while reading the
+          threads, instead of scrolling back up to them. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+        <div className="flex min-w-0 flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Dispute Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-x-5 gap-y-3.5 sm:grid-cols-3">
+              <DisputeFact
+                label="Subject"
+                value={DISPUTE_SUBJECT_LABELS[data.subject]}
+              />
+              <DisputeFact
+                label="Raised By"
+                value={data.raisedBy === "company" ? "Company" : "Recruiter"}
+              />
+              <DisputeFact
+                label="Release Countdown"
+                value={describeCountdown(data.countdown)}
+              />
+              <DisputeFact
+                className="col-span-2 sm:col-span-3"
+                variant="prose"
+                label="Reason"
+                value={data.reason}
+              />
+              {data.resolutionNote ? (
+                <DisputeFact
+                  className="col-span-2 sm:col-span-3"
+                  variant="prose"
+                  label="Resolution Note"
+                  value={data.resolutionNote}
+                />
+              ) : null}
+              <div className="col-span-2 sm:col-span-3">
+                <DisputeProofList attachments={data.attachments} />
+              </div>
+            </CardContent>
+          </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Channel With Company</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-1 flex-col">
-            <DisputeChannelThread
-              messages={data.companyMessages}
-              onSend={open ? sendTo("company") : undefined}
-              sending={sendingTo("company")}
-              placeholder="Message the company…"
-              emptyLabel="No messages with the company yet."
-            />
-          </CardContent>
-        </Card>
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>Channel With Recruiter</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-1 flex-col">
-            <DisputeChannelThread
-              messages={data.recruiterMessages}
-              onSend={open ? sendTo("recruiter") : undefined}
-              sending={sendingTo("recruiter")}
-              placeholder="Message the recruiter…"
-              emptyLabel="No messages with the recruiter yet."
-            />
-          </CardContent>
-        </Card>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle>Channel With Company</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col">
+                <DisputeChannelThread
+                  messages={data.companyMessages}
+                  onSend={open ? sendTo("company") : undefined}
+                  sending={sendingTo("company")}
+                  placeholder="Message the company…"
+                  emptyLabel="No messages with the company yet."
+                />
+              </CardContent>
+            </Card>
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle>Channel With Recruiter</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col">
+                <DisputeChannelThread
+                  messages={data.recruiterMessages}
+                  onSend={open ? sendTo("recruiter") : undefined}
+                  sending={sendingTo("recruiter")}
+                  placeholder="Message the recruiter…"
+                  emptyLabel="No messages with the recruiter yet."
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Placement Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3.5">
+              <DisputeFact label="Candidate" value={data.candidateName} />
+              <DisputeFact label="Job" value={data.jobTitle} />
+              <DisputeFact label="Company" value={data.companyName} />
+              <DisputeFact label="Recruiter" value={data.recruiterName} />
+              {/* Opens in its own tab: the admin reads the parties' own thread
+                  alongside this adjudication, not instead of it — which is what
+                  the external-link affordance already promised. */}
+              <Button asChild variant="outline" size="sm" className="w-fit">
+                <Link
+                  href={adminConversationPath({
+                    id: data.candidateId,
+                    serialNumber: data.candidateSerialNumber,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open Their Thread
+                  <ExternalLink />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment &amp; Escrow</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3.5">
+              <DisputeFact
+                label="Fee In Escrow"
+                value={formatMinor(data.amountMinor)}
+              />
+              <DisputeFact
+                label="Joining Date"
+                value={formatDate(data.joiningDate)}
+              />
+              <DisputeFact
+                label="Release Date"
+                value={formatDate(data.holdExpiresAt)}
+              />
+            </CardContent>
+          </Card>
+
+          {open ? <ResolveDisputeCard dispute={data} /> : null}
+        </div>
       </div>
-
-      {open ? <ResolveDisputeCard dispute={data} /> : null}
     </div>
   );
 }

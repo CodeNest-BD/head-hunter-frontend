@@ -96,8 +96,8 @@ export function InboxJobsTable({ side }: { side: InboxSide }) {
         title="Inbox"
         subtitle={copy.subtitle}
         metrics={[
-          { label: "New", value: newTotal },
-          { label: "Total candidates", value: candidatesTotal },
+          { label: "New", value: newTotal, tone: "blue" },
+          { label: "Total Candidates", value: candidatesTotal },
         ]}
       />
 

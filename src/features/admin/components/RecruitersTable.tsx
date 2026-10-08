@@ -15,10 +15,6 @@ import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableAvatar } from "@/shared/ui-components/data/TableAvatar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -72,18 +68,6 @@ const VERIFICATION_FILTER_OPTIONS = [
   { value: "verified", label: "Verified" },
   { value: "rejected", label: "Rejected" },
 ] as const;
-
-const COLUMNS: ColumnDef[] = [
-  { key: "recruiter", label: "Recruiter", required: true },
-  { key: "verification", label: "Verification" },
-  { key: "rating", label: "Rating" },
-  { key: "location", label: "Location" },
-  { key: "joined", label: "Joined" },
-  { key: "status", label: "Status" },
-  { key: "placements", label: "Placements" },
-  { key: "commissions", label: "Commissions" },
-  { key: "actions", label: "Actions", required: true },
-];
 
 function recruiterName(recruiter: RecruiterListItem): string {
   return `${recruiter.firstName} ${recruiter.lastName}`;
@@ -180,7 +164,6 @@ export function RecruitersTable() {
     setVerificationFilter("");
     setPage(1);
   };
-  const cols = useVisibleColumns("admin.recruiters.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminRecruiters({
     page,
     limit,
@@ -200,9 +183,17 @@ export function RecruitersTable() {
         title="Recruiters"
         subtitle="Every recruiter on the platform. Open a profile or suspend an account."
         metrics={[
-          { label: "Pending", value: pendingTotal },
-          { label: "Active", value: stats.data?.recruiters.active ?? 0 },
-          { label: "Suspended", value: stats.data?.recruiters.held ?? 0 },
+          { label: "Pending", value: pendingTotal, tone: "warn" },
+          {
+            label: "Active",
+            value: stats.data?.recruiters.active ?? 0,
+            tone: "ok",
+          },
+          {
+            label: "Suspended",
+            value: stats.data?.recruiters.held ?? 0,
+            tone: "bad",
+          },
         ]}
       />
 
@@ -220,7 +211,6 @@ export function RecruitersTable() {
             kind: "select",
             key: "status",
             label: "Status",
-            placeholder: "All statuses",
             options: STATUS_FILTER_OPTIONS,
             value: status,
             onChange: changeStatus,
@@ -229,7 +219,6 @@ export function RecruitersTable() {
             kind: "select",
             key: "verification",
             label: "Verification",
-            placeholder: "All verification",
             options: VERIFICATION_FILTER_OPTIONS,
             value: verificationFilter,
             onChange: (next) => {
@@ -238,9 +227,6 @@ export function RecruitersTable() {
             },
           },
         ]}
-        columns={cols.columns}
-        isColumnVisible={cols.isVisible}
-        onToggleColumn={cols.toggle}
         onClearFilters={resetFilters}
       />
 
@@ -288,41 +274,27 @@ export function RecruitersTable() {
                     <th scope="col" className={cn(TABLE_TH, "w-[22%]")}>
                       Recruiter
                     </th>
-                    {cols.isVisible("verification") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Verification
-                      </th>
-                    )}
-                    {cols.isVisible("rating") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Rating
-                      </th>
-                    )}
-                    {cols.isVisible("location") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Location
-                      </th>
-                    )}
-                    {cols.isVisible("joined") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Joined
-                      </th>
-                    )}
-                    {cols.isVisible("status") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Status
-                      </th>
-                    )}
-                    {cols.isVisible("placements") && (
-                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                        Placements
-                      </th>
-                    )}
-                    {cols.isVisible("commissions") && (
-                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                        Commissions
-                      </th>
-                    )}
+                    <th scope="col" className={TABLE_TH}>
+                      Verification
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Rating
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Location
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Joined
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Placements
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Commissions
+                    </th>
                     <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
                       Actions
                     </th>
@@ -356,59 +328,45 @@ export function RecruitersTable() {
                           </div>
                         </div>
                       </td>
-                      {cols.isVisible("verification") && (
-                        <td className={TABLE_TD}>
-                          <RecruiterVerification recruiter={r} />
-                        </td>
-                      )}
-                      {cols.isVisible("rating") && (
-                        <td className={cn(TABLE_TD, "whitespace-nowrap")}>
-                          <RatingStars
-                            value={r.ratingAvg}
-                            count={r.ratingCount}
-                          />
-                        </td>
-                      )}
-                      {cols.isVisible("location") && (
-                        <td className={cn(TABLE_TD, "text-ink-muted")}>
-                          {recruiterLocation(r)}
-                        </td>
-                      )}
-                      {cols.isVisible("joined") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "whitespace-nowrap tabular-nums text-ink-muted",
-                          )}
-                        >
-                          {formatDate(r.joinedAt)}
-                        </td>
-                      )}
-                      {cols.isVisible("status") && (
-                        <td className={TABLE_TD}>
-                          <RecruiterStatus recruiter={r} />
-                        </td>
-                      )}
-                      {cols.isVisible("placements") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "whitespace-nowrap text-right tabular-nums text-ink",
-                          )}
-                        >
-                          {r.placementCount}
-                        </td>
-                      )}
-                      {cols.isVisible("commissions") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
-                          )}
-                        >
-                          {formatMinor(r.commissionMinor)}
-                        </td>
-                      )}
+                      <td className={TABLE_TD}>
+                        <RecruiterVerification recruiter={r} />
+                      </td>
+                      <td className={cn(TABLE_TD, "whitespace-nowrap")}>
+                        <RatingStars
+                          value={r.ratingAvg}
+                          count={r.ratingCount}
+                        />
+                      </td>
+                      <td className={cn(TABLE_TD, "text-ink-muted")}>
+                        {recruiterLocation(r)}
+                      </td>
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap tabular-nums text-ink-muted",
+                        )}
+                      >
+                        {formatDate(r.joinedAt)}
+                      </td>
+                      <td className={TABLE_TD}>
+                        <RecruiterStatus recruiter={r} />
+                      </td>
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right tabular-nums text-ink",
+                        )}
+                      >
+                        {r.placementCount}
+                      </td>
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                        )}
+                      >
+                        {formatMinor(r.commissionMinor)}
+                      </td>
                       <td className={cn(TABLE_TD, "text-right")}>
                         <AccountRowActions
                           userId={r.userId}

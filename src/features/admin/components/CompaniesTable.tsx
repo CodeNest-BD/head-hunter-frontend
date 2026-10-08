@@ -8,10 +8,6 @@ import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { PageHeader } from "@/shared/ui-components/brand";
 import {
@@ -65,17 +61,6 @@ const APPROVAL_FILTER_OPTIONS = [
   { value: "verified", label: "Approved" },
   { value: "rejected", label: "Declined" },
 ] as const;
-
-const COLUMNS: ColumnDef[] = [
-  { key: "company", label: "Company", required: true },
-  { key: "wallet", label: "Wallet" },
-  { key: "jobs", label: "Jobs" },
-  { key: "joined", label: "Joined" },
-  { key: "approval", label: "Approval" },
-  { key: "status", label: "Status" },
-  { key: "avgFee", label: "Avg fee" },
-  { key: "actions", label: "Actions", required: true },
-];
 
 /** Deep-link to the jobs list filtered to one company. */
 function companyJobsHref(company: CompanyListItem): string {
@@ -198,7 +183,6 @@ export function CompaniesTable() {
     setVerificationFilter("");
     setPage(1);
   };
-  const cols = useVisibleColumns("admin.companies.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminCompanies({
     page,
     limit,
@@ -225,11 +209,15 @@ export function CompaniesTable() {
         title="Companies"
         subtitle="Every company on the platform, their wallet, and account controls."
         metrics={[
-          { label: "Pending approval", value: pendingTotal },
+          { label: "Pending Approval", value: pendingTotal, tone: "warn" },
           { label: "Total", value: stats.data?.companies.approved ?? 0 },
-          { label: "Funded wallets", value: fundedCount },
-          { label: "Posted a job", value: postedCount },
-          { label: "Suspended", value: stats.data?.companies.held ?? 0 },
+          { label: "Funded Wallets", value: fundedCount, tone: "ok" },
+          { label: "Posted a Job", value: postedCount, tone: "info" },
+          {
+            label: "Suspended",
+            value: stats.data?.companies.held ?? 0,
+            tone: "bad",
+          },
         ]}
       />
 
@@ -247,7 +235,6 @@ export function CompaniesTable() {
             kind: "select",
             key: "status",
             label: "Status",
-            placeholder: "All statuses",
             options: STATUS_FILTER_OPTIONS,
             value: status,
             onChange: changeStatus,
@@ -256,7 +243,6 @@ export function CompaniesTable() {
             kind: "select",
             key: "approval",
             label: "Approval",
-            placeholder: "All approvals",
             options: APPROVAL_FILTER_OPTIONS,
             value: verificationFilter,
             onChange: (next) => {
@@ -265,9 +251,6 @@ export function CompaniesTable() {
             },
           },
         ]}
-        columns={cols.columns}
-        isColumnVisible={cols.isVisible}
-        onToggleColumn={cols.toggle}
         onClearFilters={resetFilters}
       />
 
@@ -315,36 +298,24 @@ export function CompaniesTable() {
                     <th scope="col" className={cn(TABLE_TH, "w-[26%]")}>
                       Company
                     </th>
-                    {cols.isVisible("wallet") && (
-                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                        Wallet
-                      </th>
-                    )}
-                    {cols.isVisible("jobs") && (
-                      <th scope="col" className={cn(TABLE_TH, "text-center")}>
-                        Jobs
-                      </th>
-                    )}
-                    {cols.isVisible("joined") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Joined
-                      </th>
-                    )}
-                    {cols.isVisible("approval") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Approval
-                      </th>
-                    )}
-                    {cols.isVisible("status") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Status
-                      </th>
-                    )}
-                    {cols.isVisible("avgFee") && (
-                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                        Avg fee
-                      </th>
-                    )}
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Wallet
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "text-center")}>
+                      Jobs
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Joined
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Approval
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Avg fee
+                    </th>
                     <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
                       Actions
                     </th>
@@ -383,54 +354,42 @@ export function CompaniesTable() {
                           </div>
                         </div>
                       </td>
-                      {cols.isVisible("wallet") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "whitespace-nowrap text-right tabular-nums",
-                            walletToneClass(c.balanceMinor),
-                          )}
-                        >
-                          {formatMinor(c.balanceMinor)}
-                        </td>
-                      )}
-                      {cols.isVisible("jobs") && (
-                        <td className={cn(TABLE_TD, "text-center")}>
-                          <CompanyJobCount company={c} />
-                        </td>
-                      )}
-                      {cols.isVisible("joined") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "whitespace-nowrap tabular-nums text-ink-muted",
-                          )}
-                        >
-                          {formatDate(c.joinedAt)}
-                        </td>
-                      )}
-                      {cols.isVisible("approval") && (
-                        <td className={TABLE_TD}>
-                          <CompanyApproval company={c} />
-                        </td>
-                      )}
-                      {cols.isVisible("status") && (
-                        <td className={TABLE_TD}>
-                          <CompanyStatus company={c} />
-                        </td>
-                      )}
-                      {cols.isVisible("avgFee") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "whitespace-nowrap text-right tabular-nums text-ink-muted",
-                          )}
-                        >
-                          {c.avgFeeMinor === null
-                            ? "—"
-                            : formatMinor(c.avgFeeMinor)}
-                        </td>
-                      )}
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right tabular-nums",
+                          walletToneClass(c.balanceMinor),
+                        )}
+                      >
+                        {formatMinor(c.balanceMinor)}
+                      </td>
+                      <td className={cn(TABLE_TD, "text-center")}>
+                        <CompanyJobCount company={c} />
+                      </td>
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap tabular-nums text-ink-muted",
+                        )}
+                      >
+                        {formatDate(c.joinedAt)}
+                      </td>
+                      <td className={TABLE_TD}>
+                        <CompanyApproval company={c} />
+                      </td>
+                      <td className={TABLE_TD}>
+                        <CompanyStatus company={c} />
+                      </td>
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                        )}
+                      >
+                        {c.avgFeeMinor === null
+                          ? "—"
+                          : formatMinor(c.avgFeeMinor)}
+                      </td>
                       <td className={cn(TABLE_TD, "text-right")}>
                         <AccountRowActions
                           userId={c.userId}

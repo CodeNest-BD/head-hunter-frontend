@@ -13,10 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import * as T from "@/shared/ui-components/data/tableStyles";
 import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
@@ -32,16 +28,6 @@ import {
   PayoutStatusBadge,
   PayoutTrackingDialog,
 } from "./PayoutTrackingDialog";
-
-const COLUMNS: ColumnDef[] = [
-  // A withdrawal is its amount, and the trailing cell is the keyboard and
-  // screen-reader way into the tracking timeline — both stay.
-  { key: "requested", label: "Requested" },
-  { key: "amount", label: "Amount", required: true },
-  { key: "status", label: "Status" },
-  { key: "detail", label: "Detail" },
-  { key: "track", label: "Track", required: true },
-];
 
 /**
  * Withdrawal history. Renders nothing until the first withdrawal exists, so
@@ -59,7 +45,6 @@ export function PayoutsTable() {
   const [selected, setSelected] = useState<Payout | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const payouts = usePayouts(page, status ?? undefined);
-  const cols = useVisibleColumns("recruiter.payouts.columns", COLUMNS);
   const changeStatus = (next: string | null) => {
     setStatus(next);
     setPage(1);
@@ -84,49 +69,42 @@ export function PayoutsTable() {
 
   return (
     <div className={T.TABLE_CARD}>
+      {/* The filter rides on the card's own head rather than in a strip of
+          its own: one control does not earn a second band under the title. */}
       <CardHeader>
         <CardTitle>Withdrawals</CardTitle>
+        <TableFilterBar
+          className="ml-auto"
+          surface="bare"
+          filters={[
+            {
+              kind: "select",
+              key: "status",
+              label: "Status",
+              options: PAYOUT_STATUS_OPTIONS,
+              value: status ?? "",
+              onChange: (next) => changeStatus(next === "" ? null : next),
+            },
+          ]}
+          onClearFilters={() => changeStatus(null)}
+        />
       </CardHeader>
-      <TableFilterBar
-        surface="card"
-        filters={[
-          {
-            kind: "select",
-            key: "status",
-            label: "Status",
-            placeholder: "All statuses",
-            options: PAYOUT_STATUS_OPTIONS,
-            value: status ?? "",
-            onChange: (next) => changeStatus(next === "" ? null : next),
-          },
-        ]}
-        columns={cols.columns}
-        isColumnVisible={cols.isVisible}
-        onToggleColumn={cols.toggle}
-        onClearFilters={() => changeStatus(null)}
-      />
       <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
         <table className={T.TABLE_EL}>
           <thead className={T.TABLE_HEAD}>
             <tr>
-              {cols.isVisible("requested") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Requested
-                </th>
-              )}
+              <th scope="col" className={T.TABLE_TH}>
+                Requested
+              </th>
               <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
                 Amount
               </th>
-              {cols.isVisible("status") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Status
-                </th>
-              )}
-              {cols.isVisible("detail") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Detail
-                </th>
-              )}
+              <th scope="col" className={T.TABLE_TH}>
+                Status
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Detail
+              </th>
               <th scope="col" className={cn(T.TABLE_TH, "w-11")}>
                 <span className="sr-only">Track</span>
               </th>
@@ -139,16 +117,14 @@ export function PayoutsTable() {
                 className={cn(T.TABLE_ROW, "cursor-pointer")}
                 onClick={() => setSelected(payout)}
               >
-                {cols.isVisible("requested") && (
-                  <td
-                    className={cn(
-                      T.TABLE_TD,
-                      "whitespace-nowrap tabular-nums text-ink-body",
-                    )}
-                  >
-                    {formatDate(payout.createdAt)}
-                  </td>
-                )}
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap tabular-nums text-ink-body",
+                  )}
+                >
+                  {formatDate(payout.createdAt)}
+                </td>
                 <td
                   className={cn(
                     T.TABLE_TD,
@@ -157,16 +133,12 @@ export function PayoutsTable() {
                 >
                   {formatMinor(payout.amountMinor)}
                 </td>
-                {cols.isVisible("status") && (
-                  <td className={T.TABLE_TD}>
-                    <PayoutStatusBadge status={payout.status} />
-                  </td>
-                )}
-                {cols.isVisible("detail") && (
-                  <td className={cn(T.TABLE_TD, "text-ink-body")}>
-                    {payoutDetail(payout)}
-                  </td>
-                )}
+                <td className={T.TABLE_TD}>
+                  <PayoutStatusBadge status={payout.status} />
+                </td>
+                <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                  {payoutDetail(payout)}
+                </td>
                 <td className={cn(T.TABLE_TD, "text-right")}>
                   <button
                     type="button"

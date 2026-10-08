@@ -12,10 +12,6 @@ import { formatMinor } from "@/shared/utils/money";
 import { Pill } from "@/shared/ui-components/badges/Pill";
 import { Button } from "@/shared/ui-components/controls/button";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
@@ -54,18 +50,6 @@ const SUBJECT_OPTIONS = entriesOf(DISPUTE_SUBJECT_LABELS).map(
   ([value, label]) => ({ value, label }),
 );
 
-const COLUMNS: ColumnDef[] = [
-  // Role carries the update rail and the Pending pill, so the row loses its
-  // "needs you" cue without it; Actions holds the only way into the dispute.
-  { key: "role", label: "Role", required: true },
-  { key: "subject", label: "Subject" },
-  { key: "counterparty", label: "Counterparty" },
-  { key: "fee", label: "Fee" },
-  { key: "status", label: "Status" },
-  { key: "opened", label: "Opened" },
-  { key: "actions", label: "Actions", required: true },
-];
-
 /** Same pill as the inbox's "New": a row still waiting on somebody. An open
  * dispute is an admin decision outstanding, which the status badge alone does
  * not read as at a glance. */
@@ -95,7 +79,6 @@ export function MyDisputesList() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string | null>(null);
   const [subject, setSubject] = useState<string | null>(null);
-  const cols = useVisibleColumns("disputes.mine.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useMyDisputes(
     page,
     status ?? undefined,
@@ -122,7 +105,6 @@ export function MyDisputesList() {
           kind: "select",
           key: "subject",
           label: "Subject",
-          placeholder: "All subjects",
           options: SUBJECT_OPTIONS,
           value: subject ?? "",
           onChange: (next) => changeSubject(next === "" ? null : next),
@@ -131,15 +113,11 @@ export function MyDisputesList() {
           kind: "select",
           key: "status",
           label: "Status",
-          placeholder: "All statuses",
           options: STATUS_OPTIONS,
           value: status ?? "",
           onChange: (next) => changeStatus(next === "" ? null : next),
         },
       ]}
-      columns={cols.columns}
-      isColumnVisible={cols.isVisible}
-      onToggleColumn={cols.toggle}
       onClearFilters={resetFilters}
     />
   );
@@ -164,7 +142,7 @@ export function MyDisputesList() {
     return (
       <div className="flex flex-col gap-4">
         {filterBar}
-        <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
+        <TableSkeleton columns={7} />
       </div>
     );
 
@@ -206,31 +184,21 @@ export function MyDisputesList() {
                 <th scope="col" className={TABLE_TH}>
                   Role
                 </th>
-                {cols.isVisible("subject") && (
-                  <th scope="col" className={TABLE_TH}>
-                    Subject
-                  </th>
-                )}
-                {cols.isVisible("counterparty") && (
-                  <th scope="col" className={TABLE_TH}>
-                    Counterparty
-                  </th>
-                )}
-                {cols.isVisible("fee") && (
-                  <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                    Fee
-                  </th>
-                )}
-                {cols.isVisible("status") && (
-                  <th scope="col" className={TABLE_TH}>
-                    Status
-                  </th>
-                )}
-                {cols.isVisible("opened") && (
-                  <th scope="col" className={TABLE_TH}>
-                    Opened
-                  </th>
-                )}
+                <th scope="col" className={TABLE_TH}>
+                  Subject
+                </th>
+                <th scope="col" className={TABLE_TH}>
+                  Counterparty
+                </th>
+                <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                  Fee
+                </th>
+                <th scope="col" className={TABLE_TH}>
+                  Status
+                </th>
+                <th scope="col" className={TABLE_TH}>
+                  Opened
+                </th>
                 <th scope="col" className={TABLE_TH} />
               </tr>
             </thead>
@@ -257,41 +225,31 @@ export function MyDisputesList() {
                       {isDisputeOpen(d.status) && <PendingPill />}
                     </span>
                   </td>
-                  {cols.isVisible("subject") && (
-                    <td className={cn(TABLE_TD, "text-ink-body")}>
-                      {DISPUTE_SUBJECT_LABELS[d.subject]}
-                    </td>
-                  )}
-                  {cols.isVisible("counterparty") && (
-                    <td className={cn(TABLE_TD, "text-ink-muted")}>
-                      {d.counterpartyName}
-                    </td>
-                  )}
-                  {cols.isVisible("fee") && (
-                    <td
-                      className={cn(
-                        TABLE_TD,
-                        "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
-                      )}
-                    >
-                      {formatMinor(d.amountMinor)}
-                    </td>
-                  )}
-                  {cols.isVisible("status") && (
-                    <td className={TABLE_TD}>
-                      <DisputeStatusBadge status={d.status} />
-                    </td>
-                  )}
-                  {cols.isVisible("opened") && (
-                    <td
-                      className={cn(
-                        TABLE_TD,
-                        "whitespace-nowrap tabular-nums text-ink-muted",
-                      )}
-                    >
-                      {formatDate(d.createdAt)}
-                    </td>
-                  )}
+                  <td className={cn(TABLE_TD, "text-ink-body")}>
+                    {DISPUTE_SUBJECT_LABELS[d.subject]}
+                  </td>
+                  <td className={cn(TABLE_TD, "text-ink-muted")}>
+                    {d.counterpartyName}
+                  </td>
+                  <td
+                    className={cn(
+                      TABLE_TD,
+                      "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                    )}
+                  >
+                    {formatMinor(d.amountMinor)}
+                  </td>
+                  <td className={TABLE_TD}>
+                    <DisputeStatusBadge status={d.status} />
+                  </td>
+                  <td
+                    className={cn(
+                      TABLE_TD,
+                      "whitespace-nowrap tabular-nums text-ink-muted",
+                    )}
+                  >
+                    {formatDate(d.createdAt)}
+                  </td>
                   <td className={cn(TABLE_TD, "text-right")}>
                     <Button asChild variant="outline" size="sm">
                       <Link href={disputePath(d)}>View</Link>

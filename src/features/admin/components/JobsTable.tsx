@@ -8,10 +8,6 @@ import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { Pill } from "@/shared/ui-components/badges/Pill";
 import { PageHeader } from "@/shared/ui-components/brand";
@@ -69,17 +65,6 @@ const STATUS_FILTER_OPTIONS = [
   { value: "closed", label: "Closed" },
   { value: "expired", label: "Expired" },
 ] as const;
-
-const COLUMNS: ColumnDef[] = [
-  { key: "job", label: "Job", required: true },
-  { key: "company", label: "Company" },
-  { key: "status", label: "Status" },
-  { key: "fee", label: "Recruiter fee" },
-  // Candidates access is phase-2 — hidden for the phase-1 delivery.
-  ...(HIDE_PHASE2_FEATURES ? [] : [{ key: "candidates", label: "Candidates" }]),
-  { key: "posted", label: "Posted" },
-  { key: "actions", label: "Actions", required: true },
-];
 
 function JobStatus({ status }: { status: AdminJobListItem["status"] }) {
   return (
@@ -224,7 +209,6 @@ export function JobsTable({
     changeStatus("");
     setPage(1);
   };
-  const cols = useVisibleColumns("admin.jobs.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useAdminJobs({
     page,
     limit,
@@ -303,9 +287,17 @@ export function JobsTable({
         title="Jobs"
         subtitle="Every job posted on the platform. Filter by company, status or title."
         metrics={[
-          { label: "Live jobs", value: liveTotal },
-          { label: "Scheduled", value: stats.data?.scheduledJobs ?? 0 },
-          { label: "Offers", value: stats.data?.offerJobs ?? 0 },
+          { label: "Live Jobs", value: liveTotal, tone: "ok" },
+          {
+            label: "Scheduled",
+            value: stats.data?.scheduledJobs ?? 0,
+            tone: "info",
+          },
+          {
+            label: "Offers",
+            value: stats.data?.offerJobs ?? 0,
+            tone: "violet",
+          },
         ]}
       />
 
@@ -339,15 +331,11 @@ export function JobsTable({
             kind: "select",
             key: "status",
             label: "Status",
-            placeholder: "All statuses",
             options: STATUS_FILTER_OPTIONS,
             value: status,
             onChange: changeStatus,
           },
         ]}
-        columns={cols.columns}
-        isColumnVisible={cols.isVisible}
-        onToggleColumn={cols.toggle}
         onClearFilters={resetFilters}
       />
 
@@ -440,31 +428,23 @@ export function JobsTable({
                     <th scope="col" className={cn(TABLE_TH, "w-[28%]")}>
                       Job
                     </th>
-                    {cols.isVisible("company") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Company
-                      </th>
-                    )}
-                    {cols.isVisible("status") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Status
-                      </th>
-                    )}
-                    {cols.isVisible("fee") && (
-                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                        Recruiter fee
-                      </th>
-                    )}
-                    {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Company
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                      Recruiter fee
+                    </th>
+                    {!HIDE_PHASE2_FEATURES && (
                       <th scope="col" className={cn(TABLE_TH, "text-center")}>
                         Candidates
                       </th>
                     )}
-                    {cols.isVisible("posted") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Posted
-                      </th>
-                    )}
+                    <th scope="col" className={TABLE_TH}>
+                      Posted
+                    </th>
                     <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
                       Actions
                     </th>
@@ -497,42 +477,30 @@ export function JobsTable({
                           {job.locationState || "—"}
                         </p>
                       </td>
-                      {cols.isVisible("company") && (
-                        <td className={TABLE_TD}>
-                          <JobCompany job={job} />
+                      <td className={TABLE_TD}>
+                        <JobCompany job={job} />
+                      </td>
+                      <td className={TABLE_TD}>
+                        <JobStatus status={job.status} />
+                      </td>
+                      <td
+                        className={cn(TABLE_TD, "whitespace-nowrap text-right")}
+                      >
+                        <JobFee job={job} minFeeMinor={minFeeMinor} />
+                      </td>
+                      {!HIDE_PHASE2_FEATURES && (
+                        <td className={cn(TABLE_TD, "text-center")}>
+                          <JobCandidates job={job} />
                         </td>
                       )}
-                      {cols.isVisible("status") && (
-                        <td className={TABLE_TD}>
-                          <JobStatus status={job.status} />
-                        </td>
-                      )}
-                      {cols.isVisible("fee") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "whitespace-nowrap text-right",
-                          )}
-                        >
-                          <JobFee job={job} minFeeMinor={minFeeMinor} />
-                        </td>
-                      )}
-                      {!HIDE_PHASE2_FEATURES &&
-                        cols.isVisible("candidates") && (
-                          <td className={cn(TABLE_TD, "text-center")}>
-                            <JobCandidates job={job} />
-                          </td>
+                      <td
+                        className={cn(
+                          TABLE_TD,
+                          "whitespace-nowrap tabular-nums text-ink-muted",
                         )}
-                      {cols.isVisible("posted") && (
-                        <td
-                          className={cn(
-                            TABLE_TD,
-                            "whitespace-nowrap tabular-nums text-ink-muted",
-                          )}
-                        >
-                          {formatDate(job.createdAt)}
-                        </td>
-                      )}
+                      >
+                        {formatDate(job.createdAt)}
+                      </td>
                       <td className={cn(TABLE_TD, "text-right")}>
                         <JobRowActions
                           jobId={job.jobId}

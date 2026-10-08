@@ -18,10 +18,6 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { useLedger } from "../hooks/useBilling";
 import { BillingTableFooter } from "./BillingTable";
 import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
@@ -31,17 +27,6 @@ import { PurchaseReceiptDialog } from "./PurchaseReceiptDialog";
 const LEDGER_TYPE_OPTIONS = entriesOf(LEDGER_TYPE_LABELS).map(
   ([value, label]) => ({ value, label }),
 );
-
-const COLUMNS: ColumnDef[] = [
-  // When it happened and what it was are what a history row is; the running
-  // figures and the receipt beside them are the reader's to choose.
-  { key: "when", label: "When", required: true },
-  { key: "activity", label: "Activity", required: true },
-  { key: "amount", label: "Amount" },
-  { key: "balance", label: "Balance" },
-  { key: "reserved", label: "Reserved" },
-  { key: "document", label: "Document" },
-];
 
 /** Credits grow the spendable pot; reserves/holds shrink it. */
 const isInflow = (type: LedgerEntry["entryType"]): boolean =>
@@ -91,26 +76,24 @@ export function LedgerTable() {
   };
   const { user } = useAuth();
   const accountName = user ? `${user.firstName} ${user.lastName}`.trim() : "";
-  const cols = useVisibleColumns("company.ledger.columns", COLUMNS);
 
+  // This card has no title of its own — the page above carries "History" — so
+  // the bar stands in for the head and keeps the rule under it.
   const filterBar = (
     <TableFilterBar
-      surface="card"
+      className="border-b border-line px-4 py-2.5"
+      surface="bare"
       filters={[
         {
           kind: "select",
           key: "activity",
           label: "Activity",
-          placeholder: "All activity",
           options: LEDGER_TYPE_OPTIONS,
           value: entryType ?? "",
           onChange: (next) => changeEntryType(next === "" ? null : next),
           width: "200px",
         },
       ]}
-      columns={cols.columns}
-      isColumnVisible={cols.isVisible}
-      onToggleColumn={cols.toggle}
       onClearFilters={() => changeEntryType(null)}
     />
   );
@@ -119,10 +102,9 @@ export function LedgerTable() {
     return (
       <Card>
         {filterBar}
-        {/* Match whatever columns this reader has left switched on. */}
         <TableSkeleton
           rows={6}
-          columns={cols.allKeys.filter(cols.isVisible).length}
+          columns={6}
           className="rounded-none border-0 shadow-none"
         />
       </Card>
@@ -170,26 +152,18 @@ export function LedgerTable() {
               <th scope="col" className={cn(T.TABLE_TH, "w-2/5")}>
                 Activity
               </th>
-              {cols.isVisible("amount") && (
-                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                  Amount
-                </th>
-              )}
-              {cols.isVisible("balance") && (
-                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                  Balance
-                </th>
-              )}
-              {cols.isVisible("reserved") && (
-                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                  Reserved
-                </th>
-              )}
-              {cols.isVisible("document") && (
-                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                  Document
-                </th>
-              )}
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Amount
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Balance
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Reserved
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Document
+              </th>
             </tr>
           </thead>
           <tbody className={T.TABLE_BODY}>
@@ -211,44 +185,34 @@ export function LedgerTable() {
                     <p className={T.TABLE_CELL_SUB}>{entry.description}</p>
                   )}
                 </td>
-                {cols.isVisible("amount") && (
-                  <td
-                    className={cn(
-                      T.TABLE_TD,
-                      "whitespace-nowrap text-right font-[650] tabular-nums",
-                      amountToneClass(entry),
-                    )}
-                  >
-                    {amountLabel(entry)}
-                  </td>
-                )}
-                {cols.isVisible("balance") && (
-                  <td
-                    className={cn(
-                      T.TABLE_TD,
-                      "whitespace-nowrap text-right tabular-nums text-ink-muted",
-                    )}
-                  >
-                    {formatMinor(entry.balanceAfterMinor)}
-                  </td>
-                )}
-                {cols.isVisible("reserved") && (
-                  <td
-                    className={cn(
-                      T.TABLE_TD,
-                      "whitespace-nowrap text-right tabular-nums text-ink-muted",
-                    )}
-                  >
-                    {formatMinor(entry.reservedAfterMinor)}
-                  </td>
-                )}
-                {cols.isVisible("document") && (
-                  <td
-                    className={cn(T.TABLE_TD, "whitespace-nowrap text-right")}
-                  >
-                    <LedgerDocument entry={entry} accountName={accountName} />
-                  </td>
-                )}
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right font-[650] tabular-nums",
+                    amountToneClass(entry),
+                  )}
+                >
+                  {amountLabel(entry)}
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                  )}
+                >
+                  {formatMinor(entry.balanceAfterMinor)}
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right tabular-nums text-ink-muted",
+                  )}
+                >
+                  {formatMinor(entry.reservedAfterMinor)}
+                </td>
+                <td className={cn(T.TABLE_TD, "whitespace-nowrap text-right")}>
+                  <LedgerDocument entry={entry} accountName={accountName} />
+                </td>
               </tr>
             ))}
           </tbody>

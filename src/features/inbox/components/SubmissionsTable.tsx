@@ -9,10 +9,6 @@ import {
   CANDIDATE_STATUS_LABELS,
 } from "@/features/candidates/schemas";
 import { CandidateQuickView } from "@/features/candidates/components/CandidateQuickView";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -75,25 +71,11 @@ const SORT_OPTIONS: { value: Sort; label: string }[] = [
   { value: "fee-asc", label: "Lowest fee" },
 ];
 
+/** Distinct values of one field across the rows, as {value,label} options. */
 /** Narrows the select's plain string back to a sort this table understands. */
 const isSort = (value: string): value is Sort =>
   SORT_OPTIONS.some((option) => option.value === value);
 
-/**
- * Candidate carries the row's identity and its quick-view eye; Thread carries
- * the only link into the conversation. Neither can be hidden.
- */
-const COLUMNS: ColumnDef[] = [
-  { key: "candidate", label: "Candidate", required: true },
-  { key: "company", label: "Company" },
-  { key: "job", label: "Job title" },
-  { key: "submitted", label: "Submitted" },
-  { key: "status", label: "Status" },
-  { key: "fee", label: "Recruiter fee" },
-  { key: "thread", label: "Thread", required: true },
-];
-
-/** Distinct values of one field across the rows, as {value,label} options. */
 function distinct(
   rows: InboxConversationRow[],
   pick: (row: InboxConversationRow) => string,
@@ -196,14 +178,6 @@ export function SubmissionsTable({
   const [sort, setSort] = useState<Sort>("newest");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
-  const cols = useVisibleColumns(
-    "recruiter.inbox.submissions.columns",
-    COLUMNS,
-  );
-
-  const showsCompany = cols.isVisible("company");
-  const showsJob = cols.isVisible("job");
-  const showsStatus = cols.isVisible("status");
 
   const fetched = useMemo(() => data?.data ?? [], [data]);
   const rows = useMemo(
@@ -343,9 +317,6 @@ export function SubmissionsTable({
           ),
         },
       ]}
-      columns={cols.columns}
-      isColumnVisible={cols.isVisible}
-      onToggleColumn={cols.toggle}
       onClearFilters={resetFilters}
     />
   );
@@ -404,29 +375,19 @@ export function SubmissionsTable({
                     <th scope="col" className={TABLE_TH}>
                       Candidate
                     </th>
-                    {showsCompany && (
-                      <th scope="col" className={TABLE_TH}>
-                        Company
-                      </th>
-                    )}
-                    {showsJob && (
-                      <th scope="col" className={TABLE_TH}>
-                        Job title
-                      </th>
-                    )}
-                    {cols.isVisible("submitted") && (
-                      <th className={TABLE_TH}>Submitted</th>
-                    )}
-                    {showsStatus && (
-                      <th scope="col" className={TABLE_TH}>
-                        Status
-                      </th>
-                    )}
-                    {cols.isVisible("fee") && (
-                      <th className={cn(TABLE_TH, "text-right")}>
-                        Recruiter fee
-                      </th>
-                    )}
+                    <th scope="col" className={TABLE_TH}>
+                      Company
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Job title
+                    </th>
+                    <th className={TABLE_TH}>Submitted</th>
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
+                    <th className={cn(TABLE_TH, "text-right")}>
+                      Recruiter fee
+                    </th>
                     <th className={cn(TABLE_TH, "text-right")}>Thread</th>
                   </tr>
                 </thead>
@@ -467,42 +428,30 @@ export function SubmissionsTable({
                           </span>
                         </span>
                       </td>
-                      {showsCompany && (
-                        <td className={`${TABLE_TD} text-ink-body`}>
-                          {row.counterpartyName}
-                        </td>
-                      )}
-                      {showsJob && (
-                        <td className={TABLE_TD}>
-                          <JobLink row={row} />
-                        </td>
-                      )}
-                      {cols.isVisible("submitted") && (
-                        <td
-                          className={cn(TABLE_TD_STACKED, "whitespace-nowrap")}
-                        >
-                          <span className="block tabular-nums text-ink">
-                            {formatDate(submittedOf(row))}
-                          </span>
-                          <span className={cn("block", TABLE_CELL_SUB)}>
-                            {formatRelativeDay(submittedOf(row))}
-                          </span>
-                        </td>
-                      )}
-                      {showsStatus && (
-                        <td className={TABLE_TD}>
-                          <StatusPill row={row} />
-                        </td>
-                      )}
-                      {cols.isVisible("fee") && (
-                        <td
-                          className={`${TABLE_TD} whitespace-nowrap text-right font-[650] tabular-nums text-ink`}
-                        >
-                          {row.recruiterFeeMinor != null
-                            ? formatMinor(row.recruiterFeeMinor)
-                            : "—"}
-                        </td>
-                      )}
+                      <td className={`${TABLE_TD} text-ink-body`}>
+                        {row.counterpartyName}
+                      </td>
+                      <td className={TABLE_TD}>
+                        <JobLink row={row} />
+                      </td>
+                      <td className={cn(TABLE_TD_STACKED, "whitespace-nowrap")}>
+                        <span className="block tabular-nums text-ink">
+                          {formatDate(submittedOf(row))}
+                        </span>
+                        <span className={cn("block", TABLE_CELL_SUB)}>
+                          {formatRelativeDay(submittedOf(row))}
+                        </span>
+                      </td>
+                      <td className={TABLE_TD}>
+                        <StatusPill row={row} />
+                      </td>
+                      <td
+                        className={`${TABLE_TD} whitespace-nowrap text-right font-[650] tabular-nums text-ink`}
+                      >
+                        {row.recruiterFeeMinor != null
+                          ? formatMinor(row.recruiterFeeMinor)
+                          : "—"}
+                      </td>
                       <td className={`${TABLE_TD} text-right`}>
                         <ThreadCell row={row} />
                       </td>

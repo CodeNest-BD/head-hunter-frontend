@@ -30,10 +30,6 @@ import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { TableFilterBar } from "@/shared/ui-components/data/TableFilterBar";
 import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
-import {
   TABLE_BODY,
   TABLE_CARD,
   TABLE_CELL_MAIN,
@@ -90,17 +86,6 @@ const STATUS_FILTER_OPTIONS = [
   { value: "draft", label: "Draft" },
   { value: "expired", label: "Expired" },
 ] as const;
-
-const COLUMNS: ColumnDef[] = [
-  { key: "title", label: "Title", required: true },
-  { key: "status", label: "Status" },
-  { key: "category", label: "Category" },
-  { key: "fee", label: "Recruiter fee" },
-  { key: "expiry", label: "Expiry" },
-  // Candidates access is phase-2 — hidden for the phase-1 delivery.
-  ...(HIDE_PHASE2_FEATURES ? [] : [{ key: "candidates", label: "Candidates" }]),
-  { key: "actions", label: "Actions", required: true },
-];
 
 const CATEGORY_OPTIONS = entriesOf(ROLE_CATEGORY_LABELS).map(
   ([value, label]) => ({ value, label }),
@@ -285,7 +270,6 @@ export function JobsTable() {
     setCategory("");
     setPage(1);
   };
-  const cols = useVisibleColumns("company.jobs.columns", COLUMNS);
   const parsedStatus = jobStatusSchema.safeParse(status);
   const { data, isPending, isError, refetch } = useJobs({
     page,
@@ -329,7 +313,6 @@ export function JobsTable() {
           kind: "select",
           key: "status",
           label: "Status",
-          placeholder: "All statuses",
           options: STATUS_FILTER_OPTIONS,
           value: status,
           onChange: changeStatus,
@@ -338,7 +321,6 @@ export function JobsTable() {
           kind: "select",
           key: "category",
           label: "Category",
-          placeholder: "All categories",
           options: CATEGORY_OPTIONS,
           value: category,
           onChange: (next) => {
@@ -347,9 +329,6 @@ export function JobsTable() {
           },
         },
       ]}
-      columns={cols.columns}
-      isColumnVisible={cols.isVisible}
-      onToggleColumn={cols.toggle}
       onClearFilters={resetFilters}
     />
   );
@@ -408,8 +387,7 @@ export function JobsTable() {
           </div>
         </div>
       ) : isPending ? (
-        /* Match whatever columns this reader has left switched on. */
-        <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
+        <TableSkeleton columns={7} />
       ) : data.data.length === 0 ? (
         <div className={TABLE_CARD}>
           <EmptyState
@@ -446,25 +424,17 @@ export function JobsTable() {
                 <thead className={TABLE_HEAD}>
                   <tr>
                     <th className={cn(TABLE_TH, "w-[32%]")}>Title</th>
-                    {cols.isVisible("status") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Status
-                      </th>
-                    )}
-                    {cols.isVisible("category") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Category
-                      </th>
-                    )}
-                    {cols.isVisible("fee") && (
-                      <th className={cn(TABLE_TH, "text-right")}>
-                        Recruiter fee
-                      </th>
-                    )}
-                    {cols.isVisible("expiry") && (
-                      <th className={TABLE_TH}>Expiry</th>
-                    )}
-                    {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Category
+                    </th>
+                    <th className={cn(TABLE_TH, "text-right")}>
+                      Recruiter fee
+                    </th>
+                    <th className={TABLE_TH}>Expiry</th>
+                    {!HIDE_PHASE2_FEATURES && (
                       <th className={cn(TABLE_TH, "text-center")}>
                         Candidates
                       </th>
@@ -494,35 +464,23 @@ export function JobsTable() {
                           </Link>
                           <p className={TABLE_CELL_SUB}>{dateLabel}</p>
                         </td>
-                        {cols.isVisible("status") && (
-                          <td className={TABLE_TD}>
-                            <JobStatusBadge status={job.status} />
+                        <td className={TABLE_TD}>
+                          <JobStatusBadge status={job.status} />
+                        </td>
+                        <td className={cn(TABLE_TD, "text-ink-muted")}>
+                          {ROLE_CATEGORY_LABELS[job.roleCategory]}
+                        </td>
+                        <td className={cn(TABLE_TD, "text-right")}>
+                          <RecruiterFee feeMinor={job.recruiterFeeMinor} />
+                        </td>
+                        <td className={cn(TABLE_TD, "text-ink-muted")}>
+                          <JobExpiry expiresAt={job.expiresAt} />
+                        </td>
+                        {!HIDE_PHASE2_FEATURES && (
+                          <td className={cn(TABLE_TD, "text-center")}>
+                            <CandidateCount job={job} count={candidateCount} />
                           </td>
                         )}
-                        {cols.isVisible("category") && (
-                          <td className={cn(TABLE_TD, "text-ink-muted")}>
-                            {ROLE_CATEGORY_LABELS[job.roleCategory]}
-                          </td>
-                        )}
-                        {cols.isVisible("fee") && (
-                          <td className={cn(TABLE_TD, "text-right")}>
-                            <RecruiterFee feeMinor={job.recruiterFeeMinor} />
-                          </td>
-                        )}
-                        {cols.isVisible("expiry") && (
-                          <td className={cn(TABLE_TD, "text-ink-muted")}>
-                            <JobExpiry expiresAt={job.expiresAt} />
-                          </td>
-                        )}
-                        {!HIDE_PHASE2_FEATURES &&
-                          cols.isVisible("candidates") && (
-                            <td className={cn(TABLE_TD, "text-center")}>
-                              <CandidateCount
-                                job={job}
-                                count={candidateCount}
-                              />
-                            </td>
-                          )}
                         <td className={cn(TABLE_TD, "text-right")}>
                           <div className="flex justify-end">
                             <JobRowActions job={job} />

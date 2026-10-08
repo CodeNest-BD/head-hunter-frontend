@@ -1,10 +1,17 @@
 import type { ReactNode } from "react";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { TONE_DOT, type PillTone } from "@/shared/ui-components/badges/Pill";
 
-/** A label/value readout shown on the right of the header (e.g. FOLLOWING 3). */
+/** A headline figure shown as a stat card on the right of the header. */
 export interface HeaderMetric {
   readonly label: string;
   readonly value: ReactNode;
+  /**
+   * The dot's colour, from the same tone table the row badges use — so
+   * "Suspended" is the identical red in the card and on every row it counts.
+   * Left unset for a plain total, which is a figure rather than a state.
+   */
+  readonly tone?: PillTone;
 }
 
 interface PageHeaderProps {
@@ -14,10 +21,7 @@ interface PageHeaderProps {
   subtitle?: ReactNode;
   /** Sits beside the title — the reference's inline count chip or status pill. */
   badge?: ReactNode;
-  /**
-   * Right-side metric readouts, rendered as the reference's `.fact` pairs: an
-   * 11px uppercase label over a tabular figure.
-   */
+  /** Right-side headline figures, rendered as stat cards. */
   metrics?: readonly HeaderMetric[];
   /** Right-aligned actions (e.g. a primary button). Sits after the metrics. */
   actions?: ReactNode;
@@ -67,14 +71,29 @@ export function PageHeader({
         </div>
 
         {hasAside && (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 sm:ml-auto sm:shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 sm:ml-auto sm:shrink-0">
+            {/* Cards rather than bare label/value pairs: these are the page's
+                headline figures, and a row of them against the title needs an
+                edge to read as three answers instead of six loose words. */}
             {metrics?.map((metric) => (
-              <div key={metric.label} className="min-w-0">
-                <p className="text-label font-[650] uppercase text-ink-muted">
-                  {metric.label}
+              <div
+                key={metric.label}
+                className="min-w-[96px] rounded-sm border border-line bg-surface px-3 py-2 shadow-e1"
+              >
+                <p className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "size-[7px] shrink-0 rounded-full",
+                      TONE_DOT[metric.tone ?? "neutral"],
+                    )}
+                  />
+                  <span className="text-page font-bold tabular-nums text-ink">
+                    {metric.value}
+                  </span>
                 </p>
-                <p className="mt-[3px] text-block font-[550] tabular-nums text-ink">
-                  {metric.value}
+                <p className="mt-0.5 text-meta text-ink-muted">
+                  {metric.label}
                 </p>
               </div>
             ))}

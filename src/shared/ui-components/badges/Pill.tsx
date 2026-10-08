@@ -25,6 +25,21 @@ const TONE: Record<PillTone, string> = {
   blue: "bg-tint text-blue",
 };
 
+/**
+ * The same seven tones as a solid dot, for a readout that carries a figure
+ * rather than a word — a stat card's status marker. Kept beside the pill table
+ * so a tone can never mean one colour on a badge and another on a dot.
+ */
+export const TONE_DOT: Record<PillTone, string> = {
+  ok: "bg-ok",
+  warn: "bg-warn",
+  bad: "bg-bad",
+  info: "bg-info",
+  violet: "bg-violet",
+  neutral: "bg-neutral",
+  blue: "bg-blue",
+};
+
 export interface PillProps {
   tone: PillTone;
   children: ReactNode;

@@ -41,10 +41,6 @@ import {
   type RecruiterPlacement,
   type RecruiterWalletSummary,
 } from "../schemas";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { PLACEMENT_STATUS_TONES } from "../statusTones";
 import { BillingTableFooter } from "./BillingTable";
 import { PayoutsCard } from "./PayoutsCard";
@@ -55,22 +51,8 @@ const PLACEMENT_STATUS_OPTIONS = entriesOf(PLACEMENT_STATUS_LABELS).map(
   ([value, label]) => ({ value, label }),
 );
 
-const PLACEMENT_COLUMNS: ColumnDef[] = [
-  { key: "company", label: "Company" },
-  { key: "role", label: "Role" },
-  // The candidate is the placement, and the trailing cell is where a recruiter
-  // opens a dispute — neither can be switched off.
-  { key: "candidate", label: "Candidate", required: true },
-  { key: "commission", label: "Commission" },
-  { key: "status", label: "Status" },
-  { key: "released", label: "Released / Hold Ends" },
-  { key: "action", label: "Action", required: true },
-];
-
 /** The picker's state, owned by the panel so its loading skeleton counts the
  * same columns the table will render. */
-type PlacementColumns = ReturnType<typeof useVisibleColumns>;
-
 /** How a commission moves from a hire to the recruiter's balance. */
 const COMMISSION_STEPS: readonly { title: string; detail: string }[] = [
   {
@@ -240,14 +222,12 @@ const releaseLabel = (placement: RecruiterPlacement): string =>
 function PlacementsTable({
   page,
   onPage,
-  cols,
   status,
   onStatus,
   data,
 }: {
   page: number;
   onPage: (page: number) => void;
-  cols: PlacementColumns;
   status: string | null;
   onStatus: (next: string | null) => void;
   /** The panel owns the query, so the two do not fetch the same page twice. */
@@ -258,9 +238,7 @@ function PlacementsTable({
   // Only reachable between pages, where the table is already on screen — stand
   // in with the same card rather than collapsing the page to nothing.
   if (!data) {
-    return (
-      <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
-    );
+    return <TableSkeleton columns={7} />;
   }
 
   const disputing = disputingId
@@ -269,28 +247,27 @@ function PlacementsTable({
 
   return (
     <div className={T.TABLE_CARD}>
+      {/* The filter rides on the card's own head rather than in a strip of
+          its own: one control does not earn a second band under the title. */}
       <CardHeader>
         <CardTitle>Placements</CardTitle>
+        <TableFilterBar
+          className="ml-auto"
+          surface="bare"
+          filters={[
+            {
+              kind: "select",
+              key: "status",
+              label: "Status",
+              options: PLACEMENT_STATUS_OPTIONS,
+              value: status ?? "",
+              onChange: (next) => onStatus(next === "" ? null : next),
+              width: "180px",
+            },
+          ]}
+          onClearFilters={() => onStatus(null)}
+        />
       </CardHeader>
-      <TableFilterBar
-        surface="card"
-        filters={[
-          {
-            kind: "select",
-            key: "status",
-            label: "Status",
-            placeholder: "All statuses",
-            options: PLACEMENT_STATUS_OPTIONS,
-            value: status ?? "",
-            onChange: (next) => onStatus(next === "" ? null : next),
-            width: "180px",
-          },
-        ]}
-        columns={cols.columns}
-        isColumnVisible={cols.isVisible}
-        onToggleColumn={cols.toggle}
-        onClearFilters={() => onStatus(null)}
-      />
       {disputing ? (
         <div className="border-b border-line p-4">
           <RaiseDisputeForm
@@ -308,80 +285,60 @@ function PlacementsTable({
         <table className={T.TABLE_EL}>
           <thead className={T.TABLE_HEAD}>
             <tr>
-              {cols.isVisible("company") && (
-                <th scope="col" className={cn(T.TABLE_TH, "w-[22%]")}>
-                  Company
-                </th>
-              )}
-              {cols.isVisible("role") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Role
-                </th>
-              )}
+              <th scope="col" className={cn(T.TABLE_TH, "w-[22%]")}>
+                Company
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Role
+              </th>
               <th scope="col" className={T.TABLE_TH}>
                 Candidate
               </th>
-              {cols.isVisible("commission") && (
-                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                  Commission
-                </th>
-              )}
-              {cols.isVisible("status") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Status
-                </th>
-              )}
-              {cols.isVisible("released") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Released / Hold Ends
-                </th>
-              )}
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Commission
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Status
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Released / Hold Ends
+              </th>
               <th scope="col" className={cn(T.TABLE_TH, "w-[110px]")} />
             </tr>
           </thead>
           <tbody className={T.TABLE_BODY}>
             {data.data.map((p) => (
               <tr key={p.placementId} className={T.TABLE_ROW}>
-                {cols.isVisible("company") && (
-                  <td className={cn(T.TABLE_TD, T.TABLE_CELL_MAIN)}>
-                    {p.companyName}
-                  </td>
-                )}
-                {cols.isVisible("role") && (
-                  <td className={cn(T.TABLE_TD, "text-ink-body")}>
-                    <span className="block max-w-[200px] truncate">
-                      {p.jobTitle}
-                    </span>
-                  </td>
-                )}
+                <td className={cn(T.TABLE_TD, T.TABLE_CELL_MAIN)}>
+                  {p.companyName}
+                </td>
+                <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                  <span className="block max-w-[200px] truncate">
+                    {p.jobTitle}
+                  </span>
+                </td>
                 <td className={cn(T.TABLE_TD, "text-ink-body")}>
                   {p.candidateName}
                 </td>
-                {cols.isVisible("commission") && (
-                  <td
-                    className={cn(
-                      T.TABLE_TD,
-                      "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
-                    )}
-                  >
-                    {formatMinor(p.amountMinor)}
-                  </td>
-                )}
-                {cols.isVisible("status") && (
-                  <td className={T.TABLE_TD}>
-                    <PlacementStatusBadge status={p.status} />
-                  </td>
-                )}
-                {cols.isVisible("released") && (
-                  <td
-                    className={cn(
-                      T.TABLE_TD,
-                      "whitespace-nowrap tabular-nums text-ink-body",
-                    )}
-                  >
-                    {releaseLabel(p)}
-                  </td>
-                )}
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                  )}
+                >
+                  {formatMinor(p.amountMinor)}
+                </td>
+                <td className={T.TABLE_TD}>
+                  <PlacementStatusBadge status={p.status} />
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap tabular-nums text-ink-body",
+                  )}
+                >
+                  {releaseLabel(p)}
+                </td>
                 <td className={cn(T.TABLE_TD, "text-right")}>
                   {p.status === "held" ? (
                     <Button
@@ -449,10 +406,6 @@ export function RecruiterWalletPanel() {
   const [status, setStatus] = useState<string | null>(null);
   const wallet = useRecruiterWallet();
   const placements = useRecruiterPlacements(page, status ?? undefined);
-  const cols = useVisibleColumns(
-    "recruiter.placements.columns",
-    PLACEMENT_COLUMNS,
-  );
   const changeStatus = (next: string | null) => {
     setStatus(next);
     setPage(1);
@@ -510,14 +463,12 @@ export function RecruiterWalletPanel() {
           </CardContent>
         </Card>
       ) : placements.isPending ? (
-        /* Match whatever columns this reader has left switched on. */
-        <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
+        <TableSkeleton columns={7} />
       ) : hasPlacements ? (
         <div className="flex flex-col gap-4">
           <PlacementsTable
             page={page}
             onPage={setPage}
-            cols={cols}
             status={status}
             onStatus={changeStatus}
             data={placements.data}

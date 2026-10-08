@@ -31,10 +31,6 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { useCompanyPlacements, useRejectPlacement } from "../hooks/useBilling";
 import { BillingTableFooter } from "./BillingTable";
 import {
@@ -48,18 +44,6 @@ import { PLACEMENT_STATUS_TONES } from "../statusTones";
 const PLACEMENT_STATUS_OPTIONS = entriesOf(PLACEMENT_STATUS_LABELS).map(
   ([value, label]) => ({ value, label }),
 );
-
-const COLUMNS: ColumnDef[] = [
-  // The candidate names the row, and the last column is where a company acts
-  // on the hold — neither can be switched off.
-  { key: "candidate", label: "Candidate", required: true },
-  { key: "role", label: "Role" },
-  { key: "recruiter", label: "Recruiter" },
-  { key: "fee", label: "Fee" },
-  { key: "status", label: "Status" },
-  { key: "settle", label: "Released / hold ends" },
-  { key: "action", label: "Action", required: true },
-];
 
 /** A placement can be rejected only while its fee is held and the candidate has
  * not reached their joining date — the countdown starts at midnight UTC that
@@ -146,7 +130,6 @@ export function CompanyPlacementsPanel() {
     setPage(1);
   };
   const reject = useRejectPlacement();
-  const cols = useVisibleColumns("company.placements.columns", COLUMNS);
 
   if (isError) {
     return (
@@ -163,10 +146,7 @@ export function CompanyPlacementsPanel() {
   }
 
   if (isPending) {
-    /* Match whatever columns this reader has left switched on. */
-    return (
-      <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
-    );
+    return <TableSkeleton columns={7} />;
   }
   if (data.data.length === 0) {
     return (
@@ -199,32 +179,28 @@ export function CompanyPlacementsPanel() {
     <div className={T.TABLE_CARD}>
       <CardHeader>
         <CardTitle>Placements &amp; Escrow</CardTitle>
+        <TableFilterBar
+          className="ml-auto"
+          surface="bare"
+          filters={[
+            {
+              kind: "select",
+              key: "status",
+              label: "Status",
+              options: PLACEMENT_STATUS_OPTIONS,
+              value: status ?? "",
+              onChange: (next) => changeStatus(next === "" ? null : next),
+              width: "180px",
+            },
+          ]}
+          onClearFilters={() => changeStatus(null)}
+        />
         <CardDescription>
           Fees held for your hires. Each releases to the recruiter 30 days after
           the joining date. Reject a hire before the joining date to refund it;
           after that, raise a dispute.
         </CardDescription>
       </CardHeader>
-
-      <TableFilterBar
-        surface="card"
-        filters={[
-          {
-            kind: "select",
-            key: "status",
-            label: "Status",
-            placeholder: "All statuses",
-            options: PLACEMENT_STATUS_OPTIONS,
-            value: status ?? "",
-            onChange: (next) => changeStatus(next === "" ? null : next),
-            width: "180px",
-          },
-        ]}
-        columns={cols.columns}
-        isColumnVisible={cols.isVisible}
-        onToggleColumn={cols.toggle}
-        onClearFilters={() => changeStatus(null)}
-      />
 
       {confirming ? (
         <div className="border-b border-line p-4">
@@ -262,31 +238,21 @@ export function CompanyPlacementsPanel() {
               <th scope="col" className={cn(T.TABLE_TH, "w-[22%]")}>
                 Candidate
               </th>
-              {cols.isVisible("role") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Role
-                </th>
-              )}
-              {cols.isVisible("recruiter") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Recruiter
-                </th>
-              )}
-              {cols.isVisible("fee") && (
-                <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
-                  Fee
-                </th>
-              )}
-              {cols.isVisible("status") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Status
-                </th>
-              )}
-              {cols.isVisible("settle") && (
-                <th scope="col" className={T.TABLE_TH}>
-                  Released / hold ends
-                </th>
-              )}
+              <th scope="col" className={T.TABLE_TH}>
+                Role
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Recruiter
+              </th>
+              <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
+                Fee
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Status
+              </th>
+              <th scope="col" className={T.TABLE_TH}>
+                Released / hold ends
+              </th>
               <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
                 Action
               </th>
@@ -298,43 +264,33 @@ export function CompanyPlacementsPanel() {
                 <td className={cn(T.TABLE_TD, T.TABLE_CELL_MAIN)}>
                   {p.candidateName}
                 </td>
-                {cols.isVisible("role") && (
-                  <td className={cn(T.TABLE_TD, "text-ink-body")}>
-                    <span className="block max-w-[200px] truncate">
-                      {p.jobTitle}
-                    </span>
-                  </td>
-                )}
-                {cols.isVisible("recruiter") && (
-                  <td className={cn(T.TABLE_TD, "text-ink-body")}>
-                    {p.recruiterName}
-                  </td>
-                )}
-                {cols.isVisible("fee") && (
-                  <td
-                    className={cn(
-                      T.TABLE_TD,
-                      "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
-                    )}
-                  >
-                    {formatMinor(p.amountMinor)}
-                  </td>
-                )}
-                {cols.isVisible("status") && (
-                  <td className={T.TABLE_TD}>
-                    <PlacementStatusBadge status={p.status} />
-                  </td>
-                )}
-                {cols.isVisible("settle") && (
-                  <td
-                    className={cn(
-                      T.TABLE_TD,
-                      "whitespace-nowrap tabular-nums text-ink-body",
-                    )}
-                  >
-                    {settleLabel(p)}
-                  </td>
-                )}
+                <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                  <span className="block max-w-[200px] truncate">
+                    {p.jobTitle}
+                  </span>
+                </td>
+                <td className={cn(T.TABLE_TD, "text-ink-body")}>
+                  {p.recruiterName}
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap text-right font-[650] tabular-nums text-ink",
+                  )}
+                >
+                  {formatMinor(p.amountMinor)}
+                </td>
+                <td className={T.TABLE_TD}>
+                  <PlacementStatusBadge status={p.status} />
+                </td>
+                <td
+                  className={cn(
+                    T.TABLE_TD,
+                    "whitespace-nowrap tabular-nums text-ink-body",
+                  )}
+                >
+                  {settleLabel(p)}
+                </td>
                 <td className={T.TABLE_TD}>
                   <div className="flex justify-end gap-2">
                     {isRejectable(p) ? (

@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import {
-  Check,
-  Download,
-  ListFilter,
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { Check, ChevronDown, Search, X } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
@@ -24,10 +17,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/shared/ui-components/controls/select";
-
-import type { ColumnDef } from "./Columns";
 
 export interface FilterBarOption {
   value: string;
@@ -56,14 +46,15 @@ export type TableFilter =
   | {
       kind: "select";
       key: string;
+      /** The quiet prefix on the trigger — what the filter is ("Status"). */
       label: string;
-      /** Shown while nothing is chosen. Defaults to the label. */
-      placeholder?: string;
       options: readonly FilterBarOption[];
       /** `""` means unfiltered — the shape the screens' query state uses. */
       value: string;
       onChange: (next: string) => void;
-      /** CSS width for the trigger. Defaults to 160px, as in fh-core. */
+      /** What "no filter" reads as, on the trigger and in the list. */
+      allLabel?: string;
+      /** CSS width for the trigger. Defaults to 160px. */
       width?: string;
       /**
        * Force the option search on or off. Left unset it appears once the list
@@ -81,6 +72,7 @@ export type TableFilter =
       /** An empty set means unfiltered. */
       value: ReadonlySet<string>;
       onChange: (next: Set<string>) => void;
+      allLabel?: string;
       width?: string;
       /** Force the option search on or off; otherwise it appears once the
        * list is long enough to be worth searching. */
@@ -98,12 +90,6 @@ export type TableFilter =
 
 interface TableFilterBarProps {
   filters?: readonly TableFilter[];
-  /** Omit the columns and no Columns button appears. */
-  columns?: readonly ColumnDef[];
-  isColumnVisible?: (key: string) => boolean;
-  onToggleColumn?: (key: string) => void;
-  onExport?: () => void;
-  exportLabel?: string;
   /**
    * Put every filter back to its default. Omit it and no Clear appears.
    *
@@ -119,16 +105,19 @@ interface TableFilterBarProps {
    * Where the bar is standing.
    *
    * `canvas` (the default) is the list screen: the bar is its own bordered
-   * strip above the table card. `card` is a panel that already has a border and
-   * a title of its own — there the bar is ruled off under the card's head
-   * instead of drawing a second frame inside the first.
+   * strip above the table card. `bare` drops the frame entirely, for a panel
+   * that already has a border and a title — there the controls belong on the
+   * card's own head rather than in a second box drawn inside the first.
    */
-  surface?: "canvas" | "card";
+  surface?: "canvas" | "bare";
   className?: string;
 }
 
 /** Past this many options a filter grows its own search box. */
 const SEARCHABLE_THRESHOLD = 8;
+
+/** What a filter reads as when it is not narrowing anything. */
+const ALL = "All";
 
 /** Shared so an unfiltered dropdown does not allocate a Set on every render. */
 const EMPTY_SELECTION: ReadonlySet<string> = new Set();
@@ -138,7 +127,7 @@ const EMPTY_SELECTION: ReadonlySet<string> = new Set();
  *
  * Radix reserves the empty string: `value=""` on a Select means NO VALUE, so it
  * shows the placeholder instead of the chosen option. Every screen here spells
- * "no filter" as `''`, and each one would render a blank control once "All …"
+ * "no filter" as `''`, and each one would render a blank control once "All"
  * was picked — which reads as a filter that failed to apply rather than one
  * deliberately set to everything.
  *
@@ -146,6 +135,12 @@ const EMPTY_SELECTION: ReadonlySet<string> = new Set();
  * screens above still hand us `''` and still receive `''` back.
  */
 const ALL_VALUE = "__all__";
+
+/** The width every dropdown-shaped filter defaults to. */
+const TRIGGER_WIDTH = "160px";
+
+/** A multi-select needs the extra room its "n selected" reading costs. */
+const MULTI_TRIGGER_WIDTH = "180px";
 
 /** Is this filter narrowing the list? */
 function isActive(filter: TableFilter): boolean {
@@ -159,6 +154,26 @@ function isActive(filter: TableFilter): boolean {
     case "custom":
       return filter.active === true;
   }
+}
+
+/**
+ * What every dropdown-shaped trigger says: the filter's name in quiet ink, then
+ * what it is currently set to in full strength.
+ *
+ * Naming the filter on the face of the control is what lets a row of them be
+ * read at a glance — four triggers reading "All" tell you nothing about which
+ * is which, and a bare "Published" does not say it is the status.
+ */
+function TriggerLabel({ label, value }: { label: string; value: string }) {
+  return (
+    // `!flex` because SelectTrigger pins `[&>span]:line-clamp-1` on its direct
+    // child, and line-clamp is `display: -webkit-box` — which silently wins
+    // over this flex and closes the gap, so the trigger read "StatusAll".
+    <span className="!flex min-w-0 items-center gap-1.5">
+      <span className="shrink-0 text-ink-muted">{label}</span>
+      <span className="truncate font-[550] text-ink">{value}</span>
+    </span>
+  );
 }
 
 function SearchFilter({
@@ -190,6 +205,8 @@ function SelectFilter({
 }: {
   filter: Extract<TableFilter, { kind: "select" }>;
 }) {
+  const allLabel = filter.allLabel ?? ALL;
+
   // Radix's dropdown has no search, so past the threshold the same single
   // choice is offered through the searchable picker instead. The screen's API
   // is unchanged either way — one string in, one string out.
@@ -198,7 +215,7 @@ function SelectFilter({
       <OptionPicker
         multiple={false}
         label={filter.label}
-        placeholder={filter.placeholder}
+        allLabel={allLabel}
         options={filter.options}
         width={filter.width}
         searchable={filter.searchable}
@@ -211,29 +228,22 @@ function SelectFilter({
     );
   }
 
-  // "Nothing chosen" is not the same as "no value": this filter expresses it
-  // as a real option, so the trigger would show that option's label in
-  // full-strength ink and read as an active filter. Every other control on the
-  // bar greys its resting state, so a row of them was half dark and half faded
-  // with no rule behind it.
-  const unset = filter.value === "";
+  const chosen = filter.options.find((option) => option.value === filter.value);
 
   return (
     <Select
-      value={unset ? ALL_VALUE : filter.value}
+      value={filter.value === "" ? ALL_VALUE : filter.value}
       onValueChange={(next) => filter.onChange(next === ALL_VALUE ? "" : next)}
     >
       <SelectTrigger
         aria-label={filter.label}
-        className={cn("text-sub", unset && "text-ink-muted")}
-        style={{ width: filter.width ?? "160px" }}
+        className="text-sub"
+        style={{ width: filter.width ?? TRIGGER_WIDTH }}
       >
-        <SelectValue placeholder={filter.placeholder ?? filter.label} />
+        <TriggerLabel label={filter.label} value={chosen?.label ?? allLabel} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={ALL_VALUE}>
-          {filter.placeholder ?? filter.label}
-        </SelectItem>
+        <SelectItem value={ALL_VALUE}>{allLabel}</SelectItem>
         {filter.options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}
@@ -246,8 +256,9 @@ function SelectFilter({
 
 /**
  * The popover both searchable filters are built from: a list of options with an
- * optional search box, shaped like the plain dropdown beside it so a row of
- * filters reads as one set of controls.
+ * optional search box, shaped like the plain dropdown beside it — same height,
+ * same label-then-value face, same caret — so a row of filters reads as one set
+ * of controls rather than two kinds of thing.
  *
  * It knows nothing about single vs. multiple — the caller hands it the current
  * selection, what a pick means and whether a pick closes it. That is the whole
@@ -256,7 +267,7 @@ function SelectFilter({
  */
 function OptionPicker({
   label,
-  placeholder,
+  allLabel,
   options,
   width,
   searchable,
@@ -265,10 +276,10 @@ function OptionPicker({
   onPick,
   onClear,
 }: {
-  /** The control's accessible name — what the filter IS ("Job"). */
+  /** The control's name — the quiet prefix, and its accessible name. */
   label: string;
-  /** What the closed trigger says while nothing is chosen ("All jobs"). */
-  placeholder?: string;
+  /** What the trigger reads while nothing is chosen. */
+  allLabel: string;
   options: readonly FilterBarOption[];
   width?: string;
   searchable?: boolean;
@@ -294,14 +305,17 @@ function OptionPicker({
     setSearch("");
   };
 
-  // The trigger says what is applied rather than listing it. One chosen value
-  // fits and is the most useful thing it can say; several do not, and a
-  // truncated list of four company names answers nothing — so a multi-select
-  // shows its count instead.
-  const chosen =
-    !multiple && count === 1
-      ? options.find((option) => selected.has(option.value))
-      : undefined;
+  // One chosen value fits and is the most useful thing the trigger can say,
+  // whether or not more could have been picked; several do not, and a
+  // truncated list of four company names answers nothing — so past one a
+  // multi-select reports how many instead.
+  const chosen = options.find((option) => selected.has(option.value));
+  const value =
+    count === 0
+      ? allLabel
+      : count === 1
+        ? (chosen?.label ?? allLabel)
+        : `${count} selected`;
 
   return (
     <Popover
@@ -311,25 +325,20 @@ function OptionPicker({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={count > 0 ? `${label} (${count} selected)` : label}
+          aria-label={label}
           // The `.select` shell, so this sits level with the plain dropdowns
-          // either side of it.
-          className={cn(
-            "flex h-9 items-center justify-between gap-2 whitespace-nowrap rounded-sm border border-line-strong bg-surface px-[11px] text-sub transition-colors focus:border-blue focus:shadow-focus focus:outline-none",
-            count > 0 ? "text-ink" : "text-ink-muted",
-          )}
-          style={{ width: width ?? "160px" }}
+          // either side of it and wears the same caret.
+          className="flex h-9 items-center justify-between gap-2 whitespace-nowrap rounded-sm border border-line-strong bg-surface px-[11px] text-sub transition-colors focus:border-blue focus:shadow-focus focus:outline-none"
+          style={{
+            width: width ?? (multiple ? MULTI_TRIGGER_WIDTH : TRIGGER_WIDTH),
+          }}
         >
-          <span className="truncate">
-            {chosen ? chosen.label : (placeholder ?? label)}
-          </span>
-          {multiple && count > 0 ? (
-            <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-blue px-1 text-[10px] font-bold leading-none tabular-nums text-white">
-              {count}
-            </span>
-          ) : (
-            <ListFilter className="size-3.5 shrink-0 text-ink-muted" />
-          )}
+          <TriggerLabel label={label} value={value} />
+          <ChevronDown
+            aria-hidden="true"
+            className="size-3 shrink-0 text-ink-muted"
+            strokeWidth={2.5}
+          />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-60 p-0">
@@ -426,6 +435,7 @@ function MultiSelectFilter({
     <OptionPicker
       multiple
       label={filter.label}
+      allLabel={filter.allLabel ?? ALL}
       options={filter.options}
       width={filter.width}
       searchable={filter.searchable}
@@ -442,96 +452,24 @@ function MultiSelectFilter({
 }
 
 /**
- * The column-visibility popover. Every column is listed; a required one renders
- * as a disabled, checked row rather than disappearing, so the list always says
- * what the table is made of.
- */
-function ColumnsPopover({
-  columns,
-  isColumnVisible,
-  onToggleColumn,
-}: {
-  columns: readonly ColumnDef[];
-  isColumnVisible: (key: string) => boolean;
-  onToggleColumn: (key: string) => void;
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="outline">
-          <SlidersHorizontal className="size-4" />
-          Columns
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-56 p-3">
-        <p className="mb-2 text-sub font-semibold text-ink">Toggle Columns</p>
-        <div className="mb-3 h-px bg-line" />
-        <div className="flex flex-col gap-2">
-          {columns.map((column) => {
-            const checked = isColumnVisible(column.key);
-            return (
-              <button
-                key={column.key}
-                type="button"
-                role="checkbox"
-                aria-checked={checked}
-                disabled={column.required}
-                onClick={() => onToggleColumn(column.key)}
-                className="flex items-center gap-2 text-left text-sub text-ink-body disabled:cursor-default disabled:opacity-60"
-              >
-                <span
-                  className={cn(
-                    "flex size-[15px] shrink-0 items-center justify-center rounded-[4px] border",
-                    checked
-                      ? "border-blue bg-blue text-white"
-                      : "border-line-strong",
-                  )}
-                >
-                  {checked && <Check className="size-3" strokeWidth={3} />}
-                </span>
-                <span className="flex-1 truncate">{column.label}</span>
-                {column.required && (
-                  <span className="text-meta text-ink-faint">(required)</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-/**
- * The search/filter/column-toggle row above a data table — fh-core's
- * `TableFilterBar`.
+ * The search/filter row above a data table.
  *
- * Every filter a table offers lives here, on one bordered strip above the
- * table, rather than behind an icon in each column header: a reader can see
- * what is applied without opening anything, and the strip works identically on
- * a phone, where there is no header row to hang a control off.
+ * Every filter a table offers lives here, on one strip above the table, rather
+ * than behind an icon in each column header: a reader can see what is applied
+ * without opening anything, and the strip works identically on a phone, where
+ * there is no header row to hang a control off.
  *
  * Purely presentational. Values come in and changes go straight back out, so
  * filter state stays with the screen that owns the query.
  */
 export function TableFilterBar({
   filters = [],
-  columns,
-  isColumnVisible,
-  onToggleColumn,
-  onExport,
-  exportLabel = "Export",
   onClearFilters,
   children,
   surface = "canvas",
   className,
 }: TableFilterBarProps) {
   const canClear = onClearFilters !== undefined && filters.some(isActive);
-  const showColumns =
-    columns !== undefined &&
-    columns.length > 0 &&
-    isColumnVisible !== undefined &&
-    onToggleColumn !== undefined;
 
   return (
     // A plain div rather than a Card: Card's base is `flex flex-col`, which
@@ -539,10 +477,9 @@ export function TableFilterBar({
     // that wraps.
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 bg-surface",
-        surface === "canvas"
-          ? "rounded-md border border-line p-2.5 shadow-e1"
-          : "border-b border-line px-4 py-2.5",
+        "flex flex-wrap items-center gap-2",
+        surface === "canvas" &&
+          "rounded-md border border-line bg-surface p-2.5 shadow-e1",
         className,
       )}
     >
@@ -579,24 +516,6 @@ export function TableFilterBar({
           <X className="size-4" />
           Clear
         </Button>
-      )}
-
-      {(showColumns || onExport) && (
-        <div className="flex items-center gap-2 sm:ml-auto">
-          {showColumns && (
-            <ColumnsPopover
-              columns={columns}
-              isColumnVisible={isColumnVisible}
-              onToggleColumn={onToggleColumn}
-            />
-          )}
-          {onExport && (
-            <Button type="button" variant="outline" onClick={onExport}>
-              <Download className="size-4" />
-              {exportLabel}
-            </Button>
-          )}
-        </div>
       )}
     </div>
   );

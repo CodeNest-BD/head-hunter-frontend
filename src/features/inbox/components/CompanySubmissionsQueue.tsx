@@ -21,10 +21,6 @@ import {
 } from "@/features/candidates/schemas";
 import { CandidateQuickView } from "@/features/candidates/components/CandidateQuickView";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
-import {
-  useVisibleColumns,
-  type ColumnDef,
-} from "@/shared/ui-components/data/Columns";
 import { inboxThreadPath, jobPath, urlRef } from "@/shared/utils/entityPaths";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatTimeAgo, formatDateTime } from "@/shared/utils/formatDate";
@@ -101,20 +97,6 @@ const STATUS_OPTIONS: FilterBarOption[] = CANDIDATE_STATUSES.map((value) => ({
 const RECRUITER_OPTIONS: FilterBarOption[] = [
   { value: "rated", label: "Rated recruiters" },
   { value: "unrated", label: "Unrated recruiters" },
-];
-
-/**
- * Candidate carries the row's identity and its quick-view eye; Actions carries
- * the only link into the thread. Neither can be hidden.
- */
-const COLUMNS: ColumnDef[] = [
-  { key: "candidate", label: "Candidate", required: true },
-  { key: "job", label: "Job" },
-  { key: "recruiter", label: "Recruiter" },
-  { key: "rating", label: "Rating" },
-  { key: "submitted", label: "Submitted" },
-  { key: "status", label: "Status" },
-  { key: "actions", label: "Actions", required: true },
 ];
 
 interface StatCardDef {
@@ -216,7 +198,6 @@ export function CompanySubmissionsQueue() {
   const [status, setStatus] = useState<string | null>(null);
   const [recruiterKind, setRecruiterKind] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SubmissionSort>("priority");
-  const cols = useVisibleColumns("company.inbox.submissions.columns", COLUMNS);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -321,7 +302,6 @@ export function CompanySubmissionsQueue() {
             kind: "select",
             key: "job",
             label: "Job",
-            placeholder: "All jobs",
             options: jobOptions,
             value: selectedJob ?? "",
             onChange: (next) => changeJob(next === "" ? null : next),
@@ -332,7 +312,6 @@ export function CompanySubmissionsQueue() {
             kind: "select",
             key: "status",
             label: "Status",
-            placeholder: "All statuses",
             options: STATUS_OPTIONS,
             value: status ?? "",
             onChange: (next) => changeStatus(next === "" ? null : next),
@@ -341,7 +320,6 @@ export function CompanySubmissionsQueue() {
             kind: "select",
             key: "recruiter",
             label: "Recruiter",
-            placeholder: "All recruiters",
             options: RECRUITER_OPTIONS,
             value: recruiterKind ?? "",
             onChange: (next) => changeRecruiter(next === "" ? null : next),
@@ -372,9 +350,6 @@ export function CompanySubmissionsQueue() {
             ),
           },
         ]}
-        columns={cols.columns}
-        isColumnVisible={cols.isVisible}
-        onToggleColumn={cols.toggle}
         onClearFilters={resetFilters}
       />
 
@@ -387,10 +362,7 @@ export function CompanySubmissionsQueue() {
       </div>
 
       {submissions.isPending ? (
-        <TableSkeleton
-          rows={6}
-          columns={cols.allKeys.filter(cols.isVisible).length}
-        />
+        <TableSkeleton rows={6} columns={7} />
       ) : submissions.isError ? (
         <ErrorRetryCallout
           message="Could not load your submissions."
@@ -428,27 +400,17 @@ export function CompanySubmissionsQueue() {
                 <thead className={TABLE_HEAD}>
                   <tr>
                     <th className={TABLE_TH}>Candidate</th>
-                    {cols.isVisible("job") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Job
-                      </th>
-                    )}
-                    {cols.isVisible("recruiter") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Recruiter
-                      </th>
-                    )}
-                    {cols.isVisible("rating") && (
-                      <th className={TABLE_TH}>Rating</th>
-                    )}
-                    {cols.isVisible("submitted") && (
-                      <th className={TABLE_TH}>Submitted</th>
-                    )}
-                    {cols.isVisible("status") && (
-                      <th scope="col" className={TABLE_TH}>
-                        Status
-                      </th>
-                    )}
+                    <th scope="col" className={TABLE_TH}>
+                      Job
+                    </th>
+                    <th scope="col" className={TABLE_TH}>
+                      Recruiter
+                    </th>
+                    <th className={TABLE_TH}>Rating</th>
+                    <th className={TABLE_TH}>Submitted</th>
+                    <th scope="col" className={TABLE_TH}>
+                      Status
+                    </th>
                     <th className={cn(TABLE_TH, "text-right")}>Actions</th>
                   </tr>
                 </thead>
@@ -485,42 +447,32 @@ export function CompanySubmissionsQueue() {
                             />
                           </span>
                         </td>
-                        {cols.isVisible("job") && (
-                          <td className={TABLE_TD}>
-                            <JobLink row={row} />
-                          </td>
-                        )}
-                        {cols.isVisible("recruiter") && (
-                          <td className={TABLE_TD_STACKED}>
-                            <RecruiterCell row={row} />
-                          </td>
-                        )}
-                        {cols.isVisible("rating") && (
-                          <td className={TABLE_TD}>
-                            <RatingStars
-                              value={row.recruiter?.ratingAvg ?? null}
-                              count={row.recruiter?.ratingCount}
-                            />
-                          </td>
-                        )}
-                        {cols.isVisible("submitted") && (
-                          <td className={TABLE_TD}>
-                            <span
-                              className="whitespace-nowrap tabular-nums text-ink-muted"
-                              title={formatDateTime(row.submittedAt)}
-                            >
-                              {formatTimeAgo(row.submittedAt)}
-                            </span>
-                          </td>
-                        )}
-                        {cols.isVisible("status") && (
-                          <td className={TABLE_TD}>
-                            <StatusBadge
-                              label={QUEUE_STATUS_LABELS[row.status]}
-                              tone={CANDIDATE_STATUS_TONES[row.status]}
-                            />
-                          </td>
-                        )}
+                        <td className={TABLE_TD}>
+                          <JobLink row={row} />
+                        </td>
+                        <td className={TABLE_TD_STACKED}>
+                          <RecruiterCell row={row} />
+                        </td>
+                        <td className={TABLE_TD}>
+                          <RatingStars
+                            value={row.recruiter?.ratingAvg ?? null}
+                            count={row.recruiter?.ratingCount}
+                          />
+                        </td>
+                        <td className={TABLE_TD}>
+                          <span
+                            className="whitespace-nowrap tabular-nums text-ink-muted"
+                            title={formatDateTime(row.submittedAt)}
+                          >
+                            {formatTimeAgo(row.submittedAt)}
+                          </span>
+                        </td>
+                        <td className={TABLE_TD}>
+                          <StatusBadge
+                            label={QUEUE_STATUS_LABELS[row.status]}
+                            tone={CANDIDATE_STATUS_TONES[row.status]}
+                          />
+                        </td>
                         <td className={cn(TABLE_TD, "text-right")}>
                           <Link
                             href={threadHref(row)}
