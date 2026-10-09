@@ -1,18 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { navForRole } from "./dashboardNav";
+import { navForRole, navGroupsForRole } from "./dashboardNav";
 
 describe("recruiter navigation", () => {
   it("shows an approved recruiter their full workspace", () => {
     const labels = navForRole("recruiter", true).map((item) => item.label);
 
+    // Grouped order: Overview, Marketplace, Operations, Finance, Account —
+    // the redesign's own headings, so Disputes now precedes Wallet.
     expect(labels).toEqual([
       "Dashboard",
       "Live Map",
       "Inbox",
       "Submissions",
-      "Wallet",
       "Disputes",
+      "Wallet",
       "My Profile",
     ]);
   });
@@ -58,5 +60,34 @@ describe("recruiter navigation", () => {
 
   it("never reduces an admin's navigation", () => {
     expect(navForRole("admin", false)).toEqual(navForRole("admin", true));
+  });
+});
+
+describe("navigation groups", () => {
+  it("drops a heading whose items were all filtered away", () => {
+    // An unapproved company keeps only its profile, so Overview, Marketplace,
+    // Operations and Finance have nothing left — a heading over an empty run
+    // reads as a section that failed to load.
+    const groups = navGroupsForRole("company", false);
+
+    expect(groups.map((g) => g.label)).toEqual(["Account"]);
+    expect(groups[0].items.map((i) => i.label)).toEqual(["My Profile"]);
+  });
+
+  it("gives the admin the design's five headings", () => {
+    expect(navGroupsForRole("admin", true).map((g) => g.label)).toEqual([
+      "Overview",
+      "Marketplace",
+      "Operations",
+      "System",
+    ]);
+  });
+
+  it("flattens to exactly what the groups hold", () => {
+    const groups = navGroupsForRole("recruiter", true);
+
+    expect(navForRole("recruiter", true)).toEqual(
+      groups.flatMap((g) => g.items),
+    );
   });
 });

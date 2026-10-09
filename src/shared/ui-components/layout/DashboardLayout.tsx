@@ -25,7 +25,7 @@ import { type Crumb } from "./Breadcrumb";
 import { CurrentUserAvatar } from "./CurrentUserAvatar";
 import { NavBadge } from "./NavBadge";
 import { TopBarActions } from "./TopBarActions";
-import { navForRole, type NavItem } from "./dashboardNav";
+import { navForRole, navGroupsForRole, type NavItem } from "./dashboardNav";
 import { Logo } from "./Logo";
 
 /** Persists the desktop collapse choice across navigations and reloads. */
@@ -114,9 +114,11 @@ function UserMenu() {
 }
 
 /**
- * The reference's `.rail__item`: a 36px row at 13px/550 on muted ink, turning
- * to a blue tint with a cobalt inset bar and a cobalt glyph when it is the
- * current page.
+ * The design's rail row: 36px at 14px/500 on `#334155`, turning to a brand
+ * tint at 600 on `#1D4ED8` when it is the current page.
+ *
+ * No inset bar — the redesign marks the current page with the fill alone, so
+ * an active row reads as one shape rather than a shape with a stripe.
  */
 function NavLink({
   item,
@@ -137,19 +139,14 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       title={collapsed ? item.label : undefined}
       className={cn(
-        "flex h-9 items-center gap-2.5 rounded-sm text-sub font-[550] transition-colors",
-        collapsed ? "justify-center px-0" : "px-2.5",
+        "flex h-9 items-center gap-2.5 rounded-xs text-body font-medium transition-colors",
+        collapsed ? "justify-center px-0" : "pl-2.5 pr-2",
         active
-          ? "bg-tint font-[650] text-blue-ink shadow-rail"
-          : "text-ink-muted hover:bg-surface-sub hover:text-ink",
+          ? "bg-tint font-semibold text-blue-ink"
+          : "text-ink-body hover:bg-surface-sub hover:text-ink",
       )}
     >
-      <Icon
-        className={cn(
-          "size-[17px] shrink-0",
-          active ? "text-blue" : "opacity-90",
-        )}
-      />
+      <Icon className="size-[18px] shrink-0" />
       {!collapsed && <span className="truncate">{item.label}</span>}
       {!collapsed && <NavBadge badge={item.badge} />}
     </Link>
@@ -181,15 +178,15 @@ function SidebarContent({
   const isDrawer = variant === "drawer";
   if (!user) return null;
 
-  const items = navForRole(user.role, isApproved);
+  const groups = navGroupsForRole(user.role, isApproved);
   const isActive = (href: string) =>
     href === "/dashboard"
       ? pathname === "/dashboard"
       : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <div className="flex h-full flex-col px-2.5 pb-2.5 pt-3.5">
-      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto scrollbar-navy">
+    <div className="flex h-full flex-col px-2.5 pb-4 pt-3">
+      <nav className="flex flex-1 flex-col gap-3.5 overflow-y-auto scrollbar-navy">
         {/* `.rail__section` — the section label, with the collapse toggle at its
          * right (rail only). When collapsed the label hides and the toggle
          * centres. The drawer heads its nav with the account block instead, so
@@ -222,14 +219,26 @@ function SidebarContent({
             </button>
           )}
         </div>
-        {items.map((item) => (
-          <NavLink
-            key={item.href}
-            item={item}
-            active={isActive(item.href)}
-            collapsed={collapsed}
-            onNavigate={onNavigate}
-          />
+        {groups.map((group) => (
+          <div key={group.label} className="flex flex-col gap-px">
+            {/* The heading is what makes a grouped rail readable, so it is the
+                one thing the collapsed strip drops — at 56px wide there is no
+                room for a word, and the icons are already in their runs. */}
+            {!collapsed && (
+              <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase leading-4 tracking-[0.06em] text-ink-muted">
+                {group.label}
+              </p>
+            )}
+            {group.items.map((item) => (
+              <NavLink
+                key={item.href}
+                item={item}
+                active={isActive(item.href)}
+                collapsed={collapsed}
+                onNavigate={onNavigate}
+              />
+            ))}
+          </div>
         ))}
       </nav>
 
