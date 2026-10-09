@@ -3,57 +3,75 @@
 @tailwind utilities;
 
 /*
- * Head-Hunters design system — ported verbatim from the redesign reference
- * (head-hunter-design/assets/hh.css).
+ * Head-Hunters design system — the phase-2 admin redesign, token for token.
  *
- * Blue & white theme:
- *  • Layered surfaces: cool blue-grey canvas -> white cards -> tinted sub-surfaces
- *  • White topbar + white rail with a blue-tint active state
- *  • Cobalt #034AEF strictly for actions/links; semantic colors for status
- *  • Condensed density: 56px topbar, 44px rows, 36px controls, 16px rhythm
- *  • One type family, strict scale: 11/12/13/14/15/17/20/26, tabular-nums
+ * Source of truth: requirements/phase-2-rifat-design, "Component system and
+ * status model". Its foundations table is reproduced here exactly:
  *
- * The raw tokens live here; `tailwind.config.ts` exposes each one as a utility
- * so components stay on Tailwind rather than bespoke class names.
+ *   Page             #F3F5F9
+ *   Surface          White · 10px radius · 1px 6% ring + 1px shadow
+ *   Dividers         #EEF1F5 hairlines, inset
+ *   Brand            #2563EB fill · #1D4ED8 text
+ *   Type             Inter · 24 / 15 / 14 / 13 / 12
+ *   Spacing          4 · 8 · 12 · 16 · 24 · 32
+ *   Controls         40px · 8px radius
+ *   Section padding  20–24px
+ *
+ * The names below are unchanged from the previous system on purpose: every
+ * component already speaks them, so re-pointing the values moves the whole app
+ * onto the new palette at once rather than one file at a time.
+ *
+ * Surfaces are separated by a RING, not a border — `shadow-e1` carries both the
+ * 1px 6% ring and the 1px drop. A card that sets `border` as well reads as two
+ * edges.
  */
 @layer base {
   :root {
     /* ── Ground ── */
-    --canvas-rgb: 242 245 250;
+    --canvas-rgb: 243 245 249; /* #F3F5F9 — page */
     --canvas: rgb(var(--canvas-rgb));
-    --surface-rgb: 255 255 255;
+    --surface-rgb: 255 255 255; /* #FFFFFF */
     --surface: rgb(var(--surface-rgb));
-    --surface-sub-rgb: 247 250 253; /* table heads, section fills */
+    --surface-sub-rgb: 248 250 252; /* #F8FAFC — quiet fills */
     --surface-sub: rgb(var(--surface-sub-rgb));
-    --surface-sunken-rgb: 238 243 250; /* wells, code, quiet fills */
+    --surface-sunken-rgb: 233 237 243; /* #E9EDF3 — segmented track, wells */
     --surface-sunken: rgb(var(--surface-sunken-rgb));
 
     /* ── Ink ── */
-    --ink-rgb: 10 23 56; /* headings, primary data */
+    --ink-rgb: 15 23 42; /* #0F172A — headings, primary data */
     --ink: rgb(var(--ink-rgb));
-    --ink-body-rgb: 51 61 87; /* body copy */
+    --ink-body-rgb: 51 65 85; /* #334155 — body copy */
     --ink-body: rgb(var(--ink-body-rgb));
-    --ink-muted-rgb: 100 112 139; /* secondary text, hints */
+    --ink-muted-rgb: 91 107 130; /* #5B6B82 — secondary text, hints */
     --ink-muted: rgb(var(--ink-muted-rgb));
-    --ink-faint-rgb: 139 149 172; /* timestamps, placeholders */
+    --ink-faint-rgb: 131 146 167; /* #8392A7 — placeholders, disabled */
     --ink-faint: rgb(var(--ink-faint-rgb));
 
     /* ── Lines ── */
-    --line-rgb: 223 231 242;
+    --line-rgb: 238 241 245; /* #EEF1F5 — hairline dividers */
     --line: rgb(var(--line-rgb));
-    --line-strong-rgb: 201 212 230;
+    --line-strong-rgb: 221 227 236; /* #DDE3EC — control borders */
     --line-strong: rgb(var(--line-strong-rgb));
 
+    /* ── Table chrome — the design gives the head and the rows their own
+     * divider weights, and the head its own tint. ── */
+    --surface-head-rgb: 247 249 252; /* #F7F9FC — table header band */
+    --surface-head: rgb(var(--surface-head-rgb));
+    --line-head-rgb: 230 234 240; /* #E6EAF0 — above and below the head */
+    --line-head: rgb(var(--line-head-rgb));
+    --line-row-rgb: 240 242 246; /* #F0F2F6 — between rows */
+    --line-row: rgb(var(--line-row-rgb));
+
     /* ── Brand ── */
-    --blue-rgb: 3 74 239;
+    --blue-rgb: 37 99 235; /* #2563EB — fill */
     --blue: rgb(var(--blue-rgb));
-    --blue-deep-rgb: 0 56 200;
+    --blue-deep-rgb: 29 78 216; /* #1D4ED8 — hover fill */
     --blue-deep: rgb(var(--blue-deep-rgb));
-    --blue-ink-rgb: 38 88 207; /* link-on-tint, secondary blue */
+    --blue-ink-rgb: 29 78 216; /* #1D4ED8 — brand text, links */
     --blue-ink: rgb(var(--blue-ink-rgb));
-    --tint-rgb: 234 241 254; /* selected fills, secondary buttons */
+    --tint-rgb: 239 244 255; /* #EFF4FF — active nav, selected rows */
     --tint: rgb(var(--tint-rgb));
-    --tint-strong-rgb: 219 232 253;
+    --tint-strong-rgb: 219 228 251; /* #DBE4FB — flow line, stronger fills */
     --tint-strong: rgb(var(--tint-strong-rgb));
     --sky-rgb: 133 177 243;
     --sky: rgb(var(--sky-rgb));
@@ -70,41 +88,59 @@
     --rail-ink-dim-rgb: 109 123 160; /* section labels on rail */
     --rail-ink-dim: rgb(var(--rail-ink-dim-rgb));
 
-    /* ── Semantic ── */
-    --ok-rgb: 14 122 67;
+    /* ── Semantic — the design's status families.
+     *
+     * Each tone is three values, not two: a tinted chip, a label, and a DOT
+     * that is brighter than the label. The old system painted the dot in the
+     * label's own colour, which lost the design's distinction between the
+     * word (readable) and the marker (visible at a glance).
+     * ── */
+    --ok-rgb: 22 101 52; /* #166534 — label */
     --ok: rgb(var(--ok-rgb));
-    --ok-bg-rgb: 226 244 232;
+    --ok-bg-rgb: 239 250 243; /* #EFFAF3 */
     --ok-bg: rgb(var(--ok-bg-rgb));
+    --ok-dot-rgb: 34 163 90; /* #22A35A */
+    --ok-dot: rgb(var(--ok-dot-rgb));
     --ok-line-rgb: 196 230 209;
     --ok-line: rgb(var(--ok-line-rgb));
-    --warn-rgb: 138 90 0;
+    --warn-rgb: 161 92 7; /* #A15C07 */
     --warn: rgb(var(--warn-rgb));
-    --warn-bg-rgb: 252 241 216;
+    --warn-bg-rgb: 255 247 232; /* #FFF7E8 */
     --warn-bg: rgb(var(--warn-bg-rgb));
+    --warn-dot-rgb: 229 154 26; /* #E59A1A */
+    --warn-dot: rgb(var(--warn-dot-rgb));
     --warn-line-rgb: 240 223 178;
     --warn-line: rgb(var(--warn-line-rgb));
-    --bad-rgb: 179 38 30;
+    --bad-rgb: 185 28 28; /* #B91C1C */
     --bad: rgb(var(--bad-rgb));
-    --bad-bg-rgb: 251 233 231;
+    --bad-bg-rgb: 254 242 242; /* #FEF2F2 */
     --bad-bg: rgb(var(--bad-bg-rgb));
-    --bad-line-rgb: 243 205 201;
+    --bad-dot-rgb: 220 38 38; /* #DC2626 */
+    --bad-dot: rgb(var(--bad-dot-rgb));
+    --bad-line-rgb: 241 201 201; /* #F1C9C9 — destructive button border */
     --bad-line: rgb(var(--bad-line-rgb));
-    --info-rgb: 38 88 207;
+    --info-rgb: 29 78 216; /* #1D4ED8 */
     --info: rgb(var(--info-rgb));
-    --info-bg-rgb: 232 238 251;
+    --info-bg-rgb: 238 244 255; /* #EEF4FF */
     --info-bg: rgb(var(--info-bg-rgb));
+    --info-dot-rgb: 59 111 240; /* #3B6FF0 */
+    --info-dot: rgb(var(--info-dot-rgb));
     --info-line-rgb: 207 220 246;
     --info-line: rgb(var(--info-line-rgb));
-    --violet-rgb: 107 79 168;
+    --violet-rgb: 30 58 138; /* #1E3A8A — the design's "navy" tone */
     --violet: rgb(var(--violet-rgb));
-    --violet-bg-rgb: 239 233 251;
+    --violet-bg-rgb: 237 242 254;
     --violet-bg: rgb(var(--violet-bg-rgb));
-    --violet-line-rgb: 221 210 242;
+    --violet-dot-rgb: 30 58 138; /* #1E3A8A */
+    --violet-dot: rgb(var(--violet-dot-rgb));
+    --violet-line-rgb: 214 224 250;
     --violet-line: rgb(var(--violet-line-rgb));
-    --neutral-rgb: 91 101 119;
+    --neutral-rgb: 71 85 105; /* #475569 */
     --neutral: rgb(var(--neutral-rgb));
-    --neutral-bg-rgb: 237 240 245;
+    --neutral-bg-rgb: 241 244 248; /* #F1F4F8 */
     --neutral-bg: rgb(var(--neutral-bg-rgb));
+    --neutral-dot-rgb: 148 163 184; /* #94A3B8 */
+    --neutral-dot: rgb(var(--neutral-dot-rgb));
     --neutral-line-rgb: 219 225 234;
     --neutral-line: rgb(var(--neutral-line-rgb));
 
@@ -123,31 +159,31 @@
      * Re-pointed at the tokens above so every token-based component adopts the
      * reference palette without being touched individually.
      */
-    --background: 213 43% 96%; /* --canvas  #f2f5fa */
-    --foreground: 223 70% 13%; /* --ink     #0a1738 */
+    --background: 220 33% 96%; /* --canvas  #f3f5f9 */
+    --foreground: 222 47% 11%; /* --ink     #0f172a */
     --card: 0 0% 100%;
-    --card-foreground: 223 70% 13%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 223 70% 13%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 222 98% 47%; /* --blue      #034aef */
+    --primary: 221 83% 53%; /* --blue      #2563eb */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 218 94% 96%; /* --tint      #eaf1fe */
-    --secondary-foreground: 222 69% 48%; /* --blue-ink  #2658cf */
+    --secondary: 221 100% 97%; /* --tint      #eff4ff */
+    --secondary-foreground: 224 76% 48%; /* --blue-ink  #1d4ed8 */
 
-    --muted: 210 50% 98%; /* --surface-sub  #f7fafd */
-    --muted-foreground: 220 16% 47%; /* --ink-muted    #64708b */
+    --muted: 210 40% 98%; /* --surface-sub  #f8fafc */
+    --muted-foreground: 215 18% 43%; /* --ink-muted    #5b6b82 */
 
-    --accent: 218 94% 96%; /* --tint      #eaf1fe */
-    --accent-foreground: 222 69% 48%; /* --blue-ink  #2658cf */
+    --accent: 221 100% 97%; /* --tint      #eff4ff */
+    --accent-foreground: 224 76% 48%; /* --blue-ink  #1d4ed8 */
 
-    --destructive: 3 71% 41%; /* --bad       #b3261e */
+    --destructive: 0 74% 42%; /* --bad       #b91c1c */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 213 46% 91%; /* --line         #dfe7f2 */
-    --input: 216 40% 85%; /* --line-strong  #c9d4e6 */
-    --ring: 222 98% 47%; /* --blue         #034aef */
+    --border: 213 25% 95%; /* --line         #eef1f5 */
+    --input: 215 29% 90%; /* --line-strong  #dde3ec */
+    --ring: 221 83% 53%; /* --blue         #2563eb */
 
     /*
      * 12px base radius, so the inherited shadcn scale lands exactly on the
