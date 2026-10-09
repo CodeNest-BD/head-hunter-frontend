@@ -19,6 +19,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/ui-components/controls/tabs";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import {
   useAdminRecruiter,
@@ -32,10 +38,9 @@ import {
 } from "../schemas";
 import { HoldButton } from "./HoldButton";
 import {
-  DetailField,
   DetailSkeleton,
-  FACTS_GRID,
-  FACT_FULL,
+  RAIL_FACTS,
+  RailField,
   initials,
 } from "./DetailPrimitives";
 import { RecruiterSubmissions } from "./RecruiterSubmissions";
@@ -52,10 +57,12 @@ import {
   DIALOG_TITLE,
 } from "@/shared/ui-components/feedback/dialogStyles";
 
+/** Short month, as the design's header strip and rail both use — the long
+ * form wrapped "September 24, 2026" across two lines in a 340px rail. */
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-US", {
-    month: "long",
+    month: "short",
     day: "numeric",
     year: "numeric",
   });
@@ -214,6 +221,7 @@ function DeleteRecruiterButton({
 }
 
 export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
+  const [tab, setTab] = useState("overview");
   const { data, isPending, isError, refetch } = useAdminRecruiter(recruiterRef);
   useCanonicalPath(
     data &&
@@ -245,7 +253,13 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
   const location = [cityState, data.zip].filter(Boolean).join(" ") || "—";
 
   return (
-    <div className="flex w-full flex-col gap-3">
+    // Controlled rather than `defaultValue`: Overview's "View all submissions"
+    // moves the reader to the Submissions tab, so the bar has to follow.
+    <Tabs
+      value={tab}
+      onValueChange={setTab}
+      className="flex w-full flex-col gap-3"
+    >
       <Card>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -318,85 +332,116 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
             />
           </div>
         </CardContent>
+
+        {/* The tab bar closes the header card: the card's own bottom border is
+            the rule the active underline sits on, so the bar adds none of its
+            own. */}
+        <TabsList className="px-2 shadow-none">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="submissions">Submissions</TabsTrigger>
+          <TabsTrigger value="history">Recruiting History</TabsTrigger>
+          <TabsTrigger value="references">References</TabsTrigger>
+        </TabsList>
       </Card>
 
       {/* The design's shape: the account's own record down the main column,
-          the reference facts about it in a narrower rail beside. */}
+          the reference facts about it in a narrower rail beside. The rail does
+          not belong to any one tab — it is what the record is about. */}
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <div className="flex min-w-0 flex-col gap-3">
-          <VerificationCard data={data} />
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Recruiting History ({data.experiences.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {data.experiences.length === 0 ? (
-                <p className="text-sub text-ink-muted">No companies listed.</p>
-              ) : (
-                /* Compact `.well` rows rather than a table — the list never runs
+          <TabsContent value="overview" className="mt-0 flex flex-col gap-3">
+            <VerificationCard data={data} />
+            <RecruiterSubmissions
+              recruiterProfileId={data.recruiterProfileId}
+              title="Recent Submissions"
+              onViewAll={() => setTab("submissions")}
+            />
+          </TabsContent>
+
+          <TabsContent value="submissions" className="mt-0">
+            <RecruiterSubmissions
+              recruiterProfileId={data.recruiterProfileId}
+            />
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-0">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  Recruiting History ({data.experiences.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {data.experiences.length === 0 ? (
+                  <p className="text-sub text-ink-muted">
+                    No companies listed.
+                  </p>
+                ) : (
+                  /* Compact `.well` rows rather than a table — the list never runs
                    past a handful of firms. */
-                <ul className="flex flex-col gap-2">
-                  {data.experiences.map((experience) => (
-                    <li
-                      key={experience.id}
-                      className="rounded-sm border border-line bg-surface-sub px-3 py-2.5"
-                    >
-                      <span className="flex flex-wrap items-baseline gap-2 text-block font-[650] text-ink">
-                        {experience.firmName}
-                        {experience.years !== null && (
-                          <span className="text-meta font-[450] tabular-nums text-ink-muted">
-                            {experience.years} yr
-                            {experience.years === 1 ? "" : "s"}
+                  <ul className="flex flex-col gap-2">
+                    {data.experiences.map((experience) => (
+                      <li
+                        key={experience.id}
+                        className="rounded-sm border border-line bg-surface-sub px-3 py-2.5"
+                      >
+                        <span className="flex flex-wrap items-baseline gap-2 text-block font-[650] text-ink">
+                          {experience.firmName}
+                          {experience.years !== null && (
+                            <span className="text-meta font-[450] tabular-nums text-ink-muted">
+                              {experience.years} yr
+                              {experience.years === 1 ? "" : "s"}
+                            </span>
+                          )}
+                        </span>
+                        {experience.specializations.length > 0 && (
+                          <span className="mt-0.5 block text-meta text-ink-muted">
+                            {experience.specializations
+                              .map(getSpecializationLabel)
+                              .join(" · ")}
                           </span>
                         )}
-                      </span>
-                      {experience.specializations.length > 0 && (
-                        <span className="mt-0.5 block text-meta text-ink-muted">
-                          {experience.specializations
-                            .map(getSpecializationLabel)
-                            .join(" · ")}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="references" className="mt-0">
+            <Card>
+              <CardHeader>
+                <CardTitle>References ({data.references.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {data.references.length === 0 ? (
+                  <p className="text-sub text-ink-muted">
+                    No references on file.
+                  </p>
+                ) : (
+                  <ul className="flex flex-col gap-2.5">
+                    {data.references.map((ref) => (
+                      <li
+                        key={ref.id}
+                        className="flex items-center gap-2 text-body font-[550] text-ink"
+                      >
+                        {ref.verified ? (
+                          <BadgeCheck className="size-4 shrink-0 text-ok" />
+                        ) : (
+                          <BadgeX className="size-4 shrink-0 text-bad" />
+                        )}
+                        <span>
+                          {ref.name}
+                          {ref.company ? ` – ${ref.company}` : ""}
                         </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>References ({data.references.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {data.references.length === 0 ? (
-                <p className="text-sub text-ink-muted">
-                  No references on file.
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-2.5">
-                  {data.references.map((ref) => (
-                    <li
-                      key={ref.id}
-                      className="flex items-center gap-2 text-body font-[550] text-ink"
-                    >
-                      {ref.verified ? (
-                        <BadgeCheck className="size-4 shrink-0 text-ok" />
-                      ) : (
-                        <BadgeX className="size-4 shrink-0 text-bad" />
-                      )}
-                      <span>
-                        {ref.name}
-                        {ref.company ? ` – ${ref.company}` : ""}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-          <RecruiterSubmissions recruiterProfileId={data.recruiterProfileId} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </div>
 
         {/* The reference facts about the account, in the design's narrower
@@ -406,25 +451,23 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
             <CardHeader>
               <CardTitle>Contact</CardTitle>
             </CardHeader>
-            <CardContent className={FACTS_GRID}>
-              <DetailField label="Phone" value={data.phone} />
-              <DetailField
+            <CardContent className={RAIL_FACTS}>
+              <RailField label="Phone" value={data.phone} />
+              <RailField
                 label="Phone confirmed"
                 value={data.phoneVerified ? "Yes" : "No"}
               />
-              <DetailField label="Email" value={data.email} />
-              <DetailField
+              <RailField label="Email" value={data.email} />
+              <RailField
                 label="Email confirmed"
                 value={data.emailVerified ? "Yes" : "No"}
               />
-              <DetailField label="Address" value={data.addressLine} />
-              <DetailField label="Location" value={location} />
-              <div className={FACT_FULL}>
-                <div className="text-label font-[650] uppercase text-ink-muted">
-                  LinkedIn
-                </div>
-                <div className="mt-[3px] text-body font-[550] text-ink">
-                  {data.linkedinUrl ? (
+              <RailField label="Address" value={data.addressLine} />
+              <RailField label="Location" value={location} />
+              <RailField
+                label="LinkedIn"
+                value={
+                  data.linkedinUrl ? (
                     <a
                       href={data.linkedinUrl}
                       target="_blank"
@@ -433,11 +476,9 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
                     >
                       {data.linkedinUrl.replace(/^https?:\/\//, "")}
                     </a>
-                  ) : (
-                    "—"
-                  )}
-                </div>
-              </div>
+                  ) : null
+                }
+              />
             </CardContent>
           </Card>
 
@@ -445,12 +486,10 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
             <CardHeader>
               <CardTitle>Marketplace</CardTitle>
             </CardHeader>
-            <CardContent className={FACTS_GRID}>
-              <div>
-                <div className="text-label font-[650] uppercase text-ink-muted">
-                  Subscription
-                </div>
-                <div className="mt-[3px]">
+            <CardContent className={RAIL_FACTS}>
+              <RailField
+                label="Subscription"
+                value={
                   <StatusBadge
                     label={
                       SUBSCRIPTION_LABELS[data.subscriptionStatus] ??
@@ -461,21 +500,21 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
                       "neutral"
                     }
                   />
-                </div>
-              </div>
-              <DetailField
+                }
+              />
+              <RailField
                 label="Renews"
                 value={formatDate(data.currentPeriodEnd)}
               />
-              <DetailField
+              <RailField
                 label="Placements"
                 value={String(data.placementCount)}
               />
-              <DetailField
+              <RailField
                 label="Total earnings"
                 value={formatMinor(data.releasedEarningsMinor)}
               />
-              <DetailField
+              <RailField
                 label="Experience"
                 value={
                   data.yearsExperience !== null
@@ -483,29 +522,25 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
                     : null
                 }
               />
-              <div>
-                <div className="text-label font-[650] uppercase text-ink-muted">
-                  Rating
-                </div>
-                <div className="mt-[3px]">
+              <RailField
+                label="Rating"
+                value={
                   <RatingStars
                     value={data.ratingAvg}
                     count={data.ratingCount}
                   />
-                </div>
-              </div>
-              <div className={FACT_FULL}>
-                <div className="text-label font-[650] uppercase text-ink-muted">
-                  Specializations
-                </div>
-                <div className="mt-[3px] text-body font-[550] text-ink">
-                  {data.specializations && data.specializations.length > 0
+                }
+              />
+              <RailField
+                label="Specializations"
+                value={
+                  data.specializations && data.specializations.length > 0
                     ? data.specializations
                         .map(getSpecializationLabel)
                         .join(", ")
-                    : "—"}
-                </div>
-              </div>
+                    : null
+                }
+              />
             </CardContent>
           </Card>
 
@@ -513,9 +548,9 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
             <CardHeader>
               <CardTitle>Account</CardTitle>
             </CardHeader>
-            <CardContent className={FACTS_GRID}>
-              <DetailField label="Joined" value={formatDate(data.joinedAt)} />
-              <DetailField
+            <CardContent className={RAIL_FACTS}>
+              <RailField label="Joined" value={formatDate(data.joinedAt)} />
+              <RailField
                 label="Last login"
                 value={formatDate(data.lastLoginAt)}
               />
@@ -523,6 +558,6 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
           </Card>
         </div>
       </div>
-    </div>
+    </Tabs>
   );
 }

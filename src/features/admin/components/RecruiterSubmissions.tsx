@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowRight } from "lucide-react";
 
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import {
@@ -89,8 +89,14 @@ function SubmissionCard({ submission }: { submission: ConversationListItem }) {
  */
 export function RecruiterSubmissions({
   recruiterProfileId,
+  title = "Submissions",
+  onViewAll,
 }: {
   recruiterProfileId: string;
+  /** Overridden where this stands in as a preview ("Recent Submissions"). */
+  title?: string;
+  /** Offered beside the title where a fuller list exists elsewhere. */
+  onViewAll?: () => void;
 }) {
   const [page, setPage] = useState(1);
   const { data, isPending, isError, refetch } = useAdminConversations({
@@ -104,7 +110,17 @@ export function RecruiterSubmissions({
       {/* The reference's submissions table carries its title on an unruled head:
           the table's own header band is the rule. */}
       <CardHeader className="border-b-0">
-        <CardTitle>Submissions</CardTitle>
+        <CardTitle>{title}</CardTitle>
+        {onViewAll && (
+          <button
+            type="button"
+            onClick={onViewAll}
+            className="ml-auto inline-flex items-center gap-1.5 text-sub font-[550] text-blue-ink underline-offset-2 transition-colors hover:underline"
+          >
+            View all submissions
+            <ArrowRight aria-hidden="true" className="size-3.5" />
+          </button>
+        )}
       </CardHeader>
       <CardContent className="p-0">
         {isPending ? (
