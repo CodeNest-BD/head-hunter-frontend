@@ -23,6 +23,7 @@ const config: Config = {
           DEFAULT: "rgb(var(--surface-rgb) / <alpha-value>)",
           sub: "rgb(var(--surface-sub-rgb) / <alpha-value>)",
           sunken: "rgb(var(--surface-sunken-rgb) / <alpha-value>)",
+          head: "rgb(var(--surface-head-rgb) / <alpha-value>)",
         },
         // ─── Ink ───
         ink: {
@@ -35,6 +36,8 @@ const config: Config = {
         line: {
           DEFAULT: "rgb(var(--line-rgb) / <alpha-value>)",
           strong: "rgb(var(--line-strong-rgb) / <alpha-value>)",
+          head: "rgb(var(--line-head-rgb) / <alpha-value>)",
+          row: "rgb(var(--line-row-rgb) / <alpha-value>)",
         },
         // ─── Brand ───
         blue: {
@@ -63,31 +66,37 @@ const config: Config = {
         ok: {
           DEFAULT: "rgb(var(--ok-rgb) / <alpha-value>)",
           bg: "rgb(var(--ok-bg-rgb) / <alpha-value>)",
+          dot: "rgb(var(--ok-dot-rgb) / <alpha-value>)",
           line: "rgb(var(--ok-line-rgb) / <alpha-value>)",
         },
         warn: {
           DEFAULT: "rgb(var(--warn-rgb) / <alpha-value>)",
           bg: "rgb(var(--warn-bg-rgb) / <alpha-value>)",
+          dot: "rgb(var(--warn-dot-rgb) / <alpha-value>)",
           line: "rgb(var(--warn-line-rgb) / <alpha-value>)",
         },
         bad: {
           DEFAULT: "rgb(var(--bad-rgb) / <alpha-value>)",
           bg: "rgb(var(--bad-bg-rgb) / <alpha-value>)",
+          dot: "rgb(var(--bad-dot-rgb) / <alpha-value>)",
           line: "rgb(var(--bad-line-rgb) / <alpha-value>)",
         },
         info: {
           DEFAULT: "rgb(var(--info-rgb) / <alpha-value>)",
           bg: "rgb(var(--info-bg-rgb) / <alpha-value>)",
+          dot: "rgb(var(--info-dot-rgb) / <alpha-value>)",
           line: "rgb(var(--info-line-rgb) / <alpha-value>)",
         },
         violet: {
           DEFAULT: "rgb(var(--violet-rgb) / <alpha-value>)",
           bg: "rgb(var(--violet-bg-rgb) / <alpha-value>)",
+          dot: "rgb(var(--violet-dot-rgb) / <alpha-value>)",
           line: "rgb(var(--violet-line-rgb) / <alpha-value>)",
         },
         neutral: {
           DEFAULT: "rgb(var(--neutral-rgb) / <alpha-value>)",
           bg: "rgb(var(--neutral-bg-rgb) / <alpha-value>)",
+          dot: "rgb(var(--neutral-dot-rgb) / <alpha-value>)",
           line: "rgb(var(--neutral-line-rgb) / <alpha-value>)",
         },
 
@@ -169,17 +178,22 @@ const config: Config = {
        * tracking so a role is one class. The numeric `text-[11|12|…]` sizes
        * below cover the in-between steps the reference uses inline.
        */
+      /**
+       * The design's scale, verbatim: Inter · 24 / 15 / 14 / 13 / 12, plus the
+       * 22px and 28px steps its stat strips and spec pages use. The role names
+       * are unchanged so existing call sites move with the system.
+       */
       fontSize: {
-        label: ["11px", { lineHeight: "1.3", letterSpacing: "0.07em" }],
-        meta: ["12px", { lineHeight: "1.4" }],
-        sub: ["13px", { lineHeight: "1.45" }],
-        body: ["13.5px", { lineHeight: "1.5" }],
-        block: ["14px", { lineHeight: "1.4" }],
-        card: ["15px", { lineHeight: "1.35", letterSpacing: "-0.008em" }],
-        section: ["17px", { lineHeight: "1.3", letterSpacing: "-0.01em" }],
-        page: ["20px", { lineHeight: "1.25", letterSpacing: "-0.012em" }],
-        stat: ["24px", { lineHeight: "1.1", letterSpacing: "-0.02em" }],
-        display: ["26px", { lineHeight: "1.2", letterSpacing: "-0.02em" }],
+        label: ["12px", { lineHeight: "16px", fontWeight: "500" }],
+        meta: ["12px", { lineHeight: "16px" }],
+        sub: ["13px", { lineHeight: "18px" }],
+        body: ["14px", { lineHeight: "20px" }],
+        block: ["14px", { lineHeight: "20px" }],
+        card: ["15px", { lineHeight: "20px", fontWeight: "600" }],
+        section: ["15px", { lineHeight: "20px", fontWeight: "600" }],
+        page: ["24px", { lineHeight: "32px", letterSpacing: "-0.015em" }],
+        stat: ["22px", { lineHeight: "28px", letterSpacing: "-0.01em" }],
+        display: ["28px", { lineHeight: "36px", letterSpacing: "-0.02em" }],
       },
 
       fontWeight: {
@@ -191,17 +205,23 @@ const config: Config = {
       },
 
       borderRadius: {
-        lg: "var(--radius)", // 12px — page-level panels
-        md: "calc(var(--radius) - 2px)", // 10px — cards
-        sm: "calc(var(--radius) - 4px)", // 8px  — controls, inputs
-        xs: "calc(var(--radius) - 6px)", // 6px  — chips, small buttons
+        lg: "12px", // page-level sections
+        md: "10px", // cards
+        sm: "8px", //  controls, inputs — the design's one control radius
+        xs: "6px", //  chips, icon squares
       },
 
       boxShadow: {
-        // Crisp, not floaty — the reference's three elevation steps.
-        e1: "0 1px 2px rgba(10, 23, 56, 0.06)",
-        e2: "0 1px 3px rgba(10, 23, 56, 0.07), 0 4px 14px rgba(10, 23, 56, 0.06)",
-        pop: "0 4px 10px rgba(10, 23, 56, 0.09), 0 12px 32px rgba(10, 23, 56, 0.13)",
+        /**
+         * A surface is separated by a RING plus a 1px drop, never a border —
+         * `0 0 0 1px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04)`. A card
+         * that also sets `border` draws two edges a pixel apart.
+         */
+        e1: "0 0 0 1px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04)",
+        e2: "0 0 0 1px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.06)",
+        pop: "0 0 0 1px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.12)",
+        /** The segmented control's selected chip. */
+        chip: "0 1px 2px rgba(15, 23, 42, 0.08)",
         // Legacy aliases, re-pointed at the same three steps.
         card: "0 1px 2px rgba(10, 23, 56, 0.06)",
         "card-lg":
@@ -215,15 +235,18 @@ const config: Config = {
       },
 
       spacing: {
+        // The design's control ladder: 40 forms · 38 toolbars · 32 pager · 30 segment.
+        7.5: "30px", // segmented chip
+        9.5: "38px", // table toolbar control
+        10: "40px", // the one form-control height
         // Reference control and row metrics Tailwind's default scale misses.
         4.5: "18px", // large button padding, form-section block padding
         5.25: "21px", // pill height
         6.5: "26px", // tag height, small avatar
-        7.5: "30px", // small button / timeline icon
         8.5: "34px", // icon button, stat icon, topbar search
-        9.5: "38px", // table header row
         10.5: "42px", // large button
         13: "52px", // xl avatar, OTP input
+        15: "60px", // the design's table row
         topbar: "var(--topbar-h)", // 56px
         rail: "var(--rail-w)", // 232px
       },

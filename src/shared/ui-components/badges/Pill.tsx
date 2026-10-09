@@ -22,7 +22,24 @@ const TONE: Record<PillTone, string> = {
   info: "bg-info-bg text-info",
   violet: "bg-violet-bg text-violet",
   neutral: "bg-neutral-bg text-neutral",
-  blue: "bg-tint text-blue",
+  blue: "bg-info-bg text-info",
+};
+
+/**
+ * The dot is BRIGHTER than the label it leads — the design gives each tone
+ * three values (chip, label, dot), not two. Painting the dot in the label's
+ * own colour, as the old system did, loses the distinction between the word
+ * (which has to be readable) and the marker (which has to be visible at a
+ * glance down a column).
+ */
+export const TONE_DOT: Record<PillTone, string> = {
+  ok: "bg-ok-dot",
+  warn: "bg-warn-dot",
+  bad: "bg-bad-dot",
+  info: "bg-info-dot",
+  violet: "bg-violet-dot",
+  neutral: "bg-neutral-dot",
+  blue: "bg-info-dot",
 };
 
 export interface PillProps {
@@ -37,14 +54,17 @@ export interface PillProps {
 }
 
 /**
- * The reference's `.pill`: a 21px capsule at 11px/650 on a tinted fill, led by
- * a 5px dot in the same ink as its label.
+ * The design's status chip: a 24px capsule at 12px/500 on a tinted fill, led
+ * by a 6px dot in the tone's own brighter marker colour.
+ *
+ * Status is "a dot and a word, never colour alone" — the label always carries
+ * the meaning, so the chip stays readable without its fill.
  */
 export function Pill({ tone, children, plain = false, className }: PillProps) {
   return (
     <span
       className={cn(
-        "inline-flex h-5.25 items-center gap-[5px] whitespace-nowrap rounded-full px-2 text-[11px] font-[650] tracking-[0.02em]",
+        "inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-meta font-medium",
         TONE[tone],
         className,
       )}
@@ -52,7 +72,7 @@ export function Pill({ tone, children, plain = false, className }: PillProps) {
       {!plain && (
         <span
           aria-hidden="true"
-          className="size-[5px] shrink-0 rounded-full bg-current"
+          className={cn("size-1.5 shrink-0 rounded-full", TONE_DOT[tone])}
         />
       )}
       {children}

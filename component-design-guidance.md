@@ -44,29 +44,49 @@ Extending a shared part is almost always cheaper than the reconciliation.
 | Body copy                     | `text-ink-body`                                                   | `text-gray-700`                |
 | Secondary, hints              | `text-ink-muted`                                                  | `text-muted-foreground`        |
 | Timestamps, placeholders      | `text-ink-faint`                                                  | `text-gray-400`                |
-| Divider, card border          | `border-line`                                                     | `border-border`                |
+| Hairline divider              | `border-line`                                                     | `border-border`                |
 | Input, outline button         | `border-line-strong`                                              | `border-input`                 |
 | Action, link                  | `blue`, `blue-deep`, `blue-ink`                                   | `primary`, `#034aef`           |
 | Selected fill                 | `tint`, `tint-strong`                                             | `bg-accent`                    |
 | Status                        | `ok` `warn` `bad` `info` `violet` `neutral`, each `-bg` / `-line` | raw hex                        |
 
-**Navy is ink and small accents only — never a large surface.** The two
-exceptions the reference itself makes are the subscription plan card and the
-About page's one band.
+**A surface is separated by a RING, not a border.** `shadow-e1` carries both
+the 1px 6% ring and the 1px drop. A card that sets `border` as well draws two
+edges a pixel apart — that is the single easiest way to spot a component that
+has not been moved onto this system.
 
-**Type** — use the role, never a Tailwind default:
-`text-label` 11 · `text-meta` 12 · `text-sub` 13 · `text-body` 13.5 ·
-`text-block` 14 · `text-card` 15 · `text-section` 17 · `text-page` 20 ·
-`text-stat` 24 · `text-display` 26. Never `text-sm` / `text-base` / `text-xl`.
-Weights include `font-[450] [550] [650] [750]`. **Every number carries
-`tabular-nums`**; money adds `font-[650] text-ink`.
+**Type** — use the role, never a Tailwind default. The design's scale is
+Inter · 24 / 15 / 14 / 13 / 12:
+`text-label` 12/500 · `text-meta` 12 · `text-sub` 13 · `text-body` 14 (base) ·
+`text-card` 15/600 · `text-page` 24 (page title) · `text-stat` 22 (figures) ·
+`text-display` 28. Never `text-sm` / `text-base` / `text-xl`.
+**Every number carries `tabular-nums`.**
 
-**Radius** `rounded-lg` 12 (panels) · `rounded-md` 10 (cards) · `rounded-sm` 8
-(controls) · `rounded-xs` 6 (chips, small buttons). Never `rounded-xl`.
+**Radius** `rounded-lg` 12 (sections) · `rounded-md` 10 (cards) ·
+`rounded-sm` 8 (every control — the design has exactly one control radius) ·
+`rounded-xs` 6 (chips). Never `rounded-xl`.
 
-**Elevation** `shadow-e1` (resting card) · `shadow-e2` (hover) · `shadow-pop`
-(popovers, dialogs) · `shadow-rail` (inset cobalt edge) · `shadow-focus` (focus
-halo). Never `shadow-md` / `shadow-lg`.
+**Control heights** 40 (`h-10`, forms) · 38 (`h-9.5`, table toolbars) ·
+32 (`h-8`, pager) · 30 (`h-7.5`, segmented chip). Buttons carry these as
+`size`: default / `sm` / `xs`, plus `icon`, `icon-sm`, `icon-xs`.
+
+**Elevation** `shadow-e1` (resting surface: ring + drop) · `shadow-e2` (hover) ·
+`shadow-pop` (popovers, dialogs) · `shadow-chip` (segmented control's selected
+chip) · `shadow-rail` · `shadow-focus`. Never `shadow-md` / `shadow-lg`.
+
+**Status is a dot and a word, never colour alone.** Each tone carries three
+values — chip `-bg`, label, and a brighter `-dot`:
+
+| Tone      | Chip      | Label     | Dot       |
+| --------- | --------- | --------- | --------- |
+| `neutral` | `#F1F4F8` | `#475569` | `#94A3B8` |
+| `info`    | `#EEF4FF` | `#1D4ED8` | `#3B6FF0` |
+| `warn`    | `#FFF7E8` | `#A15C07` | `#E59A1A` |
+| `ok`      | `#EFFAF3` | `#166534` | `#22A35A` |
+| `bad`     | `#FEF2F2` | `#B91C1C` | `#DC2626` |
+| `violet`  | —         | `#1E3A8A` | `#1E3A8A` |
+
+Use `Pill` / `StatusBadge`; never hand-roll a chip.
 
 **Density** buttons and inputs 36px (`h-9`), small 30 (`h-7.5`), large 42
 (`h-10.5`), icon button 34 (`size-8.5`), table head 38 (`h-9.5`), table row 44

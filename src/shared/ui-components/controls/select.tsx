@@ -45,7 +45,7 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       // `.select` — the `.input` shell with a 12px caret 10px in from the edge.
-      "flex h-9 w-full items-center justify-between gap-2 whitespace-nowrap rounded-sm border border-line-strong bg-surface px-[11px] text-body text-ink transition-colors focus:border-blue focus:shadow-focus focus:outline-none disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-ink-muted data-[placeholder]:text-ink-faint [&>span]:line-clamp-1",
+      "flex h-10 w-full items-center justify-between gap-2 whitespace-nowrap rounded-sm border border-line-strong bg-surface px-3 text-body text-ink transition-colors focus:border-blue focus:shadow-focus focus:outline-none disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-ink-muted data-[placeholder]:text-ink-faint [&>span]:line-clamp-1",
       className,
     )}
     {...props}
