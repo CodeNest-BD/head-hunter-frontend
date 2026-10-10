@@ -18,6 +18,7 @@ import {
   decideCompanyVerification,
   decideRecruiterVerification,
   fetchAdmins,
+  fetchAdminDashboard,
   fetchAdminStats,
   fetchCompanies,
   fetchCompany,
@@ -45,6 +46,21 @@ import { adminKeys, type AdminListParams } from "../keys";
 
 export function useAdminStats() {
   return useQuery({ queryKey: adminKeys.stats, queryFn: fetchAdminStats });
+}
+
+/**
+ * The dashboard's queues, money and activity.
+ *
+ * Kept apart from `useAdminStats` because the two go stale at different rates:
+ * marketplace totals barely move, while a queue empties as the admin works
+ * through it — so this one refetches when the tab regains focus.
+ */
+export function useAdminDashboard() {
+  return useQuery({
+    queryKey: adminKeys.dashboard,
+    queryFn: fetchAdminDashboard,
+    refetchOnWindowFocus: true,
+  });
 }
 
 export function useAdminRecruiters(params: AdminListParams) {

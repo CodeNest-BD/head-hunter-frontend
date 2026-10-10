@@ -12,6 +12,12 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 });
 
 const baseConfig = {
+  // Two `next dev` servers sharing one build directory overwrite each other's
+  // compiled CSS, and the page then loads a stylesheet that 404s — the whole
+  // app renders unstyled with no error anywhere. That happens the moment a
+  // second server starts (an editor's, a scripted one, a second terminal), so
+  // a parallel server sets NEXT_DIST_DIR and gets a directory of its own.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   swcMinify: true,
   output: "standalone",
   reactStrictMode: true,

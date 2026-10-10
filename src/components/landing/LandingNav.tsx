@@ -8,7 +8,7 @@ import { useAuth } from "@/features/auth";
 import { Logo } from "@/shared/ui-components/layout/Logo";
 import { TopBarActions } from "@/shared/ui-components/layout/TopBarActions";
 import { UserMenu } from "@/shared/ui-components/layout/UserMenu";
-import { NAV_BY_ROLE } from "@/shared/ui-components/layout/dashboardNav";
+import { navForRole } from "@/shared/ui-components/layout/dashboardNav";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
 
@@ -158,7 +158,7 @@ export function LandingNav() {
   // what made a logged-in user briefly see "Log In / Sign Up" on the landing
   // page. Render a neutral placeholder during boot instead.
   const booting = status === "booting";
-  const navItems = user ? NAV_BY_ROLE[user.role] : [];
+  const navItems = user ? navForRole(user.role, true) : [];
 
   // A recruiter has no "For Companies" menu, and a company has no "For
   // Recruiters"; a guest and an admin see both.

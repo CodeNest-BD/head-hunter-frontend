@@ -1,75 +1,74 @@
 /**
- * Shared class strings for the app's data tables, ported from the reference's
- * `.tablecard` / `.table` / `.pager`.
+ * Shared class strings for the app's data tables.
  *
- * A table MUST sit on its own white surface — the canvas is a blue-grey tint,
- * so a table without `bg-surface` blends into the page and loses all contrast.
- * These constants keep every table on the same white card with a tinted header
- * band, 38px header row, 44px body rows and hairline separators, so every table
- * in the app reads identically.
+ * Measured off the phase-2 admin redesign (`requirements/phase-2-rifat-design`,
+ * the Recruiters / Companies / Jobs boards), token for token:
+ *
+ *   card    white, 12px radius, 1px 6% ring + 1px drop — no border
+ *   head    40px, #F7F9FC, 11px/600 uppercase 0.06em in #64748B,
+ *           ruled above AND below with #E6EAF0
+ *   row     60px, ruled with the lighter #F0F2F6
+ *   gutter  20px on the row's outer edges, 12px between cells
+ *
+ * The head's rules and the row's rules are inset shadows rather than borders:
+ * the head sticks, and a real border scrolls away from the cell it belongs to
+ * while the body moves under it.
  */
 
-/**
- * `.tablecard` — the white card the table lives in. It clips to its own radius,
- * so the header band's square corners cannot poke past the rounded border and
- * neither the head nor the last row needs corner classes of its own. Safe
- * because every in-row menu (kebab, column picker, filter popover) renders
- * through a Radix portal and so escapes the clip.
- */
-export const TABLE_CARD =
-  "overflow-hidden rounded-md border border-line bg-surface shadow-e1";
-
-/** `.toolbar` — the search/filter/columns row above a table. It sits directly
- * on the canvas in the reference, not on a card of its own. */
-export const TABLE_TOOLBAR =
-  "flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center";
+/** The surface a table sits on — a ring, never a border. */
+export const TABLE_CARD = "overflow-hidden rounded-lg bg-surface shadow-e1";
 
 /**
- * `.tablecard__scroll` — horizontal only, so a wide table scrolls sideways
- * inside its card instead of widening the page. The page keeps the vertical
- * scroll.
+ * Horizontal only, so a wide table scrolls sideways inside its card instead of
+ * widening the page. The page keeps the vertical scroll.
  */
 export const TABLE_SCROLL = "w-full overflow-x-auto";
 
-export const TABLE_EL = "w-full border-collapse text-sub";
+export const TABLE_EL = "w-full border-separate border-spacing-0 text-sub";
+
+export const TABLE_HEAD = "text-left";
 
 /**
- * `.table th` — a 38px band on the tinted sub-surface with 11px uppercase
- * labels in muted ink, distinct from both the white rows and the canvas.
- */
-export const TABLE_HEAD = "text-left";
-/**
- * The header band does NOT stick. It used to, pinned under the fixed top bar,
- * which only ever worked while no ancestor was a scroll container — and
- * `TABLE_SCROLL`'s `overflow-x` makes one, which re-parents a sticky element to
- * that box and leaves the header floating over the first rows. The reference
- * does not stick it either.
+ * The header band. It sticks, so a long board keeps its column names — which
+ * is why its rules are inset shadows rather than borders.
  */
 export const TABLE_TH =
-  "h-9.5 whitespace-nowrap border-b border-line bg-surface-sub px-3.5 text-label font-[650] uppercase tracking-[0.06em] text-ink-muted";
+  "sticky top-0 z-[1] h-10 whitespace-nowrap bg-surface-head px-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-muted shadow-[inset_0_-1px_0_theme(colors.line.head),inset_0_1px_0_theme(colors.line.head)] first:pl-5 last:pr-5";
 
-/** `.table td` — white 44px rows with hairline separators and a subtle hover;
- * the last row drops its rule, as the reference's `tr:last-child td` does. */
-export const TABLE_BODY = "bg-surface [&>tr:last-child>td]:border-b-0";
+export const TABLE_BODY = "bg-surface";
 export const TABLE_ROW = "transition-colors hover:bg-surface-sub";
+
 /**
- * An unread row: a cobalt wash with a matching hover. The wash alone is 4.5%
- * and barely registers, so pair it with `TABLE_TD_RAIL` on the row's FIRST
- * cell — an inset box-shadow on a `<tr>` does not render reliably across
- * browsers, which is why the rail belongs on a cell rather than the row.
+ * An unread row: a brand wash with a matching hover. Pair it with
+ * `TABLE_TD_RAIL` on the row's FIRST cell — an inset box-shadow on a `<tr>`
+ * does not render reliably across browsers, so the rail belongs on a cell.
  */
 export const TABLE_ROW_UNREAD = "bg-unread bg-unread-hover transition-colors";
-/** The cobalt edge marking an unread row. Goes on the row's first `<td>`. */
+/** The brand edge marking an unread row. Goes on the row's first `<td>`. */
 export const TABLE_TD_RAIL = "shadow-rail";
-export const TABLE_TD = "h-11 border-b border-line px-3.5 py-1.5 align-middle";
+
+/** 60px rows on the lighter rule, 20px outer gutters. */
+export const TABLE_TD =
+  "h-15 px-3 align-middle text-ink-body shadow-[inset_0_-1px_0_theme(colors.line.row)] first:pl-5 last:pr-5";
+
 /**
- * `.cell-2l` — a two-line cell (title over its timestamp). It keeps the row's
- * own 6px padding and only tightens the leading: in the reference `.table td`
- * outranks `.cell-2l`, so the padding it declares never applies and a stacked
- * row is the same height there as here.
+ * A two-line cell (a name over its email). It keeps the row's height and only
+ * tightens the leading, so a stacked row sits on the same rhythm as a plain
+ * one.
  */
-export const TABLE_TD_STACKED =
-  "border-b border-line px-3.5 py-1.5 align-middle leading-[1.3]";
-/** `.cell-main` / `.cell-sub` — the primary value and its quiet second line. */
-export const TABLE_CELL_MAIN = "font-semibold text-ink";
-export const TABLE_CELL_SUB = "mt-px text-[11.5px] text-ink-faint";
+export const TABLE_TD_STACKED = `${TABLE_TD} leading-[1.35]`;
+
+/** The primary value in a cell, and its quiet second line. */
+export const TABLE_CELL_MAIN = "font-medium text-ink";
+export const TABLE_CELL_SUB = "text-meta text-ink-muted";
+
+/**
+ * The toolbar strip above the rows, INSIDE the card — the design puts the
+ * search, the filters and the column picker on the table's own surface rather
+ * than on a separate bar floating above it.
+ */
+export const TABLE_TOOLBAR = "flex flex-wrap items-center gap-2 px-5 py-3.5";
+
+/** The card's foot: the range readout on the left, paging on the right. */
+export const TABLE_FOOT =
+  "flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sub text-ink-muted";

@@ -235,6 +235,8 @@ export const adminStatsSchema = z.object({
     active: z.number(),
     held: z.number(),
     subscribed: z.number(),
+    verified: z.number().catch(0),
+    pending: z.number().catch(0),
   }),
   companies: z.object({
     total: z.number(),
@@ -242,9 +244,17 @@ export const adminStatsSchema = z.object({
     held: z.number(),
     // Approved (verified) companies. `.catch` so an older API degrades to 0.
     approved: z.number().catch(0),
+    pending: z.number().catch(0),
   }),
   conversations: z.number(),
   walletTotalMinor: z.number(),
+  // The dashboard prints the wallet total with its split beneath it, so all
+  // three have to come from the same read.
+  walletAvailableMinor: z.number().catch(0),
+  walletReservedMinor: z.number().catch(0),
+  liveJobs: z.number().catch(0),
+  feeMinMinor: z.number().catch(0),
+  feeMaxMinor: z.number().catch(0),
   // Average recruiter fee across all live jobs, and job counts by lifecycle
   // stage for the Jobs banner. `.catch` for forward-tolerance.
   avgFeeMinor: z.number().catch(0),
@@ -259,6 +269,79 @@ export const adminStatsSchema = z.object({
   ),
 });
 export type AdminStats = z.infer<typeof adminStatsSchema>;
+
+/**
+ * The admin dashboard's "Needs your attention" queues, money position and
+ * activity feed.
+ *
+ * The server sends a stable key and the facts behind each count; the labels,
+ * icons and tones are the client's, so wording changes do not need a deploy on
+ * both sides.
+ */
+export const DASHBOARD_QUEUE_KEYS = [
+  "disputes_near_payout",
+  "disputes_awaiting_reply",
+  "failed_payouts",
+  "payments_on_hold",
+  "recruiter_verifications",
+  "company_approvals",
+] as const;
+export type DashboardQueueKey = (typeof DASHBOARD_QUEUE_KEYS)[number];
+
+const moneyBucketSchema = z.object({
+  amountMinor: z.number().catch(0),
+  count: z.number().catch(0),
+});
+
+export const adminDashboardSchema = z.object({
+  queues: z
+    .array(
+      z.object({
+        key: z.enum(DASHBOARD_QUEUE_KEYS),
+        count: z.number().catch(0),
+        priority: z
+          .enum(["urgent", "failed", "on_hold", "to_review"])
+          .catch("to_review"),
+        urgent: z.boolean().catch(false),
+        context: z.string().catch(""),
+      }),
+    )
+    .catch([]),
+  money: z
+    .object({
+      onHold: moneyBucketSchema.extend({
+        disputeHolds: z.number().catch(0),
+        manualHolds: z.number().catch(0),
+      }),
+      dueSoon: moneyBucketSchema,
+      paidRecently: moneyBucketSchema,
+      refundedRecently: moneyBucketSchema,
+      failedPayouts: moneyBucketSchema,
+    })
+    .catch({
+      onHold: { amountMinor: 0, count: 0, disputeHolds: 0, manualHolds: 0 },
+      dueSoon: { amountMinor: 0, count: 0 },
+      paidRecently: { amountMinor: 0, count: 0 },
+      refundedRecently: { amountMinor: 0, count: 0 },
+      failedPayouts: { amountMinor: 0, count: 0 },
+    }),
+  activity: z
+    .array(
+      z.object({
+        kind: z
+          .enum(["dispute", "money", "account", "hiring"])
+          .catch("account"),
+        title: z.string(),
+        detail: z.string().catch(""),
+        actor: z.string().catch(""),
+        at: z.string(),
+      }),
+    )
+    .catch([]),
+});
+export type AdminDashboard = z.infer<typeof adminDashboardSchema>;
+export type DashboardQueue = AdminDashboard["queues"][number];
+export type DashboardEvent = AdminDashboard["activity"][number];
 
 export const jobStatusSchema = tolerantEnum(
   ["draft", "published", "paused", "filled", "closed", "expired", "unknown"],

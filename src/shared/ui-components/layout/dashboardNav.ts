@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   type LucideIcon,
   Map,
+  MessagesSquare,
   Scale,
   Send,
   Settings,
@@ -30,62 +31,151 @@ export interface NavItem {
   badge?: "inbox" | "disputes";
 }
 
+/**
+ * A titled run of nav items.
+ *
+ * The redesign groups the rail rather than listing it flat — Overview,
+ * Marketplace, Operations, Finance, System — so a reader finds a destination
+ * by the kind of work it belongs to instead of scanning eleven labels. The
+ * same five headings serve every role; only the items under them differ.
+ */
+export interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
 /** Role-based primary navigation, shared by the sidebar and the user menu. */
-export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
+export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
   company: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/company/jobs", label: "Jobs", icon: Briefcase },
     {
-      href: "/company/inbox",
-      label: "Inbox",
-      icon: Inbox,
-      badge: "inbox",
+      label: "Overview",
+      items: [
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      ],
     },
-    { href: "/company/wallet", label: "Wallet", icon: Wallet2 },
-    { href: "/disputes", label: "Disputes", icon: Scale, badge: "disputes" },
-    { href: "/company/profile", label: "My Profile", icon: UserRound },
+    {
+      label: "Marketplace",
+      items: [
+        { href: "/company/jobs", label: "Jobs", icon: Briefcase },
+        { href: "/company/inbox", label: "Inbox", icon: Inbox, badge: "inbox" },
+      ],
+    },
+    {
+      label: "Operations",
+      items: [
+        {
+          href: "/disputes",
+          label: "Disputes",
+          icon: Scale,
+          badge: "disputes",
+        },
+      ],
+    },
+    {
+      label: "Finance",
+      items: [{ href: "/company/wallet", label: "Wallet", icon: Wallet2 }],
+    },
+    {
+      label: "Account",
+      items: [
+        { href: "/company/profile", label: "My Profile", icon: UserRound },
+      ],
+    },
   ],
   recruiter: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    // The job map is a primary recruiter surface, so it sits in the sidebar
-    // nav alongside the dashboard. Notifications stay in the bell dropdown.
-    { href: "/explore-jobs", label: "Live Map", icon: Map },
     {
-      href: "/recruiter/inbox",
-      label: "Inbox",
-      icon: Send,
-      badge: "inbox",
+      label: "Overview",
+      items: [
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        // The job map is a primary recruiter surface, so it sits in the rail
+        // alongside the dashboard. Notifications stay in the bell dropdown.
+        { href: "/explore-jobs", label: "Live Map", icon: Map },
+      ],
     },
-    { href: "/recruiter/submissions", label: "Submissions", icon: Users },
-    // Recruiting is free during phases 1–2; the subscription page returns
-    // with the flag flip.
-    ...(PHASE1_FREE
-      ? []
-      : [
-          {
-            href: "/recruiter/subscription",
-            label: "Subscription",
-            icon: BadgeCheck,
-          },
-        ]),
-    { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
-    { href: "/disputes", label: "Disputes", icon: Scale, badge: "disputes" },
-    { href: "/recruiter/profile", label: "My Profile", icon: UserRound },
+    {
+      label: "Marketplace",
+      items: [
+        {
+          href: "/recruiter/inbox",
+          label: "Inbox",
+          icon: Send,
+          badge: "inbox",
+        },
+        { href: "/recruiter/submissions", label: "Submissions", icon: Users },
+      ],
+    },
+    {
+      label: "Operations",
+      items: [
+        {
+          href: "/disputes",
+          label: "Disputes",
+          icon: Scale,
+          badge: "disputes",
+        },
+      ],
+    },
+    {
+      label: "Finance",
+      items: [
+        { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
+        // Recruiting is free during phases 1–2; the subscription page returns
+        // with the flag flip.
+        ...(PHASE1_FREE
+          ? []
+          : [
+              {
+                href: "/recruiter/subscription",
+                label: "Subscription",
+                icon: BadgeCheck,
+              },
+            ]),
+      ],
+    },
+    {
+      label: "Account",
+      items: [
+        { href: "/recruiter/profile", label: "My Profile", icon: UserRound },
+      ],
+    },
   ],
   admin: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/recruiters", label: "Recruiters", icon: Users },
-    { href: "/admin/companies", label: "Companies", icon: Building2 },
-    { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
-    // Conversations are consolidated under Jobs: a job's candidate count
-    // links into the conversations view, so no separate nav item.
     {
-      href: "/admin/disputes",
-      label: "Disputes",
-      icon: Gavel,
-      badge: "disputes",
+      label: "Overview",
+      items: [
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      ],
     },
-    { href: "/admin/settings", label: "Settings", icon: Settings },
+    {
+      label: "Marketplace",
+      items: [
+        { href: "/admin/recruiters", label: "Recruiters", icon: Users },
+        { href: "/admin/companies", label: "Companies", icon: Building2 },
+        { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
+      ],
+    },
+    {
+      // The design names it "Dispute Center" and gives Conversations its own
+      // row rather than reaching them through a job's candidate count.
+      label: "Operations",
+      items: [
+        {
+          href: "/admin/disputes",
+          label: "Dispute Center",
+          icon: Gavel,
+          badge: "disputes",
+        },
+        {
+          href: "/admin/conversations",
+          label: "Conversations",
+          icon: MessagesSquare,
+        },
+      ],
+    },
+    {
+      label: "System",
+      items: [{ href: "/admin/settings", label: "Settings", icon: Settings }],
+    },
   ],
 };
 
@@ -122,20 +212,34 @@ const HIDDEN_PHASE2_LABELS: Record<Role, readonly string[]> = {
  * account's navigation — and hiding phase-2 items — fixes the dropdown and the
  * sidebar in one change. Admins are never reduced by approval.
  */
+export function navGroupsForRole(
+  role: Role,
+  isApproved: boolean,
+): readonly NavGroup[] {
+  const hidden = HIDE_PHASE2_FEATURES ? HIDDEN_PHASE2_LABELS[role] : [];
+  const allowed =
+    role === "admin" || isApproved ? null : UNAPPROVED_LABELS[role];
+
+  // One pass per group, then drop the groups left with nothing — a heading
+  // over an empty run reads as a section that failed to load.
+  return NAV_BY_ROLE[role].flatMap((group) => {
+    const items = group.items.filter(
+      (item) =>
+        !hidden.includes(item.label) &&
+        (allowed === null || allowed.includes(item.label)),
+    );
+    return items.length > 0 ? [{ ...group, items }] : [];
+  });
+}
+
+/**
+ * The same navigation as one flat run, for the places that cannot show
+ * headings — the top-bar user menu. Derived from the groups rather than kept
+ * beside them, so a destination can never appear in one and not the other.
+ */
 export function navForRole(
   role: Role,
   isApproved: boolean,
 ): readonly NavItem[] {
-  let items: readonly NavItem[] = NAV_BY_ROLE[role];
-  if (HIDE_PHASE2_FEATURES) {
-    const hidden = HIDDEN_PHASE2_LABELS[role];
-    if (hidden.length > 0) {
-      items = items.filter((item) => !hidden.includes(item.label));
-    }
-  }
-  if (role === "admin" || isApproved) {
-    return items;
-  }
-  const allowed = UNAPPROVED_LABELS[role];
-  return items.filter((item) => allowed.includes(item.label));
+  return navGroupsForRole(role, isApproved).flatMap((group) => group.items);
 }
