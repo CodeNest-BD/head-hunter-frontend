@@ -5,6 +5,7 @@ import type { AdminListParams } from "../keys";
 import {
   accountStatusResponseSchema,
   adminJobListItemSchema,
+  adminDashboardSchema,
   adminStatsSchema,
   adminUserSchema,
   bulkJobActionResultSchema,
@@ -23,6 +24,7 @@ import {
   type CompanyDetail,
   type CompanyListItem,
   type ConversationListItem,
+  type AdminDashboard,
   type AdminStats,
   type ConversationThread,
   type RecruiterDetail,
@@ -55,6 +57,12 @@ function listParams(params: AdminListParams): Record<string, unknown> {
 export async function fetchAdminStats(): Promise<AdminStats> {
   const { data } = await apiClient.get<unknown>("/admin/stats");
   return adminStatsSchema.parse(data);
+}
+
+/** GET /v1/admin/dashboard */
+export async function fetchAdminDashboard(): Promise<AdminDashboard> {
+  const { data } = await apiClient.get<unknown>("/admin/dashboard");
+  return adminDashboardSchema.parse(data);
 }
 
 /** GET /v1/admin/recruiters */

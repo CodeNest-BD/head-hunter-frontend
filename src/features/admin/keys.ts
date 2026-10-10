@@ -33,6 +33,7 @@ export const adminKeys = {
   jobsAll: ["admin", "jobs"] as const,
   jobs: (params: AdminListParams) => ["admin", "jobs", params] as const,
   pricing: ["admin", "pricing"] as const,
+  dashboard: ["admin", "dashboard"] as const,
   minRecruiterFee: ["admin", "min-recruiter-fee"] as const,
   admins: ["admin", "admins"] as const,
 };
