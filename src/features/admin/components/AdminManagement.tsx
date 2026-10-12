@@ -7,12 +7,8 @@ import { useAuth } from "@/features/auth";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { CountChip } from "@/shared/ui-components/badges/CountChip";
 import { Button } from "@/shared/ui-components/controls/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui-components/controls/card";
+import { CardContent } from "@/shared/ui-components/controls/card";
+import { SettingsCard } from "@/shared/ui-components/layout/SettingsParts";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
@@ -398,22 +394,22 @@ export function AdminManagement() {
   const { data, isPending, isError, refetch } = useAdmins();
 
   return (
-    <div className="flex flex-col gap-3">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create admin</CardTitle>
-        </CardHeader>
+    <div className="flex flex-col gap-4">
+      <SettingsCard
+        title="Create Admin"
+        description="A new admin signs in with these details and has the same reach as you."
+      >
         <CardContent>
           <CreateAdminForm />
         </CardContent>
-      </Card>
+      </SettingsCard>
 
-      <Card>
-        {/* The roster's title sits on an unruled head — the table's own header
-            band is the rule beneath it. */}
-        <CardHeader className="border-b-0">
-          <CardTitle>Admins</CardTitle>
-        </CardHeader>
+      {/* The roster's title sits on an unruled head — the table's own header
+          band is the rule beneath it. */}
+      <SettingsCard
+        title="Admins"
+        description="Everyone who can act as an admin."
+      >
         <CardContent className="p-0">
           {isPending ? (
             /* The roster is Admin · Created · Actions. Borderless: the card
@@ -479,7 +475,7 @@ export function AdminManagement() {
             </>
           )}
         </CardContent>
-      </Card>
+      </SettingsCard>
     </div>
   );
 }

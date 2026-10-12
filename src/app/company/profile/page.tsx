@@ -1,6 +1,6 @@
 "use client";
 
-import { AccountSection, RequireRole } from "@/features/auth";
+import { AccountCard, RequireRole } from "@/features/auth";
 import {
   CompanyApprovalBanner,
   CompanyEmployeeInfoForm,
@@ -10,20 +10,15 @@ import {
 } from "@/features/companies";
 import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
 import { PageHeader } from "@/shared/ui-components/brand";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/ui-components/controls/tabs";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
+import { SettingsLayout } from "@/shared/ui-components/layout/SettingsLayout";
 
-function ProfileSkeleton() {
+function SettingsSkeleton() {
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="h-96 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
-      <div className="h-56 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
+    <div className="flex flex-col gap-5">
+      <div className="h-96 w-full animate-pulse rounded-md bg-surface-sub shadow-e1" />
+      <div className="h-56 w-full animate-pulse rounded-md bg-surface-sub shadow-e1" />
     </div>
   );
 }
@@ -38,14 +33,14 @@ const APPROVAL_PILL: Record<
   rejected: { tone: "bad", label: "Approval Declined" },
 };
 
-function CompanyProfileContent() {
+function CompanySettingsContent() {
   const { data, isPending, isError, refetch } = useMyCompanyProfile();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <PageHeader
-        title="Company Profile"
-        subtitle="This is what recruiters see when they browse companies."
+        title="Settings"
+        subtitle="The profile recruiters see, and your own contact and sign-in details."
         actions={
           data ? (
             <Pill tone={APPROVAL_PILL[data.verificationStatus].tone}>
@@ -60,29 +55,28 @@ function CompanyProfileContent() {
       <CompanyApprovalBanner />
 
       {isPending ? (
-        <ProfileSkeleton />
+        <SettingsSkeleton />
       ) : isError ? (
         <ErrorRetryCallout
           message="Could not load your profile."
           onRetry={() => void refetch()}
         />
       ) : (
-        <Tabs defaultValue="info">
-          <TabsList>
-            <TabsTrigger value="info">Company Info</TabsTrigger>
-            <TabsTrigger value="employee">User Info</TabsTrigger>
-            <TabsTrigger value="password">Password Change</TabsTrigger>
-          </TabsList>
-          <TabsContent value="info">
-            <CompanyProfileForm profile={data} />
-          </TabsContent>
-          <TabsContent value="employee">
-            <CompanyEmployeeInfoForm profile={data} />
-          </TabsContent>
-          <TabsContent value="password">
-            <AccountSection />
-          </TabsContent>
-        </Tabs>
+        <SettingsLayout
+          sections={[
+            {
+              id: "company",
+              label: "Company Profile",
+              content: <CompanyProfileForm profile={data} />,
+            },
+            {
+              id: "contact",
+              label: "Your Details",
+              content: <CompanyEmployeeInfoForm profile={data} />,
+            },
+            { id: "account", label: "Account", content: <AccountCard /> },
+          ]}
+        />
       )}
     </div>
   );
@@ -92,7 +86,7 @@ export default function CompanyProfilePage() {
   return (
     <RequireRole role="company">
       <DashboardLayout>
-        <CompanyProfileContent />
+        <CompanySettingsContent />
       </DashboardLayout>
     </RequireRole>
   );

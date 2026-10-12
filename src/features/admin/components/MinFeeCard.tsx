@@ -8,15 +8,11 @@ import {
   minorToMajorInput,
 } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui-components/controls/card";
+import { CardContent } from "@/shared/ui-components/controls/card";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Alert } from "@/shared/ui-components/feedback/Alert";
+import { SettingsCard } from "@/shared/ui-components/layout/SettingsParts";
 import {
   useMinRecruiterFeeSetting,
   useUpdateMinRecruiterFee,
@@ -47,10 +43,10 @@ export function MinFeeCard() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Minimum recruiter fee</CardTitle>
-      </CardHeader>
+    <SettingsCard
+      title="Minimum Recruiter Fee"
+      description="The floor a company must offer before it can publish a job."
+    >
       <CardContent>
         {isPending ? (
           <div className="h-24 animate-pulse rounded-sm bg-surface-sunken" />
@@ -102,6 +98,6 @@ export function MinFeeCard() {
           </form>
         )}
       </CardContent>
-    </Card>
+    </SettingsCard>
   );
 }

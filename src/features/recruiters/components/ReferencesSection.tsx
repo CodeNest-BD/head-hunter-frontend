@@ -7,17 +7,12 @@ import { Plus } from "lucide-react";
 
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { Button } from "@/shared/ui-components/controls/button";
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui-components/controls/card";
+import { CardFooter } from "@/shared/ui-components/controls/card";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { ListRow } from "@/shared/ui-components/list/ListRow";
+import { SettingsCard } from "@/shared/ui-components/layout/SettingsParts";
 import {
   useAddReference,
   useRemoveReference,
@@ -71,18 +66,15 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
   return (
     // The reference's references card: a ruled head carrying the count, the
     // rows themselves, and the one "add" affordance in the foot.
-    <Card>
-      <CardHeader>
-        <CardTitle>References</CardTitle>
-        <span className="ml-auto shrink-0 text-meta font-[550] tabular-nums text-ink-muted">
+    <SettingsCard
+      title="References"
+      description={`Up to ${MAX_REFERENCES} professional references from recruiting roles (at least 1 required).`}
+      aside={
+        <span className="text-meta font-[550] tabular-nums text-ink-muted">
           {references.length} / {MAX_REFERENCES}
         </span>
-        <CardDescription>
-          Up to {MAX_REFERENCES} professional references from recruiting roles
-          (at least 1 required).
-        </CardDescription>
-      </CardHeader>
-
+      }
+    >
       <div className="flex flex-col">
         {references.length === 0 && !adding && (
           <p className="px-4 py-6 text-sub text-ink-muted">
@@ -199,6 +191,6 @@ export function ReferencesSection({ references }: ReferencesSectionProps) {
           </button>
         </CardFooter>
       )}
-    </Card>
+    </SettingsCard>
   );
 }

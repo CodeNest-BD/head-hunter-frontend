@@ -1,10 +1,13 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+
 import { toast } from "sonner";
+
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { RequireApprovedCompany, RequireRole } from "@/features/auth";
+
 import {
   FilledJobDetails,
   JobForm,
@@ -13,15 +16,23 @@ import {
   useUpdateJob,
   type JobWriteInput,
 } from "@/features/jobs";
+
 import type { Job } from "@/features/jobs/schemas";
+
 import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
+
 import { companyJobPath } from "@/shared/utils/entityPaths";
+
 import { BackLink, PageHeader } from "@/shared/ui-components/brand";
+
 import { Button } from "@/shared/ui-components/controls/button";
+
 import type { PillTone } from "@/shared/ui-components/badges/Pill";
+
 import { Alert } from "@/shared/ui-components/feedback/Alert";
+
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
-import { cn } from "@/shared/libs/shadCnConfig";
+
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 
 /** Mirrors the jobs table's own status tones. */

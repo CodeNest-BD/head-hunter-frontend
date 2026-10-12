@@ -3,18 +3,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 
-import { Card } from "@/shared/ui-components/controls/card";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
 import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
 import { FormSection } from "@/shared/ui-components/layout/FormSection";
+import { FormSaveBar } from "@/shared/ui-components/layout/FormSaveBar";
+import { SettingsCard } from "@/shared/ui-components/layout/SettingsParts";
 import {
   companyEmployeeInfoFormSchema,
   type CompanyEmployeeInfoFormValues,
   type CompanyProfile,
 } from "../schemas";
 import { useUpdateMyCompanyProfile } from "../hooks/useCompanyProfile";
-import { CompanyFormSaveBar } from "./CompanyFormLayout";
 
 interface CompanyEmployeeInfoFormProps {
   profile: CompanyProfile;
@@ -60,10 +60,13 @@ export function CompanyEmployeeInfoForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <Card>
+      <SettingsCard
+        title="Your Details"
+        description="The person at your organization who uses Head-Hunters.com."
+      >
         <FormSection
           title="Contact"
-          hint="Head-Hunters.com user at your organization."
+          hint="How we reach you about jobs, submissions and payments."
         >
           <div className="grid gap-3 sm:max-w-lg sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
@@ -107,9 +110,9 @@ export function CompanyEmployeeInfoForm({
             )}
           </div>
         </FormSection>
-      </Card>
+      </SettingsCard>
 
-      <CompanyFormSaveBar
+      <FormSaveBar
         isDirty={isDirty}
         isSaving={update.isPending}
         onDiscard={() => reset()}
