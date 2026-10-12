@@ -507,10 +507,12 @@ export function usePaymentCounts(params: AdminPaymentParams) {
   });
 }
 
-export function usePaymentsSummary() {
+export function usePaymentsSummary(withinDays?: number) {
   return useQuery({
-    queryKey: adminKeys.paymentsSummary,
-    queryFn: fetchPaymentsSummary,
+    // Under the prefix, so invalidating the summary still clears every window.
+    queryKey: [...adminKeys.paymentsSummary, withinDays ?? null],
+    queryFn: () => fetchPaymentsSummary(withinDays),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -522,10 +524,12 @@ export function useAdminPayouts(params: AdminPayoutParams) {
   });
 }
 
-export function usePayoutsSummary() {
+export function usePayoutsSummary(withinDays?: number) {
   return useQuery({
-    queryKey: adminKeys.payoutsSummary,
-    queryFn: fetchPayoutsSummary,
+    // Under the prefix, so a hold's invalidation still clears every window.
+    queryKey: [...adminKeys.payoutsSummary, withinDays ?? null],
+    queryFn: () => fetchPayoutsSummary(withinDays),
+    placeholderData: keepPreviousData,
   });
 }
 

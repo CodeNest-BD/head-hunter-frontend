@@ -457,10 +457,25 @@ export async function fetchPaymentCounts(
   return paymentCountsSchema.parse(data);
 }
 
-/** GET /v1/admin/payments/summary */
-export async function fetchPaymentsSummary(): Promise<PaymentsSummary> {
-  const { data } = await apiClient.get<unknown>("/admin/payments/summary");
+/** GET /v1/admin/payments/summary — `withinDays` windows the refund figure. */
+export async function fetchPaymentsSummary(
+  withinDays?: number,
+): Promise<PaymentsSummary> {
+  const { data } = await apiClient.get<unknown>("/admin/payments/summary", {
+    params: withinDays ? { withinDays } : {},
+  });
   return paymentsSummarySchema.parse(data);
+}
+
+/** GET /v1/admin/payments/export — the filtered board, every page, as CSV. */
+export async function fetchPaymentsCsv(
+  params: Omit<AdminPaymentParams, "page" | "limit">,
+): Promise<Blob> {
+  const { data } = await apiClient.get<Blob>("/admin/payments/export", {
+    params: financeParams({ ...params, page: 1 }),
+    responseType: "blob",
+  });
+  return data;
 }
 
 /** GET /v1/admin/payouts */
@@ -473,10 +488,25 @@ export async function fetchAdminPayouts(
   return paginatedSchema(adminPayoutSchema).parse(data);
 }
 
-/** GET /v1/admin/payouts/summary */
-export async function fetchPayoutsSummary(): Promise<PayoutsSummary> {
-  const { data } = await apiClient.get<unknown>("/admin/payouts/summary");
+/** GET /v1/admin/payouts/summary — `withinDays` windows paid and failed. */
+export async function fetchPayoutsSummary(
+  withinDays?: number,
+): Promise<PayoutsSummary> {
+  const { data } = await apiClient.get<unknown>("/admin/payouts/summary", {
+    params: withinDays ? { withinDays } : {},
+  });
   return payoutsSummarySchema.parse(data);
+}
+
+/** GET /v1/admin/payouts/export — the filtered board, every page, as CSV. */
+export async function fetchPayoutsCsv(
+  params: Omit<AdminPayoutParams, "page" | "limit">,
+): Promise<Blob> {
+  const { data } = await apiClient.get<Blob>("/admin/payouts/export", {
+    params: financeParams({ ...params, page: 1 }),
+    responseType: "blob",
+  });
+  return data;
 }
 
 /** GET /v1/admin/payouts/:ref — `ref` is the placement serial or its id. */

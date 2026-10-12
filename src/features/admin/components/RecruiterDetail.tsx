@@ -244,7 +244,7 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
   ];
 
   return (
-    <div className="flex w-full max-w-6xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
           <span

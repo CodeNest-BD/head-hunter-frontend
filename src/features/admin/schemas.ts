@@ -677,7 +677,8 @@ export const paymentsSummarySchema = z.object({
   fundedWallets: z.number(),
   refundedMinor: z.number(),
   refundCount: z.number(),
-  windowDays: z.number(),
+  /** Days the refund figure covers; null for all time. */
+  windowDays: z.number().nullable(),
 });
 export type PaymentsSummary = z.infer<typeof paymentsSummarySchema>;
 
@@ -805,6 +806,12 @@ export const payoutsSummarySchema = z.object({
   processing: payoutViewTotalSchema,
   paid: payoutViewTotalSchema,
   refunded: payoutViewTotalSchema,
+  /** Failed bank withdrawals — not a placement stage, so it has no tab. */
+  failed: payoutViewTotalSchema,
+  /** The hourly release sweep's next run and what it is due to release. */
+  nextRun: payoutViewTotalSchema.extend({ at: z.string() }),
   activeHolds: z.number(),
+  /** Days paid and failed cover; null for all time. */
+  windowDays: z.number().nullable(),
 });
 export type PayoutsSummary = z.infer<typeof payoutsSummarySchema>;

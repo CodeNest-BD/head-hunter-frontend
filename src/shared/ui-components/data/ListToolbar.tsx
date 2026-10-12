@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
+import { SearchableSelect } from "@/shared/ui-components/controls/SearchableSelect";
 import {
   MobileFilters,
   type FilterConfig,
@@ -97,6 +98,52 @@ export function ToolbarSelect({
         </option>
       ))}
     </NativeSelect>
+  );
+}
+
+interface ToolbarSearchableSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  /** The "no filter" entry, e.g. "All jobs". Its value is "". */
+  allLabel: string;
+  options: readonly FilterOption[];
+  /** Placeholder inside the dropdown's search box. */
+  searchPlaceholder: string;
+  className?: string;
+}
+
+/**
+ * `ToolbarSelect` for option lists too long to scroll — every job, company or
+ * recruiter on the marketplace. Same value convention ("" = no filter) and the
+ * same active colouring, over the type-to-filter `SearchableSelect`.
+ */
+export function ToolbarSearchableSelect({
+  value,
+  onChange,
+  allLabel,
+  options,
+  searchPlaceholder,
+  className,
+}: ToolbarSearchableSelectProps) {
+  const active = value !== "";
+  return (
+    <SearchableSelect
+      value={active ? value : null}
+      onChange={(next) => onChange(next ?? "")}
+      options={options}
+      placeholder={allLabel}
+      clearLabel={allLabel}
+      searchPlaceholder={searchPlaceholder}
+      maxResults={100}
+      contentClassName="w-[360px]"
+      className={cn(
+        // `text-ink` overrides the trigger's faint placeholder colour: "All
+        // jobs" is a real choice here, as it is on `ToolbarSelect`.
+        "h-9.5 w-[200px] text-sub text-ink",
+        active && "border-blue/35 bg-tint/60 font-medium text-blue-ink",
+        className,
+      )}
+    />
   );
 }
 

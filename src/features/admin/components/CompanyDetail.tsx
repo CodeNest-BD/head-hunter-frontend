@@ -237,7 +237,7 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
   ];
 
   return (
-    <div className="flex w-full max-w-6xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
           <CompanyLogo
@@ -423,7 +423,7 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
                   style={{ width: `${100 - reservedShare}%` }}
                 />
                 <div
-                  className="bg-tint-strong"
+                  className="bg-warn-dot"
                   style={{ width: `${reservedShare}%` }}
                 />
               </div>
@@ -438,7 +438,7 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
                 <span className="inline-flex items-center gap-2">
                   <span
                     aria-hidden="true"
-                    className="size-2 rounded-xs bg-tint-strong"
+                    className="size-2 rounded-xs bg-warn-dot"
                   />
                   Reserved · held for live jobs and placements
                 </span>

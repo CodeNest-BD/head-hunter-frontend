@@ -6,6 +6,7 @@ import { AlertCircle, ChevronRight, Wallet2 } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
+import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { QuickViewBand } from "@/shared/ui-components/dashboard/DashboardParts";
@@ -36,12 +37,14 @@ import {
   adminPayoutPath,
 } from "@/shared/utils/entityPaths";
 import { formatMinor } from "@/shared/utils/money";
-import { DEFAULT_PAGE_SIZE } from "../api/admin";
+import { DEFAULT_PAGE_SIZE, fetchPaymentsCsv } from "../api/admin";
 import {
   useAdminPayments,
   usePaymentCounts,
   usePaymentsSummary,
 } from "../hooks/useAdmin";
+import { useCsvExport } from "../hooks/useCsvExport";
+import { FinanceHeaderActions } from "./FinanceHeaderActions";
 import { ListPager } from "./ListPager";
 import { walletBeforeAfter, walletEffect } from "./financeFacts";
 import {
@@ -51,6 +54,7 @@ import {
   PAYMENT_VIEW_LABELS,
   REFERENCE_LABELS,
   REFERENCE_PREFIXES,
+  windowLabel,
 } from "./financeLabels";
 import {
   PAYMENT_VIEWS,
@@ -296,30 +300,38 @@ export function CompanyPaymentsBoard({
   const [qInput, setQInput] = useState("");
   const [status, setStatus] = useState("");
   const [linkedTo, setLinkedTo] = useState("");
+  const [withinDays, setWithinDays] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const q = useDebouncedValue(qInput, 300);
 
-  const params = {
-    page,
-    limit: DEFAULT_PAGE_SIZE,
+  const days = withinDays ? Number(withinDays) : undefined;
+  const filters = {
     view,
     q: q || undefined,
     status: status || undefined,
     linkedTo: linkedTo || undefined,
     companyProfileId,
+    withinDays: days,
   };
+  const params = { ...filters, page, limit: DEFAULT_PAGE_SIZE };
   const { data, isPending, isError, refetch } = useAdminPayments(params);
   const counts = usePaymentCounts(params);
-  const summary = usePaymentsSummary();
+  const summary = usePaymentsSummary(days);
+  const exportCsv = useCsvExport("payments", fetchPaymentsCsv);
 
   const rows = data?.data ?? [];
   const hasFilters =
-    qInput !== "" || status !== "" || linkedTo !== "" || view !== "all";
+    qInput !== "" ||
+    status !== "" ||
+    linkedTo !== "" ||
+    withinDays !== "" ||
+    view !== "all";
 
   const resetFilters = (): void => {
     setQInput("");
     setStatus("");
     setLinkedTo("");
+    setWithinDays("");
     setView("all");
     setPage(1);
   };
@@ -333,6 +345,31 @@ export function CompanyPaymentsBoard({
   const band = summary.data;
   return (
     <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Company Payments"
+        subtitle={
+          <>
+            Money coming in from companies and how it moves inside their
+            wallets. Recruiter commissions are in{" "}
+            <Link
+              href="/admin/payouts"
+              className="font-medium text-blue-ink hover:underline"
+            >
+              Recruiter Payouts
+            </Link>
+            .
+          </>
+        }
+        actions={
+          <FinanceHeaderActions
+            withinDays={withinDays}
+            onWithinDays={applyFilter(setWithinDays)}
+            onExport={() => exportCsv.mutate(filters)}
+            exporting={exportCsv.isPending}
+          />
+        }
+      />
+
       {companyProfileId && (
         <ScopeChip
           label={`Company: ${companyName || "Selected company"}`}
@@ -369,7 +406,7 @@ export function CompanyPaymentsBoard({
           },
           {
             key: "refunded",
-            label: `Refunded · Last ${band?.windowDays ?? 30} Days`,
+            label: `Refunded · ${windowLabel(days)}`,
             value: band ? formatMinor(band.refundedMinor) : "—",
             note: band
               ? `${band.refundCount} refund${band.refundCount === 1 ? "" : "s"} from resolved disputes`

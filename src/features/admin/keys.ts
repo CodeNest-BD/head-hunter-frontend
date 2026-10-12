@@ -100,6 +100,8 @@ export interface AdminPaymentParams {
   companyProfileId?: string;
   status?: string;
   linkedTo?: string;
+  /** Only rows from the last N days; omitted for all time. */
+  withinDays?: number;
 }
 
 /** Recruiter payouts board filters. */
@@ -113,4 +115,6 @@ export interface AdminPayoutParams {
   holdKind?: string;
   sort?: string;
   sortOrder?: string;
+  /** Only placements started in the last N days; omitted for all time. */
+  withinDays?: number;
 }
