@@ -5,6 +5,7 @@ import { AlertCircle, Lock } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Button } from "@/shared/ui-components/controls/button";
+import { RichTextView } from "@/shared/ui-components/data/RichTextView";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TONE_DOT } from "@/shared/ui-components/badges/Pill";
 import {
@@ -201,9 +202,17 @@ function ComingUpRow({ item }: { item: AdminJobComingUp }) {
 }
 
 /** A `.facts` pair inside the Job details card. */
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div>
+    <div className={className}>
       <dt className="text-meta text-ink-muted">{label}</dt>
       <dd className="m-0 mt-0.5 text-sub text-ink">{value || "—"}</dd>
     </div>
@@ -277,7 +286,7 @@ function JobBody({ data }: { data: AdminJobDetailData }) {
   }).toString()}`;
 
   return (
-    <div className="flex w-full max-w-6xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-page font-bold text-ink">{data.title}</h1>
@@ -409,7 +418,20 @@ function JobBody({ data }: { data: AdminJobDetailData }) {
                 <Fact label="Benefits" value={intake?.benefitsSummary ?? ""} />
               </DetailRow>
               <DetailRow title="Position details">
-                <Fact label="Duties" value={data.description ?? ""} />
+                <Fact
+                  label="Duties"
+                  className="sm:col-span-2"
+                  value={
+                    data.description ? (
+                      <RichTextView
+                        value={data.description}
+                        className="text-sub"
+                      />
+                    ) : (
+                      ""
+                    )
+                  }
+                />
                 <Fact label="Qualifications" value={qualifications} />
               </DetailRow>
               <DetailRow title="Timeline & schedule">

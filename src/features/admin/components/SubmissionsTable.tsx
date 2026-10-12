@@ -11,6 +11,7 @@ import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   ToolbarSearch,
+  ToolbarSearchableSelect,
   ToolbarSelect,
 } from "@/shared/ui-components/data/ListToolbar";
 import {
@@ -41,6 +42,7 @@ import {
 import { adminConversationPath } from "@/shared/utils/entityPaths";
 import { useAdminConversations } from "../hooks/useAdmin";
 import { useListState } from "../hooks/useListState";
+import { useSubmissionFilterOptions } from "../hooks/useSubmissionFilterOptions";
 import { ListPager } from "./ListPager";
 import { CANDIDATE_STATUS_TONES } from "./statusStyles";
 import type { ConversationListItem } from "../schemas";
@@ -145,7 +147,12 @@ function SubmissionCard({ row }: { row: ConversationListItem }) {
  * which is the same rows read as threads — this board is about what was
  * submitted and where it got to, not who said what.
  */
-export function SubmissionsTable() {
+export function SubmissionsTable({
+  initialJobId = "",
+}: {
+  /** Pre-selected job filter (the job page's "Submissions" deep-link). */
+  initialJobId?: string;
+}) {
   const {
     page,
     setPage,
@@ -158,19 +165,40 @@ export function SubmissionsTable() {
     changeLimit,
   } = useListState();
   const [withinDays, setWithinDays] = useState("");
+  const [jobId, setJobId] = useState(initialJobId);
+  const [companyProfileId, setCompanyProfileId] = useState("");
+  const [recruiterProfileId, setRecruiterProfileId] = useState("");
   // The admin is monitoring the marketplace, so their own order is the
   // default; "ranking" previews what the company sees instead.
   const [order, setOrder] = useState<"newest" | "ranking">("newest");
+  const { jobOptions, companyOptions, recruiterOptions } =
+    useSubmissionFilterOptions(companyProfileId);
 
-  const hasFilters = qInput !== "" || status !== "" || withinDays !== "";
+  const hasFilters =
+    qInput !== "" ||
+    status !== "" ||
+    withinDays !== "" ||
+    jobId !== "" ||
+    companyProfileId !== "" ||
+    recruiterProfileId !== "";
   const resetFilters = () => {
     setQInput("");
     changeStatus("");
     setWithinDays("");
+    setJobId("");
+    setCompanyProfileId("");
+    setRecruiterProfileId("");
     setPage(1);
   };
   const applyFilter = (set: (next: string) => void) => (next: string) => {
     set(next);
+    setPage(1);
+  };
+  // The job list narrows to the chosen company, so a job picked under another
+  // company would be filtering on something the picker can no longer show.
+  const changeCompany = (next: string) => {
+    setCompanyProfileId(next);
+    setJobId("");
     setPage(1);
   };
   const cols = useVisibleColumns("admin.submissions.columns", COLUMNS);
@@ -181,6 +209,9 @@ export function SubmissionsTable() {
     q: q || undefined,
     status: status || undefined,
     withinDays: withinDays ? Number(withinDays) : undefined,
+    jobId: jobId || undefined,
+    companyProfileId: companyProfileId || undefined,
+    recruiterProfileId: recruiterProfileId || undefined,
     order,
   });
 
@@ -245,6 +276,27 @@ export function SubmissionsTable() {
             onChange={applyFilter(setWithinDays)}
             allLabel="Any time"
             options={WINDOW_FILTER_OPTIONS}
+          />
+          <ToolbarSearchableSelect
+            value={jobId}
+            onChange={applyFilter(setJobId)}
+            allLabel="All jobs"
+            searchPlaceholder="Search jobs…"
+            options={jobOptions}
+          />
+          <ToolbarSearchableSelect
+            value={companyProfileId}
+            onChange={changeCompany}
+            allLabel="All companies"
+            searchPlaceholder="Search companies…"
+            options={companyOptions}
+          />
+          <ToolbarSearchableSelect
+            value={recruiterProfileId}
+            onChange={applyFilter(setRecruiterProfileId)}
+            allLabel="All recruiters"
+            searchPlaceholder="Search recruiters…"
+            options={recruiterOptions}
           />
           {hasFilters && (
             <Button

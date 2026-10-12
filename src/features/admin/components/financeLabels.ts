@@ -106,3 +106,17 @@ export const DESTINATION_STATUS_TONES: Record<string, PillTone> = {
   verified: "ok",
   restricted: "bad",
 };
+
+/** The finance boards' date range. "" is All time, the default. */
+export const DATE_RANGE_OPTIONS = [
+  { value: "30", label: "Last 30 days" },
+  { value: "60", label: "Last 60 days" },
+  { value: "90", label: "Last 90 days" },
+  { value: "365", label: "Last 12 months" },
+] as const;
+
+/** A summary tile's window, Title Case for its header: "Last 30 Days". */
+export function windowLabel(days: number | null | undefined): string {
+  if (!days) return "All Time";
+  return days === 365 ? "Last 12 Months" : `Last ${days} Days`;
+}

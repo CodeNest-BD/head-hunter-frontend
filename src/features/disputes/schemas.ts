@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { recruiterPayoutAccountSchema } from "@/features/admin/schemas";
 import { serialNumberSchema } from "@/shared/utils/entityPaths";
 
 export const disputeStatusSchema = z.enum([
@@ -33,6 +34,15 @@ export type DisputeResolution = "release" | "refund" | "resume" | "close";
 export const FINAL_RESOLUTIONS: readonly DisputeResolution[] = [
   "release",
   "refund",
+];
+
+/**
+ * The outcomes that end the case, so the note is both parties' record of why.
+ * Mirrors the backend's `NOTE_REQUIRED_RESOLUTIONS`; "resume" keeps it running.
+ */
+export const NOTE_REQUIRED_RESOLUTIONS: readonly DisputeResolution[] = [
+  ...FINAL_RESOLUTIONS,
+  "close",
 ];
 
 /** Mirrors the backend `DisputeCountdownDto`. */
@@ -212,6 +222,16 @@ export const adminDisputeDetailSchema = adminDisputeListItemSchema.extend({
   companyMessages: z.array(disputeMessageSchema),
   recruiterMessages: z.array(disputeMessageSchema),
   attachments: z.array(disputeAttachmentSchema).catch([]),
+  jobId: z.string(),
+  jobSerialNumber: serialNumberSchema.optional(),
+  /** User ids, not profile ids: the admin company/recruiter routes key on them. */
+  companyUserId: z.string(),
+  companySerialNumber: serialNumberSchema.optional(),
+  recruiterUserId: z.string(),
+  recruiterSerialNumber: serialNumberSchema.optional(),
+  recruiterRatingAvg: z.number().nullable().catch(null),
+  recruiterRatingCount: z.number().catch(0),
+  payoutAccount: recruiterPayoutAccountSchema.nullable().catch(null),
 });
 export type AdminDisputeDetail = z.infer<typeof adminDisputeDetailSchema>;
 

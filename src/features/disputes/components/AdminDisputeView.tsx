@@ -7,12 +7,21 @@ import { toast } from "sonner";
 
 import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
-import { adminDisputePath } from "@/shared/utils/entityPaths";
+import {
+  adminCompanyPath,
+  adminDisputePath,
+  adminJobPath,
+  adminPayoutPath,
+  adminRecruiterPath,
+} from "@/shared/utils/entityPaths";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { RatingStars } from "@/shared/ui-components/data/RatingStars";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { ConversationThread } from "@/features/admin/components/ConversationThread";
+import { DESTINATION_STATUS_LABELS } from "@/features/admin/components/financeLabels";
+import type { RecruiterPayoutAccount } from "@/features/admin/schemas";
 import {
   SideFact,
   SideSection,
@@ -36,6 +45,26 @@ import { DisputeChannelThread } from "./DisputeChannelThread";
 import { DisputeProofList } from "./DisputeProofList";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 import { ResolveDisputeCard } from "./ResolveDisputeCard";
+
+const SIDE_LINK = "text-blue-ink hover:underline";
+
+/**
+ * Where a release would land. Anything short of verified is amber: releasing
+ * to an unverified or restricted account will not pay out.
+ */
+function PayoutAccountFact({
+  account,
+}: {
+  account: RecruiterPayoutAccount | null;
+}) {
+  if (!account) return <>{DESTINATION_STATUS_LABELS.none}</>;
+  const status = DESTINATION_STATUS_LABELS[account.status] ?? account.status;
+  return (
+    <span className={account.status === "verified" ? "text-ink" : "text-warn"}>
+      {account.bankLast4 ? `${status} · •••• ${account.bankLast4}` : status}
+    </span>
+  );
+}
 
 /** Full admin adjudication view: context, both channels, and resolution. */
 export function AdminDisputeView({ disputeRef }: { disputeRef: string }) {
@@ -188,7 +217,7 @@ function DisputeBody({
   ];
 
   return (
-    <div className="flex w-full max-w-6xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       {/* No `flex-wrap`: the sub-line is long enough that wrapping would push
           the action onto its own row below it, when it belongs beside the
           title. `min-w-0` lets the line wrap inside its own column instead. */}
@@ -345,13 +374,70 @@ function DisputeBody({
             <SideSection title="Placement">
               <dl className="m-0 flex flex-col gap-2.5">
                 <SideFact label="Candidate" value={data.candidateName} />
-                <SideFact label="Job" value={data.jobTitle} />
-                <SideFact label="Company" value={data.companyName} />
-                <SideFact label="Recruiter" value={data.recruiterName} />
+                <SideFact
+                  label="Job"
+                  value={
+                    <Link
+                      href={adminJobPath({
+                        id: data.jobId,
+                        serialNumber: data.jobSerialNumber,
+                      })}
+                      className={SIDE_LINK}
+                    >
+                      {data.jobTitle}
+                    </Link>
+                  }
+                />
+                <SideFact
+                  label="Company"
+                  value={
+                    <Link
+                      href={adminCompanyPath({
+                        id: data.companyUserId,
+                        serialNumber: data.companySerialNumber,
+                      })}
+                      className={SIDE_LINK}
+                    >
+                      {data.companyName}
+                    </Link>
+                  }
+                />
+                <SideFact
+                  label="Recruiter"
+                  value={
+                    <>
+                      <Link
+                        href={adminRecruiterPath({
+                          id: data.recruiterUserId,
+                          serialNumber: data.recruiterSerialNumber,
+                        })}
+                        className={SIDE_LINK}
+                      >
+                        {data.recruiterName}
+                      </Link>
+                      <span className="text-ink-muted"> · </span>
+                      <RatingStars
+                        variant="text"
+                        value={data.recruiterRatingAvg}
+                        count={data.recruiterRatingCount}
+                      />
+                    </>
+                  }
+                />
               </dl>
             </SideSection>
 
-            <SideSection title="Payment">
+            <SideSection
+              title="Payment"
+              action={
+                <Link
+                  href={adminPayoutPath({ id: data.placementId })}
+                  className="text-sub font-medium text-blue-ink hover:underline"
+                >
+                  View transaction
+                </Link>
+              }
+            >
               <dl className="m-0 flex flex-col gap-2.5">
                 <SideFact
                   label="Amount"
@@ -376,6 +462,10 @@ function DisputeBody({
                 <SideFact
                   label="Original payout"
                   value={formatDate(data.holdExpiresAt)}
+                />
+                <SideFact
+                  label="Payout account"
+                  value={<PayoutAccountFact account={data.payoutAccount} />}
                 />
               </dl>
             </SideSection>

@@ -23,6 +23,7 @@ import { useResolveDispute } from "../hooks/useDisputes";
 import {
   DISPUTE_STATUS_LABELS,
   FINAL_RESOLUTIONS,
+  NOTE_REQUIRED_RESOLUTIONS,
   isDisputeOpen,
   type AdminDisputeDetail,
   type DisputeResolution,
@@ -35,10 +36,7 @@ const SUCCESS_TOAST: Record<DisputeResolution, string> = {
   close: "Dispute closed.",
 };
 
-/**
- * A resolution note is only compulsory where it is the record of an
- * irreversible decision — the two outcomes that move money.
- */
+/** Mirrors the backend's `RESOLUTION_NOTE_MIN_LENGTH`. */
 const MIN_NOTE = 20;
 
 /** `.choice` — a full-width outcome block with its consequence underneath. */
@@ -86,8 +84,10 @@ export function ResolveDisputeCard({
   ];
 
   const isFinal = confirming !== null && FINAL_RESOLUTIONS.includes(confirming);
-  const noteTooShort = note.trim().length < MIN_NOTE;
-  const blocked = isFinal && (noteTooShort || !reviewed);
+  const noteRequired =
+    confirming !== null && NOTE_REQUIRED_RESOLUTIONS.includes(confirming);
+  const noteMissing = noteRequired && note.trim().length < MIN_NOTE;
+  const blocked = noteMissing || (isFinal && !reviewed);
 
   const close = (): void => {
     setConfirming(null);
@@ -205,7 +205,8 @@ export function ResolveDisputeCard({
                 isFinal={isFinal}
                 note={note}
                 onNote={setNote}
-                noteTooShort={noteTooShort}
+                noteRequired={noteRequired}
+                noteMissing={noteMissing}
                 reviewed={reviewed}
                 onReviewed={setReviewed}
                 blocked={blocked}
@@ -228,7 +229,8 @@ function ConfirmBody({
   isFinal,
   note,
   onNote,
-  noteTooShort,
+  noteRequired,
+  noteMissing,
   reviewed,
   onReviewed,
   blocked,
@@ -242,7 +244,8 @@ function ConfirmBody({
   isFinal: boolean;
   note: string;
   onNote: (next: string) => void;
-  noteTooShort: boolean;
+  noteRequired: boolean;
+  noteMissing: boolean;
   reviewed: boolean;
   onReviewed: (next: boolean) => void;
   blocked: boolean;
@@ -331,7 +334,8 @@ function ConfirmBody({
 
       <label className="mt-4 block">
         <span className="text-sub font-medium text-ink">
-          Resolution note{isFinal && <span className="text-bad"> *</span>}
+          Resolution note
+          {noteRequired && <span className="text-bad"> *</span>}
           <span className="font-normal text-ink-muted">
             {" "}
             · shared with both parties
@@ -346,7 +350,7 @@ function ConfirmBody({
           maxLength={4000}
         />
       </label>
-      {isFinal && noteTooShort && (
+      {noteMissing && (
         <p className="mb-0 mt-1 text-meta text-ink-muted">
           At least {MIN_NOTE} characters.
         </p>
