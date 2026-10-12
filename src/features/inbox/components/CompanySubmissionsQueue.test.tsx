@@ -113,43 +113,61 @@ describe("CompanySubmissionsQueue", () => {
     pushMock.mockClear();
   });
 
-  it("renders read-only stat cards from the current statuses and defaults to priority sort", () => {
+  it("counts each status in the quick-view band and defaults to priority sort", () => {
     renderWithProviders(<CompanySubmissionsQueue />);
 
     expect(screen.getByText("Total Submissions")).toBeInTheDocument();
     expect(screen.getByText("238")).toBeInTheDocument();
     expect(screen.getByText("42")).toBeInTheDocument(); // New
     expect(screen.getByText("120")).toBeInTheDocument(); // Reviewing
-    // Cards are informational — not clickable filters.
-    expect(
-      screen.queryByRole("button", { name: /Reviewing/ }),
-    ).not.toBeInTheDocument();
     expect(submissionsMock).toHaveBeenCalledWith(
       expect.objectContaining({ sortBy: "priority", status: undefined }),
     );
   });
 
-  it("filters by status from the status column header", async () => {
+  it("filters by the status a band tile counts, and clears on a second press", async () => {
     const user = userEvent.setup();
     renderWithProviders(<CompanySubmissionsQueue />);
 
-    await user.click(screen.getByRole("button", { name: "Filter by Status" }));
-    // Scope to the popover option (the label and badge also read "Reviewing").
-    await user.click(screen.getByRole("button", { name: "Reviewing" }));
+    const tile = screen.getByRole("button", { name: /Reviewing/ });
+    await user.click(tile);
+    expect(submissionsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "reviewing", page: 1 }),
+    );
+
+    // The total is not a status, so it stays a plain readout.
+    expect(
+      screen.queryByRole("button", { name: /Total Submissions/ }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Reviewing/ }));
+    expect(submissionsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: undefined }),
+    );
+  });
+
+  it("filters by status from the toolbar", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<CompanySubmissionsQueue />);
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Submission status" }),
+      "reviewing",
+    );
 
     expect(submissionsMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ status: "reviewing", page: 1 }),
     );
   });
 
-  it("passes the recruiter-kind filter from the recruiter column header", async () => {
+  it("passes the recruiter-kind filter from the toolbar", async () => {
     const user = userEvent.setup();
     renderWithProviders(<CompanySubmissionsQueue />);
 
-    await user.click(
-      screen.getByRole("button", { name: "Filter by Recruiter" }),
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Recruiter" }),
+      "unrated",
     );
-    await user.click(screen.getByText("Unrated recruiters"));
 
     expect(submissionsMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ recruiterKind: "unrated" }),
@@ -171,13 +189,13 @@ describe("CompanySubmissionsQueue", () => {
     expect(jobLinks[0]).toHaveAttribute("href", "/jobs/22");
   });
 
-  it("scopes the list by the job's serial from the job column header", async () => {
+  it("scopes the list by the job's serial from the toolbar", async () => {
     const user = userEvent.setup();
     renderWithProviders(<CompanySubmissionsQueue />);
 
-    await user.click(screen.getByRole("button", { name: "Filter by Job" }));
-    await user.click(
-      screen.getByRole("button", { name: "Product Designer (12 new)" }),
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Job" }),
+      "22",
     );
 
     expect(submissionsMock).toHaveBeenLastCalledWith(

@@ -1,38 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Award,
-  Bell,
-  Briefcase,
-  CalendarCheck,
-  DollarSign,
-  Lock,
-  MessageSquare,
-  UserPlus,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { Briefcase, Building2, MessageSquare, UserPlus } from "lucide-react";
 
 import { useWallet } from "@/features/billing";
+
 import { useMessageUnreadCount } from "@/features/conversations";
+
 import { useJobs } from "@/features/jobs";
+
 import { useNotifications } from "@/features/notifications";
+
 import { useInboxJobs } from "@/features/inbox";
+
 import { PageHeader } from "@/shared/ui-components/brand";
+
 import {
-  AttentionRow,
-  Panel,
+  ActivityFeed,
+  AttentionTable,
   PanelGroup,
-  StatCard,
+  QuickViewBand,
+  Section,
+  SectionHead,
   StatValueSkeleton,
+  type ActivityItem,
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
-import { ListRow } from "@/shared/ui-components/list/ListRow";
+
 import { activityGlyph } from "@/features/notifications/utils/activityGlyph";
-import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
+
 import { formatDateTime } from "@/shared/utils/formatDate";
+
 import { formatMinor } from "@/shared/utils/money";
+
 import { useMyCompanyProfile } from "../hooks/useCompanyProfile";
 
 /** A description shorter than this reads as a placeholder to recruiters. */
@@ -80,9 +80,12 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
   if (newCandidates > 0) {
     attention.push({
       id: "waiting",
-      tone: "blue",
-      title: `${newCandidates} candidate${newCandidates === 1 ? "" : "s"} waiting on your review`,
-      detail: `Across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"} in your inbox.`,
+      icon: UserPlus,
+      tone: "info",
+      label: "Candidates waiting on your review",
+      context: `Across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"} in your inbox.`,
+      priorityLabel: "Waiting",
+      count: newCandidates,
       actionLabel: "Open inbox",
       href: "/company/inbox",
     });
@@ -90,9 +93,12 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
   if (noFeeCount > 0) {
     attention.push({
       id: "no-fee",
-      tone: "amber",
-      title: `${noFeeCount} published job${noFeeCount === 1 ? "" : "s"} have no recruiter fee`,
-      detail: "Recruiters sort by fee, so these get seen last.",
+      icon: Briefcase,
+      tone: "warn",
+      label: "Published jobs with no recruiter fee",
+      context: "Recruiters sort by fee, so these get seen last.",
+      priorityLabel: "Action needed",
+      count: noFeeCount,
       actionLabel: "Set fees",
       href: "/company/jobs",
     });
@@ -100,9 +106,11 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
   if (profile.data && descriptionLength < MIN_DESCRIPTION) {
     attention.push({
       id: "description",
-      tone: "amber",
-      title: `Your company description is ${descriptionLength} character${descriptionLength === 1 ? "" : "s"}`,
-      detail: "It's the only thing recruiters read in the companies grid.",
+      icon: Building2,
+      tone: "warn",
+      label: `Your company description is ${descriptionLength} character${descriptionLength === 1 ? "" : "s"}`,
+      context: "It's the only thing recruiters read in the companies grid.",
+      priorityLabel: "Incomplete",
       actionLabel: "Edit",
       href: "/company/profile",
     });
@@ -110,15 +118,28 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
   if (unreadMessages > 0) {
     attention.push({
       id: "messages",
-      tone: "muted",
-      title: `${unreadMessages} recruiter message${unreadMessages === 1 ? "" : "s"} unanswered`,
-      detail: "Open the conversation to reply.",
+      icon: MessageSquare,
+      tone: "neutral",
+      label: "Recruiter messages unanswered",
+      context: "Open the conversation to reply.",
+      priorityLabel: "Unanswered",
+      count: unreadMessages,
       actionLabel: "Reply",
       href: "/company/inbox",
     });
   }
 
-  const recentActivity = activity.data?.data ?? [];
+  // The feed's own shape, built once: the glyph helper already decides a
+  // notification's tone, and the dashboard only has to carry it across.
+  const activityItems: ActivityItem[] = (activity.data?.data ?? []).map(
+    (note) => ({
+      id: note.id,
+      tone: activityGlyph(note.type).tone,
+      title: note.title,
+      detail: note.body ?? undefined,
+      at: note.createdAt,
+    }),
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -129,57 +150,59 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
 
       {/* Ordered left-to-right as the employer's flow: post jobs → review
           candidates → the funds that back it all. */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <StatCard
-          label="Published jobs"
-          value={published.isPending ? <StatValueSkeleton /> : publishedTotal}
-          hint={
-            noFeeCount > 0
-              ? `${noFeeCount} without a fee`
-              : "live on the job map"
-          }
-          hintTone={noFeeCount > 0 ? "warn" : "default"}
-          icon={Briefcase}
-          href="/company/jobs"
-        />
-        <StatCard
-          label="New candidates"
-          value={inbox.isPending ? <StatValueSkeleton /> : newCandidates}
-          hint={
-            newCandidates === 0
-              ? "nothing waiting on you"
-              : `across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"}`
-          }
-          icon={Users}
-          href="/company/inbox"
-        />
-        <StatCard
-          label="Available funds"
-          value={
-            wallet.isPending ? (
+      <QuickViewBand
+        label="Company summary"
+        views={[
+          {
+            key: "published",
+            label: "Published Jobs",
+            value: published.isPending ? <StatValueSkeleton /> : publishedTotal,
+            note:
+              noFeeCount > 0
+                ? `${noFeeCount} without a fee`
+                : "Live on the job map",
+            // A job with no fee ranks last for recruiters, so the tile says so
+            // in the colour the rest of the app uses for "look at this".
+            tone: noFeeCount > 0 ? "warn" : "ok",
+            href: "/company/jobs",
+          },
+          {
+            key: "new-candidates",
+            label: "New Candidates",
+            value: inbox.isPending ? <StatValueSkeleton /> : newCandidates,
+            note:
+              newCandidates === 0
+                ? "Nothing waiting on you"
+                : `Across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"}`,
+            tone: "info",
+            href: "/company/inbox",
+          },
+          {
+            key: "available",
+            label: "Available Funds",
+            value: wallet.isPending ? (
               <StatValueSkeleton />
             ) : (
               formatMinor(wallet.data?.availableMinor)
-            )
-          }
-          hint="free funds to post jobs"
-          icon={DollarSign}
-          href="/company/wallet"
-        />
-        <StatCard
-          label="Reserved funds"
-          value={
-            wallet.isPending ? (
+            ),
+            note: "Free funds to post jobs",
+            tone: "ok",
+            href: "/company/wallet",
+          },
+          {
+            key: "reserved",
+            label: "Reserved Funds",
+            value: wallet.isPending ? (
               <StatValueSkeleton />
             ) : (
               formatMinor(wallet.data?.reservedMinor)
-            )
-          }
-          hint="held for live jobs"
-          icon={Lock}
-          href="/company/wallet"
-        />
-      </div>
+            ),
+            note: "Held for live jobs",
+            tone: "neutral",
+            href: "/company/wallet",
+          },
+        ]}
+      />
 
       <PanelGroup
         gridClassName="lg:grid-cols-2"
@@ -188,65 +211,37 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
             id: "attention",
             label: "Needs your attention",
             content: (
-              <Panel
-                title="Needs your attention"
-                action={
-                  <Link
-                    href="/notifications"
-                    className="text-[12.5px] font-[550] text-blue-ink transition-colors hover:text-blue-deep"
-                  >
-                    View all
-                  </Link>
-                }
-              >
-                {attention.length > 0 ? (
-                  <div className="flex flex-col">
-                    {attention.slice(0, 5).map((item) => (
-                      <AttentionRow key={item.id} item={item} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="px-4 py-6 text-sub text-ink-muted">
-                    You&apos;re all caught up — nothing needs your attention
-                    right now.
-                  </p>
-                )}
-              </Panel>
+              <Section label="Needs your attention">
+                <SectionHead
+                  title="Needs your attention"
+                  action={
+                    <Link
+                      href="/notifications"
+                      className="text-[12.5px] font-[550] text-blue-ink transition-colors hover:text-blue-deep"
+                    >
+                      View all
+                    </Link>
+                  }
+                />
+                <AttentionTable
+                  items={attention.slice(0, 5)}
+                  emptyMessage="You're all caught up — nothing needs your attention right now."
+                />
+              </Section>
             ),
           },
           {
             id: "activity",
             label: "Recent activity",
             content: (
-              <Panel title="Recent activity">
-                {recentActivity.length > 0 ? (
-                  <div className="flex flex-col">
-                    {recentActivity.map((note) => {
-                      const { icon, tone } = activityGlyph(note.type);
-                      return (
-                        <ListRow key={note.id}>
-                          <Tile icon={icon} tone={tone} />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-body text-ink">{note.title}</p>
-                            {note.body && (
-                              <p className="mt-0.5 text-sub text-ink-muted">
-                                {note.body}
-                              </p>
-                            )}
-                            <p className="mt-[3px] text-meta text-ink-faint">
-                              {formatDateTime(note.createdAt)}
-                            </p>
-                          </div>
-                        </ListRow>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="px-4 py-6 text-sub text-ink-muted">
-                    No recent activity yet.
-                  </p>
-                )}
-              </Panel>
+              <Section label="Recent activity">
+                <SectionHead title="Recent activity" className="pb-3" />
+                <ActivityFeed
+                  items={activityItems}
+                  emptyMessage="No recent activity yet."
+                  formatAt={formatDateTime}
+                />
+              </Section>
             ),
           },
         ]}

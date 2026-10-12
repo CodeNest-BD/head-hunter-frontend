@@ -1,39 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Award,
-  Bell,
-  Briefcase,
-  CalendarCheck,
-  Clock,
-  DollarSign,
-  MessageSquare,
-  UserPlus,
-  Users,
-  Wallet2,
-  type LucideIcon,
-} from "lucide-react";
+import { BadgeCheck, Briefcase, MessageSquare, Users } from "lucide-react";
 
 import { useJobs } from "@/features/jobs";
+
 import { useNotifications } from "@/features/notifications";
+
 import { useRecruiterWallet } from "@/features/billing";
+
 import { useInboxJobs } from "@/features/inbox";
+
 import { PageHeader } from "@/shared/ui-components/brand";
+
 import {
-  AttentionRow,
-  Panel,
+  ActivityFeed,
+  AttentionTable,
   PanelGroup,
-  StatCard,
+  QuickViewBand,
+  Section,
+  SectionHead,
   StatValueSkeleton,
+  type ActivityItem,
   type AttentionItem,
 } from "@/shared/ui-components/dashboard/DashboardParts";
-import { ListRow } from "@/shared/ui-components/list/ListRow";
+
 import { activityGlyph } from "@/features/notifications/utils/activityGlyph";
-import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
+
 import { jobPath } from "@/shared/utils/entityPaths";
+
 import { formatDateTime } from "@/shared/utils/formatDate";
+
 import { formatMinor } from "@/shared/utils/money";
+
 import { useMyRecruiterProfile } from "../hooks/useRecruiterProfile";
 
 /**
@@ -87,13 +86,15 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   if (verificationStatus && verificationStatus !== "verified") {
     attention.push({
       id: "verification",
-      tone: "amber",
-      title:
+      icon: BadgeCheck,
+      tone: "warn",
+      label:
         verificationStatus === "rejected"
           ? "Your verification was declined"
           : "Your account is pending verification",
-      detail:
+      context:
         "Complete your profile and references, then an admin reviews your access.",
+      priorityLabel: "Action needed",
       actionLabel: "Review",
       href: "/recruiter/profile",
     });
@@ -101,11 +102,13 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   if (latestRole) {
     attention.push({
       id: `role-${latestRole.id}`,
-      tone: "blue",
-      title: `${latestRole.title || "A new role"} just posted`,
-      detail: `${latestRole.companyName || "A company"} · ${formatMinor(
+      icon: Briefcase,
+      tone: "info",
+      label: `${latestRole.title || "A new role"} just posted`,
+      context: `${latestRole.companyName || "A company"} · ${formatMinor(
         latestRole.recruiterFeeMinor,
       )} recruiter fee`,
+      priorityLabel: "New",
       actionLabel: "Submit",
       href: jobPath(latestRole),
     });
@@ -113,9 +116,12 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   if (unreadMessages > 0) {
     attention.push({
       id: "unread",
-      tone: "amber",
-      title: `${unreadMessages} unread message${unreadMessages === 1 ? "" : "s"}`,
-      detail: "A company is waiting on you in one of your conversations.",
+      icon: MessageSquare,
+      tone: "warn",
+      label: "Unread messages",
+      context: "A company is waiting on you in one of your conversations.",
+      priorityLabel: "Waiting",
+      count: unreadMessages,
       actionLabel: "Open",
       href: "/recruiter/inbox",
     });
@@ -124,15 +130,28 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
     const missing = 3 - references.length;
     attention.push({
       id: "references",
-      tone: "blue",
-      title: `Add ${missing} more reference${missing === 1 ? "" : "s"}`,
-      detail: "Admins check references when they review your account.",
+      icon: Users,
+      tone: "info",
+      label: `References still needed`,
+      context: "Admins check references when they review your account.",
+      priorityLabel: "Incomplete",
+      count: missing,
       actionLabel: "Add",
       href: "/recruiter/profile",
     });
   }
 
-  const recentActivity = activity.data?.data ?? [];
+  // The feed's own shape, built once: the glyph helper already decides a
+  // notification's tone, and the dashboard only has to carry it across.
+  const activityItems: ActivityItem[] = (activity.data?.data ?? []).map(
+    (note) => ({
+      id: note.id,
+      tone: activityGlyph(note.type).tone,
+      title: note.title,
+      detail: note.body ?? undefined,
+      at: note.createdAt,
+    }),
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -141,54 +160,55 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
         subtitle={subtitleParts.join(" · ")}
       />
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <StatCard
-          label="Open roles"
-          value={
-            openRoles.isPending ? (
+      <QuickViewBand
+        label="Recruiter summary"
+        views={[
+          {
+            key: "open-roles",
+            label: "Open Roles",
+            value: openRoles.isPending ? (
               <StatValueSkeleton />
             ) : (
               (openRolesCount ?? "—")
-            )
-          }
-          hint="open to you right now"
-          icon={Briefcase}
-          href="/explore-jobs"
-        />
-        <StatCard
-          label="Candidates in process"
-          value={inbox.isPending ? <StatValueSkeleton /> : candidateCount}
-          hint="submitted, interviewing, pending feedback"
-          icon={Users}
-          href="/recruiter/inbox"
-        />
-        <StatCard
-          label="Pending commission"
-          value={
-            wallet.isPending ? (
+            ),
+            note: "Open to you right now",
+            tone: "info",
+            href: "/explore-jobs",
+          },
+          {
+            key: "in-process",
+            label: "Candidates In Process",
+            value: inbox.isPending ? <StatValueSkeleton /> : candidateCount,
+            note: "Submitted, interviewing, pending feedback",
+            tone: "info",
+            href: "/recruiter/inbox",
+          },
+          {
+            key: "pending",
+            label: "Pending Commission",
+            value: wallet.isPending ? (
               <StatValueSkeleton />
             ) : (
               formatMinor(wallet.data?.inEscrowMinor ?? 0)
-            )
-          }
-          hint="released 30 days after a start"
-          icon={Clock}
-          href="/recruiter/wallet"
-        />
-        <StatCard
-          label="Commissions YTD"
-          value={
-            wallet.isPending ? (
+            ),
+            note: "Released 30 days after a start",
+            tone: "warn",
+            href: "/recruiter/wallet",
+          },
+          {
+            key: "ytd",
+            label: "Commissions YTD",
+            value: wallet.isPending ? (
               <StatValueSkeleton />
             ) : (
               formatMinor(wallet.data?.earnedYtdMinor ?? 0)
-            )
-          }
-          hint="what you've earned this year"
-          icon={Wallet2}
-          href="/recruiter/wallet"
-        />
-      </div>
+            ),
+            note: "What you’ve earned this year",
+            tone: "ok",
+            href: "/recruiter/wallet",
+          },
+        ]}
+      />
 
       <PanelGroup
         gridClassName="lg:grid-cols-2"
@@ -197,68 +217,37 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
             id: "attention",
             label: "Needs your attention",
             content: (
-              <Panel
-                title="Needs your attention"
-                action={
-                  <Link
-                    href="/notifications"
-                    className="text-[12.5px] font-[550] text-blue-ink transition-colors hover:text-blue-deep"
-                  >
-                    View all
-                  </Link>
-                }
-              >
-                {attention.length > 0 ? (
-                  <div className="flex flex-col">
-                    {attention.slice(0, 5).map((item) => (
-                      <AttentionRow key={item.id} item={item} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="px-4 py-6 text-sub text-ink-muted">
-                    You&apos;re all caught up — nothing needs your attention
-                    right now.
-                  </p>
-                )}
-              </Panel>
+              <Section label="Needs your attention">
+                <SectionHead
+                  title="Needs your attention"
+                  action={
+                    <Link
+                      href="/notifications"
+                      className="text-[12.5px] font-[550] text-blue-ink transition-colors hover:text-blue-deep"
+                    >
+                      View all
+                    </Link>
+                  }
+                />
+                <AttentionTable
+                  items={attention.slice(0, 5)}
+                  emptyMessage="You're all caught up — nothing needs your attention right now."
+                />
+              </Section>
             ),
           },
           {
             id: "activity",
             label: "Recent activity",
             content: (
-              <Panel title="Recent activity">
-                {recentActivity.length > 0 ? (
-                  <div className="flex flex-col">
-                    {recentActivity.map((note) => {
-                      const { icon, tone } = activityGlyph(note.type);
-                      return (
-                        <ListRow key={note.id}>
-                          <Tile icon={icon} tone={tone} />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-body text-ink">{note.title}</p>
-                            {note.body && (
-                              <p className="mt-0.5 text-sub text-ink-muted">
-                                {note.body}
-                              </p>
-                            )}
-                            {/* Date and time, not just the date: two events on
-                                one day are otherwise indistinguishable, which
-                                reads as a duplicate. */}
-                            <p className="mt-[3px] text-meta text-ink-faint">
-                              {formatDateTime(note.createdAt)}
-                            </p>
-                          </div>
-                        </ListRow>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="px-4 py-6 text-sub text-ink-muted">
-                    No recent activity yet.
-                  </p>
-                )}
-              </Panel>
+              <Section label="Recent activity">
+                <SectionHead title="Recent activity" className="pb-3" />
+                <ActivityFeed
+                  items={activityItems}
+                  emptyMessage="No recent activity yet."
+                  formatAt={formatDateTime}
+                />
+              </Section>
             ),
           },
         ]}

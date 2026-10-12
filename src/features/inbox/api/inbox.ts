@@ -1,12 +1,13 @@
 import { apiClient } from "@/shared/libs/apiClient";
+
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
+
 import {
   inboxAttentionCountSchema,
   inboxConversationRowSchema,
   inboxJobRowSchema,
   inboxSubmissionRowSchema,
   inboxSubmissionStatsSchema,
-  type InboxCandidateSort,
   type InboxConversationRow,
   type InboxJobRow,
   type InboxSubmissionRow,

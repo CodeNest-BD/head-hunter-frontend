@@ -20,7 +20,6 @@ import { Button } from "@/shared/ui-components/controls/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
@@ -29,10 +28,7 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
-import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
+import { ToolbarSelect } from "@/shared/ui-components/data/ListToolbar";
 import {
   ColumnsToggle,
   useVisibleColumns,
@@ -206,8 +202,27 @@ export function CompanyPlacementsPanel() {
 
   return (
     <div className={T.TABLE_CARD}>
-      <CardHeader>
-        <CardTitle>Placements &amp; Escrow</CardTitle>
+      <div className={T.TABLE_TOOLBAR}>
+        <h2 className="m-0 text-card font-[650] text-ink">
+          Placements &amp; Escrow
+        </h2>
+        <ToolbarSelect
+          label="Placement status"
+          value={status ?? ""}
+          onChange={(next) => changeStatus(next === "" ? null : next)}
+          allLabel="Any status"
+          options={PLACEMENT_STATUS_OPTIONS}
+        />
+        {status !== null && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => changeStatus(null)}
+          >
+            Clear filters
+          </Button>
+        )}
         <div className="ml-auto">
           <ColumnsToggle
             columns={cols.columns}
@@ -215,12 +230,12 @@ export function CompanyPlacementsPanel() {
             onToggle={cols.toggle}
           />
         </div>
-        <CardDescription>
-          Fees held for your hires. Each releases to the recruiter 30 days after
-          the joining date. Reject a hire before the joining date to refund it;
-          after that, raise a dispute.
-        </CardDescription>
-      </CardHeader>
+      </div>
+      <p className="m-0 border-t border-line bg-surface-sub px-5 py-2.5 text-meta leading-[18px] text-ink-muted">
+        Fees held for your hires. Each releases to the recruiter 30 days after
+        the joining date. Reject a hire before the joining date to refund it;
+        after that, raise a dispute.
+      </p>
 
       {confirming ? (
         <div className="border-b border-line p-4">
@@ -274,14 +289,9 @@ export function CompanyPlacementsPanel() {
                 </th>
               )}
               {cols.isVisible("status") && (
-                <FilterableHead label="Status">
-                  <ColumnFilter
-                    label="Status"
-                    options={PLACEMENT_STATUS_OPTIONS}
-                    value={status}
-                    onChange={changeStatus}
-                  />
-                </FilterableHead>
+                <th scope="col" className={T.TABLE_TH}>
+                  Status
+                </th>
               )}
               {cols.isVisible("settle") && (
                 <th scope="col" className={T.TABLE_TH}>

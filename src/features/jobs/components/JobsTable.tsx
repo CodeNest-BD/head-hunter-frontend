@@ -6,12 +6,10 @@ import {
   AlertCircle,
   Briefcase,
   Eye,
-  Lock,
   MoreHorizontal,
   Plus,
   SquarePen,
   Trash2,
-  TriangleAlert,
 } from "lucide-react";
 
 // Deep-imported (not via the feature barrels): JobsTable is exported from the
@@ -24,15 +22,17 @@ import { PageHeader } from "@/shared/ui-components/brand";
 import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
 import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
-import { StatCard } from "@/shared/ui-components/dashboard/DashboardParts";
+import {
+  QuickViewBand,
+  type QuickView,
+} from "@/shared/ui-components/dashboard/DashboardParts";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
-import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
+  ToolbarSearch,
+  ToolbarSelect,
+} from "@/shared/ui-components/data/ListToolbar";
 import {
   ColumnsToggle,
   useVisibleColumns,
@@ -66,12 +66,7 @@ import {
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
-import {
-  ROLE_CATEGORY_LABELS,
-  jobStatusSchema,
-  type Job,
-  type RoleCategory,
-} from "../schemas";
+import { ROLE_CATEGORY_LABELS, jobStatusSchema, type Job } from "../schemas";
 import { useDeleteJob, useJobs } from "../hooks/useJobs";
 import { companyJobPath, jobPath, urlRef } from "@/shared/utils/entityPaths";
 import { entriesOf } from "@/shared/utils/entriesOf";
@@ -297,13 +292,7 @@ export function JobsTable() {
     setCategory("");
     setPage(1);
   };
-  const cols = useVisibleColumns("company.jobs.columns", COLUMNS, (key) => {
-    if (key === "status") changeStatus("");
-    if (key === "category") {
-      setCategory("");
-      setPage(1);
-    }
-  });
+  const cols = useVisibleColumns("company.jobs.columns", COLUMNS);
   const parsedStatus = jobStatusSchema.safeParse(status);
   const { data, isPending, isError, refetch } = useJobs({
     page,
@@ -332,31 +321,61 @@ export function JobsTable() {
     (inbox.data?.data ?? []).map((row) => [row.jobId, row.candidateCount]),
   );
 
+  const quickViews: readonly QuickView[] = [
+    {
+      key: "published",
+      label: "Published",
+      value: publishedTotal.toLocaleString(),
+      note: "Open to recruiters",
+      tone: "ok",
+    },
+    {
+      key: "no-fee",
+      label: "No Fee Set",
+      value: noFeeCount.toLocaleString(),
+      note: "Recruiters sort by fee",
+      tone: "warn",
+    },
+    {
+      key: "escrow",
+      label: "Held In Escrow",
+      value: formatMinor(wallet.data?.reservedMinor),
+      note: "Reserved against live jobs",
+      tone: "info",
+    },
+  ];
+
   const toolbar = (
     <div className={TABLE_TOOLBAR}>
-      <div className="flex-1">
-        <ListToolbar
-          query={qInput}
-          onQueryChange={setQInput}
-          placeholder="Search jobs by title…"
-          filter={{
-            value: status,
-            onChange: changeStatus,
-            allLabel: "All statuses",
-            options: [...STATUS_FILTER_OPTIONS],
-          }}
-          extraFilter={{
-            value: category,
-            onChange: (next) => {
-              setCategory(next);
-              setPage(1);
-            },
-            allLabel: "All categories",
-            options: CATEGORY_OPTIONS,
-          }}
-        />
-      </div>
-      <div className="sm:ml-auto">
+      <ToolbarSearch
+        value={qInput}
+        onChange={setQInput}
+        placeholder="Search jobs by title"
+        className="min-w-[200px] flex-[1_1_220px] sm:max-w-[300px]"
+      />
+      <ToolbarSelect
+        label="Job status"
+        value={status}
+        onChange={changeStatus}
+        allLabel="All statuses"
+        options={STATUS_FILTER_OPTIONS}
+      />
+      <ToolbarSelect
+        label="Category"
+        value={category}
+        onChange={(next) => {
+          setCategory(next);
+          setPage(1);
+        }}
+        allLabel="All categories"
+        options={CATEGORY_OPTIONS}
+      />
+      {hasFilters && (
+        <Button type="button" variant="ghost" size="sm" onClick={resetFilters}>
+          Clear filters
+        </Button>
+      )}
+      <div className="ml-auto">
         <ColumnsToggle
           columns={cols.columns}
           isVisible={cols.isVisible}
@@ -373,25 +392,7 @@ export function JobsTable() {
         subtitle="Create a job, then publish it to open it to recruiters."
       />
 
-      {/* The reference's 3-up stat strip: the same three readouts the header
-          used to carry, given the room their figures deserve. */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Published" value={publishedTotal} icon={Briefcase} />
-        <StatCard
-          label="No fee set"
-          value={
-            <span className={noFeeCount > 0 ? "text-warn" : undefined}>
-              {noFeeCount}
-            </span>
-          }
-          icon={TriangleAlert}
-        />
-        <StatCard
-          label="Held in escrow"
-          value={formatMinor(wallet.data?.reservedMinor)}
-          icon={Lock}
-        />
-      </div>
+      <QuickViewBand label="Job quick views" views={quickViews} />
 
       {noFeeCount > 0 && hasRows && (
         <Alert tone="warn">
@@ -400,30 +401,33 @@ export function JobsTable() {
         </Alert>
       )}
 
-      {toolbar}
+      <div className={TABLE_CARD}>
+        {toolbar}
 
-      {isError ? (
-        <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
-          <div className="flex items-center gap-2.5 font-[550]">
-            <AlertCircle className="size-[15px] shrink-0" />
-            Could not load jobs.
+        {isError ? (
+          <div className="m-5 flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+            <div className="flex items-center gap-2.5 font-[550]">
+              <AlertCircle className="size-[15px] shrink-0" />
+              Could not load jobs.
+            </div>
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void refetch()}
+              >
+                Retry
+              </Button>
+            </div>
           </div>
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void refetch()}
-            >
-              Retry
-            </Button>
-          </div>
-        </div>
-      ) : isPending ? (
-        /* Match whatever columns this reader has left switched on. */
-        <TableSkeleton columns={cols.allKeys.filter(cols.isVisible).length} />
-      ) : data.data.length === 0 ? (
-        <div className={TABLE_CARD}>
+        ) : isPending ? (
+          /* Match whatever columns this reader has left switched on. */
+          <TableSkeleton
+            className="rounded-none shadow-none"
+            columns={cols.allKeys.filter(cols.isVisible).length}
+          />
+        ) : data.data.length === 0 ? (
           <EmptyState
             icon={Briefcase}
             title="No jobs found"
@@ -449,159 +453,151 @@ export function JobsTable() {
               </div>
             }
           />
-        </div>
-      ) : (
-        <div className={TABLE_CARD}>
-          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
-            <table className={TABLE_EL}>
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <th className={cn(TABLE_TH, "w-[32%]")}>Title</th>
-                  {cols.isVisible("status") && (
-                    <FilterableHead label="Status">
-                      <ColumnFilter
-                        label="Status"
-                        options={STATUS_FILTER_OPTIONS}
-                        value={status === "" ? null : status}
-                        onChange={(next) => changeStatus(next ?? "")}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("category") && (
-                    <FilterableHead label="Category">
-                      <ColumnFilter
-                        label="Category"
-                        options={CATEGORY_OPTIONS}
-                        value={category === "" ? null : category}
-                        onChange={(next) => {
-                          setCategory(next ?? "");
-                          setPage(1);
-                        }}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("fee") && (
-                    <th className={cn(TABLE_TH, "text-right")}>
-                      Recruiter fee
-                    </th>
-                  )}
-                  {cols.isVisible("expiry") && (
-                    <th className={TABLE_TH}>Expiry</th>
-                  )}
-                  {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
-                    <th className={cn(TABLE_TH, "text-center")}>Candidates</th>
-                  )}
-                  <th className={cn(TABLE_TH, "w-11 text-right")}>Actions</th>
-                </tr>
-              </thead>
-              <tbody className={TABLE_BODY}>
-                {data.data.map((job) => {
-                  const candidateCount = candidatesByJob.get(job.id);
-                  const dateLabel = formatDate(
-                    job.publishedAt ?? job.createdAt,
-                  );
-                  return (
-                    <tr key={job.id} className={TABLE_ROW}>
-                      <td className={TABLE_TD_STACKED}>
-                        {/* Title opens the job's public-style detail view;
+        ) : (
+          <>
+            <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr>
+                    <th className={cn(TABLE_TH, "w-[32%]")}>Title</th>
+                    {cols.isVisible("status") && (
+                      <th scope="col" className={TABLE_TH}>
+                        Status
+                      </th>
+                    )}
+                    {cols.isVisible("category") && (
+                      <th scope="col" className={TABLE_TH}>
+                        Category
+                      </th>
+                    )}
+                    {cols.isVisible("fee") && (
+                      <th className={cn(TABLE_TH, "text-right")}>
+                        Recruiter fee
+                      </th>
+                    )}
+                    {cols.isVisible("expiry") && (
+                      <th className={TABLE_TH}>Expiry</th>
+                    )}
+                    {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
+                      <th className={cn(TABLE_TH, "text-center")}>
+                        Candidates
+                      </th>
+                    )}
+                    <th className={cn(TABLE_TH, "w-11 text-right")}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody className={TABLE_BODY}>
+                  {data.data.map((job) => {
+                    const candidateCount = candidatesByJob.get(job.id);
+                    const dateLabel = formatDate(
+                      job.publishedAt ?? job.createdAt,
+                    );
+                    return (
+                      <tr key={job.id} className={TABLE_ROW}>
+                        <td className={TABLE_TD_STACKED}>
+                          {/* Title opens the job's public-style detail view;
                             the row's Edit action is where you change it. */}
-                        <Link
-                          href={jobPath(job)}
-                          className={cn(
-                            TABLE_CELL_MAIN,
-                            "transition-colors hover:text-blue",
-                          )}
-                        >
-                          {job.title}
-                        </Link>
-                        <p className={TABLE_CELL_SUB}>{dateLabel}</p>
-                      </td>
-                      {cols.isVisible("status") && (
-                        <td className={TABLE_TD}>
-                          <JobStatusBadge status={job.status} />
+                          <Link
+                            href={jobPath(job)}
+                            className={cn(
+                              TABLE_CELL_MAIN,
+                              "transition-colors hover:text-blue",
+                            )}
+                          >
+                            {job.title}
+                          </Link>
+                          <p className={TABLE_CELL_SUB}>{dateLabel}</p>
                         </td>
-                      )}
-                      {cols.isVisible("category") && (
-                        <td className={cn(TABLE_TD, "text-ink-muted")}>
-                          {ROLE_CATEGORY_LABELS[job.roleCategory]}
-                        </td>
-                      )}
-                      {cols.isVisible("fee") && (
-                        <td className={cn(TABLE_TD, "text-right")}>
-                          <RecruiterFee feeMinor={job.recruiterFeeMinor} />
-                        </td>
-                      )}
-                      {cols.isVisible("expiry") && (
-                        <td className={cn(TABLE_TD, "text-ink-muted")}>
-                          <JobExpiry expiresAt={job.expiresAt} />
-                        </td>
-                      )}
-                      {!HIDE_PHASE2_FEATURES &&
-                        cols.isVisible("candidates") && (
-                          <td className={cn(TABLE_TD, "text-center")}>
-                            <CandidateCount job={job} count={candidateCount} />
+                        {cols.isVisible("status") && (
+                          <td className={TABLE_TD}>
+                            <JobStatusBadge status={job.status} />
                           </td>
                         )}
-                      <td className={cn(TABLE_TD, "text-right")}>
-                        <div className="flex justify-end">
-                          <JobRowActions job={job} />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <MobileRecordList className="sm:hidden">
-            {data.data.map((job) => (
-              <MobileRecordCard
-                key={job.id}
-                href={jobPath(job)}
-                title={job.title}
-                subtitle={formatDate(job.publishedAt ?? job.createdAt)}
-                trailing={<JobStatusBadge status={job.status} />}
-                fields={[
-                  {
-                    label: "Category",
-                    value: ROLE_CATEGORY_LABELS[job.roleCategory],
-                  },
-                  {
-                    label: "Recruiter fee",
-                    value: <RecruiterFee feeMinor={job.recruiterFeeMinor} />,
-                  },
-                  {
-                    label: "Expiry",
-                    value: <JobExpiry expiresAt={job.expiresAt} />,
-                  },
-                  ...(HIDE_PHASE2_FEATURES
-                    ? []
-                    : [
-                        {
-                          label: "Candidates",
-                          value: (
-                            <CandidateCount
-                              job={job}
-                              count={candidatesByJob.get(job.id)}
-                            />
-                          ),
-                        },
-                      ]),
-                ]}
-                actions={<JobRowActions job={job} />}
-              />
-            ))}
-          </MobileRecordList>
-          <TablePager
-            page={page}
-            totalPages={data.meta.totalPages}
-            total={data.meta.total}
-            pageSize={limit}
-            onPage={setPage}
-            onPageSize={changeLimit}
-          />
-        </div>
-      )}
+                        {cols.isVisible("category") && (
+                          <td className={cn(TABLE_TD, "text-ink-muted")}>
+                            {ROLE_CATEGORY_LABELS[job.roleCategory]}
+                          </td>
+                        )}
+                        {cols.isVisible("fee") && (
+                          <td className={cn(TABLE_TD, "text-right")}>
+                            <RecruiterFee feeMinor={job.recruiterFeeMinor} />
+                          </td>
+                        )}
+                        {cols.isVisible("expiry") && (
+                          <td className={cn(TABLE_TD, "text-ink-muted")}>
+                            <JobExpiry expiresAt={job.expiresAt} />
+                          </td>
+                        )}
+                        {!HIDE_PHASE2_FEATURES &&
+                          cols.isVisible("candidates") && (
+                            <td className={cn(TABLE_TD, "text-center")}>
+                              <CandidateCount
+                                job={job}
+                                count={candidateCount}
+                              />
+                            </td>
+                          )}
+                        <td className={cn(TABLE_TD, "text-right")}>
+                          <div className="flex justify-end">
+                            <JobRowActions job={job} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <MobileRecordList className="sm:hidden">
+              {data.data.map((job) => (
+                <MobileRecordCard
+                  key={job.id}
+                  href={jobPath(job)}
+                  title={job.title}
+                  subtitle={formatDate(job.publishedAt ?? job.createdAt)}
+                  trailing={<JobStatusBadge status={job.status} />}
+                  fields={[
+                    {
+                      label: "Category",
+                      value: ROLE_CATEGORY_LABELS[job.roleCategory],
+                    },
+                    {
+                      label: "Recruiter fee",
+                      value: <RecruiterFee feeMinor={job.recruiterFeeMinor} />,
+                    },
+                    {
+                      label: "Expiry",
+                      value: <JobExpiry expiresAt={job.expiresAt} />,
+                    },
+                    ...(HIDE_PHASE2_FEATURES
+                      ? []
+                      : [
+                          {
+                            label: "Candidates",
+                            value: (
+                              <CandidateCount
+                                job={job}
+                                count={candidatesByJob.get(job.id)}
+                              />
+                            ),
+                          },
+                        ]),
+                  ]}
+                  actions={<JobRowActions job={job} />}
+                />
+              ))}
+            </MobileRecordList>
+            <TablePager
+              page={page}
+              totalPages={data.meta.totalPages}
+              total={data.meta.total}
+              pageSize={limit}
+              onPage={setPage}
+              onPageSize={changeLimit}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }

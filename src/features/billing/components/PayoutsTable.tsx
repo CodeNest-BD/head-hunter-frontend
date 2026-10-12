@@ -8,7 +8,7 @@ import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { CardHeader, CardTitle } from "@/shared/ui-components/controls/card";
+import { ToolbarSelect } from "@/shared/ui-components/data/ListToolbar";
 import {
   ColumnsToggle,
   useVisibleColumns,
@@ -20,17 +20,9 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
-import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
 import { usePayouts } from "../hooks/useBilling";
 import { payoutDetail } from "../payoutTracking";
-import {
-  PAYOUT_STATUS_LABELS,
-  type Payout,
-  type PayoutStatus,
-} from "../schemas";
+import { PAYOUT_STATUS_LABELS, type Payout } from "../schemas";
 import { BillingTableFooter } from "./BillingTable";
 import {
   PayoutStatusBadge,
@@ -94,8 +86,25 @@ export function PayoutsTable() {
 
   return (
     <div className={T.TABLE_CARD}>
-      <CardHeader>
-        <CardTitle>Withdrawals</CardTitle>
+      <div className={T.TABLE_TOOLBAR}>
+        <h2 className="m-0 text-card font-[650] text-ink">Withdrawals</h2>
+        <ToolbarSelect
+          label="Payout status"
+          value={status ?? ""}
+          onChange={(next) => changeStatus(next === "" ? null : next)}
+          allLabel="Any status"
+          options={PAYOUT_STATUS_OPTIONS}
+        />
+        {status !== null && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => changeStatus(null)}
+          >
+            Clear filters
+          </Button>
+        )}
         <div className="ml-auto">
           <ColumnsToggle
             columns={cols.columns}
@@ -103,7 +112,7 @@ export function PayoutsTable() {
             onToggle={cols.toggle}
           />
         </div>
-      </CardHeader>
+      </div>
       <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
         <table className={T.TABLE_EL}>
           <thead className={T.TABLE_HEAD}>
@@ -117,14 +126,9 @@ export function PayoutsTable() {
                 Amount
               </th>
               {cols.isVisible("status") && (
-                <FilterableHead label="Status">
-                  <ColumnFilter
-                    label="Status"
-                    options={PAYOUT_STATUS_OPTIONS}
-                    value={status}
-                    onChange={changeStatus}
-                  />
-                </FilterableHead>
+                <th scope="col" className={T.TABLE_TH}>
+                  Status
+                </th>
               )}
               {cols.isVisible("detail") && (
                 <th scope="col" className={T.TABLE_TH}>
