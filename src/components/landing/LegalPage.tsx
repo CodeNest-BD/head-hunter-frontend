@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { PublicPageHeader } from "./PublicPageHeader";
 import { PublicShell } from "./PublicShell";
 
 /**
@@ -100,20 +101,11 @@ export function LegalPage({
 }) {
   return (
     <PublicShell>
-      {/* `.band--tint` — the header fades the white surface into the canvas. */}
-      <header className="bg-gradient-to-b from-surface to-canvas py-9">
-        <div className="mx-auto max-w-[1200px] px-6">
-          <p className="text-[11.5px] font-[750] uppercase tracking-[0.14em] text-blue">
-            {eyebrow}
-          </p>
-          <h1 className="mt-2 text-[30px] font-extrabold leading-[1.18] tracking-[-0.022em] text-navy">
-            {title}
-          </h1>
-          <span className="mt-3 inline-flex h-5.25 items-center rounded-full bg-neutral-bg px-2 text-[11px] font-[650] tracking-[0.02em] text-neutral">
-            Last updated {updated}
-          </span>
-        </div>
-      </header>
+      <PublicPageHeader eyebrow={eyebrow} title={title}>
+        <span className="mt-3 inline-flex h-5.25 items-center rounded-full bg-neutral-bg px-2 text-[11px] font-[650] tracking-[0.02em] text-neutral">
+          Last updated {updated}
+        </span>
+      </PublicPageHeader>
 
       <div className="mx-auto max-w-[1200px] px-6 pb-6 pt-9">
         <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">

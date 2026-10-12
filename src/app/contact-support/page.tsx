@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
-import { PlaceholderPage } from "@/components/landing/PlaceholderPage";
+import { ContactSupportPage } from "@/components/landing/ContactSupportPage";
 
 export const metadata: Metadata = {
   title: "Contact Support — Head-Hunters",
 };
 
-export default function ContactSupportPage() {
-  return <PlaceholderPage title="Contact Customer Support" />;
+export default function ContactSupport() {
+  return <ContactSupportPage />;
 }
