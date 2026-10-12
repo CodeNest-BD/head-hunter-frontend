@@ -1,23 +1,29 @@
 import { z } from "zod";
 
+import type { AdminDisputeListParams } from "../keys";
+
 import type { Role } from "@/features/auth";
+
 import { apiClient } from "@/shared/libs/apiClient";
+
 import type { StagedUpload } from "@/shared/libs/documentUpload";
+
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
 
 import {
   adminDisputeDetailSchema,
   adminDisputeListItemSchema,
+  adminDisputeSummarySchema,
   disputeAttentionCountSchema,
   disputeMessageSchema,
   participantDisputeDetailSchema,
   participantDisputeSchema,
   type AdminDisputeDetail,
   type AdminDisputeListItem,
+  type AdminDisputeSummary,
   type DisputeChannel,
   type DisputeMessage,
   type DisputeResolution,
-  type DisputeStatus,
   type DisputeSubject,
   type ParticipantDispute,
   type ParticipantDisputeDetail,
@@ -187,17 +193,27 @@ export async function fetchAdminDisputeAttentionCount(): Promise<number> {
 }
 
 /** GET /v1/admin/disputes — the admin inbox. */
+/** GET /v1/admin/disputes/summary */
+export async function fetchAdminDisputeSummary(): Promise<AdminDisputeSummary> {
+  const { data } = await apiClient.get<unknown>("/admin/disputes/summary");
+  return adminDisputeSummarySchema.parse(data);
+}
+
 export async function fetchAdminDisputes(
-  page: number,
-  statuses?: readonly DisputeStatus[],
-  raisedBy?: DisputeChannel,
+  params: AdminDisputeListParams,
 ): Promise<Paginated<AdminDisputeListItem>> {
   const { data } = await apiClient.get<unknown>("/admin/disputes", {
     params: {
-      page,
+      page: params.page,
       limit: 25,
-      ...(statuses?.length ? { status: statuses } : {}),
-      ...(raisedBy ? { raisedBy } : {}),
+      ...(params.statuses?.length ? { status: params.statuses } : {}),
+      ...(params.raisedBy ? { raisedBy: params.raisedBy } : {}),
+      ...(params.companyProfileId
+        ? { companyProfileId: params.companyProfileId }
+        : {}),
+      ...(params.q ? { q: params.q } : {}),
+      ...(params.unread ? { unread: true } : {}),
+      ...(params.sort ? { sort: params.sort } : {}),
     },
   });
   return paginatedSchema(adminDisputeListItemSchema).parse(data);

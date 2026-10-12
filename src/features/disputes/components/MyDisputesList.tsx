@@ -18,10 +18,12 @@ import {
   type ColumnDef,
 } from "@/shared/ui-components/data/Columns";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
+import { ToolbarSelect } from "@/shared/ui-components/data/ListToolbar";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import {
   TABLE_BODY,
   TABLE_CARD,
+  TABLE_TOOLBAR,
   TABLE_EL,
   TABLE_HEAD,
   TABLE_ROW,
@@ -32,10 +34,6 @@ import {
   TABLE_TH,
 } from "@/shared/ui-components/data/tableStyles";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
-import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
@@ -45,8 +43,6 @@ import {
   DISPUTE_STATUS_LABELS,
   DISPUTE_SUBJECT_LABELS,
   isDisputeOpen,
-  type DisputeStatus,
-  type DisputeSubject,
 } from "../schemas";
 import { DisputeStatusBadge } from "./DisputeStatusBadge";
 
@@ -101,10 +97,7 @@ export function MyDisputesList() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string | null>(null);
   const [subject, setSubject] = useState<string | null>(null);
-  const cols = useVisibleColumns("disputes.mine.columns", COLUMNS, (key) => {
-    if (key === "status") changeStatus(null);
-    if (key === "subject") changeSubject(null);
-  });
+  const cols = useVisibleColumns("disputes.mine.columns", COLUMNS);
   const { data, isPending, isError, refetch } = useMyDisputes(
     page,
     status ?? undefined,
@@ -170,10 +163,31 @@ export function MyDisputesList() {
 
   return (
     <div className={TABLE_CARD}>
-      {/* The list has neither a toolbar nor a card title, so the picker gets a
-          header strip of its own — desktop only, since the phone card list
-          renders a fixed field set the picker could not change. */}
-      <div className="hidden items-center border-b border-line px-4 py-2.5 sm:flex">
+      <div className={TABLE_TOOLBAR}>
+        <ToolbarSelect
+          label="Subject"
+          value={subject ?? ""}
+          onChange={(next) => changeSubject(next === "" ? null : next)}
+          allLabel="Any subject"
+          options={SUBJECT_OPTIONS}
+        />
+        <ToolbarSelect
+          label="Case status"
+          value={status ?? ""}
+          onChange={(next) => changeStatus(next === "" ? null : next)}
+          allLabel="Any status"
+          options={STATUS_OPTIONS}
+        />
+        {hasFilters && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={resetFilters}
+          >
+            Clear filters
+          </Button>
+        )}
         <div className="ml-auto">
           <ColumnsToggle
             columns={cols.columns}
@@ -191,14 +205,9 @@ export function MyDisputesList() {
                 Role
               </th>
               {cols.isVisible("subject") && (
-                <FilterableHead label="Subject">
-                  <ColumnFilter
-                    label="Subject"
-                    options={SUBJECT_OPTIONS}
-                    value={subject}
-                    onChange={changeSubject}
-                  />
-                </FilterableHead>
+                <th scope="col" className={TABLE_TH}>
+                  Subject
+                </th>
               )}
               {cols.isVisible("counterparty") && (
                 <th scope="col" className={TABLE_TH}>
@@ -211,14 +220,9 @@ export function MyDisputesList() {
                 </th>
               )}
               {cols.isVisible("status") && (
-                <FilterableHead label="Status">
-                  <ColumnFilter
-                    label="Status"
-                    options={STATUS_OPTIONS}
-                    value={status}
-                    onChange={changeStatus}
-                  />
-                </FilterableHead>
+                <th scope="col" className={TABLE_TH}>
+                  Status
+                </th>
               )}
               {cols.isVisible("opened") && (
                 <th scope="col" className={TABLE_TH}>

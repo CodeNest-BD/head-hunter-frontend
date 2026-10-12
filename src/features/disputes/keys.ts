@@ -1,3 +1,18 @@
+import type { DisputeChannel, DisputeStatus } from "./schemas";
+
+/** What narrows the admin dispute inbox. */
+export interface AdminDisputeListParams {
+  page: number;
+  statuses?: readonly DisputeStatus[];
+  raisedBy?: DisputeChannel;
+  /** Restrict to one company, for the link from its profile. */
+  companyProfileId?: string;
+  q?: string;
+  /** Only cases an admin has not read since the last message. */
+  unread?: boolean;
+  sort?: string;
+}
+
 export const disputeKeys = {
   all: ["disputes"] as const,
   lists: ["disputes", "list"] as const,
@@ -8,14 +23,19 @@ export const disputeKeys = {
   detail: (ref: string) => ["disputes", "detail", ref] as const,
   attentionCount: ["disputes", "attention-count"] as const,
   adminLists: ["disputes", "admin", "list"] as const,
-  adminList: (page: number, statuses?: readonly string[], raisedBy?: string) =>
+  adminSummary: ["disputes", "admin", "summary"] as const,
+  adminList: (params: AdminDisputeListParams) =>
     [
       "disputes",
       "admin",
       "list",
-      page,
-      statuses?.join(",") ?? "all",
-      raisedBy ?? "any",
+      params.page,
+      params.statuses?.join(",") ?? "all",
+      params.raisedBy ?? "any",
+      params.companyProfileId ?? "all-companies",
+      params.q ?? "",
+      params.unread ? "unread" : "any-read",
+      params.sort ?? "needs_action",
     ] as const,
   adminDetails: ["disputes", "admin", "detail"] as const,
   adminDetail: (ref: string) => ["disputes", "admin", "detail", ref] as const,

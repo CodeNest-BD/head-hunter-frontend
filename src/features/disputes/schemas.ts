@@ -23,9 +23,17 @@ export const DISPUTE_STATUS_LABELS: Record<DisputeStatus, string> = {
   closed: "Closed",
 };
 
-/** The two ways the admin UI closes a dispute; refunds and payouts are done by
- * hand. A subset of the backend `DisputeResolution`. */
-export type DisputeResolution = "resume" | "close";
+/**
+ * How an admin settles a dispute. The two money moves are final and one-way;
+ * the other two leave the fee where it is.
+ */
+export type DisputeResolution = "release" | "refund" | "resume" | "close";
+
+/** The two outcomes that actually move money, and cannot be undone. */
+export const FINAL_RESOLUTIONS: readonly DisputeResolution[] = [
+  "release",
+  "refund",
+];
 
 /** Mirrors the backend `DisputeCountdownDto`. */
 export const disputeCountdownSchema = z.object({
@@ -188,6 +196,11 @@ export const adminDisputeListItemSchema = z.object({
   createdAt: z.string(),
   resolvedAt: z.string().nullable(),
   unread: z.boolean(),
+  // Added with the redesigned Dispute Center; `.catch` so the board still
+  // renders against an API that predates them.
+  holdExpiresAt: z.string().catch(""),
+  joiningDate: z.string().catch(""),
+  lastActivityAt: z.string().catch(""),
 });
 export type AdminDisputeListItem = z.infer<typeof adminDisputeListItemSchema>;
 
@@ -204,3 +217,13 @@ export type AdminDisputeDetail = z.infer<typeof adminDisputeDetailSchema>;
 
 /** The Disputes nav badge's payload. */
 export const disputeAttentionCountSchema = z.object({ count: z.number() });
+
+/** What the Dispute Center's summary band counts. */
+export const adminDisputeSummarySchema = z.object({
+  openCases: z.number().catch(0),
+  companies: z.number().catch(0),
+  needsAttention: z.number().catch(0),
+  payoutDueSoon: z.number().catch(0),
+  heldMinor: z.number().catch(0),
+});
+export type AdminDisputeSummary = z.infer<typeof adminDisputeSummarySchema>;
