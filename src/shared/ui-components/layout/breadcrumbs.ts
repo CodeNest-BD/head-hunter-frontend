@@ -41,6 +41,8 @@ const LINKABLE_PATHS = new Set<string>([
   "/admin/recruiters",
   "/admin/companies",
   "/admin/conversations",
+  "/admin/submissions",
+  "/admin/offers-placements",
   "/admin/jobs",
   "/admin/settings",
 ]);

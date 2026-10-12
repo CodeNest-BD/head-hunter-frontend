@@ -31,6 +31,10 @@ export const jobPath = (job: EntityRef): string => `/jobs/${urlRef(job)}`;
 export const companyJobPath = (job: EntityRef): string =>
   `/company/jobs/${urlRef(job)}`;
 
+/** The admin's own job view — not the public page a recruiter reads. */
+export const adminJobPath = (job: EntityRef): string =>
+  `/admin/jobs/${urlRef(job)}`;
+
 export const adminJobEditPath = (job: EntityRef): string =>
   `/admin/jobs/${urlRef(job)}/edit`;
 
@@ -53,6 +57,10 @@ export const disputePath = (dispute: EntityRef): string =>
 
 export const adminDisputePath = (dispute: EntityRef): string =>
   `/admin/disputes/${urlRef(dispute)}`;
+
+/** One commission's payout page, keyed by its placement. */
+export const adminPayoutPath = (placement: EntityRef): string =>
+  `/admin/payouts/${urlRef(placement)}`;
 
 /** `id` is the account's user id: the admin routes' UUID form predates serials. */
 export const adminRecruiterPath = (recruiter: EntityRef): string =>

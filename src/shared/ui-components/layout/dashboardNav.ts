@@ -1,8 +1,11 @@
 import {
   BadgeCheck,
+  Banknote,
   Briefcase,
   Building2,
+  CreditCard,
   Gavel,
+  Handshake,
   Inbox,
   LayoutDashboard,
   type LucideIcon,
@@ -12,7 +15,6 @@ import {
   Send,
   Settings,
   Users,
-  UserRound,
   Wallet2,
 } from "lucide-react";
 
@@ -77,9 +79,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
     },
     {
       label: "Account",
-      items: [
-        { href: "/company/profile", label: "My Profile", icon: UserRound },
-      ],
+      items: [{ href: "/company/profile", label: "Settings", icon: Settings }],
     },
   ],
   recruiter: [
@@ -135,7 +135,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
     {
       label: "Account",
       items: [
-        { href: "/recruiter/profile", label: "My Profile", icon: UserRound },
+        { href: "/recruiter/profile", label: "Settings", icon: Settings },
       ],
     },
   ],
@@ -152,6 +152,16 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
         { href: "/admin/recruiters", label: "Recruiters", icon: Users },
         { href: "/admin/companies", label: "Companies", icon: Building2 },
         { href: "/admin/jobs", label: "Jobs", icon: Briefcase },
+        {
+          href: "/admin/submissions",
+          label: "Candidate Submissions",
+          icon: Inbox,
+        },
+        {
+          href: "/admin/offers-placements",
+          label: "Offers & Placements",
+          icon: Handshake,
+        },
       ],
     },
     {
@@ -169,6 +179,21 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
           href: "/admin/conversations",
           label: "Conversations",
           icon: MessagesSquare,
+        },
+      ],
+    },
+    {
+      label: "Finance",
+      items: [
+        {
+          href: "/admin/payments",
+          label: "Company Payments",
+          icon: CreditCard,
+        },
+        {
+          href: "/admin/payouts",
+          label: "Recruiter Payouts",
+          icon: Banknote,
         },
       ],
     },
@@ -191,8 +216,8 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
 const UNAPPROVED_LABELS: Record<Role, readonly string[]> = {
   // The map stays reachable while unapproved — it renders its own locked
   // teaser, nudging the recruiter to finish verification.
-  recruiter: ["Live Map", "My Profile"],
-  company: ["My Profile"],
+  recruiter: ["Live Map", "Settings"],
+  company: ["Settings"],
   admin: [],
 };
 

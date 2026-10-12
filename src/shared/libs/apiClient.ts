@@ -4,7 +4,8 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { toast } from "sonner";
-import { ApiError, handleError, remainingMessages } from "./errorHandler";
+
+import { handleError, remainingMessages } from "./errorHandler";
 import { tryAuthRefreshRetry } from "./authRefreshInterceptor";
 
 // Per-request guards. `suppressGlobalErrorToast` lets a caller own its own

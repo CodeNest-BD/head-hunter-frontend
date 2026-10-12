@@ -9,6 +9,12 @@ interface RatingStarsProps {
   count?: number;
   /** Compact renders smaller stars for table rows. */
   size?: "sm" | "md";
+  /**
+   * `text` is the directory form the redesign specifies — "4.9 · 41 reviews",
+   * or a faint "Unrated". A column of star rows reads as five repeated glyphs
+   * and the number it is actually sorted on gets lost in them.
+   */
+  variant?: "stars" | "text";
   className?: string;
 }
 
@@ -20,9 +26,33 @@ export function RatingStars({
   value,
   count,
   size = "sm",
+  variant = "stars",
   className,
 }: RatingStarsProps) {
   const starClass = size === "sm" ? "size-3" : "size-3.5";
+
+  if (variant === "text") {
+    if (value === null) {
+      return (
+        <span className={cn("text-sub text-ink-faint", className)}>
+          Unrated
+        </span>
+      );
+    }
+    return (
+      <span className={cn("text-sub whitespace-nowrap", className)}>
+        <span className="font-medium tabular-nums text-ink">
+          {value.toFixed(1)}
+        </span>
+        {count !== undefined && (
+          <span className="tabular-nums text-ink-muted">
+            {" · "}
+            {count} review{count === 1 ? "" : "s"}
+          </span>
+        )}
+      </span>
+    );
+  }
 
   if (value === null) {
     return (

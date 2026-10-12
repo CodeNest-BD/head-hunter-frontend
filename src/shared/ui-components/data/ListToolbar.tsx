@@ -2,9 +2,103 @@
 
 import { Search } from "lucide-react";
 
-import { MobileFilters, type FilterConfig } from "./MobileFilters";
+import { cn } from "@/shared/libs/shadCnConfig";
+import { NativeSelect } from "@/shared/ui-components/controls/nativeSelect";
+import {
+  MobileFilters,
+  type FilterConfig,
+  type FilterOption,
+} from "./MobileFilters";
 
 export type { FilterConfig, FilterOption } from "./MobileFilters";
+
+interface ToolbarSearchProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  /** Height in the toolbar's own 38px rhythm; `sm` is the 36px canvas form. */
+  size?: "sm" | "md";
+  className?: string;
+}
+
+/**
+ * The reference's `.search`: the icon lives inside the bordered box rather
+ * than floated over a plain input, so the whole control is one unit and lines
+ * up with the selects beside it.
+ */
+export function ToolbarSearch({
+  value,
+  onChange,
+  placeholder,
+  size = "md",
+  className,
+}: ToolbarSearchProps) {
+  return (
+    <label
+      className={cn(
+        "flex items-center gap-2 rounded-sm border border-line-strong bg-surface px-[11px] transition-colors focus-within:border-blue focus-within:shadow-focus",
+        size === "md" ? "h-9.5" : "h-9",
+        className,
+      )}
+    >
+      <Search className="size-3.5 shrink-0 text-ink-faint" aria-hidden="true" />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        aria-label="Search"
+        className="w-full border-0 bg-transparent text-sub text-ink outline-none placeholder:text-ink-faint"
+      />
+    </label>
+  );
+}
+
+interface ToolbarSelectProps {
+  /** Accessible name — the visible text is the current value, not a label. */
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  /** The "no filter" option, e.g. "All verification". Its value is "". */
+  allLabel: string;
+  options: readonly FilterOption[];
+  className?: string;
+}
+
+/**
+ * A filter select on a table toolbar. It colours itself when it is narrowing
+ * the list, so a reader scanning a row of four can tell at a glance which ones
+ * are doing something — without that, an unexpected result count looks like
+ * missing data rather than an applied filter.
+ */
+export function ToolbarSelect({
+  label,
+  value,
+  onChange,
+  allLabel,
+  options,
+  className,
+}: ToolbarSelectProps) {
+  const active = value !== "";
+  return (
+    <NativeSelect
+      aria-label={label}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className={cn(
+        "h-9.5 w-auto text-sub",
+        active && "border-blue/35 bg-tint/60 font-medium text-blue-ink",
+        className,
+      )}
+    >
+      <option value="">{allLabel}</option>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </NativeSelect>
+  );
+}
 
 interface ListToolbarProps {
   query: string;
@@ -21,12 +115,11 @@ interface ListToolbarProps {
 }
 
 /**
- * The reference's `.toolbar`: a 36px `.search` box capped at 360px, sitting
- * directly on the canvas above a table. Shared by every table (admin /
- * recruiter / company) so search looks and behaves identically everywhere.
+ * The reference's `.toolbar` for tables that filter from their column headers:
+ * a search box capped at 360px, with the phone-only filter control beside it.
  *
- * Filtering lives in the column headers from `sm` up; below it the phone-only
- * control beside the search box carries the same filters.
+ * A table whose filters sit on the toolbar itself (the recruiter directory)
+ * composes `ToolbarSearch` and `ToolbarSelect` directly instead.
  */
 export function ListToolbar({
   query,
@@ -42,21 +135,13 @@ export function ListToolbar({
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       <div className="flex flex-1 items-center gap-2 sm:max-w-[360px]">
-        {/* `.search` — the icon lives inside the bordered box, not floated over
-            a plain input, so the whole control is one 36px unit. */}
-        <label className="flex h-9 flex-1 items-center gap-2 rounded-sm border border-line-strong bg-surface px-[11px] transition-colors focus-within:border-blue focus-within:shadow-focus">
-          <Search
-            className="size-3.5 shrink-0 text-ink-faint"
-            aria-hidden="true"
-          />
-          <input
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder={placeholder}
-            aria-label="Search"
-            className="w-full border-0 bg-transparent text-sub text-ink outline-none placeholder:text-ink-faint"
-          />
-        </label>
+        <ToolbarSearch
+          value={query}
+          onChange={onQueryChange}
+          placeholder={placeholder}
+          size="sm"
+          className="flex-1"
+        />
       </div>
       {/* A sibling of the search row, not a child of it: its expanded selects
           are full-width rows, and nested in that `items-center` row they would

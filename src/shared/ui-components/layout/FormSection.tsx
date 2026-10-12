@@ -17,7 +17,7 @@ export function FormSection({
   children: ReactNode;
 }) {
   return (
-    <div className="grid gap-x-5 gap-y-2.5 border-t border-line px-5 py-4.5 first:border-t-0 md:grid-cols-[220px_minmax(0,1fr)]">
+    <div className="grid gap-x-5 gap-y-2.5 border-t border-line px-6 py-4.5 first:border-t-0 md:grid-cols-[220px_minmax(0,1fr)]">
       <div>
         <h3 className="text-[13.5px] font-[650] text-ink">{title}</h3>
         {hint && (

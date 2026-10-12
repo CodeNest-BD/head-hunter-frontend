@@ -1,34 +1,52 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { AlertCircle, Briefcase } from "lucide-react";
 
 import { useAuth } from "@/features/auth";
+
 import { CANDIDATE_STATUS_LABELS } from "@/features/candidates/schemas";
+
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
+
 import { companyJobPath, jobPath } from "@/shared/utils/entityPaths";
+
 import { cn } from "@/shared/libs/shadCnConfig";
+
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
+
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
+
 import { Button } from "@/shared/ui-components/controls/button";
+
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+
 import {
   useConversationThread,
   useMarkThreadRead,
 } from "../hooks/useConversation";
+
 import { useConversationRealtime } from "../hooks/useConversationRealtime";
+
 import type { ConversationEvent, ConversationThread } from "../schemas";
+
 import {
   eventKey,
   groupEvents,
   type ConversationParty,
 } from "../utils/groupEvents";
+
 import { DaySeparator } from "./DaySeparator";
+
 import { MessageComposer } from "./MessageComposer";
+
 import { MessageGroup } from "./MessageGroup";
+
 import { OfferCard } from "./OfferCard";
+
 import { ProposalCard } from "./ProposalCard";
+
 import { SystemEvent } from "./SystemEvent";
 
 export interface ThreadProps {

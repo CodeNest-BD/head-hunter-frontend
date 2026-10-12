@@ -15,7 +15,7 @@ describe("recruiter navigation", () => {
       "Submissions",
       "Disputes",
       "Wallet",
-      "My Profile",
+      "Settings",
     ]);
   });
 
@@ -25,7 +25,7 @@ describe("recruiter navigation", () => {
     // it renders its own locked teaser nudging the recruiter to verify.
     const labels = navForRole("recruiter", false).map((item) => item.label);
 
-    expect(labels).toEqual(["Live Map", "My Profile"]);
+    expect(labels).toEqual(["Live Map", "Settings"]);
   });
 
   it("keeps notifications out of the sidebar (bell dropdown only)", () => {
@@ -41,7 +41,7 @@ describe("recruiter navigation", () => {
     // rather than the sidebar.
     const labels = navForRole("company", false).map((item) => item.label);
 
-    expect(labels).toEqual(["My Profile"]);
+    expect(labels).toEqual(["Settings"]);
   });
 
   it("gives an approved company its full navigation", () => {
@@ -53,7 +53,7 @@ describe("recruiter navigation", () => {
         "Jobs",
         "Inbox",
         "Wallet",
-        "My Profile",
+        "Settings",
       ]),
     );
   });
@@ -71,15 +71,26 @@ describe("navigation groups", () => {
     const groups = navGroupsForRole("company", false);
 
     expect(groups.map((g) => g.label)).toEqual(["Account"]);
-    expect(groups[0].items.map((i) => i.label)).toEqual(["My Profile"]);
+    expect(groups[0].items.map((i) => i.label)).toEqual(["Settings"]);
   });
 
-  it("gives the admin the design's five headings", () => {
+  it("gives the admin the design's headings, Finance among them", () => {
     expect(navGroupsForRole("admin", true).map((g) => g.label)).toEqual([
       "Overview",
       "Marketplace",
       "Operations",
+      "Finance",
       "System",
+    ]);
+  });
+
+  it("puts both finance boards under one heading", () => {
+    const finance = navGroupsForRole("admin", true).find(
+      (group) => group.label === "Finance",
+    );
+    expect(finance?.items.map((item) => item.href)).toEqual([
+      "/admin/payments",
+      "/admin/payouts",
     ]);
   });
 
