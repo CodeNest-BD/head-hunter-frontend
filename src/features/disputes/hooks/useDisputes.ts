@@ -6,12 +6,14 @@ import {
 } from "@tanstack/react-query";
 
 import type { Role } from "@/features/auth";
+
 import { notificationKeys } from "@/features/notifications/keys";
 
 import {
   fetchAdminDispute,
   fetchAdminDisputeAttentionCount,
   fetchAdminDisputes,
+  fetchAdminDisputeSummary,
   fetchEligiblePlacements,
   fetchDisputeAttentionCount,
   fetchMyDispute,
@@ -22,14 +24,20 @@ import {
   raiseDispute,
   resolveDispute,
 } from "../api/disputes";
+
 import { uploadToPresignedUrl } from "@/shared/libs/documentUpload";
+
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
+
 import { cacheUnderSerialKey } from "@/shared/libs/queryClient";
+
 import { disputeKeys } from "../keys";
+
+import type { AdminDisputeListParams } from "../keys";
+
 import type {
   DisputeChannel,
   DisputeResolution,
-  DisputeStatus,
   DisputeSubject,
 } from "../schemas";
 
@@ -175,14 +183,17 @@ export function useAdminDisputeAttentionCount(enabled: boolean) {
   });
 }
 
-export function useAdminDisputes(
-  page: number,
-  statuses?: readonly DisputeStatus[],
-  raisedBy?: DisputeChannel,
-) {
+export function useAdminDisputeSummary() {
   return useQuery({
-    queryKey: disputeKeys.adminList(page, statuses, raisedBy),
-    queryFn: () => fetchAdminDisputes(page, statuses, raisedBy),
+    queryKey: disputeKeys.adminSummary,
+    queryFn: fetchAdminDisputeSummary,
+  });
+}
+
+export function useAdminDisputes(params: AdminDisputeListParams) {
+  return useQuery({
+    queryKey: disputeKeys.adminList(params),
+    queryFn: () => fetchAdminDisputes(params),
     placeholderData: keepPreviousData,
   });
 }
