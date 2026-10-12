@@ -12,7 +12,10 @@ import type {
  * views can never drift apart on color.
  */
 export const ACCOUNT_STATUS_TONES: Record<AccountStatus, PillTone> = {
-  active: "ok",
+  // Grey, not green: "active" is the unremarkable default every healthy
+  // account sits in, and the design saves green for a state someone earned
+  // (verified) so a row of green pills cannot drown out the one red one.
+  active: "neutral",
   suspended: "bad",
 };
 

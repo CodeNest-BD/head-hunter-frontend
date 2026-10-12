@@ -1,10 +1,26 @@
+import { z } from "zod";
 import type { ThreadSortOrder } from "@/features/conversations/api/conversations";
 import { apiClient } from "@/shared/libs/apiClient";
 import { paginatedSchema, type Paginated } from "@/shared/libs/pagination";
-import type { AdminListParams } from "../keys";
+import type {
+  AdminListParams,
+  AdminOfferListParams,
+  AdminPaymentParams,
+  AdminPayoutParams,
+} from "../keys";
 import {
   accountStatusResponseSchema,
+  adminPaymentSchema,
+  adminPayoutSchema,
+  adminPayoutDetailSchema,
+  paymentCountsSchema,
+  paymentsSummarySchema,
+  payoutsSummarySchema,
   adminJobListItemSchema,
+  adminJobDetailSchema,
+  adminOfferSchema,
+  adminPlacementSchema,
+  placementCountsSchema,
   adminDashboardSchema,
   adminStatsSchema,
   adminUserSchema,
@@ -18,7 +34,19 @@ import {
   minRecruiterFeeSchema,
   recruiterPricingSchema,
   type AccountStatus,
+  type AdminPayment,
+  type AdminPayout,
+  type AdminPayoutDetail,
+  type PaymentCounts,
+  type PaymentsSummary,
+  type PayoutHoldReason,
+  type PayoutsSummary,
   type AdminJobListItem,
+  type AdminJobDetail,
+  type AdminOffer,
+  type AdminPlacement,
+  type PlacementCounts,
+  type PlacementView,
   type AdminUser,
   type BulkJobActionResult,
   type CompanyDetail,
@@ -46,9 +74,20 @@ function listParams(params: AdminListParams): Record<string, unknown> {
     ...(params.verificationStatus
       ? { verificationStatus: params.verificationStatus }
       : {}),
+    ...(params.rating ? { rating: params.rating } : {}),
+    ...(params.state ? { state: params.state } : {}),
+    ...(params.wallet ? { wallet: params.wallet } : {}),
+    ...(params.industry ? { industry: params.industry } : {}),
+    ...(params.activity ? { activity: params.activity } : {}),
+    ...(params.jobId ? { jobId: params.jobId } : {}),
+    ...(params.withinDays ? { withinDays: params.withinDays } : {}),
+    ...(params.order ? { order: params.order } : {}),
     ...(params.company ? { company: params.company } : {}),
     ...(params.recruiterProfileId
       ? { recruiterProfileId: params.recruiterProfileId }
+      : {}),
+    ...(params.companyProfileId
+      ? { companyProfileId: params.companyProfileId }
       : {}),
   };
 }
@@ -117,6 +156,12 @@ export async function fetchCompanies(
   return paginatedSchema(companyListItemSchema).parse(data);
 }
 
+/** GET /v1/admin/companies/industries */
+export async function fetchCompanyIndustries(): Promise<string[]> {
+  const { data } = await apiClient.get<unknown>("/admin/companies/industries");
+  return z.array(z.string()).parse(data);
+}
+
 /** GET /v1/admin/companies/:userId */
 export async function fetchCompany(userId: string): Promise<CompanyDetail> {
   const { data } = await apiClient.get<unknown>(`/admin/companies/${userId}`);
@@ -172,6 +217,45 @@ export async function reinstateAccount(userId: string): Promise<AccountStatus> {
     `/admin/accounts/${userId}/reinstate`,
   );
   return accountStatusResponseSchema.parse(data).status;
+}
+
+/** GET /v1/admin/placements */
+export async function fetchAdminPlacements(
+  view: PlacementView,
+  page: number,
+  limit: number,
+): Promise<Paginated<AdminPlacement>> {
+  const { data } = await apiClient.get<unknown>("/admin/placements", {
+    params: { page, limit, ...(view === "all" ? {} : { view }) },
+  });
+  return paginatedSchema(adminPlacementSchema).parse(data);
+}
+
+/** GET /v1/admin/placements/counts */
+export async function fetchPlacementCounts(): Promise<PlacementCounts> {
+  const { data } = await apiClient.get<unknown>("/admin/placements/counts");
+  return placementCountsSchema.parse(data);
+}
+
+/** GET /v1/admin/offers */
+export async function fetchAdminOffers(
+  params: AdminOfferListParams,
+): Promise<Paginated<AdminOffer>> {
+  const { data } = await apiClient.get<unknown>("/admin/offers", {
+    params: {
+      page: params.page,
+      limit: params.limit,
+      ...(params.q ? { q: params.q } : {}),
+      ...(params.status ? { status: params.status } : {}),
+    },
+  });
+  return paginatedSchema(adminOfferSchema).parse(data);
+}
+
+/** GET /v1/admin/jobs/:jobId */
+export async function fetchAdminJob(ref: string): Promise<AdminJobDetail> {
+  const { data } = await apiClient.get<unknown>(`/admin/jobs/${ref}`);
+  return adminJobDetailSchema.parse(data);
 }
 
 /** GET /v1/admin/jobs */
@@ -327,4 +411,110 @@ export function bulkDeleteAdminJobs(
   jobIds: string[],
 ): Promise<BulkJobActionResult> {
   return bulkJobAction("/admin/jobs/bulk/delete", jobIds);
+}
+
+/* ── Finance boards ────────────────────────────────────────────────────── */
+
+/**
+ * Only the filters that are set are sent. An empty select means "no filter",
+ * and sending `status=""` would narrow to rows with an empty status instead.
+ */
+function financeParams(
+  params: AdminPaymentParams | AdminPayoutParams,
+): Record<string, unknown> {
+  const entries = Object.entries(params).filter(
+    ([key, value]) =>
+      key !== "page" &&
+      key !== "limit" &&
+      value !== undefined &&
+      value !== "" &&
+      value !== "all",
+  );
+  return {
+    page: params.page,
+    limit: params.limit ?? DEFAULT_PAGE_SIZE,
+    ...Object.fromEntries(entries),
+  };
+}
+
+/** GET /v1/admin/payments */
+export async function fetchAdminPayments(
+  params: AdminPaymentParams,
+): Promise<Paginated<AdminPayment>> {
+  const { data } = await apiClient.get<unknown>("/admin/payments", {
+    params: financeParams(params),
+  });
+  return paginatedSchema(adminPaymentSchema).parse(data);
+}
+
+/** GET /v1/admin/payments/counts */
+export async function fetchPaymentCounts(
+  params: AdminPaymentParams,
+): Promise<PaymentCounts> {
+  const { data } = await apiClient.get<unknown>("/admin/payments/counts", {
+    params: financeParams(params),
+  });
+  return paymentCountsSchema.parse(data);
+}
+
+/** GET /v1/admin/payments/summary */
+export async function fetchPaymentsSummary(): Promise<PaymentsSummary> {
+  const { data } = await apiClient.get<unknown>("/admin/payments/summary");
+  return paymentsSummarySchema.parse(data);
+}
+
+/** GET /v1/admin/payouts */
+export async function fetchAdminPayouts(
+  params: AdminPayoutParams,
+): Promise<Paginated<AdminPayout>> {
+  const { data } = await apiClient.get<unknown>("/admin/payouts", {
+    params: financeParams(params),
+  });
+  return paginatedSchema(adminPayoutSchema).parse(data);
+}
+
+/** GET /v1/admin/payouts/summary */
+export async function fetchPayoutsSummary(): Promise<PayoutsSummary> {
+  const { data } = await apiClient.get<unknown>("/admin/payouts/summary");
+  return payoutsSummarySchema.parse(data);
+}
+
+/** GET /v1/admin/payouts/:ref — `ref` is the placement serial or its id. */
+export async function fetchAdminPayout(
+  ref: string,
+): Promise<AdminPayoutDetail> {
+  const { data } = await apiClient.get<unknown>(
+    `/admin/payouts/${encodeURIComponent(ref)}`,
+  );
+  return adminPayoutDetailSchema.parse(data);
+}
+
+export interface AddPayoutHoldInput {
+  reason: PayoutHoldReason;
+  note: string;
+}
+
+/** POST /v1/admin/payouts/:ref/holds */
+export async function addPayoutHold(
+  ref: string,
+  input: AddPayoutHoldInput,
+): Promise<AdminPayoutDetail> {
+  const { data } = await apiClient.post<unknown>(
+    `/admin/payouts/${encodeURIComponent(ref)}/holds`,
+    input,
+  );
+  return adminPayoutDetailSchema.parse(data);
+}
+
+/** POST /v1/admin/payouts/:ref/holds/:holdId/release */
+export async function releasePayoutHold(
+  ref: string,
+  holdId: string,
+  note?: string,
+): Promise<AdminPayoutDetail> {
+  const { data } = await apiClient.post<unknown>(
+    `/admin/payouts/${encodeURIComponent(ref)}/holds/${encodeURIComponent(holdId)}/release`,
+    note ? { note } : {},
+  );
+  return adminPayoutDetailSchema.parse(data);
 }

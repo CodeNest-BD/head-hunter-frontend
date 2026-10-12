@@ -1,161 +1,76 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { AlertCircle, BadgeCheck, BadgeX } from "lucide-react";
+import { ChevronRight, AlertCircle } from "lucide-react";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
+
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+
 import { cn } from "@/shared/libs/shadCnConfig";
+
 import { useCanonicalPath } from "@/shared/hooks/useCanonicalPath";
-import { adminCompanyPath, urlRef } from "@/shared/utils/entityPaths";
+
+import { adminCompanyPath, jobPath, urlRef } from "@/shared/utils/entityPaths";
+
 import { formatMinor } from "@/shared/utils/money";
+
 import { Button } from "@/shared/ui-components/controls/button";
+
+import { TONE_DOT } from "@/shared/ui-components/badges/Pill";
+
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui-components/controls/card";
-import { Textarea } from "@/shared/ui-components/controls/textarea";
+  TABLE_BODY,
+  TABLE_CELL_MAIN,
+  TABLE_CELL_SUB,
+  TABLE_EL,
+  TABLE_HEAD,
+  TABLE_ROW,
+  TABLE_SCROLL,
+  TABLE_TD,
+  TABLE_TD_STACKED,
+  TABLE_TH,
+} from "@/shared/ui-components/data/tableStyles";
+
+import { useAdminCompany, useAdminJobs } from "../hooks/useAdmin";
+
 import {
-  useAdminCompany,
-  useDecideCompanyVerification,
-} from "../hooks/useAdmin";
-import type { CompanyDetail as CompanyDetailData } from "../schemas";
-import { VERIFICATION_LABELS } from "../schemas";
-import { HoldButton } from "./HoldButton";
-import {
-  DetailField,
-  DetailSkeleton,
-  FACTS_GRID,
-  FACT_FULL,
-} from "./DetailPrimitives";
+  JOB_STATUS_LABELS,
+  VERIFICATION_LABELS,
+  type CompanyDetail as CompanyDetailData,
+  type CompanyLedgerRow,
+} from "../schemas";
+
+import { CompanyAccountActions } from "./CompanyAccountActions";
+
+import { DetailSkeleton, SideFact, SideSection } from "./DetailPrimitives";
+
 import {
   ACCOUNT_STATUS_LABELS,
   ACCOUNT_STATUS_TONES,
+  JOB_STATUS_TONES,
   VERIFICATION_STATUS_TONES,
 } from "./statusStyles";
-
-/**
- * The admin's approval decision. The note reaches the company either way — it
- * becomes the decline's notification body, and is appended to the approval's —
- * so it is worth writing well.
- */
-function VerificationCard({ data }: { data: CompanyDetailData }) {
-  const decide = useDecideCompanyVerification();
-  const [note, setNote] = useState("");
-
-  const submit = (status: "verified" | "rejected"): void => {
-    decide.mutate(
-      { userId: data.userId, status, note: note.trim() || undefined },
-      { onSuccess: () => setNote("") },
-    );
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Approval</CardTitle>
-        <StatusBadge
-          className="ml-auto"
-          label={VERIFICATION_LABELS[data.verificationStatus]}
-          tone={VERIFICATION_STATUS_TONES[data.verificationStatus] ?? "neutral"}
-        />
-      </CardHeader>
-      <CardContent className="flex flex-col gap-2.5">
-        <p className="text-sub text-ink-muted">
-          {data.verificationStatus === "verified"
-            ? "This company can post jobs and review candidate submissions."
-            : data.verificationStatus === "rejected"
-              ? "This company was declined. Approving now restores full access."
-              : "Review the profile, then approve or decline. A pending company cannot post jobs or review candidates, and is hidden from recruiters."}
-        </p>
-        {data.verificationNote && (
-          /* `.well` — the previous decision, kept as context beside the new one. */
-          <p className="rounded-sm border border-line bg-surface-sub px-3 py-2.5 text-body text-ink-body">
-            <span className="font-[650] text-ink">Last note:</span>{" "}
-            {data.verificationNote}
-          </p>
-        )}
-        <Textarea
-          rows={2}
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-          placeholder="Optional note — sent to the company with the decision."
-          aria-label="Approval note"
-        />
-      </CardContent>
-      <CardFooter className="flex-wrap">
-        {data.verificationStatus !== "verified" && (
-          <Button
-            type="button"
-            disabled={decide.isPending}
-            onClick={() => submit("verified")}
-          >
-            <BadgeCheck />
-            Approve
-          </Button>
-        )}
-        {data.verificationStatus !== "rejected" && (
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={decide.isPending}
-            onClick={() => submit("rejected")}
-          >
-            <BadgeX />
-            Decline
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
-  );
-}
-
-/** Label + clickable count that deep-links to this company's jobs list. */
-function JobCountField({
-  label,
-  count,
-  href,
-}: {
-  label: string;
-  count: number;
-  href: string;
-}) {
-  return (
-    <div>
-      <div className="text-label font-[650] uppercase text-ink-muted">
-        {label}
-      </div>
-      <div className="mt-[3px] text-body font-[550] tabular-nums text-ink">
-        {count > 0 ? (
-          <Link
-            href={href}
-            className="text-blue-ink hover:underline focus-visible:underline focus-visible:outline-none"
-          >
-            {count}
-          </Link>
-        ) : (
-          0
-        )}
-      </div>
-    </div>
-  );
-}
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-US", {
-    month: "long",
+    month: "short",
     day: "numeric",
     year: "numeric",
   });
 }
 
-/** Prefix "$" and group a plain revenue figure ("3500000" → "$3,500,000"). A
- * non-numeric legacy value is shown as-is behind the "$". */
+/** "Feb 2026" — the granularity a "member since" line wants. */
+function monthYear(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/** The revenue answer is free text on the sign-up form, so it may be a bare
+ *  number, a band, or already formatted. */
 function formatRevenue(revenue: string): string {
   const digits = revenue.replace(/[^\d.]/g, "");
   const n = Number(digits);
@@ -164,30 +79,48 @@ function formatRevenue(revenue: string): string {
     : `$${revenue}`;
 }
 
-/** One cell of the wallet strip — the reference's `.stat` figure, ruled off
- * from its neighbour rather than boxed on its own. */
-function WalletStat({
-  label,
-  minor,
-  first = false,
-}: {
-  label: string;
-  minor: number;
-  /** The leading cell owns no divider. */
-  first?: boolean;
-}) {
+/**
+ * The wording for each kind of wallet movement. The API sends the raw entry
+ * type; the labels live here, because how an admin reads "reserve" changes far
+ * more often than the ledger does.
+ */
+const LEDGER_LABELS = new Map<string, string>([
+  ["credit", "Deposit"],
+  ["debit", "Charge"],
+  ["reserve", "Fee reserved"],
+  ["release_reserve", "Reservation released"],
+  ["hold", "Fee held"],
+  ["release_hold", "Hold released"],
+  ["refund", "Refund"],
+  ["payout", "Fee settled"],
+]);
+
+const LEDGER_REF_LABELS = new Map<string, string>([
+  ["topup", "Wallet top-up"],
+  ["job", "Job"],
+  ["placement", "Placement"],
+  ["dispute", "Dispute"],
+  ["payout", "Payout"],
+  ["subscription", "Subscription"],
+]);
+
+/** Money leaving the wallet reads as a negative; everything else is a credit
+ *  or a ring-fence that has not left yet. */
+const OUTGOING = new Set(["debit", "payout"]);
+
+function LedgerAmount({ row }: { row: CompanyLedgerRow }) {
+  const outgoing = OUTGOING.has(row.entryType);
+  const incoming = row.entryType === "credit" || row.entryType === "refund";
   return (
-    <div
+    <span
       className={cn(
-        "flex-1 px-4 py-3.5",
-        first ? "" : "border-t border-line sm:border-l sm:border-t-0",
+        "whitespace-nowrap font-medium tabular-nums",
+        outgoing ? "text-bad" : incoming ? "text-ok" : "text-ink",
       )}
     >
-      <p className="text-label font-[650] uppercase text-ink-muted">{label}</p>
-      <p className="mt-[5px] text-stat font-bold tabular-nums text-ink">
-        {formatMinor(minor)}
-      </p>
-    </div>
+      {outgoing ? "−" : incoming ? "+" : ""}
+      {formatMinor(row.amountMinor)}
+    </span>
   );
 }
 
@@ -200,6 +133,18 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
         serialNumber: data.companySerialNumber,
       }),
   );
+  // The profile previews the company's newest jobs; the full board is a click
+  // away, so this asks for one short page rather than paging here.
+  const jobs = useAdminJobs({
+    page: 1,
+    limit: 5,
+    company: data
+      ? urlRef({
+          id: data.companyProfileId,
+          serialNumber: data.companySerialNumber,
+        })
+      : undefined,
+  });
 
   if (isPending) return <DetailSkeleton />;
   if (isError) {
@@ -219,160 +164,489 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
   }
 
   const cityState = [data.city, data.state].filter(Boolean).join(", ");
-  const location = [cityState, data.zip].filter(Boolean).join(" ") || "—";
+  const address =
+    [data.addressLine, cityState, data.zip].filter(Boolean).join(", ") || "—";
   const revenue =
     data.revenue === null || data.revenue.trim() === ""
       ? null
       : formatRevenue(data.revenue);
+  const companyParam = urlRef({
+    id: data.companyProfileId,
+    serialNumber: data.companySerialNumber,
+  });
   const jobsHref = `/admin/jobs?${new URLSearchParams({
-    company: urlRef({
-      id: data.companyProfileId,
-      serialNumber: data.companySerialNumber,
-    }),
+    company: companyParam,
     companyName: data.companyName,
   }).toString()}`;
 
   // Smallest to largest recruiter fee this company has actually posted, not the
-  // range it advertises on its profile — a company that posted $500 and $2,000
-  // reads "$500 – $2,000" here however it filled its profile in. Collapses to a
-  // single figure when every job carries the same fee.
+  // range it advertises on its profile. Collapses to a single figure when every
+  // job carries the same fee.
   const { minFeeMinor: min, maxFeeMinor: max } = data;
   const feeRange =
     min === null || max === null
-      ? null
+      ? "No jobs posted yet"
       : min === max
-        ? formatMinor(min)
-        : `${formatMinor(min)} – ${formatMinor(max)}`;
+        ? `Every job at ${formatMinor(min)}`
+        : `Range ${formatMinor(min)} – ${formatMinor(max)}`;
+
+  const summary = [
+    {
+      label: "Wallet balance",
+      value: formatMinor(data.balanceMinor),
+      note: `${formatMinor(data.availableMinor)} available · ${formatMinor(data.reservedMinor)} reserved`,
+    },
+    {
+      label: "Open jobs",
+      value: data.openJobCount.toLocaleString(),
+      note: `${data.jobCount.toLocaleString()} posted in total`,
+    },
+    {
+      label: "Placements",
+      value: data.placementCount.toLocaleString(),
+      note: `From ${data.offerCount.toLocaleString()} offer${data.offerCount === 1 ? "" : "s"}`,
+    },
+    {
+      label: "Average fee",
+      value: data.avgFeeMinor === null ? "—" : formatMinor(data.avgFeeMinor),
+      note: feeRange,
+    },
+  ];
+
+  // Reserved is a share of the balance, so the bar is two parts of one whole.
+  const reservedShare =
+    data.balanceMinor > 0
+      ? Math.min(
+          100,
+          Math.round((data.reservedMinor / data.balanceMinor) * 100),
+        )
+      : 0;
+
+  // Both carry the company, so each lands on a list already narrowed to it
+  // rather than the whole board with the reader left to filter it again.
+  const companyScope = new URLSearchParams({
+    companyProfileId: data.companyProfileId,
+    companyName: data.companyName,
+  }).toString();
+  const related = [
+    {
+      label: "Candidate submissions",
+      href: `/admin/conversations?${companyScope}`,
+    },
+    { label: "Disputes", href: `/admin/disputes?${companyScope}` },
+  ];
 
   return (
-    <div className="flex w-full max-w-5xl flex-col gap-3">
-      <Card>
-        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 items-center gap-4">
-            <CompanyLogo
-              companyProfileId={data.companyProfileId}
-              hasLogo={data.hasLogo}
-              name={data.companyName}
-              size="lg"
-            />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h2 className="text-page font-bold text-ink">
-                  {data.companyName}
-                </h2>
-                <StatusBadge
-                  label={ACCOUNT_STATUS_LABELS[data.status]}
-                  tone={ACCOUNT_STATUS_TONES[data.status]}
+    <div className="flex w-full max-w-6xl flex-col gap-6">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <CompanyLogo
+            companyProfileId={data.companyProfileId}
+            hasLogo={data.hasLogo}
+            name={data.companyName}
+            size="lg"
+          />
+          <div className="flex min-w-0 flex-col gap-1">
+            <h1 className="text-page font-bold text-ink">{data.companyName}</h1>
+            {/* The design states these as a dotted line rather than chips —
+                four facts read as one sentence, where four pills would read as
+                four competing badges. */}
+            <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-sub text-ink-muted">
+              <span className="inline-flex items-center gap-1.5 text-ok">
+                <span
+                  aria-hidden="true"
+                  className={cn("size-1.5 rounded-full", TONE_DOT.ok)}
                 />
-                <StatusBadge
-                  label={VERIFICATION_LABELS[data.verificationStatus]}
-                  tone={
-                    VERIFICATION_STATUS_TONES[data.verificationStatus] ??
-                    "neutral"
-                  }
+                {VERIFICATION_LABELS[data.verificationStatus]}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-ink-body">
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    TONE_DOT[ACCOUNT_STATUS_TONES[data.status]],
+                  )}
+                />
+                {ACCOUNT_STATUS_LABELS[data.status]}
+              </span>
+              {data.industry && <span>{data.industry}</span>}
+              {cityState && <span>{cityState}</span>}
+            </div>
+          </div>
+        </div>
+        <CompanyAccountActions data={data} presentation="menu" />
+      </header>
+
+      <section
+        aria-label="Company summary"
+        className="overflow-hidden rounded-lg bg-surface shadow-e1"
+      >
+        <dl className="m-0 grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
+          {summary.map((item) => (
+            <div
+              key={item.label}
+              className="flex flex-col gap-1 px-6 py-4.5 shadow-[inset_-1px_0_0_theme(colors.line.DEFAULT)] last:shadow-none"
+            >
+              <dt className="text-meta font-medium text-ink-muted">
+                {item.label}
+              </dt>
+              <dd className="m-0 text-[26px] font-semibold leading-8 tracking-[-0.02em] tabular-nums text-ink">
+                {item.value}
+              </dd>
+              <dd className="m-0 text-meta leading-[18px] text-ink-muted">
+                {item.note}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <div className="flex flex-wrap items-start gap-6">
+        <div className="flex min-w-0 flex-[3_1_600px] flex-col gap-6">
+          <section className="overflow-hidden rounded-md bg-surface shadow-e1">
+            <div className="flex items-center justify-between gap-3 px-6 py-4">
+              <h2 className="text-card font-[650] text-ink">Jobs</h2>
+              <Link
+                href={jobsHref}
+                className="text-sub font-medium text-blue-ink hover:underline"
+              >
+                View all
+              </Link>
+            </div>
+            {jobs.isPending ? (
+              <div className="flex flex-col">
+                {[0, 1, 2].map((row) => (
+                  <div
+                    key={row}
+                    className="flex h-14 items-center gap-4 border-t border-line px-6"
+                  >
+                    <div className="h-3.5 w-1/3 animate-pulse rounded-xs bg-surface-sunken" />
+                    <div className="ml-auto h-5.25 w-20 animate-pulse rounded-full bg-surface-sunken" />
+                  </div>
+                ))}
+              </div>
+            ) : jobs.isError ? (
+              <p className="px-6 pb-6 text-sub text-ink-muted">
+                Could not load this company&rsquo;s jobs.
+              </p>
+            ) : jobs.data.data.length === 0 ? (
+              <p className="px-6 pb-6 text-sub text-ink-muted">
+                This company has not posted a job yet.
+              </p>
+            ) : (
+              <div className={TABLE_SCROLL}>
+                <table className={TABLE_EL}>
+                  <thead className={TABLE_HEAD}>
+                    <tr>
+                      <th scope="col" className={TABLE_TH}>
+                        Job
+                      </th>
+                      <th scope="col" className={TABLE_TH}>
+                        Status
+                      </th>
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                        Candidates
+                      </th>
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                        Recruiter Fee
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className={TABLE_BODY}>
+                    {jobs.data.data.map((job) => (
+                      <tr key={job.jobId} className={TABLE_ROW}>
+                        <td className={TABLE_TD_STACKED}>
+                          <Link
+                            href={jobPath({
+                              id: job.jobId,
+                              serialNumber: job.jobSerialNumber,
+                            })}
+                            className={cn(
+                              TABLE_CELL_MAIN,
+                              "block transition-colors hover:text-blue focus-visible:underline focus-visible:outline-none",
+                            )}
+                          >
+                            {job.title}
+                          </Link>
+                          <span className={TABLE_CELL_SUB}>
+                            Posted {formatDate(job.createdAt)}
+                          </span>
+                        </td>
+                        <td className={TABLE_TD}>
+                          <StatusBadge
+                            label={JOB_STATUS_LABELS[job.status] ?? job.status}
+                            tone={JOB_STATUS_TONES[job.status] ?? "neutral"}
+                          />
+                        </td>
+                        <td className={cn(TABLE_TD, "text-right")}>
+                          {job.candidateCount > 0 ? (
+                            <Link
+                              href={`/admin/conversations?${companyScope}`}
+                              className="font-[550] tabular-nums text-blue-ink hover:underline focus-visible:underline focus-visible:outline-none"
+                            >
+                              {job.candidateCount}
+                            </Link>
+                          ) : (
+                            <span className="tabular-nums text-ink-faint">
+                              0
+                            </span>
+                          )}
+                        </td>
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap text-right font-medium tabular-nums text-ink",
+                          )}
+                        >
+                          {formatMinor(job.recruiterFeeMinor)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className="overflow-hidden rounded-md bg-surface shadow-e1">
+            <div className="flex items-center justify-between gap-3 px-6 py-4">
+              <h2 className="text-card font-[650] text-ink">Wallet</h2>
+            </div>
+            <div className="flex flex-col gap-3 px-6 pb-4">
+              <div
+                role="img"
+                aria-label={`Wallet: ${formatMinor(data.availableMinor)} available, ${formatMinor(data.reservedMinor)} reserved`}
+                className="flex h-1.5 gap-0.5 overflow-hidden rounded-full bg-line"
+              >
+                <div
+                  className="bg-blue"
+                  style={{ width: `${100 - reservedShare}%` }}
+                />
+                <div
+                  className="bg-tint-strong"
+                  style={{ width: `${reservedShare}%` }}
                 />
               </div>
-              <p className="mt-0.5 text-sub text-ink-muted">{data.email}</p>
+              <div className="flex flex-wrap gap-x-8 gap-y-2 text-sub text-ink-body">
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="size-2 rounded-xs bg-blue"
+                  />
+                  Available · can fund new jobs
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="size-2 rounded-xs bg-tint-strong"
+                  />
+                  Reserved · held for live jobs and placements
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="sm:ml-auto sm:shrink-0">
-            <HoldButton
-              userId={data.userId}
-              status={data.status}
-              subjectName={data.companyName}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <VerificationCard data={data} />
-
-      <Card>
-        <div className="flex flex-col sm:flex-row">
-          <WalletStat label="Available" minor={data.availableMinor} first />
-          <WalletStat label="Balance" minor={data.balanceMinor} />
-          <WalletStat label="Reserved" minor={data.reservedMinor} />
+            {data.recentLedger.length === 0 ? (
+              <p className="px-6 pb-6 text-sub text-ink-muted">
+                No wallet activity yet.
+              </p>
+            ) : (
+              <div className={TABLE_SCROLL}>
+                <table className={TABLE_EL}>
+                  <thead className={TABLE_HEAD}>
+                    <tr>
+                      <th scope="col" className={TABLE_TH}>
+                        Date
+                      </th>
+                      <th scope="col" className={TABLE_TH}>
+                        Activity
+                      </th>
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                        Amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className={TABLE_BODY}>
+                    {data.recentLedger.map((row) => (
+                      <tr key={row.id} className={TABLE_ROW}>
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap text-ink-muted",
+                          )}
+                        >
+                          {formatDate(row.at)}
+                        </td>
+                        <td className={TABLE_TD_STACKED}>
+                          <span className={cn(TABLE_CELL_MAIN, "block")}>
+                            {LEDGER_LABELS.get(row.entryType) ?? row.entryType}
+                          </span>
+                          <span className={TABLE_CELL_SUB}>
+                            {LEDGER_REF_LABELS.get(row.referenceType) ??
+                              row.referenceType}
+                          </span>
+                        </td>
+                        <td className={cn(TABLE_TD, "text-right")}>
+                          <LedgerAmount row={row} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </div>
-      </Card>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-          </CardHeader>
-          <CardContent className={FACTS_GRID}>
-            <DetailField label="First name" value={data.firstName} />
-            <DetailField label="Last name" value={data.lastName} />
-            <DetailField label="Phone" value={data.phone} />
-            <DetailField
-              label="Phone confirmed"
-              value={data.phoneVerified ? "Yes" : "No"}
-            />
-            <DetailField label="Email" value={data.email} />
-            <DetailField
-              label="Email confirmed"
-              value={data.emailVerified ? "Yes" : "No"}
-            />
-            <DetailField label="Address" value={data.addressLine} />
-            <DetailField label="Location" value={location} />
-            {/* Full width, so the website reads directly under the address it
-                belongs with rather than sharing a row with the joined date. */}
-            <div className={FACT_FULL}>
-              <DetailField label="Website" value={data.website} />
-            </div>
-            <div className={FACT_FULL}>
-              <DetailField label="Joined" value={formatDate(data.joinedAt)} />
-            </div>
-            <div className={FACT_FULL}>
-              <DetailField label="Description" value={data.description} />
-            </div>
-          </CardContent>
-        </Card>
+        <aside className="flex min-w-0 flex-[1_1_300px] flex-col gap-4">
+          <div className="rounded-md bg-surface shadow-e1">
+            <SideSection title="Account">
+              <dl className="m-0 flex flex-col gap-2.5">
+                <SideFact
+                  label="Approval"
+                  value={
+                    <StatusBadge
+                      label={VERIFICATION_LABELS[data.verificationStatus]}
+                      tone={
+                        VERIFICATION_STATUS_TONES[data.verificationStatus] ??
+                        "neutral"
+                      }
+                    />
+                  }
+                />
+                {data.verifiedAt && (
+                  <SideFact
+                    label="Approved"
+                    value={formatDate(data.verifiedAt)}
+                  />
+                )}
+                <SideFact
+                  label="Account"
+                  value={ACCOUNT_STATUS_LABELS[data.status]}
+                />
+                <SideFact
+                  label="Member since"
+                  value={monthYear(data.joinedAt)}
+                />
+                <SideFact
+                  label="Last login"
+                  value={formatDate(data.lastLoginAt)}
+                />
+              </dl>
+              <details className="mt-3.5">
+                <summary className="cursor-pointer list-none text-sub font-medium text-blue-ink [&::-webkit-details-marker]:hidden">
+                  Account actions
+                </summary>
+                <CompanyAccountActions data={data} presentation="stack" />
+              </details>
+            </SideSection>
 
-        {/* The sign-up questionnaire. This is what an admin actually reads to
-            judge whether a company is real, so it gets its own card rather
-            than being buried among the contact fields. */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Business Profile</CardTitle>
-          </CardHeader>
-          <CardContent className={FACTS_GRID}>
-            <DetailField label="Industry" value={data.industry} />
-            <DetailField
-              label="Founded"
-              value={
-                data.yearFounded !== null ? String(data.yearFounded) : null
-              }
-            />
-            <DetailField label="Employees" value={data.employeeSize} />
-            <DetailField label="Revenue" value={revenue} />
-            <div className={FACT_FULL}>
-              <DetailField label="Fee range" value={feeRange} />
-            </div>
-          </CardContent>
-        </Card>
+            <SideSection title="Company Profile">
+              {data.description && (
+                <p className="mb-3.5 mt-0 text-sub leading-5 text-ink-body">
+                  {data.description}
+                </p>
+              )}
+              <dl className="m-0 flex flex-col gap-2.5 text-sub">
+                <div>
+                  <dt className="text-meta text-ink-muted">Contact</dt>
+                  <dd className="m-0 mt-0.5 text-ink">
+                    {[data.firstName, data.lastName]
+                      .filter(Boolean)
+                      .join(" ") || "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-meta text-ink-muted">Email</dt>
+                  <dd className="m-0 mt-0.5 break-words text-ink">
+                    {data.email}
+                    {data.emailVerified && (
+                      <span className="text-meta text-ok"> · verified</span>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-meta text-ink-muted">Phone</dt>
+                  <dd className="m-0 mt-0.5 text-ink">
+                    {data.phone || "—"}
+                    {data.phone && data.phoneVerified && (
+                      <span className="text-meta text-ok"> · confirmed</span>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-meta text-ink-muted">Address</dt>
+                  <dd className="m-0 mt-0.5 text-ink">{address}</dd>
+                </div>
+                {data.website && (
+                  <div>
+                    <dt className="text-meta text-ink-muted">Website</dt>
+                    <dd className="m-0 mt-0.5">
+                      <a
+                        href={data.website}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="break-all text-blue-ink hover:underline"
+                      >
+                        {data.website.replace(/^https?:\/\//, "")}
+                      </a>
+                    </dd>
+                  </div>
+                )}
+              </dl>
+              <details className="mt-3">
+                <summary className="cursor-pointer list-none text-sub font-medium text-blue-ink [&::-webkit-details-marker]:hidden">
+                  Business details
+                </summary>
+                <dl className="m-0 mt-2.5 flex flex-col gap-2.5 text-sub">
+                  <div>
+                    <dt className="text-meta text-ink-muted">Industry</dt>
+                    <dd className="m-0 mt-0.5 text-ink">
+                      {data.industry || "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-meta text-ink-muted">Founded</dt>
+                    <dd className="m-0 mt-0.5 tabular-nums text-ink">
+                      {data.yearFounded ?? "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-meta text-ink-muted">Employees</dt>
+                    <dd className="m-0 mt-0.5 text-ink">
+                      {data.employeeSize || "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-meta text-ink-muted">Annual revenue</dt>
+                    <dd className="m-0 mt-0.5 text-ink">{revenue || "—"}</dd>
+                  </div>
+                </dl>
+              </details>
+            </SideSection>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Activity</CardTitle>
-          </CardHeader>
-          <CardContent className={FACTS_GRID}>
-            <JobCountField
-              label="Jobs posted"
-              count={data.jobCount}
-              href={jobsHref}
-            />
-            <JobCountField
-              label="Open jobs"
-              count={data.openJobCount}
-              href={`${jobsHref}&status=published`}
-            />
-            <DetailField
-              label="Last login"
-              value={formatDate(data.lastLoginAt)}
-            />
-          </CardContent>
-        </Card>
+            <SideSection title="Related Records">
+              <ul className="m-0 list-none p-0">
+                {related.map((item, index) => (
+                  <li key={item.label}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex h-9.5 items-center justify-between gap-2 text-sub text-ink transition-colors hover:text-blue-ink",
+                        index < related.length - 1 &&
+                          "border-b border-line-row",
+                      )}
+                    >
+                      <span>{item.label}</span>
+                      <ChevronRight
+                        className="size-4 shrink-0 text-ink-faint"
+                        aria-hidden="true"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </SideSection>
+          </div>
+        </aside>
       </div>
     </div>
   );

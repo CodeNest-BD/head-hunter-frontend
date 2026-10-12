@@ -2,16 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Briefcase, RotateCcw, Trash2, X } from "lucide-react";
+import { AlertCircle, Briefcase, RotateCcw, Trash2 } from "lucide-react";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
-import { ListToolbar } from "@/shared/ui-components/data/ListToolbar";
 import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
+  ToolbarSearch,
+  ToolbarSelect,
+} from "@/shared/ui-components/data/ListToolbar";
+import { ScopeChip } from "@/shared/ui-components/data/ScopeChip";
+import {
+  QuickViewBand,
+  StatValueSkeleton,
+  type QuickView,
+} from "@/shared/ui-components/dashboard/DashboardParts";
 import {
   ColumnsToggle,
   useVisibleColumns,
@@ -42,7 +47,7 @@ import { useListState } from "../hooks/useListState";
 import { JOB_STATUS_LABELS, type AdminJobListItem } from "../schemas";
 import { JobRowActions } from "./JobRowActions";
 import { ListPager } from "./ListPager";
-import { adminCompanyPath, jobPath } from "@/shared/utils/entityPaths";
+import { adminCompanyPath, adminJobPath } from "@/shared/utils/entityPaths";
 import { JOB_STATUS_TONES } from "./statusStyles";
 import {
   TABLE_BODY,
@@ -67,6 +72,26 @@ function formatDate(iso: string): string {
   });
 }
 
+/**
+ * How far a job's hiring has got, in the design's wording. Precedence runs
+ * backwards down the funnel — a job with a hire and three people still
+ * interviewing reads "Hired", because that is the furthest it has reached.
+ */
+function hiringStage(job: AdminJobListItem): string {
+  if (job.hiredCount > 0) return "Hired";
+  if (job.offeredCount > 0) return "Offer out";
+  if (job.interviewingCount > 0) return `${job.interviewingCount} interviewing`;
+  if (job.candidateCount > 0) return "In review";
+  return "No submissions yet";
+}
+
+/** The three stages the board's summary band counts and filters by. */
+const ACTIVITY_FILTER_OPTIONS = [
+  { value: "interviewing", label: "Interview scheduled" },
+  { value: "offer", label: "Offer made or accepted" },
+  { value: "hired", label: "Hired" },
+] as const;
+
 const STATUS_FILTER_OPTIONS = [
   { value: "published", label: "Published" },
   { value: "draft", label: "Draft" },
@@ -78,8 +103,8 @@ const STATUS_FILTER_OPTIONS = [
 
 const COLUMNS: ColumnDef[] = [
   { key: "job", label: "Job", required: true },
-  { key: "company", label: "Company" },
   { key: "status", label: "Status" },
+  { key: "stage", label: "Stage" },
   { key: "fee", label: "Recruiter fee" },
   // Candidates access is phase-2 — hidden for the phase-1 delivery.
   ...(HIDE_PHASE2_FEATURES ? [] : [{ key: "candidates", label: "Candidates" }]),
@@ -95,9 +120,6 @@ function JobStatus({ status }: { status: AdminJobListItem["status"] }) {
     />
   );
 }
-
-const publicJobHref = (job: AdminJobListItem): string =>
-  jobPath({ id: job.jobId, serialNumber: job.jobSerialNumber });
 
 /** Logo + company name → its admin profile. */
 function JobCompany({ job }: { job: AdminJobListItem }) {
@@ -183,7 +205,7 @@ function JobCard({
     <MobileRecordCard
       title={job.title}
       subtitle={job.locationState || undefined}
-      href={publicJobHref(job)}
+      href={adminJobPath({ id: job.jobId, serialNumber: job.jobSerialNumber })}
       trailing={<JobStatus status={job.status} />}
       fields={fields}
       actions={
@@ -225,8 +247,10 @@ export function JobsTable({
   // A filter that matches nothing hides the header row it lives in, so the
   // empty state carries its own way back out. The company scope is a deep-link
   // with its own chip to clear, so it stays put.
-  const hasFilters = qInput !== "" || status !== "";
+  const [activity, setActivity] = useState("");
+  const hasFilters = qInput !== "" || status !== "" || activity !== "";
   const resetFilters = () => {
+    setActivity("");
     setQInput("");
     changeStatus("");
     setPage(1);
@@ -234,12 +258,17 @@ export function JobsTable({
   const cols = useVisibleColumns("admin.jobs.columns", COLUMNS, (key) => {
     if (key === "status") changeStatus("");
   });
+  const applyFilter = (set: (next: string) => void) => (next: string) => {
+    set(next);
+    setPage(1);
+  };
   const { data, isPending, isError, refetch } = useAdminJobs({
     page,
     limit,
     q: q || undefined,
     status: status || undefined,
     company: company || undefined,
+    activity: activity || undefined,
   });
 
   // Multi-select is visible-rows-scoped: acting on rows you can no longer see
@@ -304,111 +333,163 @@ export function JobsTable({
     status: "published",
     limit: 100,
   });
-  const liveTotal = publishedJobs.data?.meta.total ?? 0;
+  const liveTotal = publishedJobs.data?.meta.total;
+
+  // Each tile narrows the board to what it counts. They overlap by design —
+  // a job at offer is still live — which the subtitle says out loud.
+  const quickFilter = (jobStatus: string, stage: string) => {
+    const active = status === jobStatus && activity === stage;
+    return {
+      active,
+      apply: () => {
+        changeStatus(active ? "" : jobStatus);
+        setActivity(active ? "" : stage);
+      },
+    };
+  };
+  const figure = (value: number | undefined) =>
+    value === undefined ? <StatValueSkeleton /> : value.toLocaleString();
+
+  const quickViews: readonly QuickView[] = [
+    {
+      key: "live",
+      label: "Live Jobs",
+      value: figure(liveTotal),
+      note: "Published and accepting submissions",
+      tone: "info",
+      filter: quickFilter("published", ""),
+    },
+    {
+      key: "interviewing",
+      label: "Interview Scheduled",
+      value: figure(stats.data?.scheduledJobs),
+      note: "At least one interview booked",
+      tone: "info",
+      filter: quickFilter("", "interviewing"),
+    },
+    {
+      key: "offer",
+      label: "Offer Made or Accepted",
+      value: figure(stats.data?.offerJobs),
+      note: "Includes counteroffers",
+      tone: "ok",
+      filter: quickFilter("", "offer"),
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Jobs"
-        subtitle="Every job posted on the platform. Filter by company, status or title."
-        metrics={[
-          { label: "Live jobs", value: liveTotal },
-          { label: "Scheduled", value: stats.data?.scheduledJobs ?? 0 },
-          { label: "Offers", value: stats.data?.offerJobs ?? 0 },
-        ]}
+        subtitle="Every job with its hiring progress. Summary counts overlap."
       />
 
+      <QuickViewBand label="Job quick views" views={quickViews} />
+
       {company && (
-        <div className="flex items-center gap-2">
-          {/* `.chip is-active` — the active company filter, with its own clear. */}
-          <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-blue bg-blue px-[11px] text-[12.5px] font-[550] text-white">
-            Company: {companyName || "Selected company"}
-            <Link
-              href="/admin/jobs"
-              aria-label="Clear company filter"
-              className="rounded-full p-0.5 transition-colors hover:bg-white/20"
-            >
-              <X className="size-3" />
-            </Link>
-          </span>
-        </div>
+        <ScopeChip
+          label={`Company: ${companyName || "Selected company"}`}
+          clearHref="/admin/jobs"
+          clearLabel="Clear company filter"
+        />
       )}
 
-      <div className={TABLE_TOOLBAR}>
-        <div className="flex-1">
-          <ListToolbar
-            query={qInput}
-            onQueryChange={setQInput}
-            placeholder="Search jobs by title…"
-            filter={{
-              value: status,
-              onChange: changeStatus,
-              allLabel: "All statuses",
-              options: [...STATUS_FILTER_OPTIONS],
-            }}
+      <div className={TABLE_CARD}>
+        <div className={TABLE_TOOLBAR}>
+          <ToolbarSearch
+            value={qInput}
+            onChange={setQInput}
+            placeholder="Search title, company, location"
+            className="min-w-[200px] flex-[1_1_220px] sm:max-w-[300px]"
           />
-        </div>
-        <div className="sm:ml-auto">
-          <ColumnsToggle
-            columns={cols.columns}
-            isVisible={cols.isVisible}
-            onToggle={cols.toggle}
+          <ToolbarSelect
+            label="Job status"
+            value={status}
+            onChange={changeStatus}
+            allLabel="All statuses"
+            options={STATUS_FILTER_OPTIONS}
           />
-        </div>
-      </div>
-
-      {selected.size > 0 && (
-        <div className="hidden flex-wrap items-center gap-3 rounded-sm border border-blue bg-tint px-3.5 py-2.5 sm:flex">
-          <span className="text-sub font-[650] tabular-nums text-blue-ink">
-            {selected.size} selected
-          </span>
-          <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setBulkConfirm("repost")}
-            >
-              <RotateCcw />
-              Re-post
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() => setBulkConfirm("delete")}
-            >
-              <Trash2 />
-              Delete
-            </Button>
+          <ToolbarSelect
+            label="Hiring activity"
+            value={activity}
+            onChange={applyFilter(setActivity)}
+            allLabel="Any hiring activity"
+            options={ACTIVITY_FILTER_OPTIONS}
+          />
+          {hasFilters && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => setSelected(new Set())}
+              onClick={resetFilters}
             >
-              Clear
+              Clear filters
             </Button>
+          )}
+          <div className="ml-auto">
+            <ColumnsToggle
+              columns={cols.columns}
+              isVisible={cols.isVisible}
+              onToggle={cols.toggle}
+            />
           </div>
         </div>
-      )}
 
-      {isPending ? (
-        <TableSkeleton />
-      ) : isError ? (
-        <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
-          <div className="flex items-center gap-2.5 font-[550]">
-            <AlertCircle className="size-[15px] shrink-0" />
-            Could not load jobs.
+        {selected.size > 0 && (
+          <div className="hidden flex-wrap items-center gap-3 border-t border-line bg-tint px-5 py-2.5 sm:flex">
+            <span className="text-sub font-[650] tabular-nums text-blue-ink">
+              {selected.size} selected
+            </span>
+            <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setBulkConfirm("repost")}
+              >
+                <RotateCcw />
+                Re-post
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setBulkConfirm("delete")}
+              >
+                <Trash2 />
+                Delete
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelected(new Set())}
+              >
+                Clear
+              </Button>
+            </div>
           </div>
-          <div>
-            <Button variant="outline" size="sm" onClick={() => void refetch()}>
-              Retry
-            </Button>
+        )}
+
+        {isPending ? (
+          <TableSkeleton className="rounded-none shadow-none" columns={5} />
+        ) : isError ? (
+          <div className="m-5 flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
+            <div className="flex items-center gap-2.5 font-[550]">
+              <AlertCircle className="size-[15px] shrink-0" />
+              Could not load jobs.
+            </div>
+            <div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refetch()}
+              >
+                Retry
+              </Button>
+            </div>
           </div>
-        </div>
-      ) : data.data.length === 0 ? (
-        <div className={TABLE_CARD}>
+        ) : data.data.length === 0 ? (
           <EmptyState
             icon={Briefcase}
             title="No jobs found"
@@ -426,147 +507,174 @@ export function JobsTable({
               ) : undefined
             }
           />
-        </div>
-      ) : (
-        <div className={TABLE_CARD}>
-          <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
-            <table className={TABLE_EL}>
-              <thead className={TABLE_HEAD}>
-                <tr>
-                  <th scope="col" className={cn(TABLE_TH, "w-10 px-0 pl-3.5")}>
-                    <Checkbox
-                      aria-label="Select all jobs on this page"
-                      checked={allOnPageSelected}
-                      onCheckedChange={(checked) =>
-                        toggleAllOnPage(checked === true)
-                      }
-                    />
-                  </th>
-                  <th scope="col" className={cn(TABLE_TH, "w-[28%]")}>
-                    Job
-                  </th>
-                  {cols.isVisible("company") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Company
-                    </th>
-                  )}
-                  {cols.isVisible("status") && (
-                    <FilterableHead label="Status">
-                      <ColumnFilter
-                        label="Status"
-                        options={STATUS_FILTER_OPTIONS}
-                        value={status === "" ? null : status}
-                        onChange={(next) => changeStatus(next ?? "")}
-                      />
-                    </FilterableHead>
-                  )}
-                  {cols.isVisible("fee") && (
-                    <th scope="col" className={cn(TABLE_TH, "text-right")}>
-                      Recruiter fee
-                    </th>
-                  )}
-                  {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
-                    <th scope="col" className={cn(TABLE_TH, "text-center")}>
-                      Candidates
-                    </th>
-                  )}
-                  {cols.isVisible("posted") && (
-                    <th scope="col" className={TABLE_TH}>
-                      Posted
-                    </th>
-                  )}
-                  <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={TABLE_BODY}>
-                {data.data.map((job) => (
-                  <tr key={job.jobId} className={TABLE_ROW}>
-                    <td className={cn(TABLE_TD, "w-10 px-0 pl-3.5")}>
+        ) : (
+          <>
+            <div className={cn(TABLE_SCROLL, "hidden sm:block")}>
+              <table className={TABLE_EL}>
+                <thead className={TABLE_HEAD}>
+                  <tr>
+                    <th
+                      scope="col"
+                      className={cn(TABLE_TH, "w-10 px-0 pl-3.5")}
+                    >
                       <Checkbox
-                        aria-label={`Select ${job.title}`}
-                        checked={selected.has(job.jobId)}
+                        aria-label="Select all jobs on this page"
+                        checked={allOnPageSelected}
                         onCheckedChange={(checked) =>
-                          toggleOne(job.jobId, checked === true)
+                          toggleAllOnPage(checked === true)
                         }
                       />
-                    </td>
-                    <td className={TABLE_TD_STACKED}>
-                      {/* Job title → the public job view. */}
-                      <Link
-                        href={publicJobHref(job)}
-                        className={cn(
-                          TABLE_CELL_MAIN,
-                          "block max-w-[260px] truncate transition-colors hover:text-blue",
-                        )}
-                      >
-                        {job.title}
-                      </Link>
-                      <p className={TABLE_CELL_SUB}>
-                        {job.locationState || "—"}
-                      </p>
-                    </td>
-                    {cols.isVisible("company") && (
-                      <td className={TABLE_TD}>
-                        <JobCompany job={job} />
-                      </td>
-                    )}
+                    </th>
+                    <th scope="col" className={cn(TABLE_TH, "w-[28%]")}>
+                      Job
+                    </th>
                     {cols.isVisible("status") && (
-                      <td className={TABLE_TD}>
-                        <JobStatus status={job.status} />
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Status
+                      </th>
                     )}
-                    {cols.isVisible("fee") && (
-                      <td
-                        className={cn(TABLE_TD, "whitespace-nowrap text-right")}
-                      >
-                        <JobFee job={job} minFeeMinor={minFeeMinor} />
-                      </td>
+                    {cols.isVisible("stage") && (
+                      <th scope="col" className={TABLE_TH}>
+                        Stage
+                      </th>
                     )}
                     {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
-                      <td className={cn(TABLE_TD, "text-center")}>
-                        <JobCandidates job={job} />
-                      </td>
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                        Candidates
+                      </th>
                     )}
                     {cols.isVisible("posted") && (
-                      <td
-                        className={cn(
-                          TABLE_TD,
-                          "whitespace-nowrap tabular-nums text-ink-muted",
-                        )}
-                      >
-                        {formatDate(job.createdAt)}
-                      </td>
+                      <th scope="col" className={TABLE_TH}>
+                        Posted
+                      </th>
                     )}
-                    <td className={cn(TABLE_TD, "text-right")}>
-                      <JobRowActions
-                        jobId={job.jobId}
-                        jobSerialNumber={job.jobSerialNumber}
-                        jobTitle={job.title}
-                        status={job.status}
-                      />
-                    </td>
+                    {cols.isVisible("fee") && (
+                      <th scope="col" className={cn(TABLE_TH, "text-right")}>
+                        Recruiter Fee
+                      </th>
+                    )}
+                    <th scope="col" className={cn(TABLE_TH, "w-11 text-right")}>
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <MobileRecordList className="sm:hidden">
-            {data.data.map((job) => (
-              <JobCard key={job.jobId} job={job} minFeeMinor={minFeeMinor} />
-            ))}
-          </MobileRecordList>
-          <ListPager
-            page={page}
-            totalPages={data.meta.totalPages}
-            total={data.meta.total}
-            onPage={setPage}
-            pageSize={limit}
-            onPageSize={changeLimit}
-          />
-        </div>
-      )}
+                </thead>
+                <tbody className={TABLE_BODY}>
+                  {data.data.map((job) => (
+                    <tr key={job.jobId} className={TABLE_ROW}>
+                      <td className={cn(TABLE_TD, "w-10 px-0 pl-3.5")}>
+                        <Checkbox
+                          aria-label={`Select ${job.title}`}
+                          checked={selected.has(job.jobId)}
+                          onCheckedChange={(checked) =>
+                            toggleOne(job.jobId, checked === true)
+                          }
+                        />
+                      </td>
+                      <td className={TABLE_TD_STACKED}>
+                        {/* Job title → the public job view. */}
+                        <Link
+                          href={adminJobPath({
+                            id: job.jobId,
+                            serialNumber: job.jobSerialNumber,
+                          })}
+                          className={cn(
+                            TABLE_CELL_MAIN,
+                            "block max-w-[260px] truncate transition-colors hover:text-blue",
+                          )}
+                        >
+                          {job.title}
+                        </Link>
+                        {/* The design files the company under the title rather
+                            than in a column of its own — it is context for the
+                            job, not a value an admin scans down. */}
+                        <p
+                          className={cn(
+                            TABLE_CELL_SUB,
+                            "max-w-[280px] truncate",
+                          )}
+                        >
+                          <Link
+                            href={adminCompanyPath({
+                              id: job.companyUserId,
+                              serialNumber: job.companySerialNumber,
+                            })}
+                            className="transition-colors hover:text-blue-ink"
+                          >
+                            {job.companyName}
+                          </Link>
+                          {job.locationState && ` · ${job.locationState}`}
+                        </p>
+                      </td>
+                      {cols.isVisible("status") && (
+                        <td className={TABLE_TD}>
+                          <JobStatus status={job.status} />
+                        </td>
+                      )}
+                      {cols.isVisible("stage") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap text-ink-body",
+                          )}
+                        >
+                          {hiringStage(job)}
+                        </td>
+                      )}
+                      {!HIDE_PHASE2_FEATURES &&
+                        cols.isVisible("candidates") && (
+                          <td className={cn(TABLE_TD, "text-right")}>
+                            <JobCandidates job={job} />
+                          </td>
+                        )}
+                      {cols.isVisible("posted") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap tabular-nums text-ink-muted",
+                          )}
+                        >
+                          {formatDate(job.createdAt)}
+                        </td>
+                      )}
+                      {cols.isVisible("fee") && (
+                        <td
+                          className={cn(
+                            TABLE_TD,
+                            "whitespace-nowrap text-right",
+                          )}
+                        >
+                          <JobFee job={job} minFeeMinor={minFeeMinor} />
+                        </td>
+                      )}
+                      <td className={cn(TABLE_TD, "text-right")}>
+                        <JobRowActions
+                          jobId={job.jobId}
+                          jobSerialNumber={job.jobSerialNumber}
+                          jobTitle={job.title}
+                          status={job.status}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <MobileRecordList className="sm:hidden">
+              {data.data.map((job) => (
+                <JobCard key={job.jobId} job={job} minFeeMinor={minFeeMinor} />
+              ))}
+            </MobileRecordList>
+            <ListPager
+              page={page}
+              totalPages={data.meta.totalPages}
+              total={data.meta.total}
+              onPage={setPage}
+              pageSize={limit}
+              onPageSize={changeLimit}
+            />
+          </>
+        )}
+      </div>
 
       <ConfirmActionDialog
         open={bulkConfirm === "repost"}

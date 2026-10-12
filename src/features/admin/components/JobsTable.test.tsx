@@ -21,6 +21,9 @@ function job(overrides: Partial<AdminJobListItem>): AdminJobListItem {
     recruiterFeeMinor: 200_000,
     locationState: "TX",
     candidateCount: 0,
+    interviewingCount: 0,
+    offeredCount: 0,
+    hiredCount: 0,
     createdAt: "2026-08-27T00:00:00.000Z",
     ...overrides,
   };

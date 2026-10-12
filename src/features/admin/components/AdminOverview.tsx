@@ -6,18 +6,22 @@ import Link from "next/link";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { TONE_DOT, type PillTone } from "@/shared/ui-components/badges/Pill";
+import type { PillTone } from "@/shared/ui-components/badges/Pill";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 
-import { useAdminDashboard, useAdminStats } from "../hooks/useAdmin";
-import type { AdminStats, DashboardEvent, DashboardQueue } from "../schemas";
 import {
-  ListHead,
-  PriorityChip,
+  ActivityFeed,
+  AttentionTable,
+  QuickViewBand,
   Section,
   SectionHead,
   Segmented,
-} from "./dashboard/DashboardPieces";
+  type ActivityItem,
+  type AttentionItem,
+  type QuickView,
+} from "@/shared/ui-components/dashboard/DashboardParts";
+import { useAdminDashboard, useAdminStats } from "../hooks/useAdmin";
+import type { AdminStats, DashboardEvent, DashboardQueue } from "../schemas";
 import { QUEUE_PRESENTATION } from "./dashboard/queuePresentation";
 
 const SCOPES = [
@@ -59,52 +63,18 @@ function today(): string {
 }
 
 /** Today's events keep a clock; older ones name the day. */
-function eventTime(iso: string): string {
-  const at = new Date(iso);
+function eventTime(when: string | Date): string {
+  const at = new Date(when);
   const sameDay = at.toDateString() === new Date().toDateString();
   return sameDay
     ? at.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
     : at.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-// ── KPI band ───────────────────────────────────────────────────────────────
-
-function Kpi({
-  label,
-  value,
-  note,
-  tone,
-  href,
-}: {
-  label: string;
-  value: string;
-  note: string;
-  tone: PillTone;
-  href: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex flex-col gap-1.5 px-6 py-5 text-ink shadow-[inset_-1px_0_0_theme(colors.line.DEFAULT)] transition-colors last:shadow-none hover:bg-surface-sub"
-    >
-      <span className="flex items-center gap-2 text-[11px] font-semibold uppercase leading-4 tracking-[0.06em] text-ink-muted">
-        <span
-          aria-hidden="true"
-          className={cn("size-1.5 rounded-full", TONE_DOT[tone])}
-        />
-        {label}
-      </span>
-      <span className="text-[26px] font-semibold leading-8 tracking-[-0.02em] tabular-nums">
-        {value}
-      </span>
-      <span className="text-meta leading-[18px] text-ink-muted">{note}</span>
-    </Link>
-  );
-}
-
 function KpiBand({ stats }: { stats: AdminStats }) {
-  const kpis = [
+  const kpis: readonly QuickView[] = [
     {
+      key: "wallet-total",
       label: "Wallet Total",
       value: formatMinor(stats.walletTotalMinor),
       note: `${formatMinor(stats.walletAvailableMinor)} available · ${formatMinor(stats.walletReservedMinor)} reserved`,
@@ -112,6 +82,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
       href: "/admin/companies",
     },
     {
+      key: "recruiters",
       label: "Recruiters",
       value: stats.recruiters.total.toLocaleString(),
       note: `${stats.recruiters.verified.toLocaleString()} verified & active`,
@@ -119,6 +90,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
       href: "/admin/recruiters",
     },
     {
+      key: "companies",
       label: "Companies",
       value: stats.companies.total.toLocaleString(),
       note: `${stats.companies.approved.toLocaleString()} approved & active`,
@@ -126,6 +98,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
       href: "/admin/companies",
     },
     {
+      key: "live-jobs",
       label: "Live Jobs",
       value: stats.liveJobs.toLocaleString(),
       note: `${stats.scheduledJobs} interviewing · ${stats.offerJobs} at offer`,
@@ -133,6 +106,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
       href: "/admin/jobs",
     },
     {
+      key: "average-fee",
       label: "Average Fee",
       value: formatMinor(stats.avgFeeMinor),
       note: `Across live jobs · ${formatMinor(stats.feeMinMinor)} – ${formatMinor(stats.feeMaxMinor)}`,
@@ -143,11 +117,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
 
   return (
     <Section label="Marketplace summary">
-      <div className="grid [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
-        {kpis.map((k) => (
-          <Kpi key={k.label} {...k} />
-        ))}
-      </div>
+      <QuickViewBand label="Marketplace summary" views={kpis} />
       {/* The figures carry definitions a reader will ask about once and then
           never again, so they fold away rather than taking a line each. */}
       <details className="bg-surface-sub px-6 py-2.5 text-meta text-ink-muted shadow-[inset_0_1px_0_theme(colors.line.DEFAULT)]">
@@ -167,57 +137,20 @@ function KpiBand({ stats }: { stats: AdminStats }) {
 
 // ── Needs your attention ───────────────────────────────────────────────────
 
-function QueueRow({ queue }: { queue: DashboardQueue }) {
+/** The server sends the key, the count and the facts; the rest is presentation. */
+function toAttentionItem(queue: DashboardQueue): AttentionItem {
   const p = QUEUE_PRESENTATION[queue.key];
-  const Icon = p.icon;
-  const TINT: Record<PillTone, string> = {
-    ok: "bg-ok-bg text-ok",
-    warn: "bg-warn-bg text-warn",
-    bad: "bg-bad-bg text-bad",
-    info: "bg-info-bg text-info",
-    violet: "bg-violet-bg text-violet",
-    neutral: "bg-neutral-bg text-neutral",
-    blue: "bg-info-bg text-info",
+  return {
+    id: queue.key,
+    icon: p.icon,
+    tone: p.tone,
+    label: p.label,
+    context: queue.context,
+    priorityLabel: p.priorityLabel,
+    count: queue.count,
+    actionLabel: "Review",
+    href: p.href,
   };
-
-  return (
-    <div
-      role="row"
-      className="grid min-h-[68px] items-center gap-4 px-6 shadow-[inset_0_-1px_0_theme(colors.line.row)] transition-colors hover:bg-surface-sub [grid-template-columns:minmax(0,1fr)_128px_64px_92px]"
-    >
-      <span role="cell" className="flex min-w-0 items-center gap-3.5">
-        <span
-          aria-hidden="true"
-          className={cn(
-            "flex size-[34px] shrink-0 items-center justify-center rounded-sm",
-            TINT[p.tone],
-          )}
-        >
-          <Icon className="size-[18px]" />
-        </span>
-        <span className="flex min-w-0 flex-col">
-          <span className="text-body font-medium text-ink">{p.label}</span>
-          <span className="truncate text-meta text-ink-muted">
-            {queue.context}
-          </span>
-        </span>
-      </span>
-      <span role="cell">
-        <PriorityChip tone={p.tone}>{p.priorityLabel}</PriorityChip>
-      </span>
-      <span
-        role="cell"
-        className="text-right text-[16px] font-semibold tabular-nums text-ink"
-      >
-        {queue.count}
-      </span>
-      <span role="cell" className="text-right">
-        <Button asChild variant="outline" size="xs">
-          <Link href={p.href}>Review</Link>
-        </Button>
-      </span>
-    </div>
-  );
 }
 
 function AttentionPanel({ queues }: { queues: DashboardQueue[] }) {
@@ -242,17 +175,10 @@ function AttentionPanel({ queues }: { queues: DashboardQueue[] }) {
           />
         }
       />
-      <div role="table" aria-label="Work queues">
-        <ListHead columns={["Queue", "Priority", "Items", "Action"]} />
-        {shown.map((q) => (
-          <QueueRow key={q.key} queue={q} />
-        ))}
-      </div>
-      {shown.length === 0 && (
-        <p className="px-6 py-7 text-center text-sub text-ink-muted">
-          Nothing urgent right now.
-        </p>
-      )}
+      <AttentionTable
+        items={shown.map(toAttentionItem)}
+        emptyMessage="Nothing urgent right now."
+      />
     </Section>
   );
 }
@@ -423,51 +349,20 @@ function ActivityPanel({ activity }: { activity: DashboardEvent[] }) {
           </select>
         }
       />
-      {shown.length === 0 ? (
-        <p className="px-6 py-7 text-center text-sub text-ink-muted">
-          Nothing here yet.
-        </p>
-      ) : (
-        <ol>
-          {shown.map((e, i) => (
-            <li
-              key={`${e.at}-${i}`}
-              className="flex items-start gap-3 px-6 py-3 shadow-[inset_0_1px_0_theme(colors.line.row)]"
-            >
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "mt-1.5 size-2 shrink-0 rounded-full ring-[3px]",
-                  TONE_DOT[EVENT_TONE[e.kind]],
-                  EVENT_TONE[e.kind] === "warn"
-                    ? "ring-warn-bg"
-                    : EVENT_TONE[e.kind] === "ok"
-                      ? "ring-ok-bg"
-                      : "ring-info-bg",
-                )}
-              />
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-sub">
-                  <span className="font-medium text-ink">{e.title}</span>{" "}
-                  <span className="text-ink-body">{e.detail}</span>
-                </span>
-                <span className="text-meta text-ink-muted">{e.actor}</span>
-              </span>
-              <span className="whitespace-nowrap text-meta tabular-nums text-ink-muted">
-                {eventTime(e.at)}
-              </span>
-            </li>
-          ))}
-        </ol>
-      )}
-      <div className="px-6 py-3 shadow-[inset_0_1px_0_theme(colors.line.DEFAULT)]">
-        <Link
-          href="/admin/settings"
-          className="text-sub font-medium text-blue-ink hover:underline"
-        >
-          View full audit log →
-        </Link>
-      </div>
+      <ActivityFeed
+        items={shown.map(
+          (e, i): ActivityItem => ({
+            id: `${e.at}-${i}`,
+            tone: EVENT_TONE[e.kind],
+            title: e.title,
+            detail: e.detail,
+            meta: e.actor,
+            at: e.at,
+          }),
+        )}
+        emptyMessage="Nothing here yet."
+        formatAt={eventTime}
+      />
     </Section>
   );
 }

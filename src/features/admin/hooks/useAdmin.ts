@@ -17,8 +17,21 @@ import {
   deleteRecruiter,
   decideCompanyVerification,
   decideRecruiterVerification,
+  addPayoutHold,
   fetchAdmins,
+  fetchAdminPayments,
+  fetchAdminPayout,
+  fetchAdminPayouts,
+  fetchPaymentCounts,
+  fetchPaymentsSummary,
+  fetchPayoutsSummary,
+  releasePayoutHold,
   fetchAdminDashboard,
+  fetchAdminJob,
+  fetchAdminOffers,
+  fetchAdminPlacements,
+  fetchPlacementCounts,
+  fetchCompanyIndustries,
   fetchAdminStats,
   fetchCompanies,
   fetchCompany,
@@ -37,12 +50,23 @@ import {
   repostAdminJob,
   updateAdminJob,
   updateRecruiterPricing,
+  type AddPayoutHoldInput,
   type CreateAdminInput,
   type VerificationDecisionInput,
 } from "../api/admin";
 import { isApiError } from "@/shared/libs/errorHandler";
-import type { BulkJobActionResult } from "../schemas";
-import { adminKeys, type AdminListParams } from "../keys";
+import type {
+  AdminPayoutDetail,
+  BulkJobActionResult,
+  PlacementView,
+} from "../schemas";
+import {
+  adminKeys,
+  type AdminListParams,
+  type AdminOfferListParams,
+  type AdminPaymentParams,
+  type AdminPayoutParams,
+} from "../keys";
 
 export function useAdminStats() {
   return useQuery({ queryKey: adminKeys.stats, queryFn: fetchAdminStats });
@@ -147,6 +171,19 @@ export function useUpdateMinRecruiterFee() {
   });
 }
 
+/**
+ * The industry options the company directory filters by. Long-lived — the set
+ * only changes when a company signs up — so it is cached hard rather than
+ * refetched alongside every page of the list.
+ */
+export function useCompanyIndustries() {
+  return useQuery({
+    queryKey: adminKeys.companyIndustries,
+    queryFn: fetchCompanyIndustries,
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
 export function useAdminCompanies(params: AdminListParams) {
   return useQuery({
     queryKey: adminKeys.companies(params),
@@ -223,6 +260,40 @@ export function useReinstateAccount() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: adminKeys.all });
     },
+  });
+}
+
+export function usePlacementCounts() {
+  return useQuery({
+    queryKey: adminKeys.placementCounts,
+    queryFn: fetchPlacementCounts,
+  });
+}
+
+export function useAdminPlacements(
+  view: PlacementView,
+  page: number,
+  limit: number,
+) {
+  return useQuery({
+    queryKey: adminKeys.placements(view, page, limit),
+    queryFn: () => fetchAdminPlacements(view, page, limit),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useAdminOffers(params: AdminOfferListParams) {
+  return useQuery({
+    queryKey: adminKeys.offers(params),
+    queryFn: () => fetchAdminOffers(params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useAdminJob(ref: string) {
+  return useQuery({
+    queryKey: adminKeys.job(ref),
+    queryFn: () => fetchAdminJob(ref),
   });
 }
 
@@ -410,4 +481,110 @@ export function useUpdateAdminJob() {
       toast.success("Job updated");
     },
   });
+}
+
+/* ── Finance boards ────────────────────────────────────────────────────── */
+
+export function useAdminPayments(params: AdminPaymentParams) {
+  return useQuery({
+    queryKey: adminKeys.payments(params),
+    queryFn: () => fetchAdminPayments(params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * The tab counts. Keyed on the same filters as the rows minus the tab itself,
+ * so switching tabs re-uses the cached counts instead of refetching them.
+ */
+export function usePaymentCounts(params: AdminPaymentParams) {
+  const { view: _view, page: _page, ...rest } = params;
+  const scoped: AdminPaymentParams = { ...rest, page: 1 };
+  return useQuery({
+    queryKey: adminKeys.paymentCounts(scoped),
+    queryFn: () => fetchPaymentCounts(scoped),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function usePaymentsSummary() {
+  return useQuery({
+    queryKey: adminKeys.paymentsSummary,
+    queryFn: fetchPaymentsSummary,
+  });
+}
+
+export function useAdminPayouts(params: AdminPayoutParams) {
+  return useQuery({
+    queryKey: adminKeys.payouts(params),
+    queryFn: () => fetchAdminPayouts(params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function usePayoutsSummary() {
+  return useQuery({
+    queryKey: adminKeys.payoutsSummary,
+    queryFn: fetchPayoutsSummary,
+  });
+}
+
+export function useAdminPayout(ref: string) {
+  return useQuery({
+    queryKey: adminKeys.payout(ref),
+    queryFn: () => fetchAdminPayout(ref),
+  });
+}
+
+/**
+ * Placing or lifting a hold changes what the board shows and what the sweep
+ * will do, so both the detail and every list page are invalidated. The detail
+ * response is written straight into the cache under both of the payout's
+ * refs — the page may have been reached by serial or by id.
+ */
+function usePayoutHoldMutation<TInput>(
+  ref: string,
+  mutationFn: (input: TInput) => Promise<AdminPayoutDetail>,
+  successMessage: string,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: (detail) => {
+      queryClient.setQueryData(adminKeys.payout(ref), detail);
+      cacheUnderSerialKey(
+        queryClient,
+        ref,
+        detail.placementSerialNumber,
+        adminKeys.payout,
+        detail,
+      );
+      void queryClient.invalidateQueries({ queryKey: adminKeys.payoutsAll });
+      void queryClient.invalidateQueries({
+        queryKey: adminKeys.payoutsSummary,
+      });
+      toast.success(successMessage);
+    },
+    onError: () => {
+      toast.error("Could not update the hold", {
+        description: "Nothing was changed. Please try again.",
+      });
+    },
+  });
+}
+
+export function useAddPayoutHold(ref: string) {
+  return usePayoutHoldMutation<AddPayoutHoldInput>(
+    ref,
+    (input) => addPayoutHold(ref, input),
+    "Hold placed — this commission will not release",
+  );
+}
+
+export function useReleasePayoutHold(ref: string) {
+  return usePayoutHoldMutation<{ holdId: string; note?: string }>(
+    ref,
+    ({ holdId, note }) => releasePayoutHold(ref, holdId, note),
+    "Hold lifted",
+  );
 }

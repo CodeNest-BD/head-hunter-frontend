@@ -83,7 +83,27 @@ function orderedEvents(pages: ConversationThreadPage[]): ConversationEvent[] {
   return pages.flatMap((page) => page.events.data).reverse();
 }
 
-export function ConversationThread({ candidateRef }: { candidateRef: string }) {
+export type ThreadFilter = "all" | "messages" | "events";
+
+export function ConversationThread({
+  candidateRef,
+  embedded = false,
+  filter = "all",
+}: {
+  candidateRef: string;
+  /**
+   * Rendered inside another page (the dispute case, the conversations board)
+   * rather than as the conversation's own route: it drops the header card and
+   * does not claim the URL, which belongs to the page it sits in.
+   */
+  embedded?: boolean;
+  /**
+   * Which half of the thread to show. The timeline interleaves what people
+   * wrote with what the system recorded, and an admin auditing one is rarely
+   * reading the other.
+   */
+  filter?: ThreadFilter;
+}) {
   const {
     data,
     isPending,
@@ -94,7 +114,9 @@ export function ConversationThread({ candidateRef }: { candidateRef: string }) {
     isFetchingNextPage,
   } = useAdminConversation(candidateRef);
   const candidate = data?.pages[0]?.candidate;
-  useCanonicalPath(candidate && adminConversationPath(candidate));
+  useCanonicalPath(
+    !embedded && candidate ? adminConversationPath(candidate) : undefined,
+  );
 
   if (isPending) return <DetailSkeleton />;
   if (isError) {
@@ -114,52 +136,67 @@ export function ConversationThread({ candidateRef }: { candidateRef: string }) {
   }
 
   const header = data.pages[0];
-  const events = orderedEvents(data.pages);
+  const all = orderedEvents(data.pages);
+  const events =
+    filter === "all"
+      ? all
+      : all.filter((event) =>
+          filter === "messages"
+            ? event.type === "message"
+            : event.type !== "message",
+        );
 
   return (
-    <div className="flex w-full max-w-5xl flex-col gap-3.5">
-      <Card>
-        <CardContent className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="text-card font-[650] text-ink">
-              {header.company.name}
-            </span>
-            <ArrowLeftRight className="size-[15px] text-ink-faint" />
-            <span className="text-card font-[650] text-ink">
-              {header.recruiter.name}
-            </span>
-            <StatusBadge
-              className="ml-auto"
-              label={
-                CANDIDATE_LABELS[header.candidate.status] ??
-                header.candidate.status
-              }
-              tone={
-                CANDIDATE_STATUS_TONES[header.candidate.status] ?? "neutral"
-              }
-            />
-          </div>
-          <p className="text-sub text-ink-body">
-            Candidate:{" "}
-            <span className="font-[650] text-ink">
-              {header.candidate.fullName}
-            </span>{" "}
-            · Role:{" "}
-            <span className="font-[650] text-ink">{header.job.title}</span>
-          </p>
-          {/* The legend the timeline icons answer to. */}
-          <div className="flex items-center gap-4 text-meta text-ink-muted">
-            <span className="flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-navy" />
-              Company
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-blue" />
-              Recruiter
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+    <div
+      className={cn(
+        "flex w-full flex-col gap-3.5",
+        embedded ? "max-w-none" : "max-w-5xl",
+      )}
+    >
+      {!embedded && (
+        <Card>
+          <CardContent className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="text-card font-[650] text-ink">
+                {header.company.name}
+              </span>
+              <ArrowLeftRight className="size-[15px] text-ink-faint" />
+              <span className="text-card font-[650] text-ink">
+                {header.recruiter.name}
+              </span>
+              <StatusBadge
+                className="ml-auto"
+                label={
+                  CANDIDATE_LABELS[header.candidate.status] ??
+                  header.candidate.status
+                }
+                tone={
+                  CANDIDATE_STATUS_TONES[header.candidate.status] ?? "neutral"
+                }
+              />
+            </div>
+            <p className="text-sub text-ink-body">
+              Candidate:{" "}
+              <span className="font-[650] text-ink">
+                {header.candidate.fullName}
+              </span>{" "}
+              · Role:{" "}
+              <span className="font-[650] text-ink">{header.job.title}</span>
+            </p>
+            {/* The legend the timeline icons answer to. */}
+            <div className="flex items-center gap-4 text-meta text-ink-muted">
+              <span className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-navy" />
+                Company
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-blue" />
+                Recruiter
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {hasNextPage && (
         <Button
