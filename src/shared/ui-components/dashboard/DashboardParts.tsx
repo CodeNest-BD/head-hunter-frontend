@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
+import { TONE_DOT, type PillTone } from "@/shared/ui-components/badges/Pill";
 
 export interface DashboardPanel {
   id: string;
@@ -92,96 +95,9 @@ export function PanelGroup({
 }
 
 /**
- * The reference's `.stat`: an uppercase 11px label, a 24px tabular figure and a
- * 12px hint stacked at the left, with a 34px tinted glyph tile at the right.
- * Every stat card in the app is this one shape — the reference defines no
- * emphasised variant, so a figure never out-shouts its neighbours.
- *
- * Pass `href` when the number has somewhere to go: a stat the reader cannot act
- * on is decoration, and the figure is usually the reason they came to the page.
- */
-export function StatCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  href,
-  hintTone = "default",
-  className: classNameProp,
-}: {
-  label: string;
-  value: ReactNode;
-  hint?: ReactNode;
-  /** Optional trailing icon, shown in a soft blue tile. */
-  icon?: LucideIcon;
-  href?: string;
-  /** `.stat__hint--warn` — amber ink for a hint that flags a problem. */
-  hintTone?: "default" | "warn";
-  /** Grid placement from the caller, e.g. a lead card spanning both columns. */
-  className?: string;
-}) {
-  // Every stat card lifts a little on hover, and its glyph tile warms and
-  // leans in. A card that also links somewhere lifts further and draws its
-  // border — so the motion tells you what is clickable rather than decorating
-  // everything equally. `group` lets the tile react to the card, not itself.
-  const className = cn(
-    "group flex items-start gap-3 rounded-md border border-line bg-surface px-4 py-3.5 shadow-e1",
-    "transition-[box-shadow,transform,border-color] duration-200 ease-out",
-    "hover:-translate-y-px hover:shadow-e2 motion-reduce:transform-none",
-    href &&
-      "hover:-translate-y-0.5 hover:border-line-strong motion-reduce:transform-none",
-    classNameProp,
-  );
-  const body = (
-    <>
-      <div className="min-w-0 flex-1">
-        <p className="text-label font-[650] uppercase text-ink-muted">
-          {label}
-        </p>
-        {/* A money figure carries no spaces, so without an explicit break it
-            runs straight out of the card on a narrow track. */}
-        <p className="mt-[5px] break-words text-stat font-bold tabular-nums text-ink">
-          {value}
-        </p>
-        {hint && (
-          <p
-            className={cn(
-              "mt-1 text-meta",
-              hintTone === "warn" ? "font-[550] text-warn" : "text-ink-faint",
-            )}
-          >
-            {hint}
-          </p>
-        )}
-      </div>
-      {Icon && (
-        <span
-          aria-hidden="true"
-          className={cn(
-            "flex size-8.5 shrink-0 items-center justify-center rounded-sm bg-tint text-blue",
-            "transition-[background-color,transform] duration-200 ease-out",
-            "group-hover:bg-tint-strong group-hover:scale-105 motion-reduce:transform-none",
-          )}
-        >
-          <Icon className="size-[17px]" />
-        </span>
-      )}
-    </>
-  );
-
-  return href ? (
-    <Link href={href} className={className}>
-      {body}
-    </Link>
-  ) : (
-    <div className={className}>{body}</div>
-  );
-}
-
-/**
- * Stands in for a `StatCard` figure whose query has not landed yet. It is an
- * inline-block shorter than the figure's line box, so the card keeps exactly
- * the height it will have once the number arrives and the strip never jumps.
+ * Stands in for a band figure whose query has not landed yet. It is an
+ * inline-block shorter than the figure's line box, so the tile keeps exactly
+ * the height it will have once the number arrives and the band never jumps.
  */
 export function StatValueSkeleton() {
   return (
@@ -192,69 +108,473 @@ export function StatValueSkeleton() {
   );
 }
 
-export type AttentionTone = "blue" | "amber" | "muted";
-
-export interface AttentionItem {
-  readonly id: string;
-  readonly tone: AttentionTone;
-  readonly title: string;
-  readonly detail: string;
-  readonly actionLabel: string;
-  readonly href: string;
+/**
+ * A surface on a dashboard: white, 12px, separated by a ring.
+ *
+ * Not `Card` — a dashboard section carries its own head with its own padding
+ * (18/24/14 rather than Card's 20/24/12) and several of them hold a full-bleed
+ * table, which Card's padded body would inset.
+ */
+export function Section({
+  children,
+  className,
+  label,
+}: {
+  children: ReactNode;
+  className?: string;
+  label?: string;
+}) {
+  return (
+    <section
+      aria-label={label}
+      className={cn(
+        "overflow-hidden rounded-lg bg-surface shadow-e1",
+        className,
+      )}
+    >
+      {children}
+    </section>
+  );
 }
 
-const DOT_TONE: Record<AttentionTone, string> = {
-  blue: "bg-blue",
-  amber: "bg-pending",
-  muted: "bg-ink-faint",
-};
-
-/**
- * The reference's `.attn`: a status dot, the headline over its one-line reason,
- * and a small outline button carrying the action to the right edge.
- */
-export function AttentionRow({ item }: { item: AttentionItem }) {
+/** A section's head: title on the left, a control on the right. */
+export function SectionHead({
+  title,
+  sub,
+  action,
+  className,
+}: {
+  title: string;
+  sub?: string;
+  action?: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="flex items-center gap-2.5 border-b border-line px-4 py-2.5 last:border-b-0">
-      <span
-        aria-hidden="true"
-        className={cn("size-2 shrink-0 rounded-full", DOT_TONE[item.tone])}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="text-sub font-semibold text-ink">{item.title}</p>
-        <p className="text-meta text-ink-muted">{item.detail}</p>
+    <div
+      className={cn(
+        "flex flex-wrap items-center justify-between gap-3 px-6 pb-3.5 pt-[18px]",
+        className,
+      )}
+    >
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <h2 className="text-[16px] font-semibold leading-5 text-ink">
+          {title}
+        </h2>
+        {sub && <span className="text-meta text-ink-muted">{sub}</span>}
       </div>
-      <Link
-        href={item.href}
-        className="inline-flex h-7.5 shrink-0 items-center whitespace-nowrap rounded-xs border border-line-strong bg-surface px-2.5 text-[12.5px] font-semibold text-ink transition-colors hover:bg-surface-sub"
-      >
-        {item.actionLabel}
-      </Link>
+      {action}
     </div>
   );
 }
 
 /**
- * The reference's `.card` with a `.card__head`: a title ruled off from a body
- * that is a list of rows. The rows supply their own padding, so the body does
- * not add any of its own.
+ * The design's segmented control: a tinted track with the selected chip raised
+ * on white.
  */
-export function Panel({
-  title,
-  action,
+export function Segmented<T extends string>({
+  value,
+  onChange,
+  options,
+  label,
+}: {
+  value: T;
+  onChange: (next: T) => void;
+  options: readonly { value: T; label: string }[];
+  label: string;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className="inline-flex gap-0.5 rounded-sm bg-neutral-bg p-[3px]"
+    >
+      {options.map((option) => {
+        const on = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "h-7 rounded-xs px-3 text-meta font-medium transition-colors",
+              on ? "bg-surface text-ink shadow-chip" : "text-ink-muted",
+            )}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** The tinted fill each tone wears on a chip or an icon square. */
+const TONE_FILL: Record<PillTone, string> = {
+  ok: "bg-ok-bg text-ok",
+  warn: "bg-warn-bg text-warn",
+  bad: "bg-bad-bg text-bad",
+  info: "bg-info-bg text-info",
+  violet: "bg-violet-bg text-violet",
+  neutral: "bg-neutral-bg text-neutral",
+  blue: "bg-info-bg text-info",
+};
+
+/** The dot-and-word status chip an attention row wears. */
+export function PriorityChip({
+  tone,
   children,
 }: {
-  title: string;
-  action?: ReactNode;
+  tone: PillTone;
   children: ReactNode;
 }) {
   return (
-    <section className="flex flex-col rounded-md border border-line bg-surface shadow-e1">
-      <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
-        <h2 className="text-card font-[650] text-ink">{title}</h2>
-        {action && <div className="ml-auto">{action}</div>}
+    <span
+      className={cn(
+        "inline-flex h-[22px] items-center gap-1.5 whitespace-nowrap rounded-full px-[9px] text-meta font-medium",
+        TONE_FILL[tone],
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn("size-1.5 shrink-0 rounded-full", TONE_DOT[tone])}
+      />
+      {children}
+    </span>
+  );
+}
+
+/**
+ * One thing waiting on whoever is reading the dashboard.
+ *
+ * `count` is optional because the three roles mean different things by a row:
+ * an admin's rows are queues that genuinely have a size, while a recruiter's
+ * are usually a single prompt. A row with nothing to count reports nothing
+ * rather than a misleading "1".
+ */
+export interface AttentionItem {
+  readonly id: string;
+  readonly icon: LucideIcon;
+  readonly tone: PillTone;
+  readonly label: string;
+  /** The line under the label saying why it is here. */
+  readonly context: string;
+  readonly priorityLabel: string;
+  readonly count?: number;
+  readonly actionLabel: string;
+  readonly href: string;
+}
+
+/**
+ * The "Needs your attention" table every dashboard uses: a tinted glyph, what
+ * is waiting and why, how urgent it is, and the one control that deals with
+ * it. The count column is dropped entirely when no row has a count, rather
+ * than left as a column of dashes.
+ */
+export function AttentionTable({
+  items,
+  emptyMessage,
+}: {
+  items: readonly AttentionItem[];
+  emptyMessage: string;
+}) {
+  const counted = items.some((item) => item.count !== undefined);
+  // Tailwind only sees class names written whole, so both grids are literals.
+  const grid = counted
+    ? "[grid-template-columns:minmax(0,1fr)_128px_64px_92px]"
+    : "[grid-template-columns:minmax(0,1fr)_128px_92px]";
+  const columns = counted
+    ? ["Item", "Priority", "Count", "Action"]
+    : ["Item", "Priority", "Action"];
+
+  if (items.length === 0) {
+    return (
+      <p className="px-6 py-7 text-center text-sub text-ink-muted">
+        {emptyMessage}
+      </p>
+    );
+  }
+
+  return (
+    <div role="table" aria-label="Needs your attention">
+      <div
+        role="row"
+        className={cn(
+          "grid h-9 items-center gap-4 bg-surface-head px-6 text-[11px] font-semibold uppercase leading-4 tracking-[0.06em] text-ink-muted shadow-[inset_0_-1px_0_theme(colors.line.head),inset_0_1px_0_theme(colors.line.head)]",
+          grid,
+        )}
+      >
+        {columns.map((column, index) => (
+          <span
+            key={column}
+            role="columnheader"
+            className={cn(
+              counted && index === 2 && "text-right",
+              // The action column is named for screen readers only — the
+              // design leaves it blank above the buttons.
+              index === columns.length - 1 && "sr-only",
+            )}
+          >
+            {column}
+          </span>
+        ))}
       </div>
-      <div className="flex flex-col">{children}</div>
+
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <div
+            key={item.id}
+            role="row"
+            className={cn(
+              "grid min-h-[68px] items-center gap-4 px-6 shadow-[inset_0_-1px_0_theme(colors.line.row)] transition-colors hover:bg-surface-sub",
+              grid,
+            )}
+          >
+            <span role="cell" className="flex min-w-0 items-center gap-3.5">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "flex size-[34px] shrink-0 items-center justify-center rounded-sm",
+                  TONE_FILL[item.tone],
+                )}
+              >
+                <Icon className="size-[18px]" />
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="text-body font-medium text-ink">
+                  {item.label}
+                </span>
+                <span className="truncate text-meta text-ink-muted">
+                  {item.context}
+                </span>
+              </span>
+            </span>
+            <span role="cell">
+              <PriorityChip tone={item.tone}>{item.priorityLabel}</PriorityChip>
+            </span>
+            {counted && (
+              <span
+                role="cell"
+                className="text-right text-[16px] font-semibold tabular-nums text-ink"
+              >
+                {item.count ?? ""}
+              </span>
+            )}
+            <span role="cell" className="text-right">
+              <Button asChild variant="outline" size="xs">
+                <Link href={item.href}>{item.actionLabel}</Link>
+              </Button>
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** One thing that already happened, for the activity feed. */
+export interface ActivityItem {
+  readonly id: string;
+  readonly tone: PillTone;
+  readonly title: string;
+  readonly detail?: string;
+  /** Who or what caused it, when that is worth saying. */
+  readonly meta?: string;
+  /**
+   * `Date` or ISO string — the notification feeds parse their timestamps and
+   * the admin dashboard does not, and neither should have to convert just to
+   * hand it to `formatAt`.
+   */
+  readonly at: string | Date;
+}
+
+/** The ring each tone's dot sits in — written whole so Tailwind emits them. */
+const DOT_RING: Record<PillTone, string> = {
+  ok: "ring-ok-bg",
+  warn: "ring-warn-bg",
+  bad: "ring-bad-bg",
+  info: "ring-info-bg",
+  violet: "ring-violet-bg",
+  neutral: "ring-neutral-bg",
+  blue: "ring-info-bg",
+};
+
+/**
+ * The "Recent activity" feed every dashboard uses: a toned dot, what happened,
+ * and when. One row shape across the three roles, so the same event does not
+ * look like two different things depending on who is signed in.
+ */
+export function ActivityFeed({
+  items,
+  emptyMessage,
+  formatAt,
+}: {
+  items: readonly ActivityItem[];
+  emptyMessage: string;
+  /** How the timestamp reads — each dashboard already has its own rule. */
+  formatAt: (at: string | Date) => string;
+}) {
+  if (items.length === 0) {
+    return (
+      <p className="px-6 py-7 text-center text-sub text-ink-muted">
+        {emptyMessage}
+      </p>
+    );
+  }
+
+  return (
+    <ol className="m-0 list-none p-0">
+      {items.map((item) => (
+        <li
+          key={item.id}
+          className="flex items-start gap-3 px-6 py-3 shadow-[inset_0_1px_0_theme(colors.line.row)]"
+        >
+          <span
+            aria-hidden="true"
+            className={cn(
+              "mt-1.5 size-2 shrink-0 rounded-full ring-[3px]",
+              TONE_DOT[item.tone],
+              DOT_RING[item.tone],
+            )}
+          />
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="text-sub">
+              <span className="font-medium text-ink">{item.title}</span>
+              {item.detail && (
+                <>
+                  {" "}
+                  <span className="text-ink-body">{item.detail}</span>
+                </>
+              )}
+            </span>
+            {item.meta && (
+              <span className="text-meta text-ink-muted">{item.meta}</span>
+            )}
+          </span>
+          <span className="whitespace-nowrap text-meta tabular-nums text-ink-muted">
+            {formatAt(item.at)}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/**
+ * One tile of a `QuickViewBand`. A tile that stands for a filter is a button
+ * carrying `aria-pressed`; one that only reports a figure is a plain `div`, so
+ * a number with nothing behind it never looks pressable.
+ */
+export interface QuickView {
+  readonly key: string;
+  readonly label: string;
+  /** `ReactNode` so a tile can hold a `StatValueSkeleton` until its count lands. */
+  readonly value: ReactNode;
+  /** The line under the figure that says what it counts. */
+  readonly note: string;
+  readonly tone: PillTone;
+  /** Omit for a read-only tile — see above. */
+  readonly filter?: {
+    readonly active: boolean;
+    readonly apply: () => void;
+  };
+  /**
+   * Where the figure goes, for a band that navigates rather than filters — a
+   * dashboard's summary. Mutually exclusive with `filter`: a tile is one or
+   * the other, never both.
+   */
+  readonly href?: string;
+}
+
+function QuickViewTile({ view }: { view: QuickView }) {
+  const { filter, href, tone } = view;
+  const body = (
+    <>
+      <span className="flex items-center gap-2 text-meta font-medium text-ink-muted">
+        <span
+          aria-hidden="true"
+          className={cn("size-1.5 shrink-0 rounded-full", TONE_DOT[tone])}
+        />
+        {view.label}
+      </span>
+      <span className="text-[26px] font-semibold leading-8 tracking-[-0.02em] tabular-nums">
+        {view.value}
+      </span>
+      <span className="text-meta leading-[18px] text-ink-muted">
+        {view.note}
+      </span>
+      {filter?.active && (
+        /* The pressed marker is its own element rather than a second inset
+           shadow: the tile already spends its shadow on the divider, and two
+           inset shadows on one box fight whenever `cn` merges them. */
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-0.5 bg-blue"
+        />
+      )}
+    </>
+  );
+
+  const className = cn(
+    "relative flex flex-col gap-1 px-6 py-4.5 text-left text-ink",
+    "shadow-[inset_-1px_0_0_theme(colors.line.DEFAULT)] last:shadow-none",
+    // A queue in the warn tone keeps a warm wash at rest: it is the tile an
+    // admin should notice before reading any of the figures.
+    tone === "warn" && "bg-warn-bg/45",
+    (filter || href) &&
+      "transition-colors duration-150 ease-out hover:bg-surface-sub",
+    filter?.active && "bg-tint hover:bg-tint",
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {body}
+      </Link>
+    );
+  }
+  if (!filter) return <div className={className}>{body}</div>;
+
+  return (
+    <button
+      type="button"
+      aria-pressed={filter.active}
+      onClick={filter.apply}
+      className={className}
+    >
+      {body}
+    </button>
+  );
+}
+
+/**
+ * The reference's quick-view band above a directory: one surface split by
+ * hairlines, each cell a figure that doubles as the filter behind it. Pressing
+ * a tile applies its filter and pressing it again clears it, so the band is
+ * both the summary and the way into each slice.
+ *
+ * One band for every summary in the app: a tile either links somewhere
+ * (`href`), toggles the filter it counts (`filter`), or just reports.
+ */
+export function QuickViewBand({
+  label,
+  views,
+}: {
+  /** Names the band for screen readers, e.g. "Recruiter quick views". */
+  label: string;
+  views: readonly QuickView[];
+}) {
+  return (
+    <section
+      aria-label={label}
+      className="overflow-hidden rounded-lg bg-surface shadow-e1"
+    >
+      <div className="grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
+        {views.map((view) => (
+          <QuickViewTile key={view.key} view={view} />
+        ))}
+      </div>
     </section>
   );
 }

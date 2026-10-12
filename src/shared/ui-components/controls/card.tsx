@@ -57,12 +57,20 @@ const CardDescription = React.forwardRef<
 ));
 CardDescription.displayName = "CardDescription";
 
-/** The body: 24px sides, 20px foot — the design's section padding. */
+/**
+ * The body: 24px sides, 20px foot — the design's section padding. It carries
+ * no top padding, because the head above it already ends in 12px of space.
+ *
+ * `first:pt-5` restores that space for a card with no head at all, where the
+ * body would otherwise sit flush against the card's own top edge. The variant
+ * is what keeps the two cases apart: it only applies when the body is the
+ * card's first child, so a headed card is never double-padded.
+ */
 const CardContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("px-6 pb-5", className)} {...props} />
+  <div ref={ref} className={cn("px-6 pb-5 first:pt-5", className)} {...props} />
 ));
 CardContent.displayName = "CardContent";
 
