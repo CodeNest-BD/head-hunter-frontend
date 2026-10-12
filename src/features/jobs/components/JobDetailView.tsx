@@ -1,18 +1,24 @@
 import type { ReactNode } from "react";
+
 import { CircleDollarSign, Gift } from "lucide-react";
+
 import { formatDistanceToNow } from "date-fns";
 
 import { Tag } from "@/shared/ui-components/badges/Tag";
+
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/shared/ui-components/controls/card";
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
+
 import { MoneyBag } from "@/shared/ui-components/icons/MoneyBag";
+
 import { RichTextView } from "@/shared/ui-components/data/RichTextView";
+
 import { cn } from "@/shared/libs/shadCnConfig";
+
 import { formatMinor } from "@/shared/utils/money";
 
 import {
@@ -39,6 +45,7 @@ import {
   type SalaryRatePeriod,
   type WorkModel,
 } from "../schemas";
+
 import { BenefitsDocumentLink } from "./BenefitsDocumentLink";
 
 /**

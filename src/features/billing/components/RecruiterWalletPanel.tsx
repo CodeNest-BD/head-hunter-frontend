@@ -23,7 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/ui-components/controls/card";
-import { StatCard } from "@/shared/ui-components/dashboard/DashboardParts";
+import { QuickViewBand } from "@/shared/ui-components/dashboard/DashboardParts";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   MobileRecordCard,
@@ -39,10 +39,7 @@ import {
   type RecruiterPlacement,
   type RecruiterWalletSummary,
 } from "../schemas";
-import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
+import { ToolbarSelect } from "@/shared/ui-components/data/ListToolbar";
 import {
   ColumnsToggle,
   useVisibleColumns,
@@ -153,25 +150,17 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
   ];
 
   return (
-    <div
-      className={cn(
-        "grid gap-3",
-        ENABLE_RECRUITER_PAYOUTS
-          ? "sm:grid-cols-2 lg:grid-cols-4"
-          : "sm:grid-cols-3",
-      )}
-    >
-      {cards.map((card) => (
-        <StatCard
-          key={card.label}
-          label={card.label}
-          value={
-            card.valueMinor === undefined ? "—" : formatMinor(card.valueMinor)
-          }
-          hint={card.hint}
-        />
-      ))}
-    </div>
+    <QuickViewBand
+      label="Wallet summary"
+      views={cards.map((card) => ({
+        key: card.label,
+        label: card.label,
+        value:
+          card.valueMinor === undefined ? "—" : formatMinor(card.valueMinor),
+        note: card.hint ?? "",
+        tone: "neutral" as const,
+      }))}
+    />
   );
 }
 
@@ -272,8 +261,25 @@ function PlacementsTable({
 
   return (
     <div className={T.TABLE_CARD}>
-      <CardHeader>
-        <CardTitle>Placements</CardTitle>
+      <div className={T.TABLE_TOOLBAR}>
+        <h2 className="m-0 text-card font-[650] text-ink">Placements</h2>
+        <ToolbarSelect
+          label="Placement status"
+          value={status ?? ""}
+          onChange={(next) => onStatus(next === "" ? null : next)}
+          allLabel="Any status"
+          options={PLACEMENT_STATUS_OPTIONS}
+        />
+        {status !== null && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onStatus(null)}
+          >
+            Clear filters
+          </Button>
+        )}
         <div className="ml-auto">
           <ColumnsToggle
             columns={cols.columns}
@@ -281,7 +287,7 @@ function PlacementsTable({
             onToggle={cols.toggle}
           />
         </div>
-      </CardHeader>
+      </div>
       {disputing ? (
         <div className="border-b border-line p-4">
           <RaiseDisputeForm
@@ -318,14 +324,9 @@ function PlacementsTable({
                 </th>
               )}
               {cols.isVisible("status") && (
-                <FilterableHead label="Status">
-                  <ColumnFilter
-                    label="Status"
-                    options={PLACEMENT_STATUS_OPTIONS}
-                    value={status}
-                    onChange={onStatus}
-                  />
-                </FilterableHead>
+                <th scope="col" className={T.TABLE_TH}>
+                  Status
+                </th>
               )}
               {cols.isVisible("released") && (
                 <th scope="col" className={T.TABLE_TH}>

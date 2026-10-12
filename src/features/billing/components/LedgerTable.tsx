@@ -9,7 +9,7 @@ import { entriesOf } from "@/shared/utils/entriesOf";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card, CardHeader } from "@/shared/ui-components/controls/card";
+import { Card } from "@/shared/ui-components/controls/card";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import * as T from "@/shared/ui-components/data/tableStyles";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
@@ -17,10 +17,7 @@ import {
   MobileRecordCard,
   MobileRecordList,
 } from "@/shared/ui-components/mobile-view/MobileRecordCard";
-import {
-  ColumnFilter,
-  FilterableHead,
-} from "@/shared/ui-components/data/ColumnFilter";
+import { ToolbarSelect } from "@/shared/ui-components/data/ListToolbar";
 import {
   ColumnsToggle,
   useVisibleColumns,
@@ -139,15 +136,32 @@ export function LedgerTable() {
 
   return (
     <div className={T.TABLE_CARD}>
-      {/* The "History" heading belongs to the page, so the card head carries
-          only the picker — and only where there are columns to pick. */}
-      <CardHeader className="hidden justify-end py-2 sm:flex">
-        <ColumnsToggle
-          columns={cols.columns}
-          isVisible={cols.isVisible}
-          onToggle={cols.toggle}
+      <div className={T.TABLE_TOOLBAR}>
+        <ToolbarSelect
+          label="Activity"
+          value={entryType ?? ""}
+          onChange={(next) => changeEntryType(next === "" ? null : next)}
+          allLabel="Any activity"
+          options={LEDGER_TYPE_OPTIONS}
         />
-      </CardHeader>
+        {entryType !== null && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => changeEntryType(null)}
+          >
+            Clear filters
+          </Button>
+        )}
+        <div className="ml-auto">
+          <ColumnsToggle
+            columns={cols.columns}
+            isVisible={cols.isVisible}
+            onToggle={cols.toggle}
+          />
+        </div>
+      </div>
       <div className={cn("hidden sm:block", T.TABLE_SCROLL)}>
         <table className={T.TABLE_EL}>
           <thead className={T.TABLE_HEAD}>
@@ -155,14 +169,9 @@ export function LedgerTable() {
               <th scope="col" className={T.TABLE_TH}>
                 When
               </th>
-              <FilterableHead label="Activity" className="w-2/5">
-                <ColumnFilter
-                  label="Activity"
-                  options={LEDGER_TYPE_OPTIONS}
-                  value={entryType}
-                  onChange={changeEntryType}
-                />
-              </FilterableHead>
+              <th scope="col" className={cn(T.TABLE_TH, "w-2/5")}>
+                Activity
+              </th>
               {cols.isVisible("amount") && (
                 <th scope="col" className={cn(T.TABLE_TH, "text-right")}>
                   Amount
