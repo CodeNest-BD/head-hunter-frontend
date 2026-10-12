@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,24 +8,17 @@ import { toast } from "sonner";
 
 import { isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
+import { CardContent } from "@/shared/ui-components/controls/card";
 import { Label } from "@/shared/ui-components/controls/label";
 import { PasswordInput } from "@/shared/ui-components/controls/password-input";
+import {
+  SettingsActionRow,
+  SettingsCard,
+} from "@/shared/ui-components/layout/SettingsParts";
 import { changePassword } from "../api/auth";
 import { useAuth } from "../hooks/useAuth";
 
-/** A read-only identity field — not editable in-app. */
-function ReadOnlyField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-navy">{label}</span>
-      <p className="flex h-9 items-center rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground">
-        {value || "—"}
-      </p>
-    </div>
-  );
-}
-
-// Mirrors the sign-up / reset password rule so every screen agrees on validity.
+// Mirrors the sign-up / reset rule so every screen agrees on what is valid.
 const schema = z
   .object({
     currentPassword: z.string().min(1, "Enter your current password"),
@@ -46,42 +40,50 @@ const schema = z
     message: "Choose a password different from your current one",
     path: ["newPassword"],
   });
-type FormData = z.infer<typeof schema>;
+type FormValues = z.infer<typeof schema>;
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-[13px] text-destructive">{message}</p>;
+  return <p className="text-meta font-medium text-bad">{message}</p>;
 }
 
 /**
- * Account identity: the email (read-only — changing it needs re-verification
- * and has no endpoint) plus an in-app password change (current + new +
- * confirm) that verifies the current password server-side.
+ * Sign-in details: the email as a readout — changing it needs re-verification
+ * and has no endpoint — over the design's password row, where the form stays
+ * folded away until it is asked for. Three password fields standing open on a
+ * settings page read as work waiting to be done.
  */
-export function AccountSection() {
+export function AccountCard() {
   const { user } = useAuth();
+  const [changing, setChanging] = useState(false);
   const {
     register,
     handleSubmit,
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   if (!user) return null;
 
-  const onSubmit = async (data: FormData): Promise<void> => {
+  const close = (): void => {
+    reset();
+    setChanging(false);
+  };
+
+  const onSubmit = handleSubmit(async (values) => {
     try {
       await changePassword({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
       });
       toast.success("Password updated", {
         description: "Use your new password next time you sign in.",
       });
-      reset();
+      close();
     } catch (error) {
-      // 401 means the current password was wrong — surface it on that field.
+      // 401 means the current password was wrong — surface it on that field
+      // rather than as a toast the form keeps no record of.
       if (isApiError(error) && error.statusCode === 401) {
         setError("currentPassword", {
           message: "Current password is incorrect",
@@ -94,25 +96,27 @@ export function AccountSection() {
           : "Something went wrong. Please try again.",
       });
     }
-  };
+  });
 
   return (
-    <section className="rounded-md border border-border bg-card p-5 shadow-card sm:p-6">
-      <div className="grid gap-x-8 gap-y-4 md:grid-cols-[minmax(0,15rem)_1fr]">
-        <div>
-          <h2 className="text-sm font-bold text-navy">Account</h2>
-          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-            Your sign-in details. Your email can&apos;t be changed here.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4">
-          <ReadOnlyField label="Email" value={user.email} />
+    <SettingsCard
+      title="Account"
+      description="How you sign in. Your email can’t be changed here."
+    >
+      <CardContent className="flex flex-col gap-1.5 sm:max-w-sm">
+        <Label htmlFor="account-email">Email</Label>
+        <p
+          id="account-email"
+          className="m-0 flex h-10 items-center rounded-sm border border-line-strong bg-surface-sunken px-3 text-body text-ink-muted"
+        >
+          {user.email}
+        </p>
+      </CardContent>
 
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col gap-4 border-t border-border pt-4"
-          >
-            <div className="flex flex-col gap-1.5">
+      {changing ? (
+        <form onSubmit={onSubmit}>
+          <div className="grid gap-x-5 gap-y-4 border-t border-line-row px-6 pt-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5 sm:col-span-2 sm:max-w-[calc(50%-0.625rem)]">
               <Label htmlFor="currentPassword">Current password</Label>
               <PasswordInput
                 id="currentPassword"
@@ -139,14 +143,38 @@ export function AccountSection() {
               />
               <FieldError message={errors.confirmPassword?.message} />
             </div>
-            <div>
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? "Updating…" : "Update password"}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </section>
+          </div>
+          <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-line-row px-6 py-3.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isSubmitting}
+              onClick={close}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" disabled={isSubmitting}>
+              {isSubmitting ? "Updating…" : "Update password"}
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <SettingsActionRow
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setChanging(true)}
+            >
+              Change password
+            </Button>
+          }
+        >
+          Password · choose a new one at any time
+        </SettingsActionRow>
+      )}
+    </SettingsCard>
   );
 }

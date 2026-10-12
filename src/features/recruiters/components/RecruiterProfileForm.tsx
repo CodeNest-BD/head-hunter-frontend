@@ -1,23 +1,39 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
-import { cn } from "@/shared/libs/shadCnConfig";
 import { useSpecializationsField } from "@/shared/hooks/useSpecializationsField";
+
 import { useStateCities } from "@/shared/hooks/useStateCities";
+
 import { Tag } from "@/shared/ui-components/badges/Tag";
+
 import { Button } from "@/shared/ui-components/controls/button";
-import { Card } from "@/shared/ui-components/controls/card";
+
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
+
 import { Input } from "@/shared/ui-components/controls/input";
+
 import { Label } from "@/shared/ui-components/controls/label";
+
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
+
 import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
+
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
+
 import { FormSection } from "@/shared/ui-components/layout/FormSection";
+
+import { FormSaveBar } from "@/shared/ui-components/layout/FormSaveBar";
+
+import { SettingsCard } from "@/shared/ui-components/layout/SettingsParts";
+
 import { useUpdateMyRecruiterProfile } from "../hooks/useRecruiterProfile";
+
 import { RecruiterPhotoUploader } from "./RecruiterPhotoUploader";
+
 import {
   MAX_EXPERIENCES,
   recruiterProfileFormSchema,
@@ -172,7 +188,10 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <Card>
+      <SettingsCard
+        title="Recruiter Profile"
+        description="What companies see when they review your submissions."
+      >
         <FormSection
           title="Photo"
           hint="Shown on your profile and in the top-right menu."
@@ -396,41 +415,13 @@ export function RecruiterProfileForm({ profile }: RecruiterProfileFormProps) {
             )}
           </div>
         </FormSection>
-      </Card>
+      </SettingsCard>
 
-      {/* The reference's `.savebar`: it sticks to the viewport bottom while the
-          form is in view, so Save is always reachable and never looks disabled
-          at a card's edge. */}
-      <div className="sticky bottom-3 z-20 flex items-center gap-2.5 rounded-md border border-line bg-surface/90 px-3.5 py-2.5 shadow-pop backdrop-blur-[6px]">
-        <span className="flex items-center gap-[7px] text-[12.5px] text-ink-muted">
-          <span
-            aria-hidden="true"
-            className={cn(
-              "size-2 shrink-0 rounded-full",
-              isDirty ? "bg-pending" : "bg-ok",
-            )}
-          />
-          {isDirty ? "Unsaved changes" : "All changes saved"}
-        </span>
-        <div className="ml-auto flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!isDirty || update.isPending}
-            onClick={() => reset()}
-          >
-            Discard
-          </Button>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={update.isPending || !isDirty}
-          >
-            {update.isPending ? "Saving…" : "Save changes"}
-          </Button>
-        </div>
-      </div>
+      <FormSaveBar
+        isDirty={isDirty}
+        isSaving={update.isPending}
+        onDiscard={() => reset()}
+      />
     </form>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { AccountSection, RequireRole } from "@/features/auth";
+import { AccountCard, RequireRole } from "@/features/auth";
 import {
   RecruiterProfileForm,
   ReferencesSection,
@@ -10,14 +10,9 @@ import {
 } from "@/features/recruiters";
 import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
 import { PageHeader } from "@/shared/ui-components/brand";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/ui-components/controls/tabs";
 import { ErrorRetryCallout } from "@/shared/ui-components/feedback/ErrorRetryCallout";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
+import { SettingsLayout } from "@/shared/ui-components/layout/SettingsLayout";
 
 const VERIFICATION_PILL: Record<
   VerificationStatus,
@@ -28,58 +23,57 @@ const VERIFICATION_PILL: Record<
   rejected: { tone: "bad", label: "Verification Declined" },
 };
 
-function VerificationPill({ status }: { status: VerificationStatus }) {
-  const { tone, label } = VERIFICATION_PILL[status];
-  return <Pill tone={tone}>{label}</Pill>;
-}
-
-function ProfileSkeleton() {
+function SettingsSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="h-56 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
-      <div className="h-40 w-full animate-pulse rounded-md border border-line bg-surface-sub" />
+    <div className="flex flex-col gap-5">
+      <div className="h-96 w-full animate-pulse rounded-md bg-surface-sub shadow-e1" />
+      <div className="h-40 w-full animate-pulse rounded-md bg-surface-sub shadow-e1" />
     </div>
   );
 }
 
-function RecruiterProfileContent() {
+function RecruiterSettingsContent() {
   const { data, isPending, isError, refetch } = useMyRecruiterProfile();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <PageHeader
-        title="Recruiter profile"
-        subtitle="Your details, specializations and references."
+        title="Settings"
+        subtitle="The profile companies see, your references, and your sign-in details."
         actions={
-          data ? <VerificationPill status={data.verificationStatus} /> : null
+          data ? (
+            <Pill tone={VERIFICATION_PILL[data.verificationStatus].tone}>
+              {VERIFICATION_PILL[data.verificationStatus].label}
+            </Pill>
+          ) : null
         }
       />
 
       <VerificationBanner />
 
       {isPending ? (
-        <ProfileSkeleton />
+        <SettingsSkeleton />
       ) : isError ? (
         <ErrorRetryCallout
           message="Could not load your profile."
           onRetry={() => void refetch()}
         />
       ) : (
-        <Tabs defaultValue="info">
-          <TabsList>
-            <TabsTrigger value="info">Personal Info</TabsTrigger>
-            <TabsTrigger value="password">Password Change</TabsTrigger>
-          </TabsList>
-          <TabsContent value="info">
-            <div className="flex flex-col gap-4">
-              <RecruiterProfileForm profile={data} />
-              <ReferencesSection references={data.references} />
-            </div>
-          </TabsContent>
-          <TabsContent value="password">
-            <AccountSection />
-          </TabsContent>
-        </Tabs>
+        <SettingsLayout
+          sections={[
+            {
+              id: "profile",
+              label: "Profile",
+              content: <RecruiterProfileForm profile={data} />,
+            },
+            {
+              id: "references",
+              label: "References",
+              content: <ReferencesSection references={data.references} />,
+            },
+            { id: "account", label: "Account", content: <AccountCard /> },
+          ]}
+        />
       )}
     </div>
   );
@@ -89,9 +83,7 @@ export default function RecruiterProfilePage() {
   return (
     <RequireRole role="recruiter">
       <DashboardLayout>
-        <div className="w-full">
-          <RecruiterProfileContent />
-        </div>
+        <RecruiterSettingsContent />
       </DashboardLayout>
     </RequireRole>
   );

@@ -1,20 +1,15 @@
 "use client";
 
-import { RequireRole } from "@/features/auth";
 import {
   AdminManagement,
   MinFeeCard,
   RecruiterPricingCard,
 } from "@/features/admin";
+import { AccountCard, RequireRole } from "@/features/auth";
 import { PHASE1_FREE } from "@/shared/config/featureFlags";
 import { PageHeader } from "@/shared/ui-components/brand";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/ui-components/controls/tabs";
 import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
+import { SettingsLayout } from "@/shared/ui-components/layout/SettingsLayout";
 
 export default function AdminSettingsPage() {
   return (
@@ -26,25 +21,33 @@ export default function AdminSettingsPage() {
           { label: "Settings" },
         ]}
       >
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           <PageHeader
             title="Settings"
-            subtitle="Marketplace policy and admin accounts."
+            subtitle="Your admin account, the marketplace policy you set, and who else can administer it."
           />
-          <Tabs defaultValue="policy">
-            <TabsList>
-              <TabsTrigger value="policy">Marketplace policy</TabsTrigger>
-              <TabsTrigger value="admins">Admin accounts</TabsTrigger>
-            </TabsList>
-            <TabsContent value="policy" className="flex flex-col gap-3">
-              <MinFeeCard />
-              {/* Subscription pricing returns when the phase-1 free period ends. */}
-              {!PHASE1_FREE && <RecruiterPricingCard />}
-            </TabsContent>
-            <TabsContent value="admins">
-              <AdminManagement />
-            </TabsContent>
-          </Tabs>
+          <SettingsLayout
+            sections={[
+              { id: "account", label: "Account", content: <AccountCard /> },
+              {
+                id: "policy",
+                label: "Marketplace Policy",
+                content: (
+                  <>
+                    <MinFeeCard />
+                    {/* Subscription pricing returns when the phase-1 free
+                        period ends. */}
+                    {!PHASE1_FREE && <RecruiterPricingCard />}
+                  </>
+                ),
+              },
+              {
+                id: "admins",
+                label: "Admin Accounts",
+                content: <AdminManagement />,
+              },
+            ]}
+          />
         </div>
       </DashboardLayout>
     </RequireRole>

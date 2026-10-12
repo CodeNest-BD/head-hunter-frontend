@@ -5,7 +5,6 @@ import { Controller, useForm } from "react-hook-form";
 
 import { useStateCities } from "@/shared/hooks/useStateCities";
 import { cn } from "@/shared/libs/shadCnConfig";
-import { Card } from "@/shared/ui-components/controls/card";
 import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
@@ -28,7 +27,8 @@ import {
 } from "../schemas";
 import { useUpdateMyCompanyProfile } from "../hooks/useCompanyProfile";
 import { FormSection } from "@/shared/ui-components/layout/FormSection";
-import { CompanyFormSaveBar } from "./CompanyFormLayout";
+import { SettingsCard } from "@/shared/ui-components/layout/SettingsParts";
+import { FormSaveBar } from "@/shared/ui-components/layout/FormSaveBar";
 import { CompanyLogoUploader } from "./CompanyLogoUploader";
 
 const MAX_DESCRIPTION = 400;
@@ -120,7 +120,10 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <Card>
+      <SettingsCard
+        title="Company Profile"
+        description="What recruiters see when they browse companies."
+      >
         <FormSection title="Identity" hint="Your brand within the website.">
           <div className="flex flex-col gap-1.5">
             <Label>Logo</Label>
@@ -356,9 +359,9 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
             backend drops the column. */}
         <input type="hidden" {...register("commissionMin")} />
         <input type="hidden" {...register("commissionMax")} />
-      </Card>
+      </SettingsCard>
 
-      <CompanyFormSaveBar
+      <FormSaveBar
         isDirty={isDirty}
         isSaving={update.isPending}
         onDiscard={() => reset()}

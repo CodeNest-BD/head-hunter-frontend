@@ -9,14 +9,10 @@ import {
   minorToMajorInput,
 } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui-components/controls/card";
+import { CardContent } from "@/shared/ui-components/controls/card";
 import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { SettingsCard } from "@/shared/ui-components/layout/SettingsParts";
 import {
   useRecruiterPricing,
   useUpdateRecruiterPricing,
@@ -48,10 +44,10 @@ export function RecruiterPricingCard() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recruiter subscription price</CardTitle>
-      </CardHeader>
+    <SettingsCard
+      title="Recruiter Subscription Price"
+      description="What a recruiter pays each month to work the marketplace."
+    >
       <CardContent>
         {isPending ? (
           <div className="h-24 animate-pulse rounded-sm bg-surface-sunken" />
@@ -126,6 +122,6 @@ export function RecruiterPricingCard() {
           </form>
         )}
       </CardContent>
-    </Card>
+    </SettingsCard>
   );
 }
