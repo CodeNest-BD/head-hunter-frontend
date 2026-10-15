@@ -122,6 +122,13 @@ function CaseBand({ data }: { data: AdminDisputeDetail }) {
   );
   const facts = [
     {
+      label: "Case ID",
+      value: data.serialNumber ? `DSP-${data.serialNumber}` : "—",
+      note: data.candidateSerialNumber
+        ? `Submission SUB-${data.candidateSerialNumber}`
+        : "Submission —",
+    },
+    {
       label: "Fee held",
       value: formatMinor(data.amountMinor),
       note: "Agreed in the offer",

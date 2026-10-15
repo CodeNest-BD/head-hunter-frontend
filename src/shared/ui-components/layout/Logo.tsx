@@ -45,12 +45,15 @@ export function Logo({
         width={292}
         height={298}
         priority
-        className={cn("w-auto select-none", large ? "h-[30px]" : "h-[26px]")}
+        className={cn(
+          "w-auto select-none",
+          large ? "h-[40px]" : "h-[26px] sm:h-[32px]",
+        )}
       />
       <span
         className={cn(
           "font-heading font-[750] leading-none tracking-[-0.015em]",
-          large ? "text-[15px]" : "text-[14.5px]",
+          large ? "text-[21px]" : "text-[14.5px] sm:text-[17px]",
         )}
       >
         <span className={onDark ? "text-white" : "text-navy"}>

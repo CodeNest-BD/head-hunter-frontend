@@ -19,13 +19,10 @@ describe("recruiter navigation", () => {
     ]);
   });
 
-  it("keeps an unapproved recruiter's map (locked teaser) and profile", () => {
-    // The dashboard goes: every tile on it reads an endpoint the approval gate
-    // refuses, so it could only ever render the pending banner. The map stays —
-    // it renders its own locked teaser nudging the recruiter to verify.
+  it("keeps an unapproved recruiter's dashboard, map (locked teaser) and profile", () => {
     const labels = navForRole("recruiter", false).map((item) => item.label);
 
-    expect(labels).toEqual(["Live Map", "Settings"]);
+    expect(labels).toEqual(["Dashboard", "Live Map", "Settings"]);
   });
 
   it("keeps notifications out of the sidebar (bell dropdown only)", () => {
@@ -35,13 +32,10 @@ describe("recruiter navigation", () => {
     expect(labels).not.toContain("Notifications");
   });
 
-  it("reduces an unapproved company to its profile alone", () => {
-    // Same rule as the recruiter above: the profile is the page it completes
-    // to get approved, and notifications stay reachable from the top-bar bell
-    // rather than the sidebar.
+  it("reduces an unapproved company to its dashboard and profile", () => {
     const labels = navForRole("company", false).map((item) => item.label);
 
-    expect(labels).toEqual(["Settings"]);
+    expect(labels).toEqual(["Dashboard", "Settings"]);
   });
 
   it("gives an approved company its full navigation", () => {
@@ -65,13 +59,12 @@ describe("recruiter navigation", () => {
 
 describe("navigation groups", () => {
   it("drops a heading whose items were all filtered away", () => {
-    // An unapproved company keeps only its profile, so Overview, Marketplace,
-    // Operations and Finance have nothing left — a heading over an empty run
-    // reads as a section that failed to load.
+    // An unapproved company keeps only its dashboard and profile, so
+    // Marketplace, Operations and Finance have nothing left — a heading over
+    // an empty run reads as a section that failed to load.
     const groups = navGroupsForRole("company", false);
 
-    expect(groups.map((g) => g.label)).toEqual(["Account"]);
-    expect(groups[0].items.map((i) => i.label)).toEqual(["Settings"]);
+    expect(groups.map((g) => g.label)).toEqual(["Overview", "Account"]);
   });
 
   it("gives the admin the design's headings, Finance among them", () => {

@@ -84,8 +84,6 @@ const STATUS_VIEWS: {
     statuses: ["open", "under_review"],
     unread: true,
   },
-  { label: "New", value: "new", statuses: ["open"] },
-  { label: "Investigating", value: "under_review", statuses: ["under_review"] },
   {
     label: "Resolved",
     value: "resolved",

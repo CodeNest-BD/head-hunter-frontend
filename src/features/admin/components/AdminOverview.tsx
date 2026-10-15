@@ -118,19 +118,6 @@ function KpiBand({ stats }: { stats: AdminStats }) {
   return (
     <Section label="Marketplace summary">
       <QuickViewBand label="Marketplace summary" views={kpis} />
-      {/* The figures carry definitions a reader will ask about once and then
-          never again, so they fold away rather than taking a line each. */}
-      <details className="bg-surface-sub px-6 py-2.5 text-meta text-ink-muted shadow-[inset_0_1px_0_theme(colors.line.DEFAULT)]">
-        <summary className="cursor-pointer font-medium text-blue-ink">
-          How these are calculated
-        </summary>
-        <p className="mb-1 mt-1.5 max-w-[760px] leading-[18px]">
-          Wallet Total sums current company balances; reserved funds are counted
-          once and past deposits are excluded. Live Jobs are published jobs
-          accepting submissions. Average Fee is the mean recruiter fee across
-          live jobs.
-        </p>
-      </details>
     </Section>
   );
 }

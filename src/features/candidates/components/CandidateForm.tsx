@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import {
   FileText,
   Paperclip,
@@ -17,6 +17,7 @@ import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
+import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor, minorToMajorInput } from "@/shared/utils/money";
@@ -151,6 +152,7 @@ export function CandidateForm({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isDirty, dirtyFields },
   } = useForm<CandidateFormValues>({
@@ -256,7 +258,24 @@ export function CandidateForm({
             <Label htmlFor="phone" className={LABEL_CLASS}>
               Phone
             </Label>
-            <Input id="phone" className={FIELD_CLASS} {...register("phone")} />
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <PhoneInput
+                  id="phone"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={errors.phone !== undefined}
+                />
+              )}
+            />
+            {errors.phone && (
+              <p className="text-meta font-medium text-bad">
+                {errors.phone.message}
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="linkedinUrl" className={LABEL_CLASS}>

@@ -230,9 +230,9 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
       accent: false,
     },
     {
-      label: "Candidates submitted",
-      value: data.candidateCount.toLocaleString(),
-      note: "Across every job",
+      label: "Pending commissions",
+      value: formatMinor(data.pendingEarningsMinor),
+      note: "Held until the guarantee completes",
       accent: false,
     },
     {

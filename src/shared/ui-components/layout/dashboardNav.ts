@@ -207,17 +207,16 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
 /**
  * Nav labels an unapproved account still sees.
  *
- * Either role keeps only its profile — the page it completes to get approved.
- * The dashboard goes too: every tile on it reads an endpoint the approval gate
- * refuses, so it can only ever render the pending banner, which the profile
- * page already carries. Notifications stay reachable from the top-bar bell
- * rather than the sidebar.
+ * Either role keeps its dashboard — which shows the pending-approval state and
+ * hides what approval gates — and its profile, the page it completes to get
+ * approved. Notifications stay reachable from the top-bar bell rather than the
+ * sidebar.
  */
 const UNAPPROVED_LABELS: Record<Role, readonly string[]> = {
   // The map stays reachable while unapproved — it renders its own locked
   // teaser, nudging the recruiter to finish verification.
-  recruiter: ["Live Map", "Settings"],
-  company: ["Settings"],
+  recruiter: ["Dashboard", "Live Map", "Settings"],
+  company: ["Dashboard", "Settings"],
   admin: [],
 };
 

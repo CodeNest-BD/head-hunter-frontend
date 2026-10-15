@@ -381,7 +381,7 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
                         <td className={cn(TABLE_TD, "text-right")}>
                           {job.candidateCount > 0 ? (
                             <Link
-                              href={`/admin/conversations?${companyScope}`}
+                              href={`/admin/submissions?${new URLSearchParams({ jobId: job.jobId }).toString()}`}
                               className="font-[550] tabular-nums text-blue-ink hover:underline focus-visible:underline focus-visible:outline-none"
                             >
                               {job.candidateCount}

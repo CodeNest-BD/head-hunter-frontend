@@ -124,9 +124,9 @@ export const recruiterDetailSchema = recruiterListItemSchema.extend({
   specializations: z.array(z.string()).nullable(),
   lastLoginAt: z.string().nullable(),
   currentPeriodEnd: z.string().nullable(),
-  candidateCount: z.number(),
   placementCount: z.number().catch(0),
   releasedEarningsMinor: z.number(),
+  pendingEarningsMinor: z.number().catch(0),
   phoneVerified: z.boolean().catch(false),
   references: z.array(recruiterReferenceSchema),
   // Added with the redesigned profile; `.catch` so the page still renders

@@ -168,11 +168,11 @@ function JobFee({
   );
 }
 
-/** Submissions → the threads on this job. */
+/** Submissions → the submissions board narrowed to this job. */
 function JobCandidates({ job }: { job: AdminJobListItem }) {
   return job.candidateCount > 0 ? (
     <Link
-      href="/admin/conversations"
+      href={`/admin/submissions?${new URLSearchParams({ jobId: job.jobId }).toString()}`}
       className="font-[550] tabular-nums text-blue-ink hover:underline"
     >
       {job.candidateCount}

@@ -255,16 +255,17 @@
 
 @layer utilities {
   /*
-   * Unread emphasis for table and list rows. The reference tints the row with
-   * the brand blue at 4.5% (8% on hover) — a translucent wash the Tailwind
-   * color scale can't express, since the palette is built from `var()` tokens.
-   * Elevation, radii and the focus halo all live in `tailwind.config.ts`.
+   * Unread emphasis for table and list rows: the brand blue at 8% (12% on
+   * hover) — the reference's 4.5% was too faint to tell apart on a white card.
+   * A translucent wash the Tailwind color scale can't express, since the
+   * palette is built from `var()` tokens. Elevation, radii and the focus halo
+   * all live in `tailwind.config.ts`.
    */
   .bg-unread {
-    background-color: rgba(3, 74, 239, 0.045);
+    background-color: rgba(3, 74, 239, 0.08);
   }
   .bg-unread-hover:hover {
-    background-color: rgba(3, 74, 239, 0.08);
+    background-color: rgba(3, 74, 239, 0.12);
   }
 }
 

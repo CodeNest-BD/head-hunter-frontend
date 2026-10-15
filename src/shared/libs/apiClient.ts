@@ -107,7 +107,14 @@ function createApiClient(baseURL: string | undefined): AxiosInstance {
   if (!baseURL) {
     throw new Error("NEXT_PUBLIC_API_URL environment variable is not set");
   }
-  const instance = axios.create({ baseURL, withCredentials: true });
+  const instance = axios.create({
+    baseURL,
+    withCredentials: true,
+    // Arrays go out as repeated keys (`status=a&status=b`). Axios's default
+    // `status[]=a` is read by the API's Express 5 query parser as a key named
+    // "status[]", which validation then strips — silently dropping the filter.
+    paramsSerializer: { indexes: null },
+  });
   instance.interceptors.request.use(
     (config) => attachAuth(config),
     (error) => Promise.reject(error),

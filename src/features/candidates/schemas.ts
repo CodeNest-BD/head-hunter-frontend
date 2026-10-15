@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { phoneSchema } from "@/shared/libs/phone";
 import { serialNumberSchema } from "@/shared/utils/entityPaths";
 import { MAX_SALARY_MAJOR, MAX_SALARY_MAJOR_LABEL } from "@/shared/utils/money";
 
@@ -56,7 +57,7 @@ export const candidateFormSchema = z.object({
     .trim()
     .min(1, "Email is required")
     .email("Enter a valid email address"),
-  phone: z.string().trim(),
+  phone: phoneSchema.or(z.literal("")),
   overview: z.string().trim(),
   linkedinUrl: z
     .string()
