@@ -221,6 +221,8 @@ export const adminDisputeDetailSchema = adminDisputeListItemSchema.extend({
   countdown: disputeCountdownSchema,
   companyMessages: z.array(disputeMessageSchema),
   recruiterMessages: z.array(disputeMessageSchema),
+  companyUnread: z.boolean().catch(false),
+  recruiterUnread: z.boolean().catch(false),
   attachments: z.array(disputeAttachmentSchema).catch([]),
   jobId: z.string(),
   jobSerialNumber: serialNumberSchema.optional(),

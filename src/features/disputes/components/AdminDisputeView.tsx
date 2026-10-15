@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle, Eye, Lock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,6 +32,7 @@ import { Card, CardContent } from "@/shared/ui-components/controls/card";
 
 import {
   useAdminDispute,
+  useMarkAdminDisputeChannelRead,
   usePostAdminDisputeMessage,
 } from "../hooks/useDisputes";
 import {
@@ -212,16 +213,40 @@ function DisputeBody({
 }) {
   const [channel, setChannel] = useState<Channel>("shared");
   const open = isDisputeOpen(data.status);
+  const { mutate: markChannelRead } = useMarkAdminDisputeChannelRead();
 
-  const tabs: { key: Channel; label: string; count?: number }[] = [
-    { key: "shared", label: "Company ↔ Recruiter" },
-    { key: "company", label: "Company", count: data.companyMessages.length },
-    {
-      key: "recruiter",
-      label: "Recruiter",
-      count: data.recruiterMessages.length,
-    },
+  const tabs: { key: Channel; label: string; unread: boolean }[] = [
+    { key: "shared", label: "Company ↔ Recruiter", unread: false },
+    { key: "company", label: "Company", unread: data.companyUnread },
+    { key: "recruiter", label: "Recruiter", unread: data.recruiterUnread },
   ];
+
+  // Reading a private channel is opening its tab, so the open tab is marked
+  // read up to its newest message — including one that arrives while it's open.
+  const openTabUnread = tabs.some((tab) => tab.key === channel && tab.unread);
+  const openTabMessages =
+    channel === "company"
+      ? data.companyMessages
+      : channel === "recruiter"
+        ? data.recruiterMessages
+        : [];
+  const newestOpenTabMessageId = openTabMessages.at(-1)?.id;
+  useEffect(() => {
+    if (channel === "shared" || !openTabUnread || !newestOpenTabMessageId) {
+      return;
+    }
+    markChannelRead({
+      disputeId: data.id,
+      channel,
+      lastMessageId: newestOpenTabMessageId,
+    });
+  }, [
+    channel,
+    openTabUnread,
+    newestOpenTabMessageId,
+    data.id,
+    markChannelRead,
+  ]);
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -295,10 +320,11 @@ function DisputeBody({
                     <Lock className="size-3.5" aria-hidden="true" />
                   )}
                   {tab.label}
-                  {tab.count !== undefined && (
-                    <span className="tabular-nums text-ink-faint">
-                      {tab.count}
-                    </span>
+                  {tab.unread && (
+                    <span
+                      aria-label="Unread messages"
+                      className="size-1.5 rounded-full bg-blue"
+                    />
                   )}
                 </button>
               ))}

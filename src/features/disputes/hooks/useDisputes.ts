@@ -18,6 +18,7 @@ import {
   fetchDisputeAttentionCount,
   fetchMyDispute,
   fetchMyDisputes,
+  markAdminDisputeChannelRead,
   postAdminDisputeMessage,
   postDisputeMessage,
   presignDisputeProof,
@@ -248,6 +249,27 @@ export function usePostAdminDisputeMessage() {
       channel: DisputeChannel;
       body: string;
     }) => postAdminDisputeMessage(input.disputeId, input.channel, input.body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: disputeKeys.adminDetails,
+      });
+    },
+  });
+}
+
+export function useMarkAdminDisputeChannelRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      disputeId: string;
+      channel: DisputeChannel;
+      lastMessageId: string;
+    }) =>
+      markAdminDisputeChannelRead(
+        input.disputeId,
+        input.channel,
+        input.lastMessageId,
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: disputeKeys.adminDetails,

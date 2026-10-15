@@ -254,3 +254,19 @@ export async function postAdminDisputeMessage(
   );
   return disputeMessageSchema.parse(data);
 }
+
+/**
+ * POST /v1/admin/disputes/:id/channels/:channel/read — mark one party's
+ * channel read up to the newest message the admin was shown.
+ */
+export async function markAdminDisputeChannelRead(
+  id: string,
+  channel: DisputeChannel,
+  lastMessageId: string,
+): Promise<void> {
+  await apiClient.post(
+    `/admin/disputes/${id}/channels/${channel}/read`,
+    { lastMessageId },
+    { suppressGlobalErrorToast: true },
+  );
+}
