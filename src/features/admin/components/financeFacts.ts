@@ -144,3 +144,34 @@ export function holdSummary(payout: AdminPayout): {
   }
   return null;
 }
+
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+
+/**
+ * The movement's description, with what the row already says stripped out.
+ *
+ * Ledger descriptions used to name the placement by its UUID — which the row
+ * shows as `PLC-…` in Reference and links under Related records — so the line
+ * read as a restatement wrapped around 36 characters of noise. The source copy
+ * now carries only the cause, but the ledger is append-only: every row written
+ * before that keeps its old text for good, so the scrub has to happen here too.
+ *
+ * Returns null when nothing but the duplication was left, so the caller can
+ * drop the block rather than print an empty box.
+ */
+export function describeMovement(description: string | null): string | null {
+  if (!description) return null;
+
+  const cleaned = description
+    // "dispute on placement <uuid>" still means "dispute" — keep the word.
+    .replace(new RegExp(`on placement ${UUID.source}`, "gi"), "")
+    .replace(new RegExp(`placement ${UUID.source}`, "gi"), "")
+    .replace(UUID, "")
+    .replace(/\s+/g, " ")
+    // A dangling dash is what is left when the clause after it was the UUID.
+    .replace(/\s*[—–-]\s*$/, "")
+    .replace(/^\s*[—–-]\s*/, "")
+    .trim();
+
+  return cleaned.length > 0 ? cleaned : null;
+}

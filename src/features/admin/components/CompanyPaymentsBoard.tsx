@@ -46,7 +46,11 @@ import {
 import { useCsvExport } from "../hooks/useCsvExport";
 import { FinanceHeaderActions } from "./FinanceHeaderActions";
 import { ListPager } from "./ListPager";
-import { walletBeforeAfter, walletEffect } from "./financeFacts";
+import {
+  describeMovement,
+  walletBeforeAfter,
+  walletEffect,
+} from "./financeFacts";
 import {
   ENTRY_TYPE_LABELS,
   PAYMENT_STATUS_LABELS,
@@ -142,6 +146,7 @@ function referenceLabel(payment: AdminPayment): string {
 function PaymentDetail({ payment }: { payment: AdminPayment }) {
   const href = referenceHref(payment);
   const wallet = walletBeforeAfter(payment);
+  const movement = describeMovement(payment.description);
 
   const facts: [string, string][] = [
     ["Type", ENTRY_TYPE_LABELS[payment.entryType]],
@@ -269,9 +274,9 @@ function PaymentDetail({ payment }: { payment: AdminPayment }) {
             </li>
           )}
         </ul>
-        {payment.description && (
+        {movement && (
           <p className="m-0 mt-3 rounded-sm bg-surface px-3 py-2 text-meta text-ink-body shadow-e1">
-            {payment.description}
+            {movement}
           </p>
         )}
       </div>
