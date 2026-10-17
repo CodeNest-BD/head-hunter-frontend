@@ -145,33 +145,59 @@ export function holdSummary(payout: AdminPayout): {
   return null;
 }
 
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
+/** "on placement <uuid>", "placement <uuid>", or a bare id left on its own. */
+const PLACEMENT_REF = new RegExp(
+  `(?:\\bon\\s+)?(?:\\bplacement\\s+)?${UUID}`,
+  "gi",
+);
+
+/** What the old descriptions led with before getting to the point. */
+const LEGACY_PREFIX = /^recruiter fee\s+/i;
+
+const TRIM_DASHES = /^[\s—–-]+|[\s—–-]+$/g;
 
 /**
- * The movement's description, with what the row already says stripped out.
+ * Why the money moved — the one thing on a movement that the row does not
+ * already say somewhere else.
  *
- * Ledger descriptions used to name the placement by its UUID — which the row
- * shows as `PLC-…` in Reference and links under Related records — so the line
- * read as a restatement wrapped around 36 characters of noise. The source copy
- * now carries only the cause, but the ledger is append-only: every row written
- * before that keeps its old text for good, so the scrub has to happen here too.
+ * Descriptions used to be whole sentences that restated the entry type and
+ * named the placement by UUID: "Recruiter fee released to recruiter —
+ * placement 89b6e914-… guarantee passed". Type is a column, the placement is
+ * a link, and the UUID is noise now that placements carry serial numbers, so
+ * the only part worth reading was the cause.
  *
- * Returns null when nothing but the duplication was left, so the caller can
- * drop the block rather than print an empty box.
+ * The source copy is now that cause alone. The ledger is append-only, though,
+ * so every row written before keeps its sentence for good. Reducing one takes
+ * three steps in this order: drop the placement reference, then trim the dash
+ * it may have left dangling, and only then split — because "held in escrow —
+ * placement <uuid>" has nothing after the dash once the reference is gone,
+ * and splitting first would throw the whole reason away.
+ *
+ * A description that never carried the lead-in is returned untouched, so this
+ * cannot truncate a reason that happens to contain a dash.
  */
 export function describeMovement(description: string | null): string | null {
   if (!description) return null;
 
-  const cleaned = description
-    // "dispute on placement <uuid>" still means "dispute" — keep the word.
-    .replace(new RegExp(`on placement ${UUID.source}`, "gi"), "")
-    .replace(new RegExp(`placement ${UUID.source}`, "gi"), "")
-    .replace(UUID, "")
+  const withoutRef = description
+    .replace(PLACEMENT_REF, "")
     .replace(/\s+/g, " ")
-    // A dangling dash is what is left when the clause after it was the UUID.
-    .replace(/\s*[—–-]\s*$/, "")
-    .replace(/^\s*[—–-]\s*/, "")
+    .replace(TRIM_DASHES, "")
     .trim();
 
-  return cleaned.length > 0 ? cleaned : null;
+  if (!LEGACY_PREFIX.test(withoutRef)) {
+    return withoutRef.length > 0 ? withoutRef : null;
+  }
+
+  const body = withoutRef.replace(LEGACY_PREFIX, "");
+  const dash = body.search(/[—–-]/);
+  const after = dash === -1 ? "" : body.slice(dash + 1).trim();
+  // Keep what follows the dash when the sentence got that far; otherwise the
+  // lead-in was the whole of it, and it is still better than nothing.
+  const cause = (after.length > 0 ? after : body).replace(TRIM_DASHES, "");
+
+  if (cause.length === 0) return null;
+  return cause.charAt(0).toUpperCase() + cause.slice(1);
 }

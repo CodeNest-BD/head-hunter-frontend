@@ -148,8 +148,14 @@ function PaymentDetail({ payment }: { payment: AdminPayment }) {
   const wallet = walletBeforeAfter(payment);
   const movement = describeMovement(payment.description);
 
+  // Why it moved, which the type alone cannot say: a settled fee may have come
+  // from the guarantee running out or from a dispute going the recruiter's
+  // way, and both read as "Fee settled".
+  const reason: [string, string][] = movement ? [["Reason", movement]] : [];
+
   const facts: [string, string][] = [
     ["Type", ENTRY_TYPE_LABELS[payment.entryType]],
+    ...reason,
     ["Amount", formatMinor(payment.amountMinor)],
     ["Reference", referenceLabel(payment)],
     ["Provider ref.", payment.providerRef ?? "Internal"],
@@ -274,11 +280,6 @@ function PaymentDetail({ payment }: { payment: AdminPayment }) {
             </li>
           )}
         </ul>
-        {movement && (
-          <p className="m-0 mt-3 rounded-sm bg-surface px-3 py-2 text-meta text-ink-body shadow-e1">
-            {movement}
-          </p>
-        )}
       </div>
     </div>
   );
