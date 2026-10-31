@@ -120,12 +120,11 @@ export function ScheduleInterviewAction({
     <Button
       type="button"
       size="sm"
-      className="self-start"
       onClick={() => setPanel({ kind: "proposing" })}
     >
       {latestInterview?.outcome === "next_round"
-        ? "Schedule next round"
-        : "Schedule interview"}
+        ? "Schedule Next Round"
+        : "Schedule Interview"}
     </Button>
   );
 }

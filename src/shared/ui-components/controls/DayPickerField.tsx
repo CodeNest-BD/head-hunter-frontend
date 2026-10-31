@@ -3,6 +3,7 @@
 import * as Popover from "@radix-ui/react-popover";
 import { format, max, startOfToday } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useState } from "react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { Calendar } from "./calendar";
@@ -60,9 +61,10 @@ export function DayPickerField({
   const firstSelectableDay = minDate
     ? max([minDate, startOfToday()])
     : startOfToday();
+  const [open, setOpen] = useState(false);
 
   return (
-    <Popover.Root>
+    <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <button
           type="button"
@@ -95,7 +97,10 @@ export function DayPickerField({
             selected={selectedDate}
             defaultMonth={selectedDate ?? firstSelectableDay}
             disabled={{ before: firstSelectableDay }}
-            onSelect={(date) => onChange(date ? format(date, DAY_FORMAT) : "")}
+            onSelect={(date) => {
+              onChange(date ? format(date, DAY_FORMAT) : "");
+              setOpen(false);
+            }}
             aria-label={ariaLabel}
           />
         </Popover.Content>
