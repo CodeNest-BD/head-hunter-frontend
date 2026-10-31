@@ -260,7 +260,9 @@ export function ProposalCard({
       <div className="mx-auto flex max-w-[420px] flex-col gap-3 overflow-hidden rounded-md border border-line bg-surface p-3 shadow-e1">
         <div className="flex items-center gap-2.5">
           <Tile icon={CalendarClock} tone="blue" />
-          <p className="text-sub font-[650] text-ink">Propose new times</p>
+          <p className="text-sub font-[650] text-ink">
+            Propose Different Times
+          </p>
         </div>
         <ProposeSlotsForm
           target={{ kind: "existing", interviewId }}
@@ -299,16 +301,17 @@ export function ProposalCard({
       )}
 
       {recruiterCanRespond && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-2">
           <Button
             type="button"
+            variant="success"
             size="sm"
             disabled={!selectedSlotId || confirmSlot.isPending}
             onClick={() => {
               if (selectedSlotId) confirmSlot.mutate(selectedSlotId);
             }}
           >
-            {confirmSlot.isPending ? "Confirming…" : "Confirm"}
+            {confirmSlot.isPending ? "Confirming…" : "Confirm Time"}
           </Button>
           <Button
             type="button"
@@ -316,7 +319,7 @@ export function ProposalCard({
             size="sm"
             onClick={() => setShowCounterForm((shown) => !shown)}
           >
-            Request other times
+            Request Different Times
           </Button>
         </div>
       )}
@@ -356,22 +359,22 @@ export function ProposalCard({
       )}
 
       {companyCanManage && !confirmingWithdraw && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setShowProposeForm(true)}
           >
-            Propose new times
+            Propose Different Times
           </Button>
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             size="sm"
             onClick={() => setConfirmingWithdraw(true)}
           >
-            Withdraw
+            Withdraw Interview
           </Button>
         </div>
       )}

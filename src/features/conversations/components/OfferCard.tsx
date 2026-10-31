@@ -273,34 +273,32 @@ export function OfferCard({
         )}
 
         {counterpartyCanRespond && !showCounterForm && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-2">
             <Button
               type="button"
+              variant="success"
               size="sm"
-              className="w-full sm:w-auto"
               disabled={acceptOffer.isPending || companyCannotFund}
               onClick={() => acceptOffer.mutate()}
             >
-              {acceptOffer.isPending ? "Accepting…" : "Accept"}
+              {acceptOffer.isPending ? "Accepting…" : "Accept Offer"}
             </Button>
             <Button
               type="button"
-              variant="outline"
+              variant="destructive"
               size="sm"
-              className="w-full sm:w-auto"
               disabled={declineOffer.isPending}
               onClick={() => declineOffer.mutate()}
             >
-              {declineOffer.isPending ? "Declining…" : "Decline"}
+              {declineOffer.isPending ? "Declining…" : "Decline Offer"}
             </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="w-full sm:w-auto"
               onClick={() => setShowCounterForm(true)}
             >
-              Counter
+              Counter Offer
             </Button>
           </div>
         )}
@@ -316,12 +314,11 @@ export function OfferCard({
         {creatorCanWithdraw && !confirmingWithdraw && (
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             size="sm"
-            className="self-start"
             onClick={() => setConfirmingWithdraw(true)}
           >
-            Withdraw
+            Withdraw Offer
           </Button>
         )}
 

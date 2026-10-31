@@ -1,15 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { FileText, Target, User, type LucideIcon } from "lucide-react";
+import { CalendarClock, FileText, User, type LucideIcon } from "lucide-react";
 
+import type { OfferParty } from "@/features/offers";
 import type { PillTone } from "@/shared/ui-components/badges/Pill";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
 import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { formatDate } from "@/shared/utils/formatDate";
-import { formatMinor } from "@/shared/utils/money";
 import { CandidateAttachments } from "./CandidateAttachments";
+import { CandidateFields } from "./CandidateFields";
 import type { Candidate } from "../schemas";
 
 /** One label-over-value pair inside a section card — the `.fact` recipe. */
@@ -57,43 +58,42 @@ function Section({
 
 interface CandidateDetailPanelProps {
   candidate: Candidate;
+  /** Contact details are the submitting recruiter's alone; a company reaches
+   * the candidate through the recruiter, so its panel never shows them. */
+  viewerParty: OfferParty;
   /** The candidate's pipeline stage — its label and semantic tone, supplied by
    * the caller so this panel never re-derives the status styling. */
   stageLabel: string;
   stageTone: PillTone;
-  /** Header controls (Edit / Remove, or the company's schedule / offer entry
-   * points) — rendered top-right beside the avatar. */
+  /** Header controls (the recruiter's Edit / Remove) — rendered top-right
+   * beside the avatar. */
   headerActions?: ReactNode;
   /** A full-width strip below the header, e.g. a remove-confirmation. */
   banner?: ReactNode;
   /** Live interview/offer state, shown right under the stage it explains. */
   negotiation?: ReactNode;
-  /** Extra sections appended after the standard ones (company actions). */
-  children?: ReactNode;
+  /** The company's interview, offer and pass controls, under the state they
+   * act on. */
+  actions?: ReactNode;
 }
 
 /**
- * The candidate rail: a header (avatar, name, stage, actions), an at-a-glance
- * stat strip, then the candidate's details grouped into Contact / Profile /
- * Expectations cards and their attachments — the read-only mirror of the edit
- * form's sections, so viewing and editing read as the same object.
+ * The candidate panel: a header (avatar, name, actions), an at-a-glance stat
+ * strip, the interview and offer section, then the candidate's details
+ * grouped into Contact (recruiter only) and Candidate Information cards and
+ * their attachments.
  */
 export function CandidateDetailPanel({
   candidate,
+  viewerParty,
   stageLabel,
   stageTone,
   headerActions,
   banner,
   negotiation,
-  children,
+  actions,
 }: CandidateDetailPanelProps) {
-  const hasProfile =
-    Boolean(candidate.overview) ||
-    Boolean(candidate.currentCompany) ||
-    candidate.yearsOfExperience !== null;
-  const hasExpectations =
-    candidate.expectedSalaryMinor !== null ||
-    candidate.noticePeriodDays !== null;
+  const showsContact = viewerParty === "recruiter";
 
   return (
     <div className="space-y-3.5 rounded-md border border-line bg-surface p-4 shadow-e1 lg:h-full lg:overflow-y-auto">
@@ -104,12 +104,14 @@ export function CandidateDetailPanel({
           <p className="truncate text-block font-[650] text-ink">
             {candidate.fullName}
           </p>
-          <a
-            href={`mailto:${candidate.email}`}
-            className="truncate text-meta text-blue-ink underline-offset-2 hover:underline"
-          >
-            {candidate.email}
-          </a>
+          {showsContact && (
+            <a
+              href={`mailto:${candidate.email}`}
+              className="truncate text-meta text-blue-ink underline-offset-2 hover:underline"
+            >
+              {candidate.email}
+            </a>
+          )}
         </div>
         {headerActions ? (
           <div className="flex shrink-0 items-center gap-1">
@@ -152,91 +154,39 @@ export function CandidateDetailPanel({
         ) : null}
       </div>
 
-      {negotiation}
+      {(negotiation || actions) && (
+        <Section icon={CalendarClock} iconTone="ok" title="Interview & Offer">
+          {negotiation}
+          {actions}
+        </Section>
+      )}
 
-      <Section
-        icon={User}
-        iconTone="blue"
-        title="Contact"
-        note="Visible to you only"
-      >
-        <Field label="Email">
-          <a
-            href={`mailto:${candidate.email}`}
-            className="text-blue-ink underline-offset-2 hover:underline"
-          >
-            {candidate.email}
-          </a>
-        </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Phone">{candidate.phone ?? "—"}</Field>
-          <Field label="LinkedIn">
-            {candidate.linkedinUrl ? (
+      {showsContact && (
+        <Section
+          icon={User}
+          iconTone="blue"
+          title="Contact"
+          note="Visible to you only"
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Email">
               <a
-                href={candidate.linkedinUrl}
-                target="_blank"
-                rel="noreferrer"
+                href={`mailto:${candidate.email}`}
                 className="text-blue-ink underline-offset-2 hover:underline"
               >
-                Profile
+                {candidate.email}
               </a>
-            ) : (
-              "—"
-            )}
-          </Field>
-        </div>
-      </Section>
-
-      {hasProfile ? (
-        <Section icon={FileText} iconTone="warn" title="Profile">
-          {candidate.overview ? (
-            <div className="flex min-w-0 flex-col">
-              <span className="text-label font-[650] uppercase text-ink-muted">
-                Overview
-              </span>
-              <p className="mt-[3px] whitespace-pre-wrap text-sub leading-relaxed text-ink-body">
-                {candidate.overview}
-              </p>
-            </div>
-          ) : null}
-          {(candidate.currentCompany ||
-            candidate.yearsOfExperience !== null) && (
-            <div className="grid grid-cols-2 gap-3">
-              {candidate.currentCompany ? (
-                <Field label="Current company">
-                  {candidate.currentCompany}
-                </Field>
-              ) : null}
-              {candidate.yearsOfExperience !== null ? (
-                <Field label="Experience">
-                  {candidate.yearsOfExperience} yrs
-                </Field>
-              ) : null}
-            </div>
-          )}
-        </Section>
-      ) : null}
-
-      {hasExpectations ? (
-        <Section icon={Target} iconTone="ok" title="Expectations">
-          <div className="grid grid-cols-2 gap-3">
-            {candidate.expectedSalaryMinor !== null ? (
-              <Field label="Expected salary">
-                {formatMinor(candidate.expectedSalaryMinor)} / yr
-              </Field>
-            ) : null}
-            {candidate.noticePeriodDays !== null ? (
-              <Field label="Notice period">
-                {candidate.noticePeriodDays} days
-              </Field>
-            ) : null}
+            </Field>
+            <Field label="Phone">{candidate.phone ?? "—"}</Field>
           </div>
         </Section>
-      ) : null}
+      )}
+
+      <Section icon={FileText} iconTone="warn" title="Candidate Information">
+        <CandidateFields candidate={candidate} />
+      </Section>
 
       <CandidateAttachments candidateId={candidate.id} />
-
-      {children}
     </div>
   );
 }

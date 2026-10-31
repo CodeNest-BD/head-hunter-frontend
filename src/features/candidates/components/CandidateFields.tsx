@@ -18,12 +18,14 @@ interface CandidateFieldsProps {
  */
 export function CandidateFields({ candidate }: CandidateFieldsProps) {
   return (
-    <div className="flex flex-col gap-3">
-      {/* `.facts` — an 11px uppercase label over its 13.5px/550 value. */}
-      <dl className="grid grid-cols-2 gap-x-5 gap-y-3.5 sm:grid-cols-3">
+    <div className="flex flex-col gap-4">
+      {/* `.facts` — an 11px uppercase label over its 13.5px/550 value. Sized
+          by the panel's own width, not the viewport's, so a label never wraps
+          into a column too narrow for it. */}
+      <dl className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-5 gap-y-3.5">
         {candidate.currentCompany && (
           <div>
-            <dt className={FACT_LABEL}>Current company</dt>
+            <dt className={FACT_LABEL}>Current Company</dt>
             <dd className={FACT_VALUE}>{candidate.currentCompany}</dd>
           </div>
         )}
@@ -37,7 +39,7 @@ export function CandidateFields({ candidate }: CandidateFieldsProps) {
         )}
         {candidate.expectedSalaryMinor !== null && (
           <div>
-            <dt className={FACT_LABEL}>Expected salary</dt>
+            <dt className={FACT_LABEL}>Expected Salary</dt>
             <dd className={cn(FACT_VALUE, "font-[650] tabular-nums")}>
               {formatMinor(candidate.expectedSalaryMinor)}
             </dd>
@@ -45,7 +47,7 @@ export function CandidateFields({ candidate }: CandidateFieldsProps) {
         )}
         {candidate.noticePeriodDays !== null && (
           <div>
-            <dt className={FACT_LABEL}>Notice period</dt>
+            <dt className={FACT_LABEL}>Notice Period</dt>
             <dd className={cn(FACT_VALUE, "tabular-nums")}>
               {candidate.noticePeriodDays} days
             </dd>
@@ -69,9 +71,12 @@ export function CandidateFields({ candidate }: CandidateFieldsProps) {
       </dl>
 
       {candidate.overview && (
-        <p className="whitespace-pre-wrap text-sub leading-relaxed text-ink-muted">
-          {candidate.overview}
-        </p>
+        <div className="border-t border-line pt-3.5">
+          <p className={FACT_LABEL}>Overview</p>
+          <p className="mt-[3px] whitespace-pre-wrap text-sub leading-relaxed text-ink-body">
+            {candidate.overview}
+          </p>
+        </div>
       )}
     </div>
   );

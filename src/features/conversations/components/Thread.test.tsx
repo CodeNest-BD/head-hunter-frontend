@@ -298,10 +298,10 @@ describe("Thread", () => {
     // (naming the commission, not the salary) would never produce.
     expect(screen.getByText("$130,000")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^accept$/i }),
+      screen.getByRole("button", { name: /^accept offer$/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^counter$/i }),
+      screen.getByRole("button", { name: /^counter offer$/i }),
     ).toBeInTheDocument();
     expect(
       screen.queryByText("Offer sent — $5,000 for J. Rivera"),
