@@ -123,12 +123,12 @@ interface StatCardDef {
 /** The line under each figure, saying what it counts. */
 const STAT_NOTES: Record<CandidateStatus | "total", string> = {
   total: "Every candidate sent to you",
-  submitted: "Waiting for a first look",
-  reviewing: "Being read now",
+  submitted: "Awaiting your review",
+  reviewing: "Viewed and awaiting action",
   interviewing: "At least one interview booked",
   offered: "Offer out, awaiting an answer",
-  hired: "Joined or about to",
-  passed: "Not taken forward",
+  hired: "Offer accepted",
+  passed: "Declined to interview",
 };
 
 const STAT_CARDS: StatCardDef[] = [
@@ -147,13 +147,13 @@ const STAT_CARDS: StatCardDef[] = [
   },
   {
     key: "interviewing",
-    label: "Interviewing",
+    label: "Scheduled",
     tone: "info",
     value: (s) => s.interviewing,
   },
+  { key: "passed", label: "Passed", tone: "neutral", value: (s) => s.passed },
   { key: "offered", label: "Offered", tone: "violet", value: (s) => s.offered },
   { key: "hired", label: "Hired", tone: "ok", value: (s) => s.hired },
-  { key: "passed", label: "Passed", tone: "neutral", value: (s) => s.passed },
 ];
 
 function RecruiterCell({ row }: { row: InboxSubmissionRow }) {
