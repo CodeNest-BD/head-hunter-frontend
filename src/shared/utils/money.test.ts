@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatMinor,
+  groupThousands,
   MAX_MONEY_MAJOR,
   MAX_MONEY_MAJOR_LABEL,
   MAX_SALARY_MAJOR,
@@ -72,6 +73,18 @@ describe("formatMinor", () => {
 
   it("renders a missing amount as a dash", () => {
     expect(formatMinor(null)).toBe("—");
+  });
+});
+
+describe("groupThousands", () => {
+  it("separates every three digits of the whole part", () => {
+    expect(groupThousands("1000000000")).toBe("1,000,000,000");
+    expect(groupThousands("999")).toBe("999");
+  });
+
+  it("leaves a fraction, or a dot still being typed, ungrouped", () => {
+    expect(groupThousands("1234.5678")).toBe("1,234.5678");
+    expect(groupThousands("1234.")).toBe("1,234.");
   });
 });
 

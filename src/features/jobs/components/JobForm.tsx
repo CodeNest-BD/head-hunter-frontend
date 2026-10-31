@@ -21,7 +21,10 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { Pill } from "@/shared/ui-components/badges/Pill";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
-import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
+import {
+  NumericInput,
+  sanitizeNumeric,
+} from "@/shared/ui-components/controls/NumericInput";
 import { companySizeOptions } from "@/shared/data/companySize";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
@@ -43,7 +46,11 @@ import {
 import { useMinRecruiterFee } from "@/features/billing";
 import { sanitizeRichText } from "@/shared/libs/richText";
 import { isoDateAfter } from "@/shared/utils/formatDate";
-import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
+import {
+  formatMinor,
+  groupThousands,
+  majorInputToMinor,
+} from "@/shared/utils/money";
 import {
   BENEFIT_CHECKBOXES,
   EMPLOYMENT_TYPES,
@@ -162,7 +169,9 @@ function Field({
       </Label>
       {children}
       {error ? (
-        <p className="text-meta font-medium text-bad">{error}</p>
+        <p role="alert" className="text-meta font-medium text-bad">
+          {error}
+        </p>
       ) : (
         hint && <p className="text-meta text-ink-faint">{hint}</p>
       )}
@@ -271,28 +280,100 @@ function Question({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /**
- * A money field with a leading "$" adornment. Numeric-only: digits and one dot,
- * or digits alone under `decimal={false}` for a figure that must be whole.
+ * Rewrites a money field's text with thousands separators and returns its bare
+ * value. Done on the element during the change event so the caret can be put
+ * back after the digit it followed; a controlled re-render alone would throw it
+ * to the end every time a comma appeared.
  */
-const MoneyInput = forwardRef<
-  HTMLInputElement,
-  React.ComponentProps<typeof NumericInput>
->(({ className, decimal = true, ...props }, ref) => (
-  <div className="relative">
-    <span className="pointer-events-none absolute left-[11px] top-1/2 -translate-y-1/2 text-sub text-ink-faint">
-      $
-    </span>
-    <NumericInput
-      decimal={decimal}
-      ref={ref}
-      className={cn(CONTROL_HEIGHT, "pl-6 tabular-nums", className)}
-      {...props}
-    />
-  </div>
-));
+function regroupMoneyInput(input: HTMLInputElement, decimal: boolean): string {
+  const caret = input.selectionStart ?? input.value.length;
+  const charsBeforeCaret = sanitizeNumeric(
+    input.value.slice(0, caret),
+    decimal,
+  ).length;
+  const bare = sanitizeNumeric(input.value, decimal);
+  const grouped = groupThousands(bare);
+  let nextCaret = 0;
+  let seen = 0;
+  while (nextCaret < grouped.length && seen < charsBeforeCaret) {
+    if (grouped[nextCaret] !== ",") seen++;
+    nextCaret++;
+  }
+  input.value = grouped;
+  input.setSelectionRange(nextCaret, nextCaret);
+  return bare;
+}
+
+interface MoneyInputProps
+  extends Omit<
+    React.ComponentProps<typeof NumericInput>,
+    "value" | "onChange"
+  > {
+  /** The bare figure ("1000000"); commas are display only. */
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/**
+ * A money field with a leading "$" adornment that reads "1,000,000" while the
+ * form holds the bare digits every parser expects. Numeric-only: digits and one
+ * dot, or digits alone under `decimal={false}` for a figure that must be whole.
+ */
+const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
+  (
+    { className, decimal = true, value, onChange, inputMode, ...props },
+    ref,
+  ) => (
+    <div className="relative">
+      <span className="pointer-events-none absolute left-[11px] top-1/2 -translate-y-1/2 text-sub text-ink-faint">
+        $
+      </span>
+      <Input
+        ref={ref}
+        type="text"
+        inputMode={inputMode ?? (decimal ? "decimal" : "numeric")}
+        className={cn(CONTROL_HEIGHT, "pl-6 tabular-nums", className)}
+        // Sanitized here too: a prefilled profile revenue may be legacy free
+        // text such as "$50M".
+        value={groupThousands(sanitizeNumeric(value, decimal))}
+        onChange={(event) =>
+          onChange(regroupMoneyInput(event.currentTarget, decimal))
+        }
+        {...props}
+      />
+    </div>
+  ),
+);
 MoneyInput.displayName = "MoneyInput";
 
 type ValidationRules = "draft" | "publish";
+
+const FOCUSABLE =
+  "input:not([type=hidden]):not([readonly]), textarea, button, [contenteditable=true]";
+
+/**
+ * Takes the company to the first flagged field of a blocked submit. Driven by
+ * the rendered messages (`role="alert"`) because they sit in page order
+ * whichever control raised them; the control focused is the last one before
+ * the message, which is the input it describes.
+ */
+function revealFirstFieldError(form: HTMLFormElement | null) {
+  // Deferred past the render that paints the messages.
+  setTimeout(() => {
+    const message = form?.querySelector('[role="alert"]');
+    const container = message?.parentElement;
+    if (!message || !container) return;
+    message.scrollIntoView({ behavior: "smooth", block: "center" });
+    const control = [...container.querySelectorAll<HTMLElement>(FOCUSABLE)]
+      .filter(
+        (node) =>
+          node.compareDocumentPosition(message) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      )
+      .at(-1);
+    control?.focus({ preventScroll: true });
+  });
+}
 
 const JOB_FORM_ID = "job-form";
 const PUBLISH_SUBMITTER_VALUE = "publish";
@@ -367,6 +448,7 @@ export function JobForm({
   // A ref, not state: set by the button that fired, read by the resolver in
   // the same submit, and by re-validation as the company fixes what it flagged.
   const validationRules = useRef<ValidationRules>("publish");
+  const formRef = useRef<HTMLFormElement>(null);
   const [resolver] = useState(() =>
     jobFormResolver(() => validationRules.current),
   );
@@ -381,6 +463,9 @@ export function JobForm({
   } = useForm<JobFormValues>({
     resolver,
     defaultValues: jobToFormValues(job),
+    // Its focus skips any Controller whose component takes no ref, landing
+    // below the first problem or nowhere; `revealFirstFieldError` owns it.
+    shouldFocusError: false,
   });
 
   // The whole form is watched so the live preview reacts as the company types;
@@ -577,23 +662,29 @@ export function JobForm({
       intent === "draft" && allowsPartialSave ? "draft" : "publish";
     return (event?: BaseSyntheticEvent) => {
       validationRules.current = rules;
-      return handleSubmit((formValues) => {
-        if (
-          rules === "publish" &&
-          minFee != null &&
-          (feeMinor ?? 0) < minFee.amountMinor
-        ) {
-          setError("recruiterFee", {
-            message: feeFloorMessage(minFee.amountMinor),
-          });
-          return;
-        }
-        onSubmit(
-          toInput(formValues),
-          intent,
-          benefitsDocument.status === "selected" ? benefitsDocument.file : null,
-        );
-      })(event);
+      return handleSubmit(
+        (formValues) => {
+          if (
+            rules === "publish" &&
+            minFee != null &&
+            (feeMinor ?? 0) < minFee.amountMinor
+          ) {
+            setError("recruiterFee", {
+              message: feeFloorMessage(minFee.amountMinor),
+            });
+            revealFirstFieldError(formRef.current);
+            return;
+          }
+          onSubmit(
+            toInput(formValues),
+            intent,
+            benefitsDocument.status === "selected"
+              ? benefitsDocument.file
+              : null,
+          );
+        },
+        () => revealFirstFieldError(formRef.current),
+      )(event);
     };
   };
 
@@ -635,6 +726,7 @@ export function JobForm({
       )}
     >
       <form
+        ref={formRef}
         id={JOB_FORM_ID}
         onSubmit={(event) => emit(submitIntent(event))(event)}
         className="flex min-w-0 flex-col gap-4"
@@ -830,12 +922,19 @@ export function JobForm({
                 htmlFor="companyRevenue"
                 error={errors.companyDetails?.revenue?.message}
               >
-                <NumericInput
-                  decimal
-                  id="companyRevenue"
-                  className={CONTROL_HEIGHT}
-                  placeholder="e.g., 50000000"
-                  {...register("companyDetails.revenue")}
+                <Controller
+                  control={control}
+                  name="companyDetails.revenue"
+                  render={({ field }) => (
+                    <MoneyInput
+                      ref={field.ref}
+                      id="companyRevenue"
+                      placeholder="e.g., 50,000,000"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  )}
                 />
               </Field>
               <Field
@@ -893,7 +992,7 @@ export function JobForm({
                 )}
               </div>
               {errors.onsiteDaysPerWeek && (
-                <p className="text-meta font-medium text-bad">
+                <p role="alert" className="text-meta font-medium text-bad">
                   {errors.onsiteDaysPerWeek.message}
                 </p>
               )}
@@ -1052,23 +1151,41 @@ export function JobForm({
                 <div className="flex items-center gap-2">
                   {/* Whole dollars, like the recruiter fee: a band is quoted in
                       dollars and cents only ever arrived by mistyping. */}
-                  <MoneyInput
-                    decimal={false}
-                    aria-label="Pay minimum"
-                    placeholder="Min"
-                    {...register("salaryMin")}
+                  <Controller
+                    control={control}
+                    name="salaryMin"
+                    render={({ field }) => (
+                      <MoneyInput
+                        ref={field.ref}
+                        decimal={false}
+                        aria-label="Pay minimum"
+                        placeholder="Min"
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                      />
+                    )}
                   />
                   <span className="text-ink-faint">–</span>
-                  <MoneyInput
-                    decimal={false}
-                    aria-label="Pay maximum"
-                    placeholder="Max"
-                    {...register("salaryMax")}
+                  <Controller
+                    control={control}
+                    name="salaryMax"
+                    render={({ field }) => (
+                      <MoneyInput
+                        ref={field.ref}
+                        decimal={false}
+                        aria-label="Pay maximum"
+                        placeholder="Max"
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                      />
+                    )}
                   />
                 </div>
               </PayRangeField>
               {(errors.salaryMin || errors.salaryMax) && (
-                <p className="text-meta font-medium text-bad">
+                <p role="alert" className="text-meta font-medium text-bad">
                   {errors.salaryMin?.message ?? errors.salaryMax?.message}
                 </p>
               )}
@@ -1173,7 +1290,7 @@ export function JobForm({
                 />
               </div>
               {benefitsError && (
-                <p className="text-meta font-medium text-bad">
+                <p role="alert" className="text-meta font-medium text-bad">
                   {benefitsError}
                 </p>
               )}
@@ -1187,7 +1304,7 @@ export function JobForm({
                     {...register("benefits.ancillaryDetails")}
                   />
                   {errors.benefits?.ancillaryDetails && (
-                    <p className="text-meta font-medium text-bad">
+                    <p role="alert" className="text-meta font-medium text-bad">
                       {errors.benefits.ancillaryDetails.message}
                     </p>
                   )}
@@ -1212,67 +1329,6 @@ export function JobForm({
                 </Field>
               )}
             </Block>
-
-            {/* The recruiter fee is the money that drives the marketplace, so it
-              gets its own emphasized panel. */}
-            <div className="rounded-sm border border-tint-strong bg-tint px-3.5 py-3">
-              <div className="flex items-center gap-1.5">
-                <Label htmlFor="recruiterFee">Recruiter Fee</Label>
-                <TooltipProvider delayDuration={150}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Why the fee is fixed"
-                        className="text-ink-muted transition-colors hover:text-blue focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      >
-                        <Info className="size-[15px]" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      You can&rsquo;t change the fee once the job is posted.
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <MoneyInput
-                  // Whole dollars: cents were rounded to the nearest dollar on
-                  // save, so a typed 499.999 read back as $500.
-                  decimal={false}
-                  id="recruiterFee"
-                  placeholder="10000"
-                  className="max-w-[12rem] bg-surface"
-                  {...register("recruiterFee")}
-                />
-                {/* One slot, two states: the fee either clears the floor or
-                    says by how much it misses, in the same pill shape. */}
-                {feeError !== null ? (
-                  <span role="alert">
-                    <Pill tone="bad">{feeError}</Pill>
-                  </span>
-                ) : (
-                  feeMeetsMinimum && (
-                    <Pill tone="ok">Meets the publishing minimum</Pill>
-                  )
-                )}
-              </div>
-              <p className="mt-[7px] text-meta text-ink-muted">
-                {minFee ? (
-                  <>
-                    A minimum recruiter fee of{" "}
-                    <span className="font-[650] text-ink">
-                      {formatMinor(minFee.amountMinor)}
-                    </span>{" "}
-                    is required to publish any role. The higher the fee, the
-                    more attention your job will get from recruiters &mdash; and
-                    faster candidates for you.
-                  </>
-                ) : (
-                  "Paid only on a successful hire."
-                )}
-              </p>
-            </div>
           </FormSection>
 
           <FormSection
@@ -1311,7 +1367,7 @@ export function JobForm({
               </span>
             </div>
             {errors.description && (
-              <p className="text-meta font-medium text-bad">
+              <p role="alert" className="text-meta font-medium text-bad">
                 {errors.description.message}
               </p>
             )}
@@ -1464,7 +1520,7 @@ export function JobForm({
                   />
                 </div>
                 {errors.interviewingTo && (
-                  <p className="text-meta font-medium text-bad">
+                  <p role="alert" className="text-meta font-medium text-bad">
                     {errors.interviewingTo.message}
                   </p>
                 )}
@@ -1630,6 +1686,81 @@ export function JobForm({
               </Question>
             </div>
           </FormSection>
+
+          {/* The last thing a company sets before the job posts. The fee is the
+            money that drives the marketplace, so it gets an emphasized panel. */}
+          <FormSection
+            title="Recruiter Fee"
+            hint="Paid to the recruiter on a successful hire."
+          >
+            <div className="rounded-sm border border-tint-strong bg-tint px-3.5 py-3">
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="recruiterFee">Recruiter Fee</Label>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Why the fee is fixed"
+                        className="text-ink-muted transition-colors hover:text-blue focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <Info className="size-[15px]" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      You can&rsquo;t change the fee once the job is posted.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <Controller
+                  control={control}
+                  name="recruiterFee"
+                  render={({ field }) => (
+                    <MoneyInput
+                      ref={field.ref}
+                      // Whole dollars: cents were rounded to the nearest dollar
+                      // on save, so a typed 499.999 read back as $500.
+                      decimal={false}
+                      id="recruiterFee"
+                      placeholder="10,000"
+                      className="max-w-[12rem] bg-surface"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
+                {/* One slot, two states: the fee either clears the floor or
+                    says by how much it misses, in the same pill shape. */}
+                {feeError !== null ? (
+                  <span role="alert">
+                    <Pill tone="bad">{feeError}</Pill>
+                  </span>
+                ) : (
+                  feeMeetsMinimum && (
+                    <Pill tone="ok">Meets the publishing minimum</Pill>
+                  )
+                )}
+              </div>
+              <p className="mt-[7px] text-meta text-ink-muted">
+                {minFee ? (
+                  <>
+                    A minimum recruiter fee of{" "}
+                    <span className="font-[650] text-ink">
+                      {formatMinor(minFee.amountMinor)}
+                    </span>{" "}
+                    is required to publish any role. The higher the fee, the
+                    more attention your job will get from recruiters &mdash; and
+                    faster candidates for you.
+                  </>
+                ) : (
+                  "Paid only on a successful hire."
+                )}
+              </p>
+            </div>
+          </FormSection>
         </div>
 
         {/* Sticky action bar so Save is always reachable in a long form. */}
@@ -1668,7 +1799,7 @@ export function JobForm({
                   onClick={emit("draft")}
                   disabled={isSubmitting}
                 >
-                  Save as draft
+                  Save As Draft
                 </Button>
                 <Button
                   type="button"
@@ -1676,7 +1807,7 @@ export function JobForm({
                   onClick={emit("publish")}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Working…" : "Publish job"}
+                  {isSubmitting ? "Working…" : "Publish Job"}
                 </Button>
               </>
             )}
