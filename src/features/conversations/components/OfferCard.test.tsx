@@ -100,13 +100,13 @@ describe("OfferCard", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: /^accept$/i }),
+      screen.getByRole("button", { name: /^accept offer$/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^decline$/i }),
+      screen.getByRole("button", { name: /^decline offer$/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^counter$/i }),
+      screen.getByRole("button", { name: /^counter offer$/i }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /withdraw/i }),
@@ -123,16 +123,16 @@ describe("OfferCard", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: /^withdraw$/i }),
+      screen.getByRole("button", { name: /^withdraw offer$/i }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^accept$/i }),
+      screen.queryByRole("button", { name: /^accept offer$/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^decline$/i }),
+      screen.queryByRole("button", { name: /^decline offer$/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^counter$/i }),
+      screen.queryByRole("button", { name: /^counter offer$/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -153,7 +153,7 @@ describe("OfferCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^withdraw offer$/i }));
     expect(
       screen.getByText(/back to their previous status/i),
     ).toBeInTheDocument();
@@ -180,12 +180,12 @@ describe("OfferCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^withdraw offer$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^cancel$/i }));
 
     expect(withdrawMutate).not.toHaveBeenCalled();
     expect(
-      screen.getByRole("button", { name: /^withdraw$/i }),
+      screen.getByRole("button", { name: /^withdraw offer$/i }),
     ).toBeInTheDocument();
   });
 
@@ -207,7 +207,7 @@ describe("OfferCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^withdraw offer$/i }));
     fireEvent.click(screen.getByRole("button", { name: /confirm withdraw/i }));
 
     expect(
@@ -288,7 +288,7 @@ describe("OfferCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^counter$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^counter offer$/i }));
     fireEvent.change(screen.getByLabelText(/new salary/i), {
       target: { value: "150000" },
     });
@@ -331,7 +331,7 @@ describe("OfferCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^counter$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^counter offer$/i }));
     fireEvent.change(screen.getByLabelText(/new salary/i), {
       target: { value: String(MAX_MONEY_MAJOR + 1) },
     });
@@ -360,7 +360,7 @@ describe("OfferCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^counter$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^counter offer$/i }));
     fireEvent.click(screen.getByRole("button", { name: /send counter/i }));
 
     expect(await screen.findByText("Salary is required")).toBeInTheDocument();
@@ -378,7 +378,7 @@ describe("OfferCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^counter$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^counter offer$/i }));
     // A free-text date input let any past day through; the shared day field
     // renders a calendar with everything before today disabled.
     fireEvent.click(screen.getByText(/pick a start date/i));
@@ -410,7 +410,9 @@ describe("OfferCard", () => {
         />,
       );
 
-      expect(screen.getByRole("button", { name: "Accept" })).toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: "Accept Offer" }),
+      ).toBeDisabled();
       expect(
         screen.getByText("The company has not enough balance to proceed."),
       ).toBeInTheDocument();
@@ -447,7 +449,9 @@ describe("OfferCard", () => {
         />,
       );
 
-      expect(screen.getByRole("button", { name: "Accept" })).toBeEnabled();
+      expect(
+        screen.getByRole("button", { name: "Accept Offer" }),
+      ).toBeEnabled();
       expect(
         screen.queryByRole("button", { name: "Notify Company" }),
       ).not.toBeInTheDocument();

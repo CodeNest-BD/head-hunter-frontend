@@ -120,26 +120,27 @@ export function OpenInterviewActions({ interview }: OpenInterviewActionsProps) {
           }
         />
       ) : (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-2">
           {/* Replacing an open batch stays in the thread's `ProposalCard`,
               which already knows which batch it supersedes — only withdrawing
               is offered in both places. */}
           {!liveProposal && (
             <Button
               type="button"
+              variant="success"
               size="sm"
               onClick={() => setPanel("proposing")}
             >
-              Propose times
+              Propose Interview Times
             </Button>
           )}
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             size="sm"
             onClick={() => setPanel("withdrawing")}
           >
-            Withdraw
+            Withdraw Interview
           </Button>
         </div>
       )}

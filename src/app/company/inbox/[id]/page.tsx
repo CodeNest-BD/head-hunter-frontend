@@ -54,8 +54,8 @@ function ErrorCallout({
 }
 
 /**
- * The left column: this one candidate, with the status control and the
- * interview/offer actions their negotiation state allows.
+ * The featured middle column: this one candidate, with the interview/offer
+ * actions their negotiation state allows.
  *
  * Interviews and offers are fetched scoped to the candidate — two requests,
  * not one pair per card, now that a page holds exactly one candidate. A
@@ -88,7 +88,6 @@ function CandidateDetailColumn({ candidate }: { candidate: Candidate }) {
     <CandidateCard
       candidate={candidate}
       negotiationState={negotiationState.get(candidate.id) ?? null}
-      className="lg:h-full lg:overflow-y-auto"
     />
   );
 }
@@ -134,7 +133,7 @@ function CandidateWorkspace({ candidateRef }: { candidateRef: string }) {
           <CandidateRailSkeleton />
         )
       }
-      candidateUnread={
+      conversationUnread={
         candidate !== undefined &&
         (unreadCounts.data?.get(candidate.id) ?? 0) > 0
       }

@@ -5,9 +5,10 @@ import { cn } from "@/shared/libs/shadCnConfig";
 
 /**
  * The design's one control: 40px tall on an 8px radius with a 14px/500 label
- * and an 8px icon gap. Four variants and no more — a filled primary, an
- * outlined secondary, a bare text action, and a destructive that is outlined
- * in red rather than filled with it.
+ * and an 8px icon gap. Five variants and no more — a filled primary, an
+ * outlined secondary, a bare text action, a destructive that is outlined in
+ * red rather than filled with it, and a filled green success for the step
+ * that moves a candidate forward (schedule, offer, accept).
  *
  * `sm` is 38px, the height the table toolbars use; `xs` is the 32px pager
  * button. Both are the same radius — the design has exactly one.
@@ -24,6 +25,7 @@ const buttonVariants = cva(
         ghost: "text-blue-ink hover:bg-tint",
         /** Danger is outlined in red, never filled with it. */
         destructive: "border-bad-line bg-surface text-bad hover:bg-bad-bg",
+        success: "bg-ok text-white hover:bg-ok/90",
         link: "h-auto p-0 text-blue-ink underline-offset-2 hover:underline",
       },
       size: {

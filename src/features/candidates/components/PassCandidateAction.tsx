@@ -29,11 +29,11 @@ export function PassCandidateAction({ candidateId }: { candidateId: string }) {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="destructive"
       size="sm"
       onClick={() => setIsConfirming(true)}
     >
-      Pass
+      Pass on Candidate
     </Button>
   );
 }

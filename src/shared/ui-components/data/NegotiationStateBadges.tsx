@@ -22,6 +22,7 @@ const TONES = {
   neutral: "neutral",
   pending: "warn",
   positive: "ok",
+  negative: "bad",
   active: "info",
 } as const satisfies Record<string, PillTone>;
 type Tone = keyof typeof TONES;
@@ -44,7 +45,7 @@ function describeInterview(interview: InterviewBadge | null): BadgeContent {
     case "completed":
       return { phrase: "completed", tone: "active" };
     case "canceled":
-      return { phrase: "canceled", tone: "neutral" };
+      return { phrase: "canceled", tone: "negative" };
   }
 }
 
@@ -65,11 +66,11 @@ function describeOffer(
     case "accepted":
       return { phrase: `accepted${salary}`, tone: "positive" };
     case "declined":
-      return { phrase: `declined${salary}`, tone: "neutral" };
+      return { phrase: `declined${salary}`, tone: "negative" };
     case "countered":
       return { phrase: `countered${salary}`, tone: "active" };
     case "withdrawn":
-      return { phrase: `withdrawn${salary}`, tone: "neutral" };
+      return { phrase: `withdrawn${salary}`, tone: "negative" };
   }
 }
 

@@ -103,6 +103,7 @@ function CandidateDetailColumn({ candidate }: { candidate: Candidate }) {
   return (
     <CandidateDetailPanel
       candidate={candidate}
+      viewerParty="recruiter"
       stageLabel={CANDIDATE_STATUS_LABELS[candidate.status]}
       stageTone={CANDIDATE_STATUS_TONES[candidate.status]}
       negotiation={
@@ -206,7 +207,7 @@ function CandidateWorkspace({ candidateRef }: { candidateRef: string }) {
           <CandidateRailSkeleton />
         )
       }
-      candidateUnread={
+      conversationUnread={
         candidate !== undefined &&
         (unreadCounts.data?.get(candidate.id) ?? 0) > 0
       }

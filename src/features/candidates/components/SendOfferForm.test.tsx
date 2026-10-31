@@ -174,7 +174,7 @@ describe("SendOfferForm", () => {
     );
 
     await user.click(
-      await screen.findByRole("button", { name: /^withdraw$/i }),
+      await screen.findByRole("button", { name: /^withdraw offer$/i }),
     );
     expect(withdrawOfferMock).not.toHaveBeenCalled();
 
@@ -199,7 +199,7 @@ describe("SendOfferForm", () => {
       await screen.findByRole("button", { name: /send offer/i }),
     ).toBeDisabled();
     expect(
-      screen.queryByRole("button", { name: /^withdraw$/i }),
+      screen.queryByRole("button", { name: /^withdraw offer$/i }),
     ).not.toBeInTheDocument();
   });
 

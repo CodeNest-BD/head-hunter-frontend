@@ -109,7 +109,8 @@ describe("CandidateCard", () => {
     expect(screen.getByText(/Offer:/)).toHaveTextContent(
       "Offer: you sent · $130,000 · awaiting reply",
     );
-    expect(screen.getByText("Submitted")).toBeInTheDocument();
+    // Once as the stage pill, once as the submitted-on date's label.
+    expect(screen.getAllByText("Submitted")).toHaveLength(2);
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
 
@@ -131,10 +132,10 @@ describe("CandidateCard", () => {
     );
 
     expect(
-      screen.queryByRole("button", { name: /^accept$/i }),
+      screen.queryByRole("button", { name: /^accept offer$/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /^counter$/i }),
+      screen.queryByRole("button", { name: /^counter offer$/i }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("Schedule interview action")).toBeInTheDocument();
     expect(screen.getByText("Send offer form")).toBeInTheDocument();

@@ -96,10 +96,10 @@ describe("ProposalCard", () => {
 
     expect(screen.getAllByRole("radio")).toHaveLength(2);
     expect(
-      screen.getByRole("button", { name: /^confirm$/i }),
+      screen.getByRole("button", { name: /^confirm time$/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /request other times/i }),
+      screen.getByRole("button", { name: /request different times/i }),
     ).toBeInTheDocument();
   });
 
@@ -115,13 +115,13 @@ describe("ProposalCard", () => {
 
     expect(screen.queryAllByRole("radio")).toHaveLength(0);
     expect(
-      screen.queryByRole("button", { name: /^confirm$/i }),
+      screen.queryByRole("button", { name: /^confirm time$/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /request other times/i }),
+      screen.queryByRole("button", { name: /request different times/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /propose new times/i }),
+      screen.getByRole("button", { name: /propose different times/i }),
     ).toBeInTheDocument();
   });
 
@@ -193,7 +193,7 @@ describe("ProposalCard", () => {
 
     expect(screen.getByText("Mornings only, please.")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /propose new times/i }),
+      screen.getByRole("button", { name: /propose different times/i }),
     ).toBeInTheDocument();
   });
 
@@ -218,7 +218,9 @@ describe("ProposalCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /^withdraw interview$/i }),
+    );
     expect(
       screen.getByText(/cancels the interview and cannot be undone/i),
     ).toBeInTheDocument();
@@ -279,10 +281,10 @@ describe("ProposalCard", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: /propose new times/i }),
+      screen.getByRole("button", { name: /propose different times/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^withdraw$/i }),
+      screen.getByRole("button", { name: /^withdraw interview$/i }),
     ).toBeInTheDocument();
   });
 
@@ -473,7 +475,9 @@ describe("ProposalCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /^withdraw interview$/i }),
+    );
     fireEvent.click(screen.getByRole("button", { name: /confirm withdraw/i }));
 
     expect(

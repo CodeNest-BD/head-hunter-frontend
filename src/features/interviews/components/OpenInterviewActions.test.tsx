@@ -65,7 +65,7 @@ describe("OpenInterviewActions", () => {
 
     expect(screen.getByText(/awaiting a time/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /propose times/i }),
+      screen.getByRole("button", { name: /propose interview times/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /withdraw/i }),
@@ -75,7 +75,9 @@ describe("OpenInterviewActions", () => {
   it("opens the propose-times form for this interview", () => {
     renderWithProviders(<OpenInterviewActions interview={interview()} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /propose times/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /propose interview times/i }),
+    );
 
     expect(
       screen.getByText(/propose slots form for interview-1/i),
@@ -87,7 +89,9 @@ describe("OpenInterviewActions", () => {
     useCancelInterviewMock.mockReturnValue(mutationStub({ mutate }));
 
     renderWithProviders(<OpenInterviewActions interview={interview()} />);
-    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /^withdraw interview$/i }),
+    );
 
     expect(mutate).not.toHaveBeenCalled();
 
@@ -104,14 +108,16 @@ describe("OpenInterviewActions", () => {
     useCancelInterviewMock.mockReturnValue(mutationStub({ mutate }));
 
     renderWithProviders(<OpenInterviewActions interview={interview()} />);
-    fireEvent.click(screen.getByRole("button", { name: /^withdraw$/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /^withdraw interview$/i }),
+    );
     fireEvent.click(screen.getByRole("button", { name: /confirm withdraw/i }));
 
     expect(
       screen.queryByRole("button", { name: /confirm withdraw/i }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /propose times/i }),
+      screen.getByRole("button", { name: /propose interview times/i }),
     ).toBeInTheDocument();
   });
 
@@ -151,12 +157,12 @@ describe("OpenInterviewActions", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /^withdraw$/i }),
+      screen.getByRole("button", { name: /^withdraw interview$/i }),
     ).toBeInTheDocument();
     // Replacing an open batch stays with the thread's ProposalCard, which
     // knows which batch it supersedes.
     expect(
-      screen.queryByRole("button", { name: /propose times/i }),
+      screen.queryByRole("button", { name: /propose interview times/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -186,7 +192,7 @@ describe("OpenInterviewActions", () => {
       screen.getByText(/record outcome for interview-1/i),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /propose times/i }),
+      screen.queryByRole("button", { name: /propose interview times/i }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /withdraw/i }),

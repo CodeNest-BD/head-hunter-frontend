@@ -245,7 +245,7 @@ export function SendOfferForm({
     <div className="flex flex-col gap-1.5">
       <Button
         type="button"
-        variant="outline"
+        variant="success"
         size="sm"
         disabled={Boolean(disabledReason)}
         aria-describedby={disabledReason ? disabledReasonId : undefined}
@@ -278,12 +278,11 @@ export function SendOfferForm({
         ) : (
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             size="sm"
-            className="self-start"
             onClick={() => setIsWithdrawing(true)}
           >
-            Withdraw
+            Withdraw Offer
           </Button>
         ))}
       {withdrawOffer.isError && (
