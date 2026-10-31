@@ -15,12 +15,10 @@ import {
 // Deep-imported (not via the feature barrels): JobsTable is exported from the
 // jobs barrel, and the inbox barrel imports back from jobs — the barrel
 // paths would close an import cycle.
-import { useWallet } from "@/features/billing/hooks/useBilling";
 import { useInboxJobs } from "@/features/inbox/hooks/useInbox";
 import { HIDE_PHASE2_FEATURES } from "@/shared/config/featureFlags";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Pill, type PillTone } from "@/shared/ui-components/badges/Pill";
-import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import {
   QuickViewBand,
@@ -302,17 +300,13 @@ export function JobsTable() {
     roleCategory: category || undefined,
   });
 
-  // Banner metrics + the fee-consequence note, from the full published set.
-  const publishedJobs = useJobs({ page: 1, status: "published", limit: 100 });
+  // Banner counts: only each status's total is read, so one row is enough.
+  const publishedJobs = useJobs({ page: 1, status: "published", limit: 1 });
+  const expiredJobs = useJobs({ page: 1, status: "expired", limit: 1 });
+  const filledJobs = useJobs({ page: 1, status: "filled", limit: 1 });
   const publishedTotal = publishedJobs.data?.meta.total ?? 0;
-  const noFeeCount = (publishedJobs.data?.data ?? []).filter(
-    (job) => job.recruiterFeeMinor === 0,
-  ).length;
-  const wallet = useWallet();
-  // The fee notice sits above the toolbar, as the reference places it, but it
-  // still only accompanies a populated table — a filtered search that matches
-  // nothing should not start surfacing it.
-  const hasRows = (data?.data.length ?? 0) > 0;
+  const expiredTotal = expiredJobs.data?.meta.total ?? 0;
+  const filledTotal = filledJobs.data?.meta.total ?? 0;
 
   // Candidate counts live on the inbox rows, not the job; one fetch builds a
   // lookup keyed by job.
@@ -330,17 +324,17 @@ export function JobsTable() {
       tone: "ok",
     },
     {
-      key: "no-fee",
-      label: "No Fee Set",
-      value: noFeeCount.toLocaleString(),
-      note: "Recruiters sort by fee",
+      key: "expired",
+      label: "Expired",
+      value: expiredTotal.toLocaleString(),
+      note: "Closed after 30 days",
       tone: "warn",
     },
     {
-      key: "escrow",
-      label: "Held In Escrow",
-      value: formatMinor(wallet.data?.reservedMinor),
-      note: "Reserved against live jobs",
+      key: "filled",
+      label: "Filled",
+      value: filledTotal.toLocaleString(),
+      note: "Hire made",
       tone: "info",
     },
   ];
@@ -393,13 +387,6 @@ export function JobsTable() {
       />
 
       <QuickViewBand label="Job quick views" views={quickViews} />
-
-      {noFeeCount > 0 && hasRows && (
-        <Alert tone="warn">
-          {noFeeCount} published job{noFeeCount === 1 ? "" : "s"} have no
-          recruiter fee. Recruiters sort by fee, so these rank last.
-        </Alert>
-      )}
 
       <div className={TABLE_CARD}>
         {toolbar}
