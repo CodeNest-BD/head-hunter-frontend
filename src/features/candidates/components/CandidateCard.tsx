@@ -87,15 +87,15 @@ export function CandidateCard({
               candidateId={candidate.id}
               negotiationState={negotiationState}
             />
-            <SendOfferForm
-              candidateId={candidate.id}
-              negotiationState={negotiationState}
-            />
             {/* A hire is undone through the placement's guarantee, which
                 refunds the fee — never by passing. */}
             {candidate.status !== "hired" && (
               <PassCandidateAction candidateId={candidate.id} />
             )}
+            <SendOfferForm
+              candidateId={candidate.id}
+              negotiationState={negotiationState}
+            />
           </>
         )}
 

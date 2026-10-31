@@ -68,6 +68,13 @@ export function minorToMajorInput(minor: number | null | undefined): string {
     : String(minorToMajor(minor));
 }
 
+/** Input display helper: "1000000.5" -> "1,000,000.5", for a sanitized numeric string. */
+export function groupThousands(numeric: string): string {
+  const [whole, fraction] = numeric.split(".");
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return fraction === undefined ? grouped : `${grouped}.${fraction}`;
+}
+
 /** Display helper: 250000 -> "$2,500". Cents shown only when non-zero. */
 export function formatMinor(
   minor: number | null | undefined,

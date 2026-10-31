@@ -251,7 +251,7 @@ export function SendOfferForm({
         aria-describedby={disabledReason ? disabledReasonId : undefined}
         onClick={() => setIsOpen(true)}
       >
-        Send offer
+        Send Offer
       </Button>
       {disabledReason && (
         <p id={disabledReasonId} className="text-meta text-ink-muted">
