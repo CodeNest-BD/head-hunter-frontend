@@ -6,6 +6,7 @@ export { CandidateDetailPanel } from "./components/CandidateDetailPanel";
 export { CandidateFields } from "./components/CandidateFields";
 export { CandidateForm } from "./components/CandidateForm";
 export { CandidateQuickView } from "./components/CandidateQuickView";
+export { ReviewStateNotice } from "./components/ReviewStateNotice";
 export { CandidateRailSkeleton } from "./components/CandidateRailSkeleton";
 export { ScheduleInterviewAction } from "./components/ScheduleInterviewAction";
 export { SendOfferForm } from "./components/SendOfferForm";
@@ -13,13 +14,21 @@ export {
   useAttachments,
   useCandidate,
   useMyCandidatesForJob,
+  useApproveCandidate,
+  useDeclineCandidate,
   useDeleteCandidate,
+  useResubmitCandidate,
   useSubmitCandidate,
   useUpdateCandidate,
 } from "./hooks/useCandidates";
 export { CANDIDATE_STATUS_TONES } from "./components/statusStyles";
 export { candidateKeys } from "./keys";
-export { CANDIDATE_STATUS_LABELS } from "./schemas";
+export {
+  CANDIDATE_STATUS_LABELS,
+  EDITABLE_CANDIDATE_STATUSES,
+  GATED_CANDIDATE_STATUSES,
+  isGatedCandidateStatus,
+} from "./schemas";
 export type { Attachment, Candidate, CandidateStatus } from "./schemas";
 export {
   createCandidate,

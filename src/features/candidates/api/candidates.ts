@@ -100,6 +100,47 @@ export async function updateCandidate(
   return candidateSchema.parse(data);
 }
 
+/**
+ * PATCH /v1/candidates/:id/approve — admin only.
+ *
+ * Releases a submission from the quality-control gate into the hiring
+ * company's inbox. 409 once it has already been reviewed, which is what makes
+ * a double-click safe rather than a second notification to the company.
+ */
+export async function approveCandidate(id: string): Promise<Candidate> {
+  const { data } = await apiClient.patch<unknown>(
+    `/candidates/${id}/approve`,
+    undefined,
+    { suppressGlobalErrorToast: true },
+  );
+  return candidateSchema.parse(data);
+}
+
+/** PATCH /v1/candidates/:id/decline — admin only. Sends it back to the
+ * recruiter with a reason; the company never learns it existed. */
+export async function declineCandidate(
+  id: string,
+  reason: string,
+): Promise<Candidate> {
+  const { data } = await apiClient.patch<unknown>(
+    `/candidates/${id}/decline`,
+    { reason },
+    { suppressGlobalErrorToast: true },
+  );
+  return candidateSchema.parse(data);
+}
+
+/** PATCH /v1/candidates/:id/resubmit — the submitting recruiter sends a
+ * declined candidate back for review once they have fixed it. */
+export async function resubmitCandidate(id: string): Promise<Candidate> {
+  const { data } = await apiClient.patch<unknown>(
+    `/candidates/${id}/resubmit`,
+    undefined,
+    { suppressGlobalErrorToast: true },
+  );
+  return candidateSchema.parse(data);
+}
+
 /** PATCH /v1/candidates/:id — the company passes on the candidate; the server
  * withdraws any offer still awaiting a response. */
 export async function passCandidate(id: string): Promise<Candidate> {

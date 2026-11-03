@@ -73,6 +73,7 @@ import {
   type SubmissionRecruiterKind,
   type SubmissionSort,
 } from "../schemas";
+import { COMPANY_CANDIDATE_STATUSES } from "@/features/candidates/schemas";
 
 const PAGE_SIZE = 25;
 
@@ -80,7 +81,12 @@ const PAGE_SIZE = 25;
  * The queue speaks the requirement doc's language: an unreviewed submission
  * is "New". Every other status keeps its product name.
  */
+// Total over every status, including the two a company is never shown: a
+// label map that could return undefined would render a blank chip if one ever
+// reached this screen. Which stages are *offered* is narrowed below instead.
 const QUEUE_STATUS_LABELS: Record<CandidateStatus, string> = {
+  pending_review: "Pending Review",
+  declined: "Declined",
   submitted: "New",
   reviewing: "Reviewing",
   interviewing: "Interviewing",
@@ -89,10 +95,15 @@ const QUEUE_STATUS_LABELS: Record<CandidateStatus, string> = {
   passed: "Passed",
 };
 
-const STATUS_OPTIONS: FilterOption[] = CANDIDATE_STATUSES.map((value) => ({
-  value,
-  label: QUEUE_STATUS_LABELS[value],
-}));
+// Only the stages a company can reach. A candidate still at the
+// quality-control gate is invisible to them, so offering those as filters
+// would be offering two options that can only ever return nothing.
+const STATUS_OPTIONS: FilterOption[] = COMPANY_CANDIDATE_STATUSES.map(
+  (value) => ({
+    value,
+    label: QUEUE_STATUS_LABELS[value],
+  }),
+);
 
 const RECRUITER_OPTIONS: FilterOption[] = [
   { value: "rated", label: "Rated recruiters" },
@@ -122,6 +133,8 @@ interface StatCardDef {
 
 /** The line under each figure, saying what it counts. */
 const STAT_NOTES: Record<CandidateStatus | "total", string> = {
+  pending_review: "Waiting on a quality check",
+  declined: "Sent back to the recruiter",
   total: "Every candidate sent to you",
   submitted: "Awaiting your review",
   reviewing: "Viewed and awaiting action",

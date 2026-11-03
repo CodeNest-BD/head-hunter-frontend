@@ -11,7 +11,10 @@ import { DashboardLayout } from "@/shared/ui-components/layout/DashboardLayout";
 function SubmissionsContent() {
   const searchParams = useSearchParams();
   return (
-    <SubmissionsTable initialJobId={searchParams.get("jobId") ?? undefined} />
+    <SubmissionsTable
+      initialJobId={searchParams.get("jobId") ?? undefined}
+      initialStatus={searchParams.get("status") ?? undefined}
+    />
   );
 }
 

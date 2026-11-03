@@ -42,6 +42,8 @@ const candidate: Candidate = {
   expectedSalaryMinor: 150000,
   noticePeriodDays: 14,
   status: "submitted",
+  reviewNote: null,
+  reviewedAt: null,
   createdAt: new Date("2026-01-01"),
 };
 

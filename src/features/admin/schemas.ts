@@ -352,6 +352,7 @@ export const DASHBOARD_QUEUE_KEYS = [
   "payments_on_hold",
   "recruiter_verifications",
   "company_approvals",
+  "submissions_awaiting_review",
 ] as const;
 export type DashboardQueueKey = (typeof DASHBOARD_QUEUE_KEYS)[number];
 

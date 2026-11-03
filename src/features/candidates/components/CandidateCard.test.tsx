@@ -65,6 +65,8 @@ function candidate(overrides: Partial<Candidate> = {}): Candidate {
     fullName: "Dana Lee",
     email: "dana@example.com",
     phone: null,
+    reviewNote: null,
+    reviewedAt: null,
     overview: null,
     pitch: null,
     linkedinUrl: null,

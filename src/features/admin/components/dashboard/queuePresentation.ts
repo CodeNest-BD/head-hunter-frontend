@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   Building2,
+  ClipboardCheck,
   MessageSquare,
   PauseCircle,
   Scale,
@@ -71,5 +72,15 @@ export const QUEUE_PRESENTATION: Record<DashboardQueueKey, QueuePresentation> =
       tone: "info",
       priorityLabel: "To review",
       href: "/admin/companies",
+    },
+    submissions_awaiting_review: {
+      label: "Submissions awaiting review",
+      icon: ClipboardCheck,
+      tone: "info",
+      priorityLabel: "To review",
+      // Straight to the queue, already filtered: the point of the row is the
+      // work, and an admin landing on every submission ever made would have
+      // to re-find the ones that need them.
+      href: "/admin/submissions?status=pending_review",
     },
   };

@@ -58,9 +58,16 @@ function Section({
 
 interface CandidateDetailPanelProps {
   candidate: Candidate;
-  /** Contact details are the submitting recruiter's alone; a company reaches
-   * the candidate through the recruiter, so its panel never shows them. */
-  viewerParty: OfferParty;
+  /**
+   * Who is reading.
+   *
+   * Contact details are the submitting recruiter's alone — a company reaches
+   * the candidate through the recruiter, so its panel never shows them. An
+   * admin reviewing a submission at the quality-control gate sees everything:
+   * judging whether a submission is good enough is the one job that needs the
+   * whole record, and they are staff, not the other side of a negotiation.
+   */
+  viewerParty: OfferParty | "admin";
   /** The candidate's pipeline stage — its label and semantic tone, supplied by
    * the caller so this panel never re-derives the status styling. */
   stageLabel: string;
@@ -97,7 +104,7 @@ export function CandidateDetailPanel({
   // all on candidates submitted before the form stopped asking for them. A
   // recruiter with neither gets no Contact card rather than a card of dashes.
   const hasContact = candidate.email !== null || candidate.phone !== null;
-  const showsContact = viewerParty === "recruiter" && hasContact;
+  const showsContact = viewerParty !== "company" && hasContact;
 
   return (
     <div className="space-y-3.5 rounded-md border border-line bg-surface p-4 shadow-e1 lg:h-full lg:overflow-y-auto">
@@ -108,7 +115,7 @@ export function CandidateDetailPanel({
           <p className="truncate text-block font-[650] text-ink">
             {candidate.fullName}
           </p>
-          {viewerParty === "recruiter" && candidate.email !== null && (
+          {viewerParty !== "company" && candidate.email !== null && (
             <a
               href={`mailto:${candidate.email}`}
               className="truncate text-meta text-blue-ink underline-offset-2 hover:underline"

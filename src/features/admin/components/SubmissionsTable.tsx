@@ -46,9 +46,12 @@ import { useSubmissionFilterOptions } from "../hooks/useSubmissionFilterOptions"
 import { ListPager } from "./ListPager";
 import { CANDIDATE_STATUS_TONES } from "./statusStyles";
 import type { ConversationListItem } from "../schemas";
+import { SubmissionReviewDialog } from "./SubmissionReviewDialog";
 
 /** The design's status wording for a submission. */
 const STATUS_LABELS: Record<string, string> = {
+  pending_review: "Pending Review",
+  declined: "Declined",
   submitted: "New",
   reviewing: "Reviewing",
   interviewing: "Interviewing",
@@ -59,6 +62,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_FILTER_OPTIONS = [
+  // First, because it is the only stage that needs an admin to act: every
+  // other row here is somebody else's move.
+  { value: "pending_review", label: "Pending Review" },
+  { value: "declined", label: "Declined" },
   { value: "submitted", label: "New" },
   { value: "reviewing", label: "Reviewing" },
   { value: "interviewing", label: "Interviewing" },
@@ -149,9 +156,12 @@ function SubmissionCard({ row }: { row: ConversationListItem }) {
  */
 export function SubmissionsTable({
   initialJobId = "",
+  initialStatus = "",
 }: {
   /** Pre-selected job filter (the job page's "Submissions" deep-link). */
   initialJobId?: string;
+  /** Pre-selected stage — how the dashboard's review queue arrives here. */
+  initialStatus?: string;
 }) {
   const {
     page,
@@ -163,7 +173,7 @@ export function SubmissionsTable({
     changeStatus,
     limit,
     changeLimit,
-  } = useListState();
+  } = useListState(initialStatus);
   const [withinDays, setWithinDays] = useState("");
   const [jobId, setJobId] = useState(initialJobId);
   const [companyProfileId, setCompanyProfileId] = useState("");
@@ -399,6 +409,11 @@ export function SubmissionsTable({
                     <th scope="col" className={TABLE_TH}>
                       Status
                     </th>
+                    {/* Named for screen readers only — the design leaves the
+                        column above the buttons blank. */}
+                    <th scope="col" className={cn(TABLE_TH, "sr-only")}>
+                      Review
+                    </th>
                   </tr>
                 </thead>
                 <tbody className={TABLE_BODY}>
@@ -463,6 +478,18 @@ export function SubmissionsTable({
                       )}
                       <td className={TABLE_TD}>
                         <SubmissionStatus row={row} />
+                      </td>
+                      <td className={cn(TABLE_TD, "text-right")}>
+                        {/* Only on the rows that need an admin. Every other
+                            stage is somebody else's move, and a Review button
+                            on one would invite a decision there is nothing to
+                            decide. */}
+                        {row.status === "pending_review" && (
+                          <SubmissionReviewDialog
+                            candidateId={row.candidateId}
+                            name={row.candidateName}
+                          />
+                        )}
                       </td>
                     </tr>
                   ))}
