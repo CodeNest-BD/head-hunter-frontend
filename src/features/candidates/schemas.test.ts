@@ -63,7 +63,7 @@ describe("candidateFormSchema", () => {
 });
 
 describe("IN_PROCESS_CANDIDATE_STATUSES", () => {
-  it("is every stage except the two endings", () => {
+  it("is every stage except the endings and a stopped submission", () => {
     // The recruiter dashboard counts "Candidates In Process" with this list
     // and links to the inbox filtered by the very same list, so a stage added
     // to CANDIDATE_STATUSES without a decision here would be silently
@@ -73,7 +73,11 @@ describe("IN_PROCESS_CANDIDATE_STATUSES", () => {
         !(IN_PROCESS_CANDIDATE_STATUSES as readonly string[]).includes(status),
     );
 
-    expect(endings).toEqual(["hired", "passed"]);
+    // `declined` joins the two endings: the candidate is stopped until the
+    // recruiter fixes and resubmits, so counting it as work in flight would
+    // overstate a pipeline that is actually waiting on them. `pending_review`
+    // stays in — that one is live work waiting on an admin.
+    expect(endings).toEqual(["declined", "hired", "passed"]);
   });
 
   it("keeps an offered candidate in process — the offer can still be declined", () => {

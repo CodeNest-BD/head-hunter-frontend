@@ -3,7 +3,17 @@ import { z } from "zod";
 import { serialNumberSchema } from "@/shared/utils/entityPaths";
 import { MAX_SALARY_MAJOR, MAX_SALARY_MAJOR_LABEL } from "@/shared/utils/money";
 
+/**
+ * Where a candidate stands, in the order they move.
+ *
+ * The first two are the quality-control gate: a recruiter submits, an admin
+ * checks, and only then does the company see anything. The company's own
+ * stages still begin at `submitted`, which keeps its meaning — in the
+ * company's inbox, not yet looked at.
+ */
 export const CANDIDATE_STATUSES = [
+  "pending_review",
+  "declined",
   "submitted",
   "reviewing",
   "interviewing",
@@ -15,6 +25,8 @@ export const candidateStatusSchema = z.enum(CANDIDATE_STATUSES);
 export type CandidateStatus = z.infer<typeof candidateStatusSchema>;
 
 export const CANDIDATE_STATUS_LABELS: Record<CandidateStatus, string> = {
+  pending_review: "Pending Review",
+  declined: "Declined",
   submitted: "Submitted",
   reviewing: "Reviewing",
   interviewing: "Interviewing",
@@ -48,6 +60,11 @@ export function toCandidateStatuses(
  * pipeline rather than an alphabet.
  */
 export const IN_PROCESS_CANDIDATE_STATUSES = [
+  // Still at the quality-control gate, but it is live work the recruiter is
+  // waiting on an answer for — leaving it out would under-report their
+  // pipeline the moment the gate has a queue. `declined` is excluded: it is
+  // stopped until the recruiter acts, which the inbox surfaces separately.
+  "pending_review",
   "submitted",
   "reviewing",
   "interviewing",
@@ -74,6 +91,10 @@ export const candidateSchema = z.object({
   expectedSalaryMinor: z.number().nullable(),
   noticePeriodDays: z.number().nullable(),
   status: candidateStatusSchema,
+  /** Why an admin declined this submission; null unless it was declined. */
+  reviewNote: z.string().nullable().catch(null),
+  /** When an admin last decided; null while it has never been reviewed. */
+  reviewedAt: z.coerce.date().nullable().catch(null),
   createdAt: z.coerce.date(),
 });
 export type Candidate = z.infer<typeof candidateSchema>;
@@ -146,3 +167,49 @@ export const attachmentSchema = z.object({
   createdAt: z.coerce.date(),
 });
 export type Attachment = z.infer<typeof attachmentSchema>;
+
+/**
+ * The stages in front of the quality-control gate.
+ *
+ * A candidate at one of these has not been approved, so the hiring company
+ * never sees it — the API enforces that, and the company's own screens use
+ * this to leave the stages out of filters and figures rather than offering a
+ * reader a value that can only ever return nothing.
+ */
+export const GATED_CANDIDATE_STATUSES = [
+  "pending_review",
+  "declined",
+] as const satisfies readonly CandidateStatus[];
+
+/**
+ * The stages at which the submitting recruiter may still edit or withdraw a
+ * candidate — everything before a company has started reviewing them.
+ *
+ * Mirrors the backend's own removal rule. Both sides of the quality-control
+ * gate are here: a candidate waiting on an admin has reached nobody, and one
+ * sent back can only be fixed if the recruiter can change it.
+ */
+export const EDITABLE_CANDIDATE_STATUSES: readonly CandidateStatus[] = [
+  "pending_review",
+  "declined",
+  "submitted",
+];
+
+/** A stage a company can be shown — every status but the gated two. */
+export type CompanyCandidateStatus = Exclude<
+  CandidateStatus,
+  (typeof GATED_CANDIDATE_STATUSES)[number]
+>;
+
+const GATED = new Set<CandidateStatus>(GATED_CANDIDATE_STATUSES);
+
+/** Whether this stage is one the hiring company is never shown. */
+export function isGatedCandidateStatus(status: CandidateStatus): boolean {
+  return GATED.has(status);
+}
+
+/** The stages a company can actually see, for its own filters and figures. */
+export const COMPANY_CANDIDATE_STATUSES: readonly CompanyCandidateStatus[] =
+  CANDIDATE_STATUSES.filter(
+    (status): status is CompanyCandidateStatus => !GATED.has(status),
+  );

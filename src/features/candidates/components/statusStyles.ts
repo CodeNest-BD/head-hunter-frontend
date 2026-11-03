@@ -13,6 +13,11 @@ import type { CandidateStatus } from "../schemas";
  * off-palette badge.
  */
 export const CANDIDATE_STATUS_TONES: Record<CandidateStatus, PillTone> = {
+  // Waiting on an admin reads as neutral — nobody has judged the candidate
+  // yet, so it is a queue position, not a verdict. A decline is a real stop
+  // the recruiter has to act on, which is the one thing here that is a fault.
+  pending_review: "neutral",
+  declined: "bad",
   submitted: "info",
   reviewing: "warn",
   interviewing: "info",

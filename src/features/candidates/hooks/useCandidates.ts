@@ -4,13 +4,16 @@ import { toast } from "sonner";
 import { isApiError } from "@/shared/libs/errorHandler";
 import { cacheUnderSerialKey } from "@/shared/libs/queryClient";
 import {
+  approveCandidate,
   createCandidate,
+  declineCandidate,
   deleteCandidate,
   fetchAttachments,
   fetchCandidate,
   fetchMyCandidatesForJob,
   passCandidate,
   presignCandidateUpload,
+  resubmitCandidate,
   updateCandidate,
   uploadToPresignedUrl,
   type CandidateInput,
@@ -19,6 +22,7 @@ import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { conversationKeys } from "@/features/conversations/keys";
 import { inboxKeys } from "@/features/inbox/keys";
 import { offerKeys } from "@/features/offers/keys";
+import { adminKeys } from "@/features/admin/keys";
 import { candidateKeys } from "../keys";
 
 /** The calling recruiter's own candidates on one job — at most five. */
@@ -174,5 +178,65 @@ export function useDeleteCandidate(jobId: string) {
       void queryClient.invalidateQueries({ queryKey: inboxKeys.all });
       toast.success("Candidate removed");
     },
+  });
+}
+
+/**
+ * Everything a review decision touches.
+ *
+ * Approving moves a candidate into a company's inbox, so the inbox lists, the
+ * admin queue and the admin dashboard's work queues are all stale afterwards —
+ * and the dashboard is where an admin sees how much is left to review.
+ */
+async function invalidateAfterReview(
+  queryClient: ReturnType<typeof useQueryClient>,
+): Promise<void> {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
+    queryClient.invalidateQueries({ queryKey: inboxKeys.all }),
+    queryClient.invalidateQueries({ queryKey: adminKeys.all }),
+  ]);
+}
+
+export function useApproveCandidate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => approveCandidate(id),
+    onSuccess: async () => {
+      await invalidateAfterReview(queryClient);
+      toast.success("Approved — the company can see this candidate now");
+    },
+    onError: () =>
+      toast.error(
+        "Could not approve this submission — it may already be reviewed",
+      ),
+  });
+}
+
+export function useDeclineCandidate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      declineCandidate(id, reason),
+    onSuccess: async () => {
+      await invalidateAfterReview(queryClient);
+      toast.success("Sent back to the recruiter");
+    },
+    onError: () =>
+      toast.error(
+        "Could not decline this submission — it may already be reviewed",
+      ),
+  });
+}
+
+export function useResubmitCandidate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => resubmitCandidate(id),
+    onSuccess: async () => {
+      await invalidateAfterReview(queryClient);
+      toast.success("Sent back for review");
+    },
+    onError: () => toast.error("Could not send this candidate back for review"),
   });
 }

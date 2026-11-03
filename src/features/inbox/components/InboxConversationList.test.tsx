@@ -178,3 +178,38 @@ describe("the URL follows the stage filter", () => {
     );
   });
 });
+
+describe("the stage filter respects who is looking", () => {
+  it("offers a recruiter the quality-control stages", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<InboxConversationList side="recruiter" />);
+
+    await user.click(screen.getByRole("button", { name: "Stage" }));
+
+    expect(
+      screen.getByRole("menuitemcheckbox", { name: /pending review/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitemcheckbox", { name: /declined/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("hides them from a company, which can never match one", async () => {
+    // The API never returns a candidate at the gate to a company, so these
+    // two would be filters that can only ever return an empty list.
+    const user = userEvent.setup();
+    renderWithProviders(<InboxConversationList side="company" />);
+
+    await user.click(screen.getByRole("button", { name: "Stage" }));
+
+    expect(
+      screen.queryByRole("menuitemcheckbox", { name: /pending review/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitemcheckbox", { name: /declined/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitemcheckbox", { name: /submitted/i }),
+    ).toBeInTheDocument();
+  });
+});

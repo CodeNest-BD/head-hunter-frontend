@@ -9,6 +9,8 @@ import {
   CandidateDetailPanel,
   CandidateForm,
   CandidateRailSkeleton,
+  EDITABLE_CANDIDATE_STATUSES,
+  ReviewStateNotice,
   useCandidate,
   useDeleteCandidate,
   CANDIDATE_STATUS_LABELS,
@@ -85,7 +87,14 @@ function CandidateDetailColumn({ candidate }: { candidate: Candidate }) {
 
   // Once the company starts reviewing, the details it is judging must hold
   // still — the API refuses edits and removal past this point too.
-  const canManageCandidate = candidate.status === "submitted";
+  // Editable and removable right up until a company starts reviewing. That
+  // now includes both sides of the quality-control gate: a candidate waiting
+  // on an admin has reached nobody, and one sent back can only be fixed if
+  // the recruiter can actually change it — which is the whole point of a
+  // decline carrying a reason.
+  const canManageCandidate = EDITABLE_CANDIDATE_STATUSES.includes(
+    candidate.status,
+  );
 
   if (mode === "edit" && canManageCandidate) {
     return (
@@ -110,6 +119,10 @@ function CandidateDetailColumn({ candidate }: { candidate: Candidate }) {
       negotiation={
         negotiationState !== undefined ? (
           <div className="flex flex-col gap-2">
+            {/* Above the negotiation badges: while a candidate is still at the
+                quality-control gate there is no negotiation to report, and
+                what the recruiter needs is what the admin said. */}
+            <ReviewStateNotice candidate={candidate} />
             <NegotiationStateBadges
               interview={negotiationState?.interview ?? null}
               offer={negotiationState?.offer ?? null}

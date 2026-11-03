@@ -10,6 +10,7 @@ import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusS
 import {
   CANDIDATE_STATUSES,
   CANDIDATE_STATUS_LABELS,
+  COMPANY_CANDIDATE_STATUSES,
   toCandidateStatuses,
   type CandidateStatus,
 } from "@/features/candidates/schemas";
@@ -87,11 +88,28 @@ const FILTERS: readonly { value: Filter; label: string }[] = [
  * "N–M of total" it prints matches what the server actually returned. */
 const PAGE_SIZE = 20;
 
-/** The stage filter's options, in pipeline order rather than alphabetical. */
-const STATUS_OPTIONS = CANDIDATE_STATUSES.map((status) => ({
-  value: status,
-  label: CANDIDATE_STATUS_LABELS[status],
-}));
+/**
+ * The stages each side can filter by, in pipeline order rather than
+ * alphabetical.
+ *
+ * A company is never shown a candidate still at the quality-control gate, so
+ * offering those two would be offering filters that can only ever return
+ * nothing. The recruiter keeps them: waiting on an admin, and sent back, are
+ * exactly the two states they most need to pick out of a long list.
+ */
+const STATUS_OPTIONS_BY_SIDE: Record<
+  InboxSide,
+  { value: string; label: string }[]
+> = {
+  recruiter: CANDIDATE_STATUSES.map((status) => ({
+    value: status,
+    label: CANDIDATE_STATUS_LABELS[status],
+  })),
+  company: COMPANY_CANDIDATE_STATUSES.map((status) => ({
+    value: status,
+    label: CANDIDATE_STATUS_LABELS[status],
+  })),
+};
 
 /**
  * The inbox: a flat list of message threads, most-recent first — a row is the
@@ -211,7 +229,7 @@ export function InboxConversationList({
         />
         <MultiSelectFilter
           label="Stage"
-          options={STATUS_OPTIONS}
+          options={STATUS_OPTIONS_BY_SIDE[side]}
           value={statuses}
           onChange={(next) => chooseStatuses(toCandidateStatuses(next))}
         />
