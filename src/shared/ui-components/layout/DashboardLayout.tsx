@@ -220,11 +220,21 @@ function SidebarContent({
           )}
         </div>
         {groups.map((group) => (
-          <div key={group.label} className="flex flex-col gap-px">
+          <div
+            key={group.id}
+            className={cn(
+              "flex flex-col gap-px",
+              // An untitled run is the featured one (the recruiter's Live
+              // Map): it sits straight under MENU and is ruled off from the
+              // headed groups, so it reads as the way in rather than as the
+              // first item of whatever heading follows it.
+              !group.label && "border-b border-line pb-3.5",
+            )}
+          >
             {/* The heading is what makes a grouped rail readable, so it is the
                 one thing the collapsed strip drops — at 56px wide there is no
                 room for a word, and the icons are already in their runs. */}
-            {!collapsed && (
+            {!collapsed && group.label && (
               <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase leading-4 tracking-[0.06em] text-ink-muted">
                 {group.label}
               </p>

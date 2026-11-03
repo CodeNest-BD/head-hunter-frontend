@@ -18,6 +18,7 @@ import { useIsVerifiedRecruiter } from "@/features/recruiters";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { Tag } from "@/shared/ui-components/badges/Tag";
+import { BackLink } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
 import { Input } from "@/shared/ui-components/controls/input";
@@ -53,11 +54,14 @@ import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { StateSelect } from "@/shared/ui-components/controls/StateSelect";
 import { TableSkeleton } from "@/shared/ui-components/data/TableSkeleton";
 import { jobPath } from "@/shared/utils/entityPaths";
-import { PublicJobCard } from "./PublicJobCard";
+import { PublicJobCard, jobCardTags } from "./PublicJobCard";
 import { UsJobMap, type MapSelection } from "./UsJobMap";
 
 const PAGE_SIZE = 12;
 const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
+
+/** How many fact pills the dense row list shows before counting the rest. */
+const ROW_VIEW_TAGS = 2;
 
 // City is the only filter the API can't do (the public list has no city param;
 // the map groups by city), so when a city is active we fetch the whole
@@ -150,6 +154,8 @@ export function ExploreJobsView() {
   const { user } = useAuth();
   // Companies and admins see the live map too, not just verified recruiters.
   const canViewLiveMap = user?.role === "admin" || user?.role === "company";
+  // Guests have no dashboard to go back to; the marketing nav is their way out.
+  const isSignedIn = user !== null && user !== undefined;
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
   const [view, setView] = useState<ResultView>("cards");
   // A phone is one column wide either way, so the layout choice is a desktop
@@ -273,7 +279,25 @@ export function ExploreJobsView() {
   return (
     <div className="w-full">
       {/* Hero band — light, centered */}
-      <header className="relative overflow-hidden bg-gradient-to-b from-surface to-canvas px-4 py-5 text-center sm:px-5 sm:py-6 md:px-10 md:py-8">
+      <header className="relative overflow-hidden bg-gradient-to-b from-surface to-canvas px-3 py-5 text-center sm:px-5 sm:py-6 md:px-10 md:py-8">
+        {/* The map is a public route, so it wears the marketing chrome and has
+            no rail to go back through — a signed-in user reaching it from the
+            app had to find the account menu to get home.
+
+            In flow rather than absolutely positioned: `left-0` resolved
+            against the header's border box, so the link sat flush to the
+            viewport edge while every other element on the page — the filters
+            card below it included — started at the page gutter. The header now
+            carries the same `px-3 sm:px-5 md:px-10` as the body beneath it, so
+            the link's left edge lines up with the filters card exactly.
+
+            `flex w-fit` because the header is centred: an inline-flex link
+            would be centred with the hero copy. */}
+        {isSignedIn && (
+          <BackLink href="/dashboard" className="mb-4 flex w-fit">
+            Back to Dashboard
+          </BackLink>
+        )}
         <div className="relative mx-auto flex max-w-3xl flex-col items-center">
           <h1 className="text-display font-[750] tracking-[-0.022em] text-navy md:text-[30px]">
             Explore Live Fee-Backed Openings.
@@ -1070,9 +1094,10 @@ function JobRow({ job }: { job: PublicJobCardData }) {
     : "—";
   const category =
     ROLE_CATEGORY_LABELS[job.roleCategory as RoleCategory] ?? "Other";
-  const employment = job.employmentType
-    ? (EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType] ?? null)
-    : null;
+  // The same facts the card carries, through the same helper — the two views
+  // are one list in two shapes, so they must never disagree on what a role
+  // says about itself. Employment type is gone from both (see `jobCardTags`).
+  const terms = jobCardTags(job);
   const salary = formatSalaryRange(job);
 
   return (
@@ -1106,8 +1131,21 @@ function JobRow({ job }: { job: PublicJobCardData }) {
           </p>
         )}
       </div>
-      <div className="flex flex-wrap gap-1.5">
-        {employment && <Tag>{employment}</Tag>}
+      {/* The row view is the dense one and its Terms track is a fixed ~10rem,
+          so it shows the first few and counts the rest rather than growing a
+          row five pills tall. The card view carries them all. */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {terms.slice(0, ROW_VIEW_TAGS).map((term) => (
+          <Tag key={term}>{term}</Tag>
+        ))}
+        {terms.length > ROW_VIEW_TAGS && (
+          <span
+            className="text-meta tabular-nums text-ink-faint"
+            title={terms.slice(ROW_VIEW_TAGS).join(" · ")}
+          >
+            +{terms.length - ROW_VIEW_TAGS}
+          </span>
+        )}
       </div>
       <div className="hidden text-sub font-[650] tabular-nums text-ink xl:block">
         {salary ?? <span className="font-[450] text-ink-muted">—</span>}

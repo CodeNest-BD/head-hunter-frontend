@@ -150,6 +150,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
 
       {/* Ordered left-to-right as the employer's flow: post jobs → review
           candidates → the funds that back it all. */}
+      {/* No `tone` on any tile — see the recruiter dashboard. */}
       <QuickViewBand
         label="Company summary"
         views={[
@@ -157,13 +158,13 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
             key: "published",
             label: "Published Jobs",
             value: published.isPending ? <StatValueSkeleton /> : publishedTotal,
+            // A job with no fee ranks last for recruiters, so the card still
+            // says so — in words now rather than in a warm wash, since every
+            // summary card wears the one look.
             note:
               noFeeCount > 0
                 ? `${noFeeCount} without a fee`
                 : "Live on the job map",
-            // A job with no fee ranks last for recruiters, so the tile says so
-            // in the colour the rest of the app uses for "look at this".
-            tone: noFeeCount > 0 ? "warn" : "ok",
             href: "/company/jobs",
           },
           {
@@ -174,7 +175,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
               newCandidates === 0
                 ? "Nothing waiting on you"
                 : `Across ${jobsWithNew} job${jobsWithNew === 1 ? "" : "s"}`,
-            tone: "info",
             href: "/company/inbox",
           },
           {
@@ -186,7 +186,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
               formatMinor(wallet.data?.availableMinor)
             ),
             note: "Free funds to post jobs",
-            tone: "ok",
             href: "/company/wallet",
           },
           {
@@ -198,7 +197,6 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
               formatMinor(wallet.data?.reservedMinor)
             ),
             note: "Held for live jobs",
-            tone: "neutral",
             href: "/company/wallet",
           },
         ]}

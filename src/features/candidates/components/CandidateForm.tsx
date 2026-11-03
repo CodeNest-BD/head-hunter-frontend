@@ -13,13 +13,18 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import {
+  isPlainText,
+  isRichTextEmpty,
+  sanitizeRichText,
+} from "@/shared/libs/richText";
 import { Tile, type TileTone } from "@/shared/ui-components/list/Tile";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
+import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
-import { PhoneInput } from "@/shared/ui-components/controls/PhoneInput";
 import { Label } from "@/shared/ui-components/controls/label";
-import { Textarea } from "@/shared/ui-components/controls/textarea";
+import { RichTextEditor } from "@/shared/ui-components/controls/RichTextEditor";
 import { majorInputToMinor, minorToMajorInput } from "@/shared/utils/money";
 import {
   DOCUMENT_ACCEPT,
@@ -67,6 +72,42 @@ function toNullableText(value: string): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+/**
+ * The overview, sanitized the way every stored rich-text value is, or null
+ * when the editor holds no actual text — an untouched editor emits "<p></p>",
+ * which `trim()` alone would save as a non-empty overview that renders blank.
+ */
+function toNullableOverview(value: string): string | null {
+  if (isRichTextEmpty(value)) return null;
+  return sanitizeRichText(value);
+}
+
+/**
+ * A stored overview as the editor needs it.
+ *
+ * Overviews written before the rich-text editor are plain text carrying real
+ * newlines. Tiptap parses whatever it is given as HTML, where a newline is
+ * just whitespace — so seeding it with the raw value collapses every line
+ * break, and the first save then persists the flattened text. Blank lines
+ * become paragraphs and single newlines become breaks, which is what the
+ * reader already sees via `RichTextView`'s pre-wrapped plain-text branch.
+ */
+function overviewToEditorValue(stored: string | null): string {
+  if (stored === null || stored === "") return "";
+  if (!isPlainText(stored)) return stored;
+  return stored
+    .split(/\n{2,}/)
+    .map(
+      (paragraph) =>
+        `<p>${paragraph
+          // `isPlainText` guarantees no "<", so "&" is the only character
+          // that would otherwise be read as the start of an entity.
+          .replace(/&/g, "&amp;")
+          .replace(/\n/g, "<br>")}</p>`,
+    )
+    .join("");
+}
+
 /** Blank means "not stated"; anything else is the number as typed — years now
  * carry a half, so this must not round. */
 function toNullableInt(value: string): number | null {
@@ -78,8 +119,6 @@ function defaultValuesFor(candidate?: Candidate): CandidateFormValues {
   if (!candidate) {
     return {
       fullName: "",
-      email: "",
-      phone: "",
       overview: "",
       linkedinUrl: "",
       yearsOfExperience: "",
@@ -90,9 +129,7 @@ function defaultValuesFor(candidate?: Candidate): CandidateFormValues {
   }
   return {
     fullName: candidate.fullName,
-    email: candidate.email,
-    phone: candidate.phone ?? "",
-    overview: candidate.overview ?? "",
+    overview: overviewToEditorValue(candidate.overview),
     linkedinUrl: candidate.linkedinUrl ?? "",
     yearsOfExperience:
       candidate.yearsOfExperience === null
@@ -106,12 +143,6 @@ function defaultValuesFor(candidate?: Candidate): CandidateFormValues {
         : String(candidate.noticePeriodDays),
   };
 }
-
-/** One outlined-field look across the whole form: white fill, a comfortable
- * (not oversized) height and soft-but-crisp corners, instead of the short
- * transparent default. */
-const FIELD_CLASS = "";
-const LABEL_CLASS = "";
 
 /** A titled sub-card grouping related fields — the editable mirror of the
  * candidate rail's Contact / Profile / Expectations sections. */
@@ -169,10 +200,8 @@ export function CandidateForm({
       // API, so an untouched field must never be sent at all. null clears one.
       const input: Partial<CandidateInput> = {};
       if (dirtyFields.fullName) input.fullName = values.fullName.trim();
-      if (dirtyFields.email) input.email = values.email.trim();
-      if (dirtyFields.phone) input.phone = toNullableText(values.phone);
       if (dirtyFields.overview)
-        input.overview = toNullableText(values.overview);
+        input.overview = toNullableOverview(values.overview);
       if (dirtyFields.linkedinUrl)
         input.linkedinUrl = toNullableText(values.linkedinUrl);
       if (dirtyFields.yearsOfExperience)
@@ -198,9 +227,7 @@ export function CandidateForm({
 
     const input: CandidateInput = {
       fullName: values.fullName.trim(),
-      email: values.email.trim(),
-      phone: toNullableText(values.phone),
-      overview: toNullableText(values.overview),
+      overview: toNullableOverview(values.overview),
       linkedinUrl: toNullableText(values.linkedinUrl),
       yearsOfExperience: toNullableInt(values.yearsOfExperience),
       currentCompany: toNullableText(values.currentCompany),
@@ -221,14 +248,8 @@ export function CandidateForm({
     <form onSubmit={onSubmit} className="space-y-3.5">
       <FormSection icon={User} iconTone="blue" title="Contact">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="fullName" className={LABEL_CLASS}>
-            Full name
-          </Label>
-          <Input
-            id="fullName"
-            className={FIELD_CLASS}
-            {...register("fullName")}
-          />
+          <Label htmlFor="fullName">Full Name</Label>
+          <Input id="fullName" {...register("fullName")} />
           {errors.fullName && (
             <p className="text-meta font-medium text-bad">
               {errors.fullName.message}
@@ -236,97 +257,55 @@ export function CandidateForm({
           )}
         </div>
 
+        {/* No phone or email field. Direct contact details are what let a
+            company go round the recruiter who sourced the candidate, so the
+            client asked for both off this form; everything needed to arrange
+            an interview passes through the thread instead. The company never
+            saw them anyway (see `CandidateDetailPanel`), so the platform now
+            simply does not ask. Submissions made before this keep whatever
+            they were given, and the recruiter still sees those. */}
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email" className={LABEL_CLASS}>
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            className={FIELD_CLASS}
-            {...register("email")}
-          />
-          {errors.email && (
+          <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
+          <Input id="linkedinUrl" {...register("linkedinUrl")} />
+          {errors.linkedinUrl && (
             <p className="text-meta font-medium text-bad">
-              {errors.email.message}
+              {errors.linkedinUrl.message}
             </p>
           )}
-        </div>
-
-        <div className={twoCol}>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="phone" className={LABEL_CLASS}>
-              Phone
-            </Label>
-            <Controller
-              control={control}
-              name="phone"
-              render={({ field }) => (
-                <PhoneInput
-                  id="phone"
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  invalid={errors.phone !== undefined}
-                />
-              )}
-            />
-            {errors.phone && (
-              <p className="text-meta font-medium text-bad">
-                {errors.phone.message}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="linkedinUrl" className={LABEL_CLASS}>
-              LinkedIn URL
-            </Label>
-            <Input
-              id="linkedinUrl"
-              className={FIELD_CLASS}
-              {...register("linkedinUrl")}
-            />
-            {errors.linkedinUrl && (
-              <p className="text-meta font-medium text-bad">
-                {errors.linkedinUrl.message}
-              </p>
-            )}
-          </div>
         </div>
       </FormSection>
 
       <FormSection icon={FileText} iconTone="warn" title="Profile">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="overview" className={LABEL_CLASS}>
-            Overview
-          </Label>
-          <Textarea
-            id="overview"
-            rows={4}
-            className="min-h-[104px]"
-            {...register("overview")}
+          <Label htmlFor="overview">Overview</Label>
+          {/* The same editor the job description uses: a recruiter writing a
+              background wanted bold, bullets and underline, and `RichTextView`
+              already renders the result wherever a candidate is read — an
+              overview saved before this still renders as plain text. */}
+          <Controller
+            control={control}
+            name="overview"
+            render={({ field }) => (
+              <RichTextEditor
+                id="overview"
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Background, strengths, why they fit this role…"
+              />
+            )}
           />
         </div>
 
         <div className={twoCol}>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="currentCompany" className={LABEL_CLASS}>
-              Current company
-            </Label>
-            <Input
-              id="currentCompany"
-              className={FIELD_CLASS}
-              {...register("currentCompany")}
-            />
+            <Label htmlFor="currentCompany">Current Company</Label>
+            <Input id="currentCompany" {...register("currentCompany")} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="yearsOfExperience" className={LABEL_CLASS}>
-              Years of experience
-            </Label>
+            <Label htmlFor="yearsOfExperience">Years of Experience</Label>
             <NumericInput
               decimal
               id="yearsOfExperience"
-              className={FIELD_CLASS}
               {...register("yearsOfExperience")}
             />
             {errors.yearsOfExperience && (
@@ -341,13 +320,26 @@ export function CandidateForm({
       <FormSection icon={Target} iconTone="ok" title="Expectations">
         <div className={twoCol}>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="expectedSalary" className={LABEL_CLASS}>
-              Expected salary (USD/yr)
-            </Label>
-            <NumericInput
-              id="expectedSalary"
-              className={FIELD_CLASS}
-              {...register("expectedSalary")}
+            <Label htmlFor="expectedSalary">Expected Salary (USD/yr)</Label>
+            {/* `MoneyInput`, not a bare number field: a salary typed as
+                "30000" read back as a quantity rather than an amount. The form
+                still holds the bare digits — the $ and commas are display. */}
+            <Controller
+              control={control}
+              name="expectedSalary"
+              render={({ field }) => (
+                <MoneyInput
+                  ref={field.ref}
+                  // Whole dollars: a salary is quoted to the dollar, and the
+                  // schema already refuses anything with a fraction.
+                  decimal={false}
+                  id="expectedSalary"
+                  placeholder="30,000"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
             />
             {errors.expectedSalary && (
               <p className="text-meta font-medium text-bad">
@@ -356,12 +348,9 @@ export function CandidateForm({
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="noticePeriodDays" className={LABEL_CLASS}>
-              Notice period (days)
-            </Label>
+            <Label htmlFor="noticePeriodDays">Notice Period (days)</Label>
             <NumericInput
               id="noticePeriodDays"
-              className={FIELD_CLASS}
               {...register("noticePeriodDays")}
             />
             {errors.noticePeriodDays && (

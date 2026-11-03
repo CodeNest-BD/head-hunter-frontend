@@ -3,9 +3,15 @@ import { z } from "zod";
 /**
  * Curated specializations shown as chips on the sign-up form and the
  * recruiter profile form. The single source for what is offered — the backend
- * stores `specializations` as free text and keeps no copy of this list. Unrelated
- * to a job's `ROLE_CATEGORIES`, which is a fixed backend enum describing the
- * role rather than the recruiter. `value` is the slug stored in the backend's
+ * stores `specializations` as free text and keeps no copy of this list.
+ *
+ * A job's `ROLE_CATEGORIES` is the same vocabulary plus `other`, so a
+ * recruiter can filter the live map by the words they described themselves
+ * with. That agreement is pinned by a test in `features/jobs/schemas.test.ts`.
+ * Adding or renaming an entry here therefore also needs a backend migration —
+ * `role_category` is a Postgres enum — and the test will say so.
+ *
+ * `value` is the slug stored in the backend's
  * `specializations` `text[]` column and sent over the wire; `label` is what
  * the chip displays. A recruiter can also add a specialization that isn't
  * listed here via the "+ Add" chip — that custom entry is stored verbatim

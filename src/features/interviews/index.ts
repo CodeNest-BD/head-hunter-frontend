@@ -4,6 +4,7 @@
 // client-only React APIs, so a Server Component importing this file must not
 // pull them into the server graph.
 /** Public surface of the interviews feature. */
+export { MeetingLinkField } from "./components/MeetingLinkField";
 export { OpenInterviewActions } from "./components/OpenInterviewActions";
 export { ProposedSlotList } from "./components/ProposedSlotList";
 export { ProposeSlotsForm } from "./components/ProposeSlotsForm";

@@ -44,7 +44,7 @@ function JobCandidates({ job }: { job: Job }) {
     <Button asChild type="button" disabled={mine.isPending}>
       <Link href={submitCandidatePath(job)}>
         <Plus aria-hidden="true" />
-        {isEmpty ? "Submit a candidate" : "Submit another candidate"}
+        {isEmpty ? "Submit a Candidate" : "Submit Another Candidate"}
       </Link>
     </Button>
   );

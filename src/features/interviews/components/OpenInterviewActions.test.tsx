@@ -6,13 +6,21 @@ import type { Interview } from "../schemas";
 import { OpenInterviewActions } from "./OpenInterviewActions";
 
 const useCancelInterviewMock = vi.fn();
+const setMeetingUrlMock = vi.fn();
 
-// Only the mutation this component owns is stubbed; `ProposeSlotsForm` stands in
-// for the whole propose flow (covered by the schema and slot-timing tests), and
-// stubbing it also keeps `../api/interviews` — which needs
-// `NEXT_PUBLIC_API_URL` at import time — out of this test.
+// Only the mutations reachable from this component are stubbed;
+// `ProposeSlotsForm` stands in for the whole propose flow (covered by the
+// schema and slot-timing tests), and stubbing it also keeps
+// `../api/interviews` — which needs `NEXT_PUBLIC_API_URL` at import time — out
+// of this test. `MeetingLinkField` renders for real, since the join link is
+// part of what a scheduled interview is now expected to show.
 vi.mock("../hooks/useInterviews", () => ({
   useCancelInterview: (...args: unknown[]) => useCancelInterviewMock(...args),
+  useSetMeetingUrl: () => ({
+    mutate: setMeetingUrlMock,
+    isPending: false,
+    isError: false,
+  }),
 }));
 vi.mock("./ProposeSlotsForm", () => ({
   ProposeSlotsForm: ({ target }: { target: { interviewId?: string } }) => (

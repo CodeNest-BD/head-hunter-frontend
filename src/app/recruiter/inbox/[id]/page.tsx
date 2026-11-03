@@ -22,7 +22,7 @@ import {
 } from "@/features/conversations";
 import { candidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
 import { InboxConversationPane, InboxMessageWorkspace } from "@/features/inbox";
-import { useInterviews } from "@/features/interviews";
+import { MeetingLinkField, useInterviews } from "@/features/interviews";
 import { useOffers } from "@/features/offers";
 import { Button } from "@/shared/ui-components/controls/button";
 import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
@@ -81,6 +81,7 @@ function CandidateDetailColumn({ candidate }: { candidate: Candidate }) {
           offersQuery.data.data,
         ).get(candidate.id) ?? null)
       : undefined;
+  const interviewRecord = negotiationState?.interviewRecord ?? null;
 
   // Once the company starts reviewing, the details it is judging must hold
   // still — the API refuses edits and removal past this point too.
@@ -108,11 +109,19 @@ function CandidateDetailColumn({ candidate }: { candidate: Candidate }) {
       stageTone={CANDIDATE_STATUS_TONES[candidate.status]}
       negotiation={
         negotiationState !== undefined ? (
-          <NegotiationStateBadges
-            interview={negotiationState?.interview ?? null}
-            offer={negotiationState?.offer ?? null}
-            viewerParty="recruiter"
-          />
+          <div className="flex flex-col gap-2">
+            <NegotiationStateBadges
+              interview={negotiationState?.interview ?? null}
+              offer={negotiationState?.offer ?? null}
+              viewerParty="recruiter"
+            />
+            {/* Read-only here: setting the link is the company's, since it is
+                their calendar that made the meeting. The recruiter needs it to
+                brief — and sometimes join — the candidate. */}
+            {interviewRecord?.status === "scheduled" && (
+              <MeetingLinkField interview={interviewRecord} canEdit={false} />
+            )}
+          </div>
         ) : null
       }
       headerActions={

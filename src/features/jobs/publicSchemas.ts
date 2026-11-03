@@ -4,6 +4,7 @@ import { serialNumberSchema } from "@/shared/utils/entityPaths";
 import {
   interviewStageSchema,
   offerTimelineSchema,
+  otherSourcingSchema,
   positionOpenReasonSchema,
   salaryRatePeriodSchema,
 } from "./schemas";
@@ -40,6 +41,16 @@ export const publicJobCardSchema = z.object({
   positionOpenReason: positionOpenReasonSchema.nullable().catch(null),
   interviewCount: z.number().catch(0),
   submittedCandidates: z.number().catch(0),
+  // Whether the company is also advertising the role itself, and what else it
+  // has working on it — both read by a recruiter as "how much competition is
+  // there before I even start?".
+  //
+  // `.nullish()` rather than `.nullable()`: PublicJobCardDto does not carry
+  // these yet, so today they parse as absent and the card simply omits the
+  // pill. They render the moment the backend cherry-picks them out of
+  // `intake` alongside `offerTimeline`, with no further change here.
+  postedOnlineElsewhere: z.boolean().nullish().catch(null),
+  otherSourcing: otherSourcingSchema.nullish().catch(null),
 });
 export type PublicJobCard = z.infer<typeof publicJobCardSchema>;
 
