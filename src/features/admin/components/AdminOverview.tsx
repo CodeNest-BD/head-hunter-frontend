@@ -72,13 +72,13 @@ function eventTime(when: string | Date): string {
 }
 
 function KpiBand({ stats }: { stats: AdminStats }) {
+  // No `tone` on any tile — see the recruiter dashboard.
   const kpis: readonly QuickView[] = [
     {
       key: "wallet-total",
       label: "Wallet Total",
       value: formatMinor(stats.walletTotalMinor),
       note: `${formatMinor(stats.walletAvailableMinor)} available · ${formatMinor(stats.walletReservedMinor)} reserved`,
-      tone: "ok" as const,
       href: "/admin/companies",
     },
     {
@@ -86,7 +86,6 @@ function KpiBand({ stats }: { stats: AdminStats }) {
       label: "Recruiters",
       value: stats.recruiters.total.toLocaleString(),
       note: `${stats.recruiters.verified.toLocaleString()} verified & active`,
-      tone: "info" as const,
       href: "/admin/recruiters",
     },
     {
@@ -94,7 +93,6 @@ function KpiBand({ stats }: { stats: AdminStats }) {
       label: "Companies",
       value: stats.companies.total.toLocaleString(),
       note: `${stats.companies.approved.toLocaleString()} approved & active`,
-      tone: "info" as const,
       href: "/admin/companies",
     },
     {
@@ -102,7 +100,6 @@ function KpiBand({ stats }: { stats: AdminStats }) {
       label: "Live Jobs",
       value: stats.liveJobs.toLocaleString(),
       note: `${stats.scheduledJobs} interviewing · ${stats.offerJobs} at offer`,
-      tone: "info" as const,
       href: "/admin/jobs",
     },
     {
@@ -110,16 +107,13 @@ function KpiBand({ stats }: { stats: AdminStats }) {
       label: "Average Fee",
       value: formatMinor(stats.avgFeeMinor),
       note: `Across live jobs · ${formatMinor(stats.feeMinMinor)} – ${formatMinor(stats.feeMaxMinor)}`,
-      tone: "neutral" as const,
       href: "/admin/jobs",
     },
   ];
 
-  return (
-    <Section label="Marketplace summary">
-      <QuickViewBand label="Marketplace summary" views={kpis} />
-    </Section>
-  );
+  // No `Section` wrapper: the band is already its own surface, and nesting it
+  // in one drew a panel around a panel.
+  return <QuickViewBand label="Marketplace summary" views={kpis} />;
 }
 
 // ── Needs your attention ───────────────────────────────────────────────────

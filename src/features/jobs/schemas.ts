@@ -166,6 +166,21 @@ export const OTHER_SOURCING_LABELS: Record<OtherSourcing, string> = {
   none: "No",
 };
 
+/** Job-card wording — see POSITION_OPEN_REASON_CARD_LABELS. The labels above
+ * answer the intake question "are you sourcing elsewhere?", so on a card they
+ * would read as a bare "No" with nothing to say what was being denied. */
+export const OTHER_SOURCING_CARD_LABELS: Record<OtherSourcing, string> = {
+  other_agencies: "Agencies Also Sourcing",
+  internal_talent_team: "Internal Team Also Sourcing",
+  none: "No Other Sourcing",
+};
+
+/** Job-card wording for `postedOnlineElsewhere`, for the same reason. */
+export const POSTED_ONLINE_CARD_LABELS: Record<"yes" | "no", string> = {
+  yes: "Also Posted Online",
+  no: "Not Posted Online",
+};
+
 export const benefitsSchema = z.object({
   medical: z.boolean(),
   dental: z.boolean(),
@@ -383,29 +398,40 @@ export const jobIntakeSchema = z
 export type JobIntake = z.infer<typeof jobIntakeSchema>;
 
 /**
- * Mirrors the backend role_category enum.
+ * Mirrors the backend `role_category` enum.
  *
- * Deliberately NOT the same vocabulary as a recruiter's
- * `SPECIALIZATION_SUGGESTIONS`: this describes what a job is (a fixed DB enum
- * companies pick from and recruiters filter on), while a specialization
- * describes a recruiter's expertise and is free text. The overlap in names is
- * coincidence — do not derive one list from the other, and do not "sync" them.
+ * Deliberately the SAME vocabulary as a recruiter's
+ * `SPECIALIZATION_SUGGESTIONS`, plus `other`. A recruiter filters the live map
+ * with the words they used to describe themselves, so the two lists have to
+ * agree — written separately, they drifted far enough that filtering by
+ * "Technology" matched nothing, because no job could be filed under it.
+ *
+ * Written out rather than derived from `SPECIALIZATION_SUGGESTIONS`, because
+ * this has to mirror a Postgres enum exactly and `z.enum` needs literals; the
+ * agreement is enforced by a test instead (`schemas.test.ts`), which fails
+ * with instructions the moment a specialization is added without a matching
+ * backend migration.
+ *
+ * `other` has no specialization equivalent on purpose — see the entity.
  */
 export const ROLE_CATEGORIES = [
-  "engineering",
-  "product",
-  "design",
-  "data",
-  "sales",
-  "marketing",
+  "accounting",
   "finance",
-  "operations",
   "human_resources",
+  "administrative",
+  "customer_service",
+  "technology",
+  "marketing",
   "legal",
+  "engineering",
+  "sales",
+  "operations",
   "healthcare",
-  "education",
-  "customer_success",
-  "executive",
+  "pharma",
+  "biotech",
+  "skilled_trades",
+  "logistics_supply_chain",
+  "hospitality",
   "other",
 ] as const;
 export const roleCategorySchema = z.enum(ROLE_CATEGORIES);
@@ -419,7 +445,14 @@ export const jobSchema = z.object({
   // `.catch(null)` so a row still holding the retired `contract` value reads as
   // unset instead of failing the whole job's parse.
   employmentType: employmentTypeSchema.nullable().catch(null),
-  roleCategory: roleCategorySchema,
+  // `.catch("other")` for the same reason `employmentType` catches below, and
+  // it is what makes the vocabulary change survivable: a job still filed under
+  // a retired category (product, design, data, education, customer_success,
+  // executive) reads as Other instead of throwing. Without it one such row
+  // fails `paginatedSchema(jobSchema).parse`, which takes down the whole page
+  // of jobs rather than the single card. The read path only — the form's own
+  // `roleCategory` stays strict so a company cannot submit a retired value.
+  roleCategory: roleCategorySchema.catch("other"),
   locationState: z.string().nullable(),
   locationCity: z.string().nullable(),
   isRemote: z.boolean(),
@@ -447,22 +480,27 @@ export const jobSchema = z.object({
 });
 export type Job = z.infer<typeof jobSchema>;
 
-/** Human labels; the API speaks snake_case enums. */
+/** Human labels; the API speaks snake_case enums. Each one reads exactly as
+ * the matching specialization chip does, which is the point of the shared
+ * vocabulary — the same expertise must not be worded two ways. */
 export const ROLE_CATEGORY_LABELS: Record<RoleCategory, string> = {
-  engineering: "Engineering",
-  product: "Product",
-  design: "Design",
-  data: "Data",
-  sales: "Sales",
-  marketing: "Marketing",
+  accounting: "Accounting",
   finance: "Finance",
-  operations: "Operations",
   human_resources: "Human Resources",
+  administrative: "Administrative",
+  customer_service: "Customer Service",
+  technology: "Technology",
+  marketing: "Marketing",
   legal: "Legal",
+  engineering: "Engineering",
+  sales: "Sales",
+  operations: "Operations",
   healthcare: "Healthcare",
-  education: "Education",
-  customer_success: "Customer Service",
-  executive: "Executive",
+  pharma: "Pharma",
+  biotech: "Biotech",
+  skilled_trades: "Skilled Trades",
+  logistics_supply_chain: "Logistics & Supply Chain",
+  hospitality: "Hospitality",
   other: "Other",
 };
 

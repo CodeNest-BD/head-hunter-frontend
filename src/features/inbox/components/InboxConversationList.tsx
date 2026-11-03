@@ -3,18 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  AlertCircle,
-  Briefcase,
-  CheckCheck,
-  Inbox,
-  Search,
-} from "lucide-react";
+import { AlertCircle, Briefcase, CheckCheck, Inbox } from "lucide-react";
 
 import { useMarkAllThreadsRead } from "@/features/conversations/hooks/useConversation";
 import { CANDIDATE_STATUS_TONES } from "@/features/candidates/components/statusStyles";
 import {
+  CANDIDATE_STATUSES,
   CANDIDATE_STATUS_LABELS,
+  toCandidateStatuses,
   type CandidateStatus,
 } from "@/features/candidates/schemas";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
@@ -31,8 +27,10 @@ import { RefChip } from "@/shared/ui-components/badges/RefChip";
 import { PageHeader } from "@/shared/ui-components/brand";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Card, CardHeader } from "@/shared/ui-components/controls/card";
-import { Input } from "@/shared/ui-components/controls/input";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
+import { MultiSelectFilter } from "@/shared/ui-components/data/MultiSelectFilter";
+import { ToolbarSearch } from "@/shared/ui-components/data/ListToolbar";
+import { Segmented } from "@/shared/ui-components/dashboard/DashboardParts";
 import { TablePager } from "@/shared/ui-components/data/TablePager";
 import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { EmptyState } from "@/shared/ui-components/feedback/EmptyState";
@@ -80,30 +78,58 @@ const COPY: Record<
 type Filter = "all" | "unread";
 
 /** The two positions of the reference's `.seg` control above the list. */
-const FILTERS: readonly Filter[] = ["all", "unread"];
+const FILTERS: readonly { value: Filter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "unread", label: "Unread" },
+];
 
 /** Server page size — shared by the query and the pager's range readout so the
  * "N–M of total" it prints matches what the server actually returned. */
 const PAGE_SIZE = 20;
+
+/** The stage filter's options, in pipeline order rather than alphabetical. */
+const STATUS_OPTIONS = CANDIDATE_STATUSES.map((status) => ({
+  value: status,
+  label: CANDIDATE_STATUS_LABELS[status],
+}));
 
 /**
  * The inbox: a flat list of message threads, most-recent first — a row is the
  * whole card, and clicking it opens the conversation. The job the thread is
  * about is a nested link that routes to the job instead.
  */
-export function InboxConversationList({ side }: { side: InboxSide }) {
+export function InboxConversationList({
+  side,
+  initialStatuses,
+}: {
+  side: InboxSide;
+  /**
+   * Stages to open filtered to — how the recruiter dashboard's "Candidates In
+   * Process" and "New Offers" cards land here.
+   *
+   * Read once as the starting value, never synced: past the first render the
+   * control owns the choice, so clearing the filter must not be undone by the
+   * URL it arrived from. Same rule the submissions queue follows for `?job=`.
+   */
+  initialStatuses?: readonly CandidateStatus[];
+}) {
   const router = useRouter();
   const copy = COPY[side];
 
   const [search, setSearch] = useState("");
   const q = useDebouncedValue(search.trim(), 300);
   const [filter, setFilter] = useState<Filter>("all");
+  const [statuses, setStatuses] = useState<readonly CandidateStatus[]>(
+    () => initialStatuses ?? [],
+  );
   const [page, setPage] = useState(1);
 
-  // A new search or filter always starts back on page 1.
+  // A new search or filter always starts back on page 1. `statuses` is the
+  // array itself, not a key built from it — `setStatuses` only ever hands back
+  // a new array when the selection actually changed.
   useEffect(() => {
     setPage(1);
-  }, [q, filter]);
+  }, [q, filter, statuses]);
 
   const { data, isPending, isError, refetch, isPlaceholderData } =
     useInboxConversations(side, {
@@ -111,7 +137,13 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
       limit: PAGE_SIZE,
       q: q || undefined,
       unreadOnly: filter === "unread",
+      status: statuses,
     });
+
+  // Whether anything is hiding rows right now. Drives the empty state, which
+  // otherwise tells a recruiter with a stage filter on that they have no
+  // conversations at all.
+  const narrowed = Boolean(q) || filter === "unread" || statuses.length > 0;
 
   const attentionCount = useInboxAttentionCount(side).data ?? 0;
   const markAllRead = useMarkAllThreadsRead();
@@ -142,38 +174,29 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
         }
       />
 
-      {/* `.toolbar` — the 36px search box and the All/Unread segmented control
-       * sit directly on the canvas, left-aligned as one group. */}
+      {/* `.toolbar` — search, the All/Unread toggle and the stage filter, all
+       * on the toolbar's own 38px rhythm and all built from the shared parts,
+       * so this row looks like every other list page's toolbar. */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[220px] max-w-[360px] flex-1">
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute left-[11px] top-1/2 size-3.5 -translate-y-1/2 text-ink-faint"
-          />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search company, candidate or job"
-            className="pl-8 text-sub"
-          />
-        </div>
-        <div className="inline-flex shrink-0 rounded-sm border border-line bg-surface-sunken p-0.5">
-          {FILTERS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setFilter(key)}
-              className={cn(
-                "inline-flex h-7 items-center gap-1.5 rounded-xs px-3 text-[12.5px] font-semibold capitalize transition-colors",
-                filter === key
-                  ? "bg-surface text-ink shadow-e1"
-                  : "text-ink-muted hover:text-ink",
-              )}
-            >
-              {key}
-            </button>
-          ))}
-        </div>
+        <ToolbarSearch
+          value={search}
+          onChange={setSearch}
+          placeholder="Search company, candidate or job"
+          className="min-w-[220px] max-w-[360px] flex-1"
+        />
+        <Segmented
+          label="Show"
+          size="toolbar"
+          value={filter}
+          onChange={setFilter}
+          options={FILTERS}
+        />
+        <MultiSelectFilter
+          label="Stage"
+          options={STATUS_OPTIONS}
+          value={statuses}
+          onChange={(next) => setStatuses(toCandidateStatuses(next))}
+        />
       </div>
 
       {isError ? (
@@ -203,13 +226,9 @@ export function InboxConversationList({ side }: { side: InboxSide }) {
         <Card className="overflow-hidden">
           <EmptyState
             icon={Inbox}
-            title={
-              q || filter === "unread"
-                ? "No conversations match"
-                : "No conversations yet"
-            }
+            title={narrowed ? "No conversations match" : "No conversations yet"}
             description={
-              !q && filter !== "unread" ? (
+              !narrowed ? (
                 <>
                   {copy.emptyHint.before}
                   <Link

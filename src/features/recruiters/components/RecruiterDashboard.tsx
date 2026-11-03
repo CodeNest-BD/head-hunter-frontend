@@ -9,7 +9,10 @@ import { useNotifications } from "@/features/notifications";
 
 import { useRecruiterWallet } from "@/features/billing";
 
-import { useInboxJobs } from "@/features/inbox";
+import {
+  useInboxAttentionCount,
+  useRecruiterPipelineCounts,
+} from "@/features/inbox";
 
 import { PageHeader } from "@/shared/ui-components/brand";
 
@@ -33,7 +36,17 @@ import { formatDateTime } from "@/shared/utils/formatDate";
 
 import { formatMinor } from "@/shared/utils/money";
 
+import { IN_PROCESS_CANDIDATE_STATUSES } from "@/features/candidates/schemas";
+
 import { useMyRecruiterProfile } from "../hooks/useRecruiterProfile";
+
+/**
+ * The inbox, opened filtered to these stages — so a card and the list it
+ * leads to always agree about what they are counting. Built from the same
+ * constant the figures are counted with, never a hand-written query string.
+ */
+const inboxFilteredTo = (statuses: readonly string[]): string =>
+  `/recruiter/inbox?${statuses.map((s) => `status=${s}`).join("&")}`;
 
 /**
  * The tinted glyph that leads an activity row. Matching on the event's type
@@ -42,7 +55,10 @@ import { useMyRecruiterProfile } from "../hooks/useRecruiterProfile";
  */
 export function RecruiterDashboard({ firstName }: { firstName: string }) {
   const profile = useMyRecruiterProfile();
-  const inbox = useInboxJobs("recruiter", { limit: 50 });
+  // Counted per candidate rather than per job: the summary reports the stage
+  // each candidate is at, and only the conversation rows carry `status`.
+  const pipeline = useRecruiterPipelineCounts();
+  const attentionCount = useInboxAttentionCount("recruiter");
   const wallet = useRecruiterWallet();
   const openRoles = useJobs({ limit: 5, sortBy: "publishedAt" });
   const activity = useNotifications({ limit: 6 });
@@ -50,18 +66,14 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
   const references = profile.data?.references ?? [];
   const verificationStatus = profile.data?.verificationStatus;
   const yearsExperience = profile.data?.yearsExperience ?? null;
+  const ratingAvg = profile.data?.ratingAvg ?? null;
+  const ratingCount = profile.data?.ratingCount ?? 0;
 
-  const inboxJobs = inbox.data?.data ?? [];
-  // One row per job you have someone on; the counts are already per job, so
-  // the totals are a sum rather than a second query.
-  const candidateCount = inboxJobs.reduce(
-    (sum, job) => sum + job.candidateCount,
-    0,
-  );
-  const unreadMessages = inboxJobs.reduce(
-    (sum, job) => sum + job.unreadMessages,
-    0,
-  );
+  const { inProcess, newOffers, isInProcessPending, isNewOffersPending } =
+    pipeline;
+  // The same figure the sidebar badge shows, from the same cached query — the
+  // dashboard and the rail must not disagree about how much is waiting.
+  const waiting = attentionCount.data ?? 0;
 
   const latestRole = openRoles.data?.data[0] ?? null;
   // Every role the marketplace would show this recruiter, not the fetched
@@ -78,6 +90,13 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
     yearsExperience !== null
       ? `${yearsExperience} Year${yearsExperience === 1 ? "" : "s"} Experience`
       : null,
+    // The client asked whether a recruiter can see their own rating. It is the
+    // number companies sort submissions by, so it belongs beside the rest of
+    // their standing rather than only on the profile page. Stated as unrated
+    // when nobody has reviewed them — an absent line reads as a failed load.
+    ratingAvg !== null
+      ? `${ratingAvg.toFixed(1)} ★ (${ratingCount} Review${ratingCount === 1 ? "" : "s"})`
+      : "Not Yet Rated",
   ].filter(Boolean);
 
   // The attention feed is derived from real signals, ordered most-actionable
@@ -113,15 +132,18 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
       href: jobPath(latestRole),
     });
   }
-  if (unreadMessages > 0) {
+  if (waiting > 0) {
     attention.push({
       id: "unread",
       icon: MessageSquare,
       tone: "warn",
-      label: "Unread messages",
-      context: "A company is waiting on you in one of your conversations.",
+      // Threads, not messages: this counts conversations needing the
+      // recruiter — an unread message, a proposed time, a sent offer — which
+      // is what the sidebar badge counts too.
+      label: "Conversations waiting on you",
+      context: "A company has replied or moved one of your candidates on.",
       priorityLabel: "Waiting",
-      count: unreadMessages,
+      count: waiting,
       actionLabel: "Open",
       href: "/recruiter/inbox",
     });
@@ -160,6 +182,8 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
         subtitle={subtitleParts.join(" · ")}
       />
 
+      {/* No `tone` on any tile: the summary reports stages, not statuses, so
+          every tile wears the same blue dot and blue label. */}
       <QuickViewBand
         label="Recruiter summary"
         views={[
@@ -172,16 +196,24 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
               (openRolesCount ?? "—")
             ),
             note: "Open to you right now",
-            tone: "info",
             href: "/explore-jobs",
           },
           {
             key: "in-process",
             label: "Candidates In Process",
-            value: inbox.isPending ? <StatValueSkeleton /> : candidateCount,
+            value: isInProcessPending ? <StatValueSkeleton /> : inProcess,
             note: "Submitted, interviewing, pending feedback",
-            tone: "info",
-            href: "/recruiter/inbox",
+            href: inboxFilteredTo(IN_PROCESS_CANDIDATE_STATUSES),
+          },
+          {
+            key: "new-offers",
+            label: "New Offers",
+            value: isNewOffersPending ? <StatValueSkeleton /> : newOffers,
+            note:
+              newOffers === 0
+                ? "No offers awaiting a decision"
+                : "Awaiting accept or decline",
+            href: inboxFilteredTo(["offered"]),
           },
           {
             key: "pending",
@@ -192,7 +224,6 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
               formatMinor(wallet.data?.inEscrowMinor ?? 0)
             ),
             note: "Released 30 days after a start",
-            tone: "warn",
             href: "/recruiter/wallet",
           },
           {
@@ -204,7 +235,6 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
               formatMinor(wallet.data?.earnedYtdMinor ?? 0)
             ),
             note: "What you’ve earned this year",
-            tone: "ok",
             href: "/recruiter/wallet",
           },
         ]}

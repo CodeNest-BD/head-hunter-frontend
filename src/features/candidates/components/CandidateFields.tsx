@@ -1,4 +1,5 @@
 import { cn } from "@/shared/libs/shadCnConfig";
+import { RichTextView } from "@/shared/ui-components/data/RichTextView";
 import { formatMinor } from "@/shared/utils/money";
 import type { Candidate } from "../schemas";
 
@@ -73,9 +74,13 @@ export function CandidateFields({ candidate }: CandidateFieldsProps) {
       {candidate.overview && (
         <div className="border-t border-line pt-3.5">
           <p className={FACT_LABEL}>Overview</p>
-          <p className="mt-[3px] whitespace-pre-wrap text-sub leading-relaxed text-ink-body">
-            {candidate.overview}
-          </p>
+          {/* An overview is rich text now. `RichTextView` sanitizes markup and
+              renders a pre-editor plain-text overview as-is, so both shapes
+              read correctly without a migration. */}
+          <RichTextView
+            value={candidate.overview}
+            className="mt-[3px] text-sub leading-relaxed"
+          />
         </div>
       )}
     </div>

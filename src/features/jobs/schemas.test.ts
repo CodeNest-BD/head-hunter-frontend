@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { SPECIALIZATION_SUGGESTIONS } from "@/shared/utils/specializations";
 import {
   draftBlockingIssues,
   formatDaysAndHours,
   jobFormSchema,
+  ROLE_CATEGORIES,
+  ROLE_CATEGORY_LABELS,
   type JobFormValues,
+  type RoleCategory,
 } from "./schemas";
 import { intakeToFormValues, jobToFormValues } from "./utils/jobIntake";
 
@@ -310,5 +314,49 @@ describe("draftBlockingIssues", () => {
         salaryMax: "100000",
       }).sort(),
     ).toEqual(["locationState", "salaryMax"]);
+  });
+});
+
+describe("role categories speak the recruiter's own vocabulary", () => {
+  // The client asked whether a job's Role Category and a recruiter's
+  // Specializations should be the same list. They should: a recruiter filters
+  // the live map with the words they described themselves with, and before
+  // this they could pick "Technology" on their profile and never find a job
+  // under it, because no such category existed.
+  //
+  // If one of these fails because a specialization was added or renamed, the
+  // fix is NOT to edit the expectation: `role_category` is a Postgres enum, so
+  // it needs a migration in head-hunter-backend (see
+  // UnifyRoleCategoryWithSpecializations) and the matching entity change.
+  const specializationValues = SPECIALIZATION_SUGGESTIONS.map((s) => s.value);
+
+  it("offers every specialization as a role category", () => {
+    const categories = new Set<string>(ROLE_CATEGORIES);
+    const missing = specializationValues.filter((v) => !categories.has(v));
+
+    expect(missing).toEqual([]);
+  });
+
+  it("adds nothing beyond the specializations except the Other fallback", () => {
+    const specializations = new Set<string>(specializationValues);
+    const extra = ROLE_CATEGORIES.filter((c) => !specializations.has(c));
+
+    // `other` is the escape hatch a company needs when nothing fits; a
+    // specialization list has no use for it, so it is the one asymmetry.
+    expect(extra).toEqual(["other"]);
+  });
+
+  it("words each shared category exactly as its specialization chip does", () => {
+    const differences = SPECIALIZATION_SUGGESTIONS.filter(
+      (s) => ROLE_CATEGORY_LABELS[s.value as RoleCategory] !== s.label,
+    ).map((s) => s.value);
+
+    expect(differences).toEqual([]);
+  });
+
+  it("labels every category, Other included", () => {
+    const unlabelled = ROLE_CATEGORIES.filter((c) => !ROLE_CATEGORY_LABELS[c]);
+
+    expect(unlabelled).toEqual([]);
   });
 });

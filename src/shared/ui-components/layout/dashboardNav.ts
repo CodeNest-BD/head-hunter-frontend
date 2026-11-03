@@ -34,15 +34,23 @@ export interface NavItem {
 }
 
 /**
- * A titled run of nav items.
+ * A run of nav items, usually titled.
  *
  * The redesign groups the rail rather than listing it flat — Overview,
  * Marketplace, Operations, Finance, System — so a reader finds a destination
  * by the kind of work it belongs to instead of scanning eleven labels. The
  * same five headings serve every role; only the items under them differ.
+ *
+ * A group may omit its `label`, which makes it a *featured* run: it renders
+ * above the first heading, directly under MENU, ruled off from the groups
+ * below. The recruiter's Live Map is the one such run — the client asked for
+ * it to read as the primary destination rather than as one of several
+ * Overview links. `id` rather than the label keys the group, so an untitled
+ * run is still addressable.
  */
 export interface NavGroup {
-  label: string;
+  id: string;
+  label?: string;
   items: NavItem[];
 }
 
@@ -50,12 +58,14 @@ export interface NavGroup {
 export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
   company: [
     {
+      id: "overview",
       label: "Overview",
       items: [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       ],
     },
     {
+      id: "marketplace",
       label: "Marketplace",
       items: [
         { href: "/company/jobs", label: "Jobs", icon: Briefcase },
@@ -63,6 +73,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       ],
     },
     {
+      id: "operations",
       label: "Operations",
       items: [
         {
@@ -74,25 +85,33 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       ],
     },
     {
+      id: "finance",
       label: "Finance",
       items: [{ href: "/company/wallet", label: "Wallet", icon: Wallet2 }],
     },
     {
+      id: "account",
       label: "Account",
       items: [{ href: "/company/profile", label: "Settings", icon: Settings }],
     },
   ],
   recruiter: [
     {
+      // Untitled and first: the live map is where a recruiter's day starts, so
+      // the client asked for it above the headings rather than filed under
+      // Overview with the dashboard.
+      id: "live-map",
+      items: [{ href: "/explore-jobs", label: "Live Map", icon: Map }],
+    },
+    {
+      id: "overview",
       label: "Overview",
       items: [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        // The job map is a primary recruiter surface, so it sits in the rail
-        // alongside the dashboard. Notifications stay in the bell dropdown.
-        { href: "/explore-jobs", label: "Live Map", icon: Map },
       ],
     },
     {
+      id: "marketplace",
       label: "Marketplace",
       items: [
         {
@@ -105,6 +124,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       ],
     },
     {
+      id: "operations",
       label: "Operations",
       items: [
         {
@@ -116,6 +136,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       ],
     },
     {
+      id: "finance",
       label: "Finance",
       items: [
         { href: "/recruiter/wallet", label: "Wallet", icon: Wallet2 },
@@ -133,6 +154,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       ],
     },
     {
+      id: "account",
       label: "Account",
       items: [
         { href: "/recruiter/profile", label: "Settings", icon: Settings },
@@ -141,12 +163,14 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
   ],
   admin: [
     {
+      id: "overview",
       label: "Overview",
       items: [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       ],
     },
     {
+      id: "marketplace",
       label: "Marketplace",
       items: [
         { href: "/admin/recruiters", label: "Recruiters", icon: Users },
@@ -167,6 +191,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
     {
       // The design names it "Dispute Center" and gives Conversations its own
       // row rather than reaching them through a job's candidate count.
+      id: "operations",
       label: "Operations",
       items: [
         {
@@ -183,6 +208,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       ],
     },
     {
+      id: "finance",
       label: "Finance",
       items: [
         {
@@ -198,6 +224,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       ],
     },
     {
+      id: "system",
       label: "System",
       items: [{ href: "/admin/settings", label: "Settings", icon: Settings }],
     },

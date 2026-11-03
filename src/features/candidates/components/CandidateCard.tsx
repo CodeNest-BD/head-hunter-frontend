@@ -48,9 +48,13 @@ export function CandidateCard({
           </p>
         ) : (
           // Capped so the buttons read as one equal-width stack in a wide
-          // column, and an expanded scheduling form keeps the width it was
-          // laid out for.
-          <div className="flex max-w-sm flex-col gap-2">
+          // column. The cap used to be `max-w-sm`, which squeezed the
+          // scheduling panel that opens in this same stack down to ~384px —
+          // narrow enough that the times already proposed wrapped to one word
+          // a line, which is what the client reported. Wide enough now for
+          // day/start/end/length to sit on one row and for a staged window to
+          // read on one line.
+          <div className="flex max-w-xl flex-col gap-2">
             <ScheduleInterviewAction
               candidateId={candidate.id}
               negotiationState={negotiationState}

@@ -9,6 +9,7 @@ import { formatDateTime } from "@/shared/utils/formatDate";
 import { useCancelInterview } from "../hooks/useInterviews";
 import { INTERVIEW_TYPE_LABELS, type Interview } from "../schemas";
 import { withdrawInterviewErrorMessage } from "../utils/interviewErrorMessages";
+import { MeetingLinkField } from "./MeetingLinkField";
 import { ProposedSlotList } from "./ProposedSlotList";
 import { ProposeSlotsForm } from "./ProposeSlotsForm";
 import { RecordOutcomeActions } from "./RecordOutcomeActions";
@@ -46,6 +47,10 @@ function ScheduledInterview({ interview }: { interview: Interview }) {
           </p>
         )}
       </div>
+      {/* A time is agreed but a video interview still needs somewhere to
+          happen — the company adds the link here, and the recruiter joins
+          from the same field on their own panel. */}
+      <MeetingLinkField interview={interview} canEdit />
       <RecordOutcomeActions interview={interview} />
     </div>
   );
@@ -86,6 +91,18 @@ export function OpenInterviewActions({ interview }: OpenInterviewActionsProps) {
     return (
       <div className="flex flex-col gap-2 rounded-sm border border-line bg-surface-sub p-3">
         <p className="text-sub font-[650] text-ink">Propose interview times</p>
+        {/* The times already on the table, kept in view while new ones are
+            picked. Opening this panel used to replace them with the empty
+            picker, so a company proposing again could not see what it had
+            already offered — and re-offered the same slots. */}
+        {liveProposal && (
+          <div className="flex flex-col gap-1.5">
+            <p className="text-meta font-[650] uppercase tracking-[0.06em] text-ink-muted">
+              Already Proposed
+            </p>
+            <ProposedSlotList slots={liveProposal.slots} />
+          </div>
+        )}
         <ProposeSlotsForm
           target={{ kind: "existing", interviewId: interview.id }}
           onDone={() => setPanel("none")}

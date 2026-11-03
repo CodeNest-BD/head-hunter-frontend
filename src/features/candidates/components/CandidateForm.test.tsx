@@ -50,8 +50,8 @@ function pdfFile(): File {
 }
 
 async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText("Full name"), "Jane Doe");
-  await user.type(screen.getByLabelText("Email"), "jane@example.com");
+  // A name is the only thing a submission requires now.
+  await user.type(screen.getByLabelText("Full Name"), "Jane Doe");
 }
 
 describe("CandidateForm", () => {
@@ -112,6 +112,51 @@ describe("CandidateForm", () => {
     ).toBeDisabled();
   });
 
+  it("shows the expected salary as money while sending bare cents", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<CandidateForm jobId="job-1" onDone={vi.fn()} />);
+
+    const salary = screen.getByLabelText(/expected salary/i);
+    await user.type(salary, "30000");
+
+    // What the client reported: a salary read back as "30000" rather than as
+    // an amount. The "$" is an adornment beside the field, the commas are in
+    // it.
+    expect(salary).toHaveValue("30,000");
+  });
+
+  it("never asks for the candidate's direct contact details", async () => {
+    // A direct line is what lets a company go around the recruiter who
+    // sourced the candidate, so the form collects neither.
+    renderWithProviders(<CandidateForm jobId="job-1" onDone={vi.fn()} />);
+
+    expect(screen.queryByLabelText(/phone/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+  });
+
+  it("sends a submission carrying no contact details at all", async () => {
+    const user = userEvent.setup();
+    presignCandidateUploadMock.mockResolvedValue({
+      s3Key: "staged/key.pdf",
+      uploadUrl: "https://s3.example.com/upload",
+    });
+    uploadToPresignedUrlMock.mockResolvedValue(undefined);
+    createCandidateMock.mockResolvedValue(candidate);
+
+    renderWithProviders(<CandidateForm jobId="job-1" onDone={vi.fn()} />);
+    await fillRequiredFields(user);
+    await user.upload(screen.getByLabelText(/cv \/ resume/i), pdfFile());
+    await user.click(screen.getByRole("button", { name: /submit candidate/i }));
+
+    await waitFor(() => expect(createCandidateMock).toHaveBeenCalled());
+    const sent = createCandidateMock.mock.calls[0]?.[1] as Record<
+      string,
+      unknown
+    >;
+    expect(sent.email).toBeUndefined();
+    expect(sent.phone).toBeUndefined();
+  });
+
   it("converts the dollars input to cents in the mutation payload", async () => {
     const user = userEvent.setup();
     presignCandidateUploadMock.mockResolvedValue({
@@ -142,8 +187,31 @@ describe("CandidateForm", () => {
     );
 
     expect(screen.queryByLabelText(/cv \/ resume/i)).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Full name")).toHaveValue("Jane Doe");
-    expect(screen.getByLabelText("Email")).toHaveValue("jane@example.com");
-    expect(screen.getByLabelText(/expected salary/i)).toHaveValue("1500");
+    expect(screen.getByLabelText("Full Name")).toHaveValue("Jane Doe");
+    expect(screen.getByLabelText(/expected salary/i)).toHaveValue("1,500");
+  });
+});
+
+describe("editing an overview written before the rich-text editor", () => {
+  it("keeps the line breaks of a stored plain-text overview", () => {
+    // Tiptap parses its seed as HTML, where a newline is just whitespace, so
+    // handing it the raw stored text flattened the paragraphs — and the next
+    // save persisted the flattened version.
+    renderWithProviders(
+      <CandidateForm
+        jobId="job-1"
+        candidate={{
+          ...candidate,
+          overview: "First line.\nSecond line.\n\nNew paragraph.",
+        }}
+        onDone={vi.fn()}
+      />,
+    );
+
+    const editor = document.querySelector(".ProseMirror");
+    expect(editor).not.toBeNull();
+    expect(editor?.querySelectorAll("p")).toHaveLength(2);
+    expect(editor?.querySelectorAll("br")).toHaveLength(1);
+    expect(editor?.textContent).toContain("Second line.");
   });
 });

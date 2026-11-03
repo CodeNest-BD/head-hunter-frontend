@@ -18,11 +18,11 @@ import { formatMinor } from "@/shared/utils/money";
 
 import type { PublicJobCard as PublicJobCardData } from "../publicSchemas";
 import {
-  EMPLOYMENT_TYPE_LABELS,
   OFFER_TIMELINE_CARD_LABELS,
+  OTHER_SOURCING_CARD_LABELS,
   POSITION_OPEN_REASON_CARD_LABELS,
+  POSTED_ONLINE_CARD_LABELS,
   ROLE_CATEGORY_LABELS,
-  type EmploymentType,
   type RoleCategory,
 } from "../schemas";
 import { formatSalaryRange } from "../utils/formatSalaryRange";
@@ -57,26 +57,23 @@ function postedAgo(date: Date | null): string {
 }
 
 /**
- * The pills under the location, in the order a recruiter triages them: what the
- * seat is, why it is open, how soon the company hires, and how many interviews
- * it takes. Each label names its own fact rather than stating a bare value,
- * since the pills carry no captions to tell a recruiter which question they
- * answer — so the row is allowed to wrap rather than shrink back to bare values.
- * Work mode is omitted: the location line already says "Remote" or the city, so
- * a Remote/On-site pill would just repeat it. All but employment type only
- * appear when the company said.
+ * The pills under the location: every fact a recruiter uses to judge whether
+ * the role is worth working — how soon the company hires, how many interviews
+ * it takes, whether the company is also advertising it, what else it has
+ * sourcing, and why the seat is open.
+ *
+ * Each label names its own fact rather than stating a bare value, since the
+ * pills carry no captions to tell a recruiter which question they answer — so
+ * the row is allowed to wrap rather than shrink back to bare values.
+ *
+ * Employment type is deliberately absent: the client asked for it off the
+ * cards, since "Full-Time" is true of nearly every listing and so separates
+ * nothing. Work mode is out for the same reason it always was — the location
+ * line already says "Remote" or the city. Every pill appears only when the
+ * company actually answered.
  */
-function tags(job: PublicJobCardData): string[] {
+export function jobCardTags(job: PublicJobCardData): string[] {
   const out: string[] = [];
-  if (job.employmentType) {
-    out.push(
-      EMPLOYMENT_TYPE_LABELS[job.employmentType as EmploymentType] ??
-        job.employmentType,
-    );
-  }
-  if (job.positionOpenReason) {
-    out.push(POSITION_OPEN_REASON_CARD_LABELS[job.positionOpenReason]);
-  }
   if (job.offerTimeline) {
     out.push(OFFER_TIMELINE_CARD_LABELS[job.offerTimeline]);
   }
@@ -84,6 +81,20 @@ function tags(job: PublicJobCardData): string[] {
     out.push(
       `${job.interviewCount} ${job.interviewCount === 1 ? "Interview" : "Interviews"}`,
     );
+  }
+  // `typeof`, not a truthiness or `!== null` test: the field is nullish while
+  // the backend has yet to send it, and `false` is a real answer the card must
+  // state rather than skip.
+  if (typeof job.postedOnlineElsewhere === "boolean") {
+    out.push(
+      POSTED_ONLINE_CARD_LABELS[job.postedOnlineElsewhere ? "yes" : "no"],
+    );
+  }
+  if (job.otherSourcing) {
+    out.push(OTHER_SOURCING_CARD_LABELS[job.otherSourcing]);
+  }
+  if (job.positionOpenReason) {
+    out.push(POSITION_OPEN_REASON_CARD_LABELS[job.positionOpenReason]);
   }
   return out;
 }
@@ -161,7 +172,7 @@ export function PublicJobCard({ job }: { job: PublicJobCardData }) {
        * and the divider under it — sit at the same height on every card in a
        * row instead of floating up behind a short title. */}
       <div className="mt-auto flex flex-wrap gap-2 pt-3">
-        {tags(job).map((tag) => (
+        {jobCardTags(job).map((tag) => (
           <Tag key={tag}>{tag}</Tag>
         ))}
       </div>

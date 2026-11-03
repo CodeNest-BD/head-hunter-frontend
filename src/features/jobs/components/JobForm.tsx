@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  forwardRef,
   useEffect,
   useRef,
   useState,
@@ -21,10 +20,8 @@ import { cn } from "@/shared/libs/shadCnConfig";
 import { Pill } from "@/shared/ui-components/badges/Pill";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Input } from "@/shared/ui-components/controls/input";
-import {
-  NumericInput,
-  sanitizeNumeric,
-} from "@/shared/ui-components/controls/NumericInput";
+import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
+import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import { companySizeOptions } from "@/shared/data/companySize";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
@@ -46,11 +43,7 @@ import {
 import { useMinRecruiterFee } from "@/features/billing";
 import { sanitizeRichText } from "@/shared/libs/richText";
 import { isoDateAfter } from "@/shared/utils/formatDate";
-import {
-  formatMinor,
-  groupThousands,
-  majorInputToMinor,
-} from "@/shared/utils/money";
+import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
 import {
   BENEFIT_CHECKBOXES,
   EMPLOYMENT_TYPES,
@@ -278,73 +271,6 @@ function Question({ label, children }: { label: string; children: ReactNode }) {
     </div>
   );
 }
-
-/**
- * Rewrites a money field's text with thousands separators and returns its bare
- * value. Done on the element during the change event so the caret can be put
- * back after the digit it followed; a controlled re-render alone would throw it
- * to the end every time a comma appeared.
- */
-function regroupMoneyInput(input: HTMLInputElement, decimal: boolean): string {
-  const caret = input.selectionStart ?? input.value.length;
-  const charsBeforeCaret = sanitizeNumeric(
-    input.value.slice(0, caret),
-    decimal,
-  ).length;
-  const bare = sanitizeNumeric(input.value, decimal);
-  const grouped = groupThousands(bare);
-  let nextCaret = 0;
-  let seen = 0;
-  while (nextCaret < grouped.length && seen < charsBeforeCaret) {
-    if (grouped[nextCaret] !== ",") seen++;
-    nextCaret++;
-  }
-  input.value = grouped;
-  input.setSelectionRange(nextCaret, nextCaret);
-  return bare;
-}
-
-interface MoneyInputProps
-  extends Omit<
-    React.ComponentProps<typeof NumericInput>,
-    "value" | "onChange"
-  > {
-  /** The bare figure ("1000000"); commas are display only. */
-  value: string;
-  onChange: (value: string) => void;
-}
-
-/**
- * A money field with a leading "$" adornment that reads "1,000,000" while the
- * form holds the bare digits every parser expects. Numeric-only: digits and one
- * dot, or digits alone under `decimal={false}` for a figure that must be whole.
- */
-const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
-  (
-    { className, decimal = true, value, onChange, inputMode, ...props },
-    ref,
-  ) => (
-    <div className="relative">
-      <span className="pointer-events-none absolute left-[11px] top-1/2 -translate-y-1/2 text-sub text-ink-faint">
-        $
-      </span>
-      <Input
-        ref={ref}
-        type="text"
-        inputMode={inputMode ?? (decimal ? "decimal" : "numeric")}
-        className={cn(CONTROL_HEIGHT, "pl-6 tabular-nums", className)}
-        // Sanitized here too: a prefilled profile revenue may be legacy free
-        // text such as "$50M".
-        value={groupThousands(sanitizeNumeric(value, decimal))}
-        onChange={(event) =>
-          onChange(regroupMoneyInput(event.currentTarget, decimal))
-        }
-        {...props}
-      />
-    </div>
-  ),
-);
-MoneyInput.displayName = "MoneyInput";
 
 type ValidationRules = "draft" | "publish";
 
@@ -929,6 +855,7 @@ export function JobForm({
                     <MoneyInput
                       ref={field.ref}
                       id="companyRevenue"
+                      className={CONTROL_HEIGHT}
                       placeholder="e.g., 50,000,000"
                       value={field.value}
                       onChange={field.onChange}
@@ -1159,6 +1086,7 @@ export function JobForm({
                         ref={field.ref}
                         decimal={false}
                         aria-label="Pay minimum"
+                        className={CONTROL_HEIGHT}
                         placeholder="Min"
                         value={field.value}
                         onChange={field.onChange}
@@ -1175,6 +1103,7 @@ export function JobForm({
                         ref={field.ref}
                         decimal={false}
                         aria-label="Pay maximum"
+                        className={CONTROL_HEIGHT}
                         placeholder="Max"
                         value={field.value}
                         onChange={field.onChange}
@@ -1725,7 +1654,7 @@ export function JobForm({
                       decimal={false}
                       id="recruiterFee"
                       placeholder="10,000"
-                      className="max-w-[12rem] bg-surface"
+                      className={cn(CONTROL_HEIGHT, "max-w-[12rem] bg-surface")}
                       value={field.value}
                       onChange={field.onChange}
                       onBlur={field.onBlur}

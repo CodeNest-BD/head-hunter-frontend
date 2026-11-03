@@ -35,7 +35,8 @@ export async function fetchAttachments(
 
 export interface CandidateInput {
   fullName: string;
-  email: string;
+  /** Optional and recruiter-only; the submit form no longer collects one. */
+  email?: string | null;
   phone?: string | null;
   overview?: string | null;
   /** Opens the candidate's conversation, where `overview` describes the person. */

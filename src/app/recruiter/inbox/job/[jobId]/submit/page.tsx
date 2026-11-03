@@ -67,8 +67,12 @@ export default function SubmitCandidatePage() {
               Back to your candidates
             </BackLink>
             <PageHeader
-              title="Submit a candidate"
-              subtitle="They get their own conversation with the company as soon as you send them."
+              title="Submit a Candidate"
+              // The old line promised the candidate a thread with the company.
+              // They never get one — every interview and offer is arranged
+              // between the recruiter and the company — so it was describing a
+              // product that does not exist.
+              subtitle="Input candidate information below for company review."
               className="mb-0"
             />
             <SubmitCandidateForm jobRef={params.jobId} />

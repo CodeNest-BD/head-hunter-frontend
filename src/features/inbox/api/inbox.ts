@@ -30,6 +30,12 @@ export interface InboxConversationsParams {
   /** Scope to a single job — the per-job candidates view, server-side so it
    * can't truncate when the recruiter has many conversations elsewhere. */
   jobId?: string;
+  /**
+   * Keep only threads whose candidate is at one of these stages. Empty or
+   * omitted means every stage — filtering to nothing is not a thing a reader
+   * can ask for.
+   */
+  status?: readonly CandidateStatus[];
 }
 
 /** GET /v1/{side}/inbox/conversations — the flat inbox, most-recent first. */
@@ -46,6 +52,10 @@ export async function fetchInboxConversations(
         q: params.q || undefined,
         unreadOnly: params.unreadOnly ? true : undefined,
         jobId: params.jobId || undefined,
+        // Sent as a repeated key (`?status=a&status=b`) — the client sets
+        // `paramsSerializer: { indexes: null }`, which is the shape the
+        // endpoint's `@Transform(toArray)` normalises.
+        status: params.status?.length ? params.status : undefined,
       },
     },
   );

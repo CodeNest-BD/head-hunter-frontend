@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { candidateFormSchema } from "./schemas";
+import {
+  candidateFormSchema,
+  CANDIDATE_STATUSES,
+  IN_PROCESS_CANDIDATE_STATUSES,
+} from "./schemas";
 
 const valid = {
   fullName: "Jordan Rivera",
@@ -55,5 +59,24 @@ describe("candidateFormSchema", () => {
     expect(errorMessages({ expectedSalary: "1e20" })).toContain(
       "Expected salary must be under $10,000,000",
     );
+  });
+});
+
+describe("IN_PROCESS_CANDIDATE_STATUSES", () => {
+  it("is every stage except the two endings", () => {
+    // The recruiter dashboard counts "Candidates In Process" with this list
+    // and links to the inbox filtered by the very same list, so a stage added
+    // to CANDIDATE_STATUSES without a decision here would be silently
+    // excluded from both. A hire is the finish line and a pass is the exit.
+    const endings = CANDIDATE_STATUSES.filter(
+      (status) =>
+        !(IN_PROCESS_CANDIDATE_STATUSES as readonly string[]).includes(status),
+    );
+
+    expect(endings).toEqual(["hired", "passed"]);
+  });
+
+  it("keeps an offered candidate in process — the offer can still be declined", () => {
+    expect(IN_PROCESS_CANDIDATE_STATUSES).toContain("offered");
   });
 });

@@ -93,7 +93,11 @@ export function CandidateDetailPanel({
   negotiation,
   actions,
 }: CandidateDetailPanelProps) {
-  const showsContact = viewerParty === "recruiter";
+  // Contact details are the submitting recruiter's alone — and only exist at
+  // all on candidates submitted before the form stopped asking for them. A
+  // recruiter with neither gets no Contact card rather than a card of dashes.
+  const hasContact = candidate.email !== null || candidate.phone !== null;
+  const showsContact = viewerParty === "recruiter" && hasContact;
 
   return (
     <div className="space-y-3.5 rounded-md border border-line bg-surface p-4 shadow-e1 lg:h-full lg:overflow-y-auto">
@@ -104,7 +108,7 @@ export function CandidateDetailPanel({
           <p className="truncate text-block font-[650] text-ink">
             {candidate.fullName}
           </p>
-          {showsContact && (
+          {viewerParty === "recruiter" && candidate.email !== null && (
             <a
               href={`mailto:${candidate.email}`}
               className="truncate text-meta text-blue-ink underline-offset-2 hover:underline"
@@ -169,15 +173,19 @@ export function CandidateDetailPanel({
           note="Visible to you only"
         >
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Email">
-              <a
-                href={`mailto:${candidate.email}`}
-                className="text-blue-ink underline-offset-2 hover:underline"
-              >
-                {candidate.email}
-              </a>
-            </Field>
-            <Field label="Phone">{candidate.phone ?? "—"}</Field>
+            {candidate.email !== null && (
+              <Field label="Email">
+                <a
+                  href={`mailto:${candidate.email}`}
+                  className="text-blue-ink underline-offset-2 hover:underline"
+                >
+                  {candidate.email}
+                </a>
+              </Field>
+            )}
+            {candidate.phone !== null && (
+              <Field label="Phone">{candidate.phone}</Field>
+            )}
           </div>
         </Section>
       )}

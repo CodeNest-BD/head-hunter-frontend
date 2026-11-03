@@ -18,6 +18,7 @@ export {
   useInboxAttentionCount,
   useInboxConversations,
   useInboxJobs,
+  useRecruiterPipelineCounts,
 } from "./hooks/useInbox";
 export { inboxKeys } from "./keys";
 export type { InboxSide } from "./api/inbox";

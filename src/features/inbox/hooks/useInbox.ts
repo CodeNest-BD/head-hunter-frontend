@@ -14,6 +14,9 @@ import {
   type InboxSide,
 } from "../api/inbox";
 import { inboxKeys } from "../keys";
+import type { InboxConversationRow } from "../schemas";
+import { IN_PROCESS_CANDIDATE_STATUSES } from "@/features/candidates/schemas";
+import type { Paginated } from "@/shared/libs/pagination";
 
 /** The flat inbox list: threads most-recent first, refreshed like the badge. */
 export function useInboxConversations(
@@ -53,6 +56,56 @@ export function useInboxAttentionCount(side: InboxSide) {
     refetchInterval: REALTIME_POLL_MS,
     refetchOnWindowFocus: true,
   });
+}
+
+/**
+ * How many threads match a filter, without fetching them.
+ *
+ * `limit: 1` and read `meta.total`: the server already counts the filtered
+ * set, and that count is exact at any size. Counting a fetched page instead
+ * silently under-reports the moment a recruiter has more threads than the
+ * page holds — and the dashboard card links to a list that *is* server
+ * filtered and paginated, so the tile and the list it opens would disagree
+ * for precisely the busiest recruiters.
+ *
+ * A dedicated query rather than `useInboxConversations`: that one polls every
+ * five seconds because it backs a live inbox, and a dashboard summary neither
+ * needs nor deserves that.
+ */
+function useConversationTotal(params: InboxConversationsParams) {
+  return useQuery({
+    queryKey: inboxKeys.conversations("recruiter", params),
+    queryFn: () => fetchInboxConversations("recruiter", params),
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    select: (page: Paginated<InboxConversationRow>) => page.meta.total,
+  });
+}
+
+// The same constants the dashboard builds its card links from, so a card's
+// figure and the list it opens are filtered by one definition rather than two.
+const IN_PROCESS_PARAMS: InboxConversationsParams = {
+  limit: 1,
+  status: IN_PROCESS_CANDIDATE_STATUSES,
+};
+const OFFERED_PARAMS: InboxConversationsParams = {
+  limit: 1,
+  status: ["offered"],
+};
+
+/** The recruiter dashboard's two pipeline figures, counted server-side. */
+export function useRecruiterPipelineCounts() {
+  const inProcess = useConversationTotal(IN_PROCESS_PARAMS);
+  const newOffers = useConversationTotal(OFFERED_PARAMS);
+
+  return {
+    // Each card shows its own skeleton, so a figure is pending only while its
+    // own count is.
+    inProcess: inProcess.data,
+    newOffers: newOffers.data,
+    isInProcessPending: inProcess.isPending,
+    isNewOffersPending: newOffers.isPending,
+  };
 }
 
 export function useCompanySubmissions(params: CompanySubmissionsParams) {

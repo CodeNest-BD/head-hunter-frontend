@@ -176,17 +176,25 @@ export function Segmented<T extends string>({
   onChange,
   options,
   label,
+  size = "default",
 }: {
   value: T;
   onChange: (next: T) => void;
   options: readonly { value: T; label: string }[];
   label: string;
+  /**
+   * `toolbar` sits the track at 38px so it lines up with `ToolbarSearch` and
+   * `ToolbarSelect` on a list page. The default 34px is the denser one a
+   * dashboard section head wears.
+   */
+  size?: "default" | "toolbar";
 }) {
+  const toolbar = size === "toolbar";
   return (
     <div
       role="group"
       aria-label={label}
-      className="inline-flex gap-0.5 rounded-sm bg-neutral-bg p-[3px]"
+      className="inline-flex shrink-0 gap-0.5 rounded-sm bg-neutral-bg p-[3px]"
     >
       {options.map((option) => {
         const on = option.value === value;
@@ -197,8 +205,11 @@ export function Segmented<T extends string>({
             aria-pressed={on}
             onClick={() => onChange(option.value)}
             className={cn(
-              "h-7 rounded-xs px-3 text-meta font-medium transition-colors",
-              on ? "bg-surface text-ink shadow-chip" : "text-ink-muted",
+              "rounded-xs px-3 font-medium transition-colors",
+              toolbar ? "h-8 text-sub" : "h-7 text-meta",
+              on
+                ? "bg-surface text-ink shadow-chip"
+                : "text-ink-muted hover:text-ink",
             )}
           >
             {option.label}
@@ -473,7 +484,17 @@ export interface QuickView {
   readonly value: ReactNode;
   /** The line under the figure that says what it counts. */
   readonly note: string;
-  readonly tone: PillTone;
+  /**
+   * The status this figure carries, when it has one — a directory's filter
+   * band, where the tone is the point.
+   *
+   * Omitted on a dashboard summary, which renders every tile identically: a
+   * blue dot, a blue label and a black figure. That is not a default to fall
+   * back on but the other half of the choice — a summary tile has no status,
+   * so there is no tone to pick, and colouring one by status made "pending"
+   * read as a problem on a dashboard where it is simply a stage.
+   */
+  readonly tone?: PillTone;
   /** Omit for a read-only tile — see above. */
   readonly filter?: {
     readonly active: boolean;
@@ -491,10 +512,18 @@ function QuickViewTile({ view }: { view: QuickView }) {
   const { filter, href, tone } = view;
   const body = (
     <>
-      <span className="flex items-center gap-2 text-meta font-medium text-ink-muted">
+      <span
+        className={cn(
+          "flex items-center gap-2 text-meta font-medium",
+          tone ? "text-ink-muted" : "text-blue-ink",
+        )}
+      >
         <span
           aria-hidden="true"
-          className={cn("size-1.5 shrink-0 rounded-full", TONE_DOT[tone])}
+          className={cn(
+            "size-1.5 shrink-0 rounded-full",
+            tone ? TONE_DOT[tone] : "bg-blue",
+          )}
         />
         {view.label}
       </span>
