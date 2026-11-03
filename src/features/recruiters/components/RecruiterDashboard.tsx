@@ -93,10 +93,14 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
     // The client asked whether a recruiter can see their own rating. It is the
     // number companies sort submissions by, so it belongs beside the rest of
     // their standing rather than only on the profile page. Stated as unrated
-    // when nobody has reviewed them — an absent line reads as a failed load.
-    ratingAvg !== null
-      ? `${ratingAvg.toFixed(1)} ★ (${ratingCount} Review${ratingCount === 1 ? "" : "s"})`
-      : "Not Yet Rated",
+    // once the profile has actually loaded — said while it is still loading,
+    // a rated recruiter is told they have no rating and then watches it
+    // change, which is worse than a subtitle that is briefly shorter.
+    profile.isPending
+      ? null
+      : ratingAvg !== null
+        ? `${ratingAvg.toFixed(1)} ★ (${ratingCount} Review${ratingCount === 1 ? "" : "s"})`
+        : "Not Yet Rated",
   ].filter(Boolean);
 
   // The attention feed is derived from real signals, ordered most-actionable
@@ -201,14 +205,25 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
           {
             key: "in-process",
             label: "Candidates In Process",
-            value: isInProcessPending ? <StatValueSkeleton /> : inProcess,
+            // `?? "—"` because a failed count is not a pending one: react-query
+            // reports `isPending: false` with no data on error, which would
+            // render a tile with a blank figure under its caption.
+            value: isInProcessPending ? (
+              <StatValueSkeleton />
+            ) : (
+              (inProcess ?? "—")
+            ),
             note: "Submitted, interviewing, pending feedback",
             href: inboxFilteredTo(IN_PROCESS_CANDIDATE_STATUSES),
           },
           {
             key: "new-offers",
             label: "New Offers",
-            value: isNewOffersPending ? <StatValueSkeleton /> : newOffers,
+            value: isNewOffersPending ? (
+              <StatValueSkeleton />
+            ) : (
+              (newOffers ?? "—")
+            ),
             note:
               newOffers === 0
                 ? "No offers awaiting a decision"

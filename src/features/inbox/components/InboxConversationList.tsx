@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AlertCircle, Briefcase, CheckCheck, Inbox } from "lucide-react";
 
 import { useMarkAllThreadsRead } from "@/features/conversations/hooks/useConversation";
@@ -114,6 +114,7 @@ export function InboxConversationList({
   initialStatuses?: readonly CandidateStatus[];
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const copy = COPY[side];
 
   const [search, setSearch] = useState("");
@@ -123,6 +124,23 @@ export function InboxConversationList({
     () => initialStatuses ?? [],
   );
   const [page, setPage] = useState(1);
+
+  /**
+   * Apply a stage selection and write it into the URL.
+   *
+   * The URL has to follow the filter, not just seed it. Clearing the filter
+   * while the URL still said `?status=…` left the two disagreeing — and then
+   * following the same dashboard tile again navigated to a URL the page was
+   * already on, so nothing remounted and the list stayed unfiltered. Keeping
+   * them in step also makes the view shareable and survives a reload.
+   */
+  const chooseStatuses = (next: readonly CandidateStatus[]): void => {
+    setStatuses(next);
+    const query = next.map((s) => `status=${s}`).join("&");
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  };
 
   // A new search or filter always starts back on page 1. `statuses` is the
   // array itself, not a key built from it — `setStatuses` only ever hands back
@@ -195,7 +213,7 @@ export function InboxConversationList({
           label="Stage"
           options={STATUS_OPTIONS}
           value={statuses}
-          onChange={(next) => setStatuses(toCandidateStatuses(next))}
+          onChange={(next) => chooseStatuses(toCandidateStatuses(next))}
         />
       </div>
 

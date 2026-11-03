@@ -215,3 +215,23 @@ describe("editing an overview written before the rich-text editor", () => {
     expect(editor?.textContent).toContain("Second line.");
   });
 });
+
+describe("a stored salary that carries cents", () => {
+  it("prefills whole dollars so the field and the form agree", async () => {
+    // 150050 minor is $1,500.50. The field is whole dollars, so an unrounded
+    // prefill showed "$1,500" while the form still held "1500.5" — and saving
+    // failed with "enter a whole amount" against a field showing one.
+    renderWithProviders(
+      <CandidateForm
+        jobId="job-1"
+        candidate={{ ...candidate, expectedSalaryMinor: 150050 }}
+        onDone={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText(/expected salary/i)).toHaveValue("1,501");
+    expect(
+      screen.queryByText(/whole amount of 0 or more/i),
+    ).not.toBeInTheDocument();
+  });
+});

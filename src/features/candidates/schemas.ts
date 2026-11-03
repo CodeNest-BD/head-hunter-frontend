@@ -24,16 +24,6 @@ export const CANDIDATE_STATUS_LABELS: Record<CandidateStatus, string> = {
 };
 
 /**
- * The stages a candidate is still live at — everything but the two endings.
- *
- * One definition because two things have to agree about it: the recruiter
- * dashboard's "Candidates In Process" figure, and the inbox filter that card
- * links to. When they were written separately the card counted a hired
- * candidate and the list did not, which is the mismatch the client reported.
- * Ordered as a candidate moves through them, so a filter menu reads as a
- * pipeline rather than an alphabet.
- */
-/**
  * The given values narrowed to real candidate statuses, in pipeline order.
  *
  * One helper because two callers need it and both must agree: the inbox's
@@ -47,6 +37,16 @@ export function toCandidateStatuses(
   return CANDIDATE_STATUSES.filter((status) => values.includes(status));
 }
 
+/**
+ * The stages a candidate is still live at — everything but the two endings.
+ *
+ * One definition because two things have to agree about it: the recruiter
+ * dashboard's "Candidates In Process" figure, and the inbox filter that card
+ * links to. When they were written separately the card counted a hired
+ * candidate and the list did not, which is the mismatch the client reported.
+ * Ordered as a candidate moves through them, so a filter menu reads as a
+ * pipeline rather than an alphabet.
+ */
 export const IN_PROCESS_CANDIDATE_STATUSES = [
   "submitted",
   "reviewing",

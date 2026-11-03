@@ -264,6 +264,18 @@ export function ProposalCard({
             Propose Different Times
           </p>
         </div>
+        {/* The batch being replaced, kept in view while the new one is picked.
+            Opening this form used to swap the card's slot list out for an
+            empty picker, so a company proposing again could not see what it
+            had already offered — and re-offered the same times. */}
+        {slots.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <p className="text-meta font-[650] uppercase tracking-[0.06em] text-ink-muted">
+              Already Proposed
+            </p>
+            <ProposedSlotList slots={slots} />
+          </div>
+        )}
         <ProposeSlotsForm
           target={{ kind: "existing", interviewId }}
           onDone={() => setShowProposeForm(false)}

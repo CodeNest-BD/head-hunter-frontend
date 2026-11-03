@@ -6,9 +6,11 @@ import { renderWithProviders } from "@/test/utils";
 import type { InboxConversationRow } from "../schemas";
 import { InboxConversationList } from "./InboxConversationList";
 
+const replaceMock = vi.fn();
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: replaceMock, prefetch: vi.fn() }),
+  usePathname: () => "/recruiter/inbox",
 }));
 
 const conversationsMock = vi.fn();
@@ -141,5 +143,38 @@ describe("InboxConversationList stage filter", () => {
     await user.click(screen.getByRole("menuitemcheckbox", { name: /hired/i }));
 
     expect(lastParams().status).toEqual([]);
+  });
+});
+
+describe("the URL follows the stage filter", () => {
+  it("writes the chosen stages into the URL", async () => {
+    // Without this the URL and the filter drift apart, and following the same
+    // dashboard tile again navigates to a URL the page is already on — so
+    // nothing remounts and the list stays unfiltered.
+    const user = userEvent.setup();
+    renderWithProviders(<InboxConversationList side="recruiter" />);
+
+    await user.click(screen.getByRole("button", { name: "Stage" }));
+    await user.click(screen.getByRole("menuitemcheckbox", { name: /hired/i }));
+
+    expect(replaceMock).toHaveBeenCalledWith(
+      "/recruiter/inbox?status=hired",
+      expect.anything(),
+    );
+  });
+
+  it("drops the query entirely when the filter is cleared", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <InboxConversationList side="recruiter" initialStatuses={["offered"]} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /stage: offered/i }));
+    await user.click(screen.getByRole("menuitem", { name: /clear stage/i }));
+
+    expect(replaceMock).toHaveBeenCalledWith(
+      "/recruiter/inbox",
+      expect.anything(),
+    );
   });
 });

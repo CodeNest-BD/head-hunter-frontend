@@ -25,7 +25,7 @@ import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { RichTextEditor } from "@/shared/ui-components/controls/RichTextEditor";
-import { majorInputToMinor, minorToMajorInput } from "@/shared/utils/money";
+import { majorInputToMinor, minorToMajor } from "@/shared/utils/money";
 import {
   DOCUMENT_ACCEPT,
   DOCUMENT_CONTENT_TYPES,
@@ -108,6 +108,19 @@ function overviewToEditorValue(stored: string | null): string {
     .join("");
 }
 
+/**
+ * A stored amount as this form's whole-dollar field holds it.
+ *
+ * The field is whole dollars — the schema refuses a fraction and `MoneyInput`
+ * draws one away — so an amount carrying cents has to be rounded on the way
+ * in. Left unrounded, 150050 prefilled as "1500.5": the field showed $1,500
+ * while the form still held 1500.5, and saving failed with "enter a whole
+ * amount" against a field that plainly showed one.
+ */
+function wholeDollarsInput(minor: number | null): string {
+  return minor === null ? "" : String(Math.round(minorToMajor(minor)));
+}
+
 /** Blank means "not stated"; anything else is the number as typed — years now
  * carry a half, so this must not round. */
 function toNullableInt(value: string): number | null {
@@ -136,7 +149,7 @@ function defaultValuesFor(candidate?: Candidate): CandidateFormValues {
         ? ""
         : String(candidate.yearsOfExperience),
     currentCompany: candidate.currentCompany ?? "",
-    expectedSalary: minorToMajorInput(candidate.expectedSalaryMinor),
+    expectedSalary: wholeDollarsInput(candidate.expectedSalaryMinor),
     noticePeriodDays:
       candidate.noticePeriodDays === null
         ? ""
