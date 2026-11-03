@@ -99,14 +99,6 @@ export const DESTINATION_STATUS_LABELS: Record<string, string> = {
   restricted: "Restricted",
 };
 
-export const DESTINATION_STATUS_TONES: Record<string, PillTone> = {
-  none: "neutral",
-  onboarding: "warn",
-  pending_verification: "info",
-  verified: "ok",
-  restricted: "bad",
-};
-
 /** The finance boards' date range. "" is All time, the default. */
 export const DATE_RANGE_OPTIONS = [
   { value: "30", label: "Last 30 days" },

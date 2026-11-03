@@ -272,7 +272,6 @@ export function CompaniesTable() {
       label: "Pending Approval",
       value: figure(counts?.pending),
       note: "Awaiting review",
-      tone: "warn",
       filter: quickFilter("pending", "", ""),
     },
     {
@@ -280,7 +279,6 @@ export function CompaniesTable() {
       label: "Approved & Active",
       value: figure(counts?.approved),
       note: "Can post and fund jobs",
-      tone: "ok",
       filter: quickFilter("verified", "active", ""),
     },
     {
@@ -288,7 +286,6 @@ export function CompaniesTable() {
       label: "Funded Wallets",
       value: figure(fundedTotal),
       note: "Balance above $0",
-      tone: "info",
       filter: quickFilter("", "", "funded"),
     },
     {
@@ -296,7 +293,6 @@ export function CompaniesTable() {
       label: "Suspended",
       value: figure(counts?.held),
       note: "Access blocked",
-      tone: "bad",
       filter: quickFilter("", "suspended", ""),
     },
   ];

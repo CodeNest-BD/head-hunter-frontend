@@ -234,7 +234,6 @@ export function AdminDisputesTable({
       note: `Across ${summary.data?.companies ?? 0} compan${
         summary.data?.companies === 1 ? "y" : "ies"
       }`,
-      tone: "info",
       filter: {
         active: statusView === "open_active",
         apply: () => {
@@ -248,7 +247,6 @@ export function AdminDisputesTable({
       label: "Needs My Attention",
       value: figure(summary.data?.needsAttention),
       note: "Unread since the last message",
-      tone: "warn",
       filter: {
         active: statusView === "needs_attention",
         apply: () => {
@@ -262,7 +260,6 @@ export function AdminDisputesTable({
       label: "Payout Due Within 3 Days",
       value: figure(summary.data?.payoutDueSoon),
       note: "Original dates, unchanged by the dispute",
-      tone: "bad",
       // No server filter for a date window, so this reports rather than
       // pretending to narrow the list.
     },
@@ -276,7 +273,6 @@ export function AdminDisputesTable({
           formatMinor(summary.data.heldMinor)
         ),
       note: "Released only by a decision",
-      tone: "neutral",
     },
   ];
 

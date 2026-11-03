@@ -147,6 +147,7 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
   });
 
   if (isPending) return <DetailSkeleton />;
+
   if (isError) {
     return (
       <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
@@ -162,6 +163,10 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
       </div>
     );
   }
+
+  // Still waiting on an admin's approve/deny — the moment the client cares
+  // about, when the business facts have to be on screen rather than folded.
+  const awaitingDecision = data.verificationStatus === "pending";
 
   const cityState = [data.city, data.state].filter(Boolean).join(", ");
   const address =
@@ -576,27 +581,35 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
                   <dt className="text-meta text-ink-muted">Address</dt>
                   <dd className="m-0 mt-0.5 text-ink">{address}</dd>
                 </div>
-                {data.website && (
-                  <div>
-                    <dt className="text-meta text-ink-muted">Website</dt>
-                    <dd className="m-0 mt-0.5">
-                      <a
-                        href={data.website}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="break-all text-blue-ink hover:underline"
-                      >
-                        {data.website.replace(/^https?:\/\//, "")}
-                      </a>
-                    </dd>
-                  </div>
-                )}
               </dl>
-              <details className="mt-3">
+              {/* Open while the company is still waiting on a decision: the
+                  website is what an admin opens to judge whether this is a
+                  real business, so during a review it has to be on screen
+                  rather than behind a summary. */}
+              <details className="mt-3" open={awaitingDecision}>
                 <summary className="cursor-pointer list-none text-sub font-medium text-blue-ink [&::-webkit-details-marker]:hidden">
                   Business details
                 </summary>
                 <dl className="m-0 mt-2.5 flex flex-col gap-2.5 text-sub">
+                  {/* First, and stated even when unset: a company that gave no
+                      website is itself something to weigh before approving. */}
+                  <div>
+                    <dt className="text-meta text-ink-muted">Website</dt>
+                    <dd className="m-0 mt-0.5">
+                      {data.website ? (
+                        <a
+                          href={data.website}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="break-all text-blue-ink hover:underline"
+                        >
+                          {data.website.replace(/^https?:\/\//, "")}
+                        </a>
+                      ) : (
+                        <span className="text-ink">—</span>
+                      )}
+                    </dd>
+                  </div>
                   <div>
                     <dt className="text-meta text-ink-muted">Industry</dt>
                     <dd className="m-0 mt-0.5 text-ink">

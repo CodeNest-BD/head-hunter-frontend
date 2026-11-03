@@ -438,7 +438,6 @@ export function RecruiterPayoutsBoard({
               note: total
                 ? `${plural(total.count, "commission")} · ${note}`
                 : note,
-              tone: PAYOUT_VIEW_TONES[key],
               filter: {
                 active: view === key,
                 apply: () => {
@@ -457,7 +456,6 @@ export function RecruiterPayoutsBoard({
             note: band
               ? `${plural(band.failed.count, "bank withdrawal")} · Needs follow-up`
               : "Bank withdrawals Stripe could not pay",
-            tone: "bad",
           },
         ]}
       />
