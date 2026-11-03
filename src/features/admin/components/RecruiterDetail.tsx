@@ -42,6 +42,7 @@ import {
 } from "./statusStyles";
 
 import { cn } from "@/shared/libs/shadCnConfig";
+import { displayUrl, safeExternalHref } from "@/shared/utils/externalUrl";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -201,6 +202,8 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
   }
 
   const name = `${data.firstName} ${data.lastName}`;
+  const linkedinHref = safeExternalHref(data.linkedinUrl);
+
   const cityState = [data.city, data.state].filter(Boolean).join(", ");
   const location = [cityState, data.zip].filter(Boolean).join(" ") || "—";
   const metaLine = [
@@ -388,14 +391,20 @@ export function RecruiterDetail({ recruiterRef }: { recruiterRef: string }) {
                   <div>
                     <dt className="sr-only">LinkedIn</dt>
                     <dd className="m-0">
-                      <a
-                        href={data.linkedinUrl}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="break-all text-blue-ink hover:underline"
-                      >
-                        {data.linkedinUrl.replace(/^https?:\/\//, "")}
-                      </a>
+                      {linkedinHref ? (
+                        <a
+                          href={linkedinHref}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="break-all text-blue-ink hover:underline"
+                        >
+                          {displayUrl(data.linkedinUrl)}
+                        </a>
+                      ) : (
+                        <span className="break-all text-ink">
+                          {data.linkedinUrl}
+                        </span>
+                      )}
                     </dd>
                   </div>
                 )}

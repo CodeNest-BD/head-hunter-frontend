@@ -41,6 +41,7 @@ import {
   type CompanyLedgerRow,
 } from "../schemas";
 
+import { displayUrl, safeExternalHref } from "@/shared/utils/externalUrl";
 import { CompanyAccountActions } from "./CompanyAccountActions";
 
 import { DetailSkeleton, SideFact, SideSection } from "./DetailPrimitives";
@@ -147,7 +148,6 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
   });
 
   if (isPending) return <DetailSkeleton />;
-
   if (isError) {
     return (
       <div className="flex max-w-md flex-col gap-3 rounded-sm border border-bad-line bg-bad-bg p-3.5 text-sub text-bad">
@@ -167,6 +167,7 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
   // Still waiting on an admin's approve/deny — the moment the client cares
   // about, when the business facts have to be on screen rather than folded.
   const awaitingDecision = data.verificationStatus === "pending";
+  const websiteHref = safeExternalHref(data.website);
 
   const cityState = [data.city, data.state].filter(Boolean).join(", ");
   const address =
@@ -596,17 +597,22 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
                   <div>
                     <dt className="text-meta text-ink-muted">Website</dt>
                     <dd className="m-0 mt-0.5">
-                      {data.website ? (
+                      {websiteHref ? (
                         <a
-                          href={data.website}
+                          href={websiteHref}
                           target="_blank"
                           rel="noreferrer noopener"
                           className="break-all text-blue-ink hover:underline"
                         >
-                          {data.website.replace(/^https?:\/\//, "")}
+                          {displayUrl(data.website ?? "")}
                         </a>
                       ) : (
-                        <span className="text-ink">—</span>
+                        // Shown, never linked: an address we cannot make a
+                        // safe http(s) link out of is still a fact worth
+                        // seeing before approving.
+                        <span className="break-all text-ink">
+                          {data.website || "—"}
+                        </span>
                       )}
                     </dd>
                   </div>

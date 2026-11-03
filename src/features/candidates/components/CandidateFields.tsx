@@ -1,5 +1,6 @@
 import { cn } from "@/shared/libs/shadCnConfig";
 import { RichTextView } from "@/shared/ui-components/data/RichTextView";
+import { safeExternalHref } from "@/shared/utils/externalUrl";
 import { formatMinor } from "@/shared/utils/money";
 import type { Candidate } from "../schemas";
 
@@ -18,6 +19,8 @@ interface CandidateFieldsProps {
  * this in this order.
  */
 export function CandidateFields({ candidate }: CandidateFieldsProps) {
+  const linkedinHref = safeExternalHref(candidate.linkedinUrl);
+
   return (
     <div className="flex flex-col gap-4">
       {/* `.facts` — an 11px uppercase label over its 13.5px/550 value. Sized
@@ -58,14 +61,20 @@ export function CandidateFields({ candidate }: CandidateFieldsProps) {
           <div>
             <dt className={FACT_LABEL}>LinkedIn</dt>
             <dd className="mt-[3px]">
-              <a
-                href={candidate.linkedinUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-body font-[550] text-blue-ink underline-offset-2 hover:underline"
-              >
-                Profile
-              </a>
+              {linkedinHref ? (
+                <a
+                  href={linkedinHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-body font-[550] text-blue-ink underline-offset-2 hover:underline"
+                >
+                  Profile
+                </a>
+              ) : (
+                <span className="break-all text-body text-ink-body">
+                  {candidate.linkedinUrl}
+                </span>
+              )}
             </dd>
           </div>
         )}
