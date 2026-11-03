@@ -394,21 +394,18 @@ export function CompanyPaymentsBoard({
             note: band
               ? `Across ${band.fundedWallets} funded company wallet${band.fundedWallets === 1 ? "" : "s"}`
               : "Every company wallet, added up",
-            tone: "neutral",
           },
           {
             key: "available",
             label: "Available Funds",
             value: band ? formatMinor(band.availableMinor) : "—",
             note: "Free for companies to reserve against new jobs",
-            tone: "ok",
           },
           {
             key: "reserved",
             label: "Reserved Funds",
             value: band ? formatMinor(band.reservedMinor) : "—",
             note: "Held for live jobs and placements in guarantee",
-            tone: "info",
           },
           {
             key: "refunded",
@@ -417,7 +414,6 @@ export function CompanyPaymentsBoard({
             note: band
               ? `${band.refundCount} refund${band.refundCount === 1 ? "" : "s"} from resolved disputes`
               : "Returned to companies after a dispute",
-            tone: "neutral",
           },
         ]}
       />

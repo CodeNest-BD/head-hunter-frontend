@@ -356,7 +356,6 @@ export function JobsTable({
       label: "Live Jobs",
       value: figure(liveTotal),
       note: "Published and accepting submissions",
-      tone: "info",
       filter: quickFilter("published", ""),
     },
     {
@@ -364,7 +363,6 @@ export function JobsTable({
       label: "Interview Scheduled",
       value: figure(stats.data?.scheduledJobs),
       note: "At least one interview booked",
-      tone: "info",
       filter: quickFilter("", "interviewing"),
     },
     {
@@ -372,7 +370,6 @@ export function JobsTable({
       label: "Offer Made or Accepted",
       value: figure(stats.data?.offerJobs),
       note: "Includes counteroffers",
-      tone: "ok",
       filter: quickFilter("", "offer"),
     },
   ];

@@ -30,7 +30,6 @@ import { useAdminPayout, useReleasePayoutHold } from "../hooks/useAdmin";
 import { AddPayoutHoldDialog } from "./AddPayoutHoldDialog";
 import {
   DESTINATION_STATUS_LABELS,
-  DESTINATION_STATUS_TONES,
   HOLD_REASON_LABELS,
   PAYOUT_VIEW_LABELS,
   PAYOUT_VIEW_TONES,
@@ -376,21 +375,18 @@ export function AdminPayoutDetail({ payoutRef }: { payoutRef: string }) {
             label: "Commission",
             value: formatMinor(data.commissionMinor),
             note: "Fixed fee from the job",
-            tone: "neutral",
           },
           {
             key: "joined",
             label: "Joined",
             value: longDay(data.joiningDate),
             note: "Confirmed by the company",
-            tone: "neutral",
           },
           {
             key: "eligible",
             label: "Eligible",
             value: longDay(data.eligibleAt),
             note: `Day ${day} of ${total}`,
-            tone: activeHolds.length > 0 ? "warn" : "info",
           },
           {
             key: "destination",
@@ -399,7 +395,6 @@ export function AdminPayoutDetail({ payoutRef }: { payoutRef: string }) {
             note: data.destination?.bankLast4
               ? `${data.destination.bankName ?? "Bank account"} •• ${data.destination.bankLast4}`
               : "No bank account on file yet",
-            tone: DESTINATION_STATUS_TONES[destinationStatus] ?? "neutral",
           },
         ]}
       />

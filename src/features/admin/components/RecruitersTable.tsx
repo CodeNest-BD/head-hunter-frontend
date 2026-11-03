@@ -275,7 +275,6 @@ export function RecruitersTable() {
       label: "Pending Verification",
       value: figure(counts?.pending),
       note: "Awaiting review",
-      tone: "warn",
       filter: quickFilter("pending", ""),
     },
     {
@@ -283,7 +282,6 @@ export function RecruitersTable() {
       label: "Verified & Active",
       value: figure(counts?.verified),
       note: "Can browse and submit",
-      tone: "ok",
       filter: quickFilter("verified", "active"),
     },
     {
@@ -291,7 +289,6 @@ export function RecruitersTable() {
       label: "Suspended",
       value: figure(counts?.held),
       note: "Marketplace access blocked",
-      tone: "bad",
       filter: quickFilter("", "suspended"),
     },
     {
@@ -301,7 +298,6 @@ export function RecruitersTable() {
       label: "Joined This Month",
       value: figure(latestSignups?.recruiters),
       note: monthStartLabel(latestSignups?.month),
-      tone: "info",
     },
   ];
 
