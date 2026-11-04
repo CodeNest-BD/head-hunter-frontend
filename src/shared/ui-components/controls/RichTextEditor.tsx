@@ -19,6 +19,7 @@ import {
   List,
   ListOrdered,
   Redo2,
+  Underline as UnderlineIcon,
   Undo2,
   type LucideIcon,
 } from "lucide-react";
@@ -111,6 +112,7 @@ export function RichTextEditor({
     selector: ({ editor: current }) => ({
       bold: current?.isActive("bold") ?? false,
       italic: current?.isActive("italic") ?? false,
+      underline: current?.isActive("underline") ?? false,
       heading2: current?.isActive("heading", { level: 2 }) ?? false,
       heading3: current?.isActive("heading", { level: 3 }) ?? false,
       bulletList: current?.isActive("bulletList") ?? false,
@@ -156,6 +158,15 @@ export function RichTextEditor({
           label="Italic"
           isActive={active?.italic}
           onClick={() => editor.chain().focus().toggleItalic().run()}
+        />
+        {/* StarterKit has carried the underline mark since v3, so ⌘U already
+            worked — but a shortcut nobody is shown is not a feature. The
+            client asked for bold, underline and bullets by name. */}
+        <ToolbarButton
+          icon={UnderlineIcon}
+          label="Underline"
+          isActive={active?.underline}
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
         />
         <Divider />
         <ToolbarButton
