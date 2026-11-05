@@ -22,21 +22,18 @@ export function WalletSummary() {
           label: "Available To Spend",
           value: formatMinor(data?.availableMinor),
           note: "Spendable on new offers",
-          tone: "ok",
         },
         {
           key: "balance",
           label: "Balance",
           value: formatMinor(data?.balanceMinor),
           note: "Everything loaded into your wallet",
-          tone: "neutral",
         },
         {
           key: "escrow",
           label: "Held In Escrow",
           value: formatMinor(data?.reservedMinor),
           note: "Fees held for your accepted hires",
-          tone: "info",
         },
       ]}
     />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AlertCircle, Loader2 } from "lucide-react";
 
@@ -36,6 +36,12 @@ export interface SubmissionReviewDialogProps {
   candidateId: string;
   /** Names the trigger for assistive tech, so it is never a bare "Review". */
   name: string;
+  /**
+   * The control that opens the panel. Composition rather than a `size` or
+   * `prominent` flag: a table cell wants the quiet default, a banner wants a
+   * primary button, and the dialog has no business knowing which it is in.
+   */
+  trigger?: ReactNode;
 }
 
 /**
@@ -51,6 +57,7 @@ export interface SubmissionReviewDialogProps {
 export function SubmissionReviewDialog({
   candidateId,
   name,
+  trigger,
 }: SubmissionReviewDialogProps) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>({ kind: "reviewing" });
@@ -76,15 +83,17 @@ export function SubmissionReviewDialog({
   return (
     <Dialog.Root open={open} onOpenChange={close}>
       <Dialog.Trigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="xs"
-          aria-label={`Review ${name}'s submission`}
-          onClick={(event) => event.stopPropagation()}
-        >
-          Review
-        </Button>
+        {trigger ?? (
+          <Button
+            type="button"
+            variant="outline"
+            size="xs"
+            aria-label={`Review ${name}'s submission`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            Review
+          </Button>
+        )}
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className={DIALOG_OVERLAY} />

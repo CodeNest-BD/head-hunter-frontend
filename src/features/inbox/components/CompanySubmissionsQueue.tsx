@@ -28,7 +28,6 @@ import { Button } from "@/shared/ui-components/controls/button";
 import { Avatar } from "@/shared/ui-components/badges/Avatar";
 import { RefChip } from "@/shared/ui-components/badges/RefChip";
 import { PageHeader } from "@/shared/ui-components/brand";
-import type { PillTone } from "@/shared/ui-components/badges/Pill";
 import {
   QuickViewBand,
   type QuickView,
@@ -127,7 +126,6 @@ const COLUMNS: ColumnDef[] = [
 interface StatCardDef {
   key: CandidateStatus | "total";
   label: string;
-  tone: PillTone;
   value: (stats: InboxSubmissionStats) => number;
 }
 
@@ -148,25 +146,22 @@ const STAT_CARDS: StatCardDef[] = [
   {
     key: "total",
     label: "Total Submissions",
-    tone: "neutral",
     value: (s) => s.total,
   },
-  { key: "submitted", label: "New", tone: "info", value: (s) => s.submitted },
+  { key: "submitted", label: "New", value: (s) => s.submitted },
   {
     key: "reviewing",
     label: "Reviewing",
-    tone: "warn",
     value: (s) => s.reviewing,
   },
   {
     key: "interviewing",
     label: "Scheduled",
-    tone: "info",
     value: (s) => s.interviewing,
   },
-  { key: "passed", label: "Passed", tone: "neutral", value: (s) => s.passed },
-  { key: "offered", label: "Offered", tone: "violet", value: (s) => s.offered },
-  { key: "hired", label: "Hired", tone: "ok", value: (s) => s.hired },
+  { key: "passed", label: "Passed", value: (s) => s.passed },
+  { key: "offered", label: "Offered", value: (s) => s.offered },
+  { key: "hired", label: "Hired", value: (s) => s.hired },
 ];
 
 function RecruiterCell({ row }: { row: InboxSubmissionRow }) {
@@ -321,12 +316,11 @@ export function CompanySubmissionsQueue() {
   };
 
   const quickViews: readonly QuickView[] = STAT_CARDS.map(
-    ({ key, label, tone, value }) => ({
+    ({ key, label, value }) => ({
       key,
       label,
       value: stats.data ? value(stats.data).toLocaleString() : "—",
       note: STAT_NOTES[key],
-      tone,
       // Every card but the total stands for a status, and the status filter
       // is what it counts.
       filter:

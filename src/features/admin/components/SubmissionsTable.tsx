@@ -410,9 +410,13 @@ export function SubmissionsTable({
                       Status
                     </th>
                     {/* Named for screen readers only — the design leaves the
-                        column above the buttons blank. */}
-                    <th scope="col" className={cn(TABLE_TH, "sr-only")}>
-                      Review
+                        column above the buttons blank. The label is hidden,
+                        not the cell: `sr-only` sets `position: absolute`,
+                        which `TABLE_TH`'s `sticky` overrides, so putting both
+                        on one element left the word "REVIEW" on screen and
+                        the header band with a gap. */}
+                    <th scope="col" className={TABLE_TH}>
+                      <span className="sr-only">Review</span>
                     </th>
                   </tr>
                 </thead>

@@ -484,18 +484,18 @@ export interface QuickView {
   readonly value: ReactNode;
   /** The line under the figure that says what it counts. */
   readonly note: string;
-  /**
-   * The status this figure carries, when it has one — a directory's filter
-   * band, where the tone is the point.
+  /*
+   * Deliberately no `tone`. Every tile in every band renders identically — a
+   * blue dot, a blue label, a black figure — and the figure alone carries the
+   * meaning.
    *
-   * Omitted on a dashboard summary, which renders every tile identically: a
-   * blue dot, a blue label and a black figure. That is not a default to fall
-   * back on but the other half of the choice — a summary tile has no status,
-   * so there is no tone to pick, and colouring one by status made "pending"
-   * read as a problem on a dashboard where it is simply a stage.
+   * It used to be tunable, and the result was that the same count wore
+   * different colours on different pages: "Expired" sat in an amber wash on
+   * the company's job list while the admin's read plain, and "Reviewing"
+   * looked like a problem when it is simply a stage. Per-tile colour is not a
+   * knob worth having, so the type no longer offers one.
    */
-  readonly tone?: PillTone;
-  /** Omit for a read-only tile — see above. */
+  /** Omit for a read-only tile. */
   readonly filter?: {
     readonly active: boolean;
     readonly apply: () => void;
@@ -509,21 +509,13 @@ export interface QuickView {
 }
 
 function QuickViewTile({ view }: { view: QuickView }) {
-  const { filter, href, tone } = view;
+  const { filter, href } = view;
   const body = (
     <>
-      <span
-        className={cn(
-          "flex items-center gap-2 text-meta font-medium",
-          tone ? "text-ink-muted" : "text-blue-ink",
-        )}
-      >
+      <span className="flex items-center gap-2 text-meta font-medium text-blue-ink">
         <span
           aria-hidden="true"
-          className={cn(
-            "size-1.5 shrink-0 rounded-full",
-            tone ? TONE_DOT[tone] : "bg-blue",
-          )}
+          className="size-1.5 shrink-0 rounded-full bg-blue"
         />
         {view.label}
       </span>
@@ -548,9 +540,6 @@ function QuickViewTile({ view }: { view: QuickView }) {
   const className = cn(
     "relative flex flex-col gap-1 px-6 py-4.5 text-left text-ink",
     "shadow-[inset_-1px_0_0_theme(colors.line.DEFAULT)] last:shadow-none",
-    // A queue in the warn tone keeps a warm wash at rest: it is the tile an
-    // admin should notice before reading any of the figures.
-    tone === "warn" && "bg-warn-bg/45",
     (filter || href) &&
       "transition-colors duration-150 ease-out hover:bg-surface-sub",
     filter?.active && "bg-tint hover:bg-tint",

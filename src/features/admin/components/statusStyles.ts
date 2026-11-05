@@ -39,6 +39,13 @@ export const VERIFICATION_STATUS_TONES: Record<string, PillTone> = {
 };
 
 export const CANDIDATE_STATUS_TONES: Record<AdminCandidateStatus, PillTone> = {
+  // Amber, not blue: a submission at the gate is the one row on an admin's
+  // screen that is waiting on them, and it should read as work rather than as
+  // another stage going by.
+  pending_review: "warn",
+  // Red rather than grey: a sent-back submission is not a closed row, it is a
+  // recruiter who still owes a fix.
+  declined: "bad",
   submitted: "info",
   reviewing: "warn",
   interviewing: "info",
