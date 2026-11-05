@@ -321,21 +321,18 @@ export function JobsTable() {
       label: "Published",
       value: publishedTotal.toLocaleString(),
       note: "Open to recruiters",
-      tone: "ok",
     },
     {
       key: "expired",
       label: "Expired",
       value: expiredTotal.toLocaleString(),
       note: "Closed after 30 days",
-      tone: "warn",
     },
     {
       key: "filled",
       label: "Filled",
       value: filledTotal.toLocaleString(),
       note: "Hire made",
-      tone: "info",
     },
   ];
 

@@ -220,6 +220,13 @@ export type CompanyDetail = z.infer<typeof companyDetailSchema>;
 // throw it away.
 export const candidateStatusSchema = tolerantEnum(
   [
+    // The two quality-control stages lead, because they are the only ones an
+    // admin acts on; everything after them is the company's or recruiter's
+    // move. Omitting them here degraded a real `pending_review` row to
+    // "unknown", which silently withheld the Review button that stage exists
+    // for — the status enum is what makes the gate reachable, not just legible.
+    "pending_review",
+    "declined",
     "submitted",
     "reviewing",
     "interviewing",
@@ -287,6 +294,8 @@ export const VERIFICATION_LABELS: Record<AdminVerificationStatus, string> = {
 };
 
 export const CANDIDATE_LABELS: Record<AdminCandidateStatus, string> = {
+  pending_review: "Pending Review",
+  declined: "Declined",
   submitted: "Submitted",
   reviewing: "Reviewing",
   interviewing: "Interviewing",

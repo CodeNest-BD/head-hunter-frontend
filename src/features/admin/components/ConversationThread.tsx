@@ -24,6 +24,7 @@ import {
   type ConversationThread as ConversationThreadPage,
 } from "../schemas";
 import { DetailSkeleton } from "./DetailPrimitives";
+import { SubmissionGateBar } from "./SubmissionGateBar";
 import { CANDIDATE_STATUS_TONES } from "./statusStyles";
 
 const EVENT_ICON: Record<ConversationEvent["type"], LucideIcon> = {
@@ -153,6 +154,11 @@ export function ConversationThread({
         embedded ? "max-w-none" : "max-w-5xl",
       )}
     >
+      {/* Before the thread, and outside the `embedded` guard: when a
+          submission is sitting at the gate the decision is the only thing on
+          this page worth reading, and an admin arriving from the review queue
+          should not have to find it under the timeline. */}
+      <SubmissionGateBar candidate={header.candidate} />
       {!embedded && (
         <Card>
           <CardContent className="flex flex-col gap-2">

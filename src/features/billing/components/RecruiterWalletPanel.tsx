@@ -158,7 +158,6 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
         value:
           card.valueMinor === undefined ? "—" : formatMinor(card.valueMinor),
         note: card.hint ?? "",
-        tone: "neutral" as const,
       }))}
     />
   );
