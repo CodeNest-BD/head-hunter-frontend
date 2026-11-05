@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, type ReactElement } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AlertCircle, Loader2 } from "lucide-react";
 
@@ -40,8 +40,12 @@ export interface SubmissionReviewDialogProps {
    * The control that opens the panel. Composition rather than a `size` or
    * `prominent` flag: a table cell wants the quiet default, a banner wants a
    * primary button, and the dialog has no business knowing which it is in.
+   *
+   * A single element, not a `ReactNode`: `Dialog.Trigger asChild` clones its
+   * child and throws on a string, a fragment or a list, so the narrower type
+   * turns a crash into a compile error.
    */
-  trigger?: ReactNode;
+  trigger?: ReactElement;
 }
 
 /**

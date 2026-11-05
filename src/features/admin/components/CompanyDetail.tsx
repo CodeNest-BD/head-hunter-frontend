@@ -18,6 +18,10 @@ import { formatMinor } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 
 import { TONE_DOT } from "@/shared/ui-components/badges/Pill";
+import {
+  QuickViewBand,
+  type QuickView,
+} from "@/shared/ui-components/dashboard/DashboardParts";
 
 import {
   TABLE_BODY,
@@ -196,24 +200,28 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
         ? `Every job at ${formatMinor(min)}`
         : `Range ${formatMinor(min)} – ${formatMinor(max)}`;
 
-  const summary = [
+  const summary: readonly QuickView[] = [
     {
-      label: "Wallet balance",
+      key: "balance",
+      label: "Wallet Balance",
       value: formatMinor(data.balanceMinor),
       note: `${formatMinor(data.availableMinor)} available · ${formatMinor(data.reservedMinor)} reserved`,
     },
     {
-      label: "Open jobs",
+      key: "open-jobs",
+      label: "Open Jobs",
       value: data.openJobCount.toLocaleString(),
       note: `${data.jobCount.toLocaleString()} posted in total`,
     },
     {
+      key: "placements",
       label: "Placements",
       value: data.placementCount.toLocaleString(),
       note: `From ${data.offerCount.toLocaleString()} offer${data.offerCount === 1 ? "" : "s"}`,
     },
     {
-      label: "Average fee",
+      key: "average-fee",
+      label: "Average Fee",
       value: data.avgFeeMinor === null ? "—" : formatMinor(data.avgFeeMinor),
       note: feeRange,
     },
@@ -283,29 +291,7 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
         <CompanyAccountActions data={data} presentation="menu" />
       </header>
 
-      <section
-        aria-label="Company summary"
-        className="overflow-hidden rounded-lg bg-surface shadow-e1"
-      >
-        <dl className="m-0 grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-          {summary.map((item) => (
-            <div
-              key={item.label}
-              className="flex flex-col gap-1 px-6 py-4.5 shadow-[inset_-1px_0_0_theme(colors.line.DEFAULT)] last:shadow-none"
-            >
-              <dt className="text-meta font-medium text-ink-muted">
-                {item.label}
-              </dt>
-              <dd className="m-0 text-[26px] font-semibold leading-8 tracking-[-0.02em] tabular-nums text-ink">
-                {item.value}
-              </dd>
-              <dd className="m-0 text-meta leading-[18px] text-ink-muted">
-                {item.note}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+      <QuickViewBand label="Company summary" views={summary} />
 
       <div className="flex flex-wrap items-start gap-6">
         <div className="flex min-w-0 flex-[3_1_600px] flex-col gap-6">
