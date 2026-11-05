@@ -476,6 +476,13 @@ export function ActivityFeed({
  * One tile of a `QuickViewBand`. A tile that stands for a filter is a button
  * carrying `aria-pressed`; one that only reports a figure is a plain `div`, so
  * a number with nothing behind it never looks pressable.
+ *
+ * Every tile renders identically — a blue dot, a blue label, a black figure —
+ * and there is deliberately no way to tint one. Per-tile colour used to be
+ * tunable, and the result was that the same count wore different colours on
+ * different pages: "Expired" sat in an amber wash on the company's job list
+ * while the admin's read plain, and "Reviewing" looked like a problem when it
+ * is simply a stage. The figure carries the meaning; the band stays quiet.
  */
 export interface QuickView {
   readonly key: string;
@@ -484,17 +491,6 @@ export interface QuickView {
   readonly value: ReactNode;
   /** The line under the figure that says what it counts. */
   readonly note: string;
-  /*
-   * Deliberately no `tone`. Every tile in every band renders identically — a
-   * blue dot, a blue label, a black figure — and the figure alone carries the
-   * meaning.
-   *
-   * It used to be tunable, and the result was that the same count wore
-   * different colours on different pages: "Expired" sat in an amber wash on
-   * the company's job list while the admin's read plain, and "Reviewing"
-   * looked like a problem when it is simply a stage. Per-tile colour is not a
-   * knob worth having, so the type no longer offers one.
-   */
   /** Omit for a read-only tile. */
   readonly filter?: {
     readonly active: boolean;
