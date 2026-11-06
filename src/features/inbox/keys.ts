@@ -10,5 +10,6 @@ export const inboxKeys = {
     ["inbox", side, "attention-count"] as const,
   submissions: (params: unknown) =>
     ["inbox", "company", "submissions", params] as const,
-  submissionStats: ["inbox", "company", "submission-stats"] as const,
+  submissionStats: (jobId: string | undefined) =>
+    ["inbox", "company", "submission-stats", jobId] as const,
 };

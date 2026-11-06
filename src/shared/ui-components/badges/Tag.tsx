@@ -18,7 +18,7 @@ export interface TagProps {
 }
 
 const BASE =
-  "inline-flex h-6.5 items-center gap-[5px] rounded-full border px-2.5 text-meta font-[550] transition-colors [&_svg]:size-3";
+  "inline-flex h-6.5 max-w-full items-center gap-[5px] rounded-full border px-2.5 text-meta font-[550] transition-colors [&_svg]:size-3";
 
 export function Tag({
   children,
@@ -33,8 +33,16 @@ export function Tag({
       ? "border-dashed border-line-strong bg-surface text-ink-muted"
       : "border-line-strong bg-surface text-ink-body";
   const classes = cn(BASE, tone, className);
+  const label = (
+    <span
+      className="truncate"
+      title={typeof children === "string" ? children : undefined}
+    >
+      {children}
+    </span>
+  );
 
-  if (!onClick) return <span className={classes}>{children}</span>;
+  if (!onClick) return <span className={classes}>{label}</span>;
   return (
     <button
       type="button"
@@ -44,7 +52,7 @@ export function Tag({
       aria-pressed={variant === "add" ? undefined : selected}
       className={cn(classes, "hover:border-blue hover:text-blue-ink")}
     >
-      {children}
+      {label}
     </button>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Briefcase, Search } from "lucide-react";
 
+import { COMPANY_CANDIDATE_STATUSES } from "@/features/candidates/schemas";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { inboxThreadPath } from "@/shared/utils/entityPaths";
@@ -20,6 +21,12 @@ type Filter = "all" | "unread";
 
 /** The two positions of the reference's `.seg` control in the pane's head. */
 const FILTERS: readonly Filter[] = ["all", "unread"];
+
+/** A company's pane leaves out candidates it has passed on, so it holds only
+ * the ones still in play; the main inbox's Passed filter still finds them. */
+const ACTIVE_COMPANY_STATUSES = COMPANY_CANDIDATE_STATUSES.filter(
+  (status) => status !== "passed",
+);
 
 /**
  * The compact conversation list that sits to the left of an open thread — the
@@ -43,6 +50,7 @@ export function InboxConversationPane({
     limit: 50,
     q: q || undefined,
     unreadOnly: filter === "unread",
+    status: side === "company" ? ACTIVE_COMPANY_STATUSES : undefined,
   });
   const rows = data?.data ?? [];
 
@@ -91,6 +99,12 @@ export function InboxConversationPane({
           // Same rule as `InboxConversationList` and the sidebar badge: an
           // unseen offer, interview or status change marks the row too.
           const needsYou = unread || row.needsReview;
+          // A company judges candidates, so theirs leads the row and the
+          // recruiter who sent them is secondary.
+          const [primaryName, secondaryName] =
+            side === "company"
+              ? [row.candidateName, row.counterpartyName]
+              : [row.counterpartyName, row.candidateName];
           return (
             // The separator lives on the list item so `ListRow`'s own `last:`
             // rule keeps working inside the link wrapper.
@@ -116,7 +130,7 @@ export function InboxConversationPane({
                       <span className="block size-[7px] shrink-0 rounded-full bg-blue" />
                     ) : null}
                   </span>
-                  <Avatar name={row.counterpartyName} size="sm" />
+                  <Avatar name={primaryName} size="sm" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <span
@@ -125,7 +139,7 @@ export function InboxConversationPane({
                           needsYou ? "font-[650]" : "font-semibold",
                         )}
                       >
-                        {row.counterpartyName}
+                        {primaryName}
                       </span>
                       <span className="shrink-0 text-[11px] tabular-nums text-ink-faint">
                         {formatDate(row.lastActivityAt)}
@@ -133,7 +147,7 @@ export function InboxConversationPane({
                     </div>
                     <div className="mt-[2px] flex min-w-0 items-center gap-1.5">
                       <span className="shrink-0 truncate text-[11.5px] text-ink-muted">
-                        {row.candidateName}
+                        {secondaryName}
                       </span>
                       <span aria-hidden="true" className="text-ink-faint">
                         ·

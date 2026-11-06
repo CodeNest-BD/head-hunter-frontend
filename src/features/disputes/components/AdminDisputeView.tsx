@@ -377,7 +377,7 @@ function DisputeBody({
                     ? `${data.companyName} (company)`
                     : `${data.recruiterName} (recruiter)`}
                 </dd>
-                <dt className="text-sub text-ink-muted">Release countdown</dt>
+                <dt className="text-sub text-ink-muted">Guarantee Status</dt>
                 <dd className="m-0 text-sub text-ink-body">
                   {describeCountdown(data.countdown)}
                 </dd>

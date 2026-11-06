@@ -13,6 +13,7 @@ import {
   Controller,
   useForm,
   type FieldError,
+  type Merge,
   type Resolver,
 } from "react-hook-form";
 import { Info, PanelRightOpen, X } from "lucide-react";
@@ -276,6 +277,23 @@ type ValidationRules = "draft" | "publish";
 
 const FOCUSABLE =
   "input:not([type=hidden]):not([readonly]), textarea, button, [contenteditable=true]";
+
+/**
+ * A chip list fails either as a whole (too many) or on one entry (too long) —
+ * the latter is how a job saved under an older, longer limit gets blocked, so
+ * it must surface rather than leave Save doing nothing.
+ */
+function chipListError(
+  error: Merge<FieldError, (FieldError | undefined)[]> | undefined,
+): string | undefined {
+  if (error === undefined) return undefined;
+  if (error.message) return error.message;
+  for (let index = 0; index < MAX_QUALIFICATIONS; index += 1) {
+    const message = error[index]?.message;
+    if (message) return message;
+  }
+  return undefined;
+}
 
 /**
  * Takes the company to the first flagged field of a blocked submit. Driven by
@@ -1302,7 +1320,11 @@ export function JobForm({
             )}
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Must Haves" htmlFor="mustHave">
+              <Field
+                label="Must Haves"
+                htmlFor="mustHave"
+                error={chipListError(errors.mustHave)}
+              >
                 <Controller
                   control={control}
                   name="mustHave"
@@ -1319,7 +1341,11 @@ export function JobForm({
                   )}
                 />
               </Field>
-              <Field label="Nice to Haves" htmlFor="niceToHave">
+              <Field
+                label="Nice to Haves"
+                htmlFor="niceToHave"
+                error={chipListError(errors.niceToHave)}
+              >
                 <Controller
                   control={control}
                   name="niceToHave"

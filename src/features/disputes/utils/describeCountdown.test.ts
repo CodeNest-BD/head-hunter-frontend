@@ -27,7 +27,7 @@ describe("describeCountdown", () => {
         }),
       ),
     ).toBe(
-      "Paused for 3 days 4 hours so far. 20 days of the countdown was left when this dispute was raised.",
+      "Paused for 3 days 4 hours so far. 20 days of the guarantee period was left when this dispute was raised.",
     );
   });
 

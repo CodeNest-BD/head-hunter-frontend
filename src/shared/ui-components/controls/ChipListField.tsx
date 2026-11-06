@@ -146,9 +146,11 @@ export function ChipListField({
       {value.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {value.map((entry, index) => (
-            <li key={entry}>
-              <span className="inline-flex h-6.5 items-center gap-1.5 rounded-full border border-blue bg-tint pl-2.5 pr-1 text-meta font-[550] text-blue-ink">
-                {entry}
+            <li key={entry} className="max-w-full">
+              <span className="inline-flex h-6.5 max-w-full items-center gap-1.5 rounded-full border border-blue bg-tint pl-2.5 pr-1 text-meta font-[550] text-blue-ink">
+                <span className="truncate" title={entry}>
+                  {entry}
+                </span>
                 <button
                   type="button"
                   onClick={() =>

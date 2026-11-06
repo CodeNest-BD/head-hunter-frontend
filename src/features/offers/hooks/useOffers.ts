@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // conversations API client into every module that merely wants to invalidate
 // its cache — this hook only needs the static key array.
 import { conversationKeys } from "@/features/conversations/keys";
+import { billingKeys } from "@/features/billing/keys";
 import { candidateKeys } from "@/features/candidates/keys";
 import { inboxKeys } from "@/features/inbox/keys";
 import {
@@ -61,6 +62,9 @@ function useInvalidateOnOffer(): () => Promise<unknown> {
       queryClient.invalidateQueries({ queryKey: conversationKeys.all }),
       queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
       queryClient.invalidateQueries({ queryKey: inboxKeys.all }),
+      // Accepting holds the fee, so the wallet — and the Make Offer funds
+      // check against it — must not keep the old available balance.
+      queryClient.invalidateQueries({ queryKey: billingKeys.all }),
     ]);
 }
 

@@ -32,7 +32,7 @@ import {
 const SUCCESS_TOAST: Record<DisputeResolution, string> = {
   release: "Payment released to the recruiter.",
   refund: "Commission refunded to the company.",
-  resume: "Countdown resumed; the fee stays held.",
+  resume: "Guarantee period resumed; the fee stays held.",
   close: "Dispute closed.",
 };
 
@@ -279,10 +279,10 @@ function ConfirmBody({
     },
     resume: {
       title: "Continue the hold",
-      lead: "Keep the fee held and resume the release countdown where it paused.",
-      action: `${fee} stays in escrow; the clock restarts.`,
+      lead: "Keep the fee held and resume the guarantee period where it paused.",
+      action: `${fee} stays in escrow; the guarantee period restarts.`,
       when: "The release date moves out by the time this dispute was open.",
-      confirm: "Resume countdown",
+      confirm: "Resume guarantee period",
     },
     close: {
       title: "Close without moving money",

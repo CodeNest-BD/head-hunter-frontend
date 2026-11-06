@@ -1,6 +1,9 @@
 "use client";
 
-import type { CandidateNegotiationState } from "@/features/conversations/utils/candidateNegotiationState";
+import {
+  isOfferLive,
+  type CandidateNegotiationState,
+} from "@/features/conversations/utils/candidateNegotiationState";
 import { NegotiationStateBadges } from "@/shared/ui-components/data/NegotiationStateBadges";
 import { CandidateDetailPanel } from "./CandidateDetailPanel";
 import { PassCandidateAction } from "./PassCandidateAction";
@@ -59,13 +62,16 @@ export function CandidateCard({
               candidateId={candidate.id}
               negotiationState={negotiationState}
             />
-            {/* A hire is undone through the placement's guarantee, which
-                refunds the fee — never by passing. */}
-            {candidate.status !== "hired" && (
-              <PassCandidateAction candidateId={candidate.id} />
-            )}
+            {/* Once an offer is out, passing is no longer a one-click way
+                back: an unanswered offer is withdrawn first, and a hire is
+                undone only through a dispute. */}
+            {candidate.status !== "hired" &&
+              !isOfferLive(negotiationState?.offer ?? null) && (
+                <PassCandidateAction candidateId={candidate.id} />
+              )}
             <SendOfferForm
               candidateId={candidate.id}
+              jobId={candidate.jobId}
               negotiationState={negotiationState}
             />
           </div>

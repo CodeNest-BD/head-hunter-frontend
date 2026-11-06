@@ -322,7 +322,7 @@ function RequirementRow({
       <p className="text-label font-[650] uppercase text-ink-muted">{label}</p>
       <ul className="flex flex-wrap gap-1.5">
         {entries.map((entry) => (
-          <li key={entry}>
+          <li key={entry} className="max-w-full">
             <Tag>{entry}</Tag>
           </li>
         ))}

@@ -100,7 +100,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "status", label: "Status" },
   { key: "category", label: "Category" },
   { key: "fee", label: "Recruiter fee" },
-  { key: "expiry", label: "Expiry" },
+  { key: "expiry", label: "Expires" },
   // Candidates access is phase-2 — hidden for the phase-1 delivery.
   ...(HIDE_PHASE2_FEATURES ? [] : [{ key: "candidates", label: "Candidates" }]),
   { key: "actions", label: "Actions", required: true },
@@ -460,7 +460,7 @@ export function JobsTable() {
                       </th>
                     )}
                     {cols.isVisible("expiry") && (
-                      <th className={TABLE_TH}>Expiry</th>
+                      <th className={TABLE_TH}>Expires</th>
                     )}
                     {!HIDE_PHASE2_FEATURES && cols.isVisible("candidates") && (
                       <th className={cn(TABLE_TH, "text-center")}>
@@ -550,7 +550,7 @@ export function JobsTable() {
                       value: <RecruiterFee feeMinor={job.recruiterFeeMinor} />,
                     },
                     {
-                      label: "Expiry",
+                      label: "Expires",
                       value: <JobExpiry expiresAt={job.expiresAt} />,
                     },
                     ...(HIDE_PHASE2_FEATURES

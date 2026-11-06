@@ -257,7 +257,7 @@ export function CompanySubmissionsQueue() {
     return () => clearTimeout(timer);
   }, [qInput]);
 
-  const stats = useCompanySubmissionStats();
+  const stats = useCompanySubmissionStats(jobRef ?? undefined);
   // The Job filter needs every job with its new-submission count; 100 covers a
   // company's open listings comfortably (the endpoint caps larger asks anyway).
   const jobs = useInboxJobs("company", { page: 1, limit: 100 });

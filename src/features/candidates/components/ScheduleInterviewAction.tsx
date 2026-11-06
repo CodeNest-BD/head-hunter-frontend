@@ -119,7 +119,7 @@ export function ScheduleInterviewAction({
   return (
     <Button
       type="button"
-      variant="success"
+      variant="outline"
       size="sm"
       onClick={() => setPanel({ kind: "proposing" })}
     >
