@@ -194,6 +194,7 @@ const defaultValuesFor = (role: SignupRole): SignUpFormData => ({
   confirmPassword: "",
   phone: "",
   companyName: "",
+  website: "",
   linkedinUrl: "",
   // A recruiter must supply at least one of each, so the first row starts open.
   experiences: role === "recruiter" ? [EMPTY_EXPERIENCE] : [],
@@ -449,19 +450,40 @@ function SignUpDetailsForm({ role, onChangeRole }: SignUpDetailsFormProps) {
       </div>
 
       {role === "company" && (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="companyName">Company Name</Label>
-          <Input
-            id="companyName"
-            type="text"
-            autoComplete="organization"
-            aria-invalid={errors.companyName ? true : undefined}
-            {...register("companyName")}
-            className={cn("h-11", errors.companyName && "border-destructive")}
-            placeholder="Acme Inc."
-          />
-          <FieldError message={errors.companyName?.message} />
-        </div>
+        <>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="companyName">Company Name</Label>
+            <Input
+              id="companyName"
+              type="text"
+              autoComplete="organization"
+              aria-invalid={errors.companyName ? true : undefined}
+              {...register("companyName")}
+              className={cn("h-11", errors.companyName && "border-destructive")}
+              placeholder="Acme Inc."
+            />
+            <FieldError message={errors.companyName?.message} />
+          </div>
+
+          {/* Asked for at sign-up rather than left to a profile edit: an admin
+              opens it to judge whether the business is real before approving,
+              and a company waiting on that approval has had no reason to go
+              back and fill it in. */}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="website">Company Website {optionalHint}</Label>
+            <Input
+              id="website"
+              type="url"
+              inputMode="url"
+              autoComplete="url"
+              aria-invalid={errors.website ? true : undefined}
+              {...register("website")}
+              className={cn("h-11", errors.website && "border-destructive")}
+              placeholder="https://acme.com"
+            />
+            <FieldError message={errors.website?.message} />
+          </div>
+        </>
       )}
 
       {role === "recruiter" && (

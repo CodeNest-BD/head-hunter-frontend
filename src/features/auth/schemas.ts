@@ -125,6 +125,16 @@ export const signUpSchema = z
     // E.164 (any country) straight from the international phone input.
     phone: phoneSchema,
     companyName: z.string().trim().max(160, "Keep it under 160 characters"),
+    // Optional, but asked for here rather than left to a profile edit: it is
+    // the first thing an admin opens when deciding whether to approve the
+    // account, and a company awaiting approval has had no reason to go back
+    // and fill it in.
+    website: z
+      .string()
+      .trim()
+      .max(255, "Keep it under 255 characters")
+      .url("Enter a full website address, including https://")
+      .or(z.literal("")),
     linkedinUrl: z
       .string()
       .trim()
@@ -209,6 +219,7 @@ export type SignUpPayload =
   | (SignUpPayloadBase & {
       role: Extract<SignupRole, "company">;
       companyName: string;
+      website?: string;
     })
   | (SignUpPayloadBase & {
       role: Extract<SignupRole, "recruiter">;
@@ -244,7 +255,12 @@ export function toSignUpPayload(values: SignUpFormData): SignUpPayload {
   };
 
   if (values.role === "company") {
-    return { ...base, role: values.role, companyName: values.companyName };
+    return {
+      ...base,
+      role: values.role,
+      companyName: values.companyName,
+      ...(values.website === "" ? {} : { website: values.website }),
+    };
   }
 
   return {

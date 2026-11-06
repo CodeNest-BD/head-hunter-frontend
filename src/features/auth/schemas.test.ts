@@ -10,6 +10,7 @@ const validCompany: SignUpFormData = {
   confirmPassword: "S3cureP@ssw0rd",
   phone: "+12025550100",
   companyName: "Acme Inc.",
+  website: "",
   linkedinUrl: "",
   experiences: [],
   references: [],
@@ -327,5 +328,39 @@ describe("toSignUpPayload", () => {
       expect(payload.references?.[0]).not.toHaveProperty("title");
       expect(payload.references?.[0]).not.toHaveProperty("phone");
     }
+  });
+
+  describe("the company website", () => {
+    it("is carried to the API when given", () => {
+      const payload = toSignUpPayload({
+        ...validCompany,
+        website: "https://acme.com",
+      });
+
+      expect(payload).toMatchObject({ website: "https://acme.com" });
+    });
+
+    it("is left out entirely when the company has none", () => {
+      // Omitted rather than sent as "": the field is optional, and a blank
+      // string is a website that does not exist.
+      const payload = toSignUpPayload({ ...validCompany, website: "" });
+
+      expect(payload).not.toHaveProperty("website");
+    });
+
+    it("refuses an address with no scheme, which would not open", () => {
+      // An admin clicks this to judge the business; schemeless values
+      // navigate inside the app instead of out to the company's site.
+      const result = signUpSchema.safeParse({
+        ...validCompany,
+        website: "acme.com",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("accepts a company that gives no website", () => {
+      expect(signUpSchema.safeParse(validCompany).success).toBe(true);
+    });
   });
 });
