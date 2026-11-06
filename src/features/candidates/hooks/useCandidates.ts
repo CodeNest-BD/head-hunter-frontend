@@ -235,8 +235,8 @@ export function useResubmitCandidate() {
     mutationFn: (id: string) => resubmitCandidate(id),
     onSuccess: async () => {
       await invalidateAfterReview(queryClient);
-      toast.success("Sent back for review");
+      toast.success("Resubmitted — an admin will review it again");
     },
-    onError: () => toast.error("Could not send this candidate back for review"),
+    onError: () => toast.error("Could not resubmit this candidate for review"),
   });
 }

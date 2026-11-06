@@ -313,7 +313,12 @@ export function ConversationThread({
         </div>
 
         {reviewsInline && (
-          <aside className="flex w-full flex-col gap-3 lg:sticky lg:top-4 lg:w-[400px] lg:shrink-0">
+          /* Not sticky: `CandidateDetailPanel` carries its own
+             `lg:overflow-y-auto`, and pinning a taller-than-viewport panel
+             inside a second scroller is how the Approve button ends up
+             somewhere you cannot reach. The page is short — that was the
+             complaint — so it scrolls as one. */
+          <aside className="flex w-full flex-col gap-3 lg:w-[400px] lg:shrink-0">
             {/* The same record and the same two buttons the dialog shows, so
                 an admin reviewing from here and one reviewing from the
                 submissions table are deciding on identical information. */}

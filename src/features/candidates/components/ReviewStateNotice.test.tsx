@@ -42,7 +42,7 @@ describe("ReviewStateNotice", () => {
     expect(screen.getByText(/waiting on a quality check/i)).toBeInTheDocument();
     // No resubmit on a candidate nobody has decided about yet.
     expect(
-      screen.queryByRole("button", { name: /send back for review/i }),
+      screen.queryByRole("button", { name: /resubmit for review/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -61,12 +61,43 @@ describe("ReviewStateNotice", () => {
     ).toBeInTheDocument();
   });
 
-  it("still renders when an admin declined without a note", () => {
+  it("still says what to do when a rejection carries no note", () => {
+    // The note is optional, so this is the common case rather than the edge.
     renderWithProviders(
       <ReviewStateNotice candidate={candidate({ status: "declined" })} />,
     );
 
-    expect(screen.getByText(/no reason was given/i)).toBeInTheDocument();
+    expect(screen.getByText(/no note was left/i)).toBeInTheDocument();
+    expect(screen.queryByText(/what to fix/i)).not.toBeInTheDocument();
+    // Still recoverable: a rejection with no note is not a dead end.
+    expect(
+      screen.getByRole("button", { name: /resubmit for review/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("heads the notice with the same word the admin's button used", () => {
+    renderWithProviders(
+      <ReviewStateNotice candidate={candidate({ status: "declined" })} />,
+    );
+
+    expect(screen.getByText(/rejected by an admin/i)).toBeInTheDocument();
+  });
+
+  it("sets the admin's note apart as a quote, under its own heading", () => {
+    const { container } = renderWithProviders(
+      <ReviewStateNotice
+        candidate={candidate({
+          status: "declined",
+          reviewNote: "Line one.\nLine two.",
+        })}
+      />,
+    );
+
+    expect(screen.getByText(/what to fix/i)).toBeInTheDocument();
+    const quote = container.querySelector("blockquote");
+    // Pre-wrapped, so a note written over several lines stays several lines.
+    expect(quote).toHaveTextContent("Line one.");
+    expect(quote).toHaveClass("whitespace-pre-wrap");
   });
 
   it("sends a declined candidate back for review", () => {
@@ -77,7 +108,7 @@ describe("ReviewStateNotice", () => {
     );
 
     fireEvent.click(
-      screen.getByRole("button", { name: /send back for review/i }),
+      screen.getByRole("button", { name: /resubmit for review/i }),
     );
 
     expect(resubmitMock).toHaveBeenCalledWith("cand-1");
@@ -91,7 +122,7 @@ describe("ReviewStateNotice", () => {
     );
 
     expect(
-      screen.getByText(/company was not told about this submission/i),
+      screen.getByText(/company was never told about this submission/i),
     ).toBeInTheDocument();
   });
 

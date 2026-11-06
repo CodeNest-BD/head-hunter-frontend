@@ -60,7 +60,11 @@ export function ExpandableBlock({
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => observer.disconnect();
-  }, [measure, children]);
+    // Deliberately not keyed on `children`: that is a new object on every
+    // parent render, which would tear down and re-attach the observer each
+    // time. The observer is watching the content node, so it already fires
+    // when the children change the block's height.
+  }, [measure]);
 
   const collapsed = overflows && !expanded;
 

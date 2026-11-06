@@ -10,6 +10,7 @@ import {
   CandidateForm,
   CandidateRailSkeleton,
   EDITABLE_CANDIDATE_STATUSES,
+  isGatedCandidateStatus,
   ReviewStateNotice,
   useCandidate,
   useDeleteCandidate,
@@ -117,22 +118,32 @@ function CandidateDetailColumn({ candidate }: { candidate: Candidate }) {
       stageLabel={CANDIDATE_STATUS_LABELS[candidate.status]}
       stageTone={CANDIDATE_STATUS_TONES[candidate.status]}
       negotiation={
+        isGatedCandidateStatus(candidate.status) ||
         negotiationState !== undefined ? (
           <div className="flex flex-col gap-2">
-            {/* Above the negotiation badges: while a candidate is still at the
-                quality-control gate there is no negotiation to report, and
-                what the recruiter needs is what the admin said. */}
+            {/* Outside the negotiation gate, not inside it. A candidate at the
+                quality-control gate has no interviews and no offers, so making
+                the rejection reason wait on both queries delayed the one
+                message the recruiter has to act on — and hid it entirely if
+                either query failed. */}
             <ReviewStateNotice candidate={candidate} />
-            <NegotiationStateBadges
-              interview={negotiationState?.interview ?? null}
-              offer={negotiationState?.offer ?? null}
-              viewerParty="recruiter"
-            />
-            {/* Read-only here: setting the link is the company's, since it is
-                their calendar that made the meeting. The recruiter needs it to
-                brief — and sometimes join — the candidate. */}
-            {interviewRecord?.status === "scheduled" && (
-              <MeetingLinkField interview={interviewRecord} canEdit={false} />
+            {negotiationState !== undefined && (
+              <>
+                <NegotiationStateBadges
+                  interview={negotiationState?.interview ?? null}
+                  offer={negotiationState?.offer ?? null}
+                  viewerParty="recruiter"
+                />
+                {/* Read-only here: setting the link is the company's, since it
+                    is their calendar that made the meeting. The recruiter
+                    needs it to brief — and sometimes join — the candidate. */}
+                {interviewRecord?.status === "scheduled" && (
+                  <MeetingLinkField
+                    interview={interviewRecord}
+                    canEdit={false}
+                  />
+                )}
+              </>
             )}
           </div>
         ) : null
