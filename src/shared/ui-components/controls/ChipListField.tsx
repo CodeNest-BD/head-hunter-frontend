@@ -91,6 +91,7 @@ export function ChipListField({
 }: ChipListFieldProps) {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const isFull = value.length >= max;
 
   const commit = (): void => {
     const { next, rejection } = addChip(value, draft, { max, maxLength });
@@ -107,39 +108,42 @@ export function ChipListField({
     <div className="flex flex-col gap-2.5">
       {/* Input first, chips beneath: side-by-side chip fields would otherwise
           sit at different heights, since chips above the input push it down by
-          however many rows that column happens to have. */}
-      {value.length < max && (
-        <div className="flex items-center gap-2">
-          <Input
-            id={id}
-            type="text"
-            value={draft}
-            aria-label={ariaLabel}
-            onChange={(event) => {
-              setDraft(event.target.value);
-              setError(null);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                // Enter in a chip field adds a chip; without this it submits
-                // the whole job form instead.
-                event.preventDefault();
-                commit();
-              }
-            }}
-            placeholder={placeholder}
-            className={cn("h-11", error !== null && "border-bad")}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={commit}
-            className="h-11 shrink-0"
-          >
-            Add
-          </Button>
-        </div>
-      )}
+          however many rows that column happens to have. It stays rendered when
+          the list is full for the same reason. */}
+      <div className="flex items-center gap-2">
+        <Input
+          id={id}
+          type="text"
+          value={draft}
+          disabled={isFull}
+          aria-label={ariaLabel}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            setError(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              // Enter in a chip field adds a chip; without this it submits
+              // the whole job form instead.
+              event.preventDefault();
+              commit();
+            }
+          }}
+          placeholder={
+            isFull ? `Limit of ${max} reached — remove one to add` : placeholder
+          }
+          className={cn("h-11", error !== null && "border-bad")}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={commit}
+          disabled={isFull}
+          className="h-11 shrink-0"
+        >
+          Add
+        </Button>
+      </div>
       {error !== null && (
         <p className="text-meta font-medium text-bad">{error}</p>
       )}

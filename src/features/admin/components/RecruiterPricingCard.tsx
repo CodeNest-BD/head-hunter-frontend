@@ -10,8 +10,8 @@ import {
 } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { CardContent } from "@/shared/ui-components/controls/card";
-import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import { SettingsCard } from "@/shared/ui-components/layout/SettingsParts";
 import {
   useRecruiterPricing,
@@ -86,19 +86,12 @@ export function RecruiterPricingCard() {
             {/* `.field` — label, control, then the consequence of changing it. */}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="recruiter-price">Monthly price (USD)</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-body text-ink-muted">$</span>
-                <Input
-                  id="recruiter-price"
-                  type="number"
-                  min={MIN_MAJOR}
-                  step="0.01"
-                  inputMode="decimal"
-                  value={value}
-                  onChange={(event) => setValue(event.target.value)}
-                  className="max-w-[160px] tabular-nums"
-                />
-              </div>
+              <MoneyInput
+                id="recruiter-price"
+                value={value}
+                onChange={setValue}
+                className="max-w-[160px]"
+              />
               <p className="text-meta text-ink-faint">
                 New subscriptions bill at this rate. Existing subscribers keep
                 their current price until they resubscribe.

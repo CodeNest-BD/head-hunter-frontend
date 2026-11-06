@@ -13,7 +13,7 @@ import {
 } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Label } from "@/shared/ui-components/controls/label";
-import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
+import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import { useWithdraw } from "../hooks/useBilling";
 import { ARRIVAL_WINDOW_LABEL } from "../payoutTracking";
 import { MIN_PAYOUT_MINOR } from "../schemas";
@@ -165,20 +165,12 @@ export function WithdrawDialog({
                     Withdraw all
                   </button>
                 </div>
-                {/* `.moneywrap` — the currency mark lives inside the field. */}
-                <div className="relative">
-                  <span className="pointer-events-none absolute left-[11px] top-1/2 -translate-y-1/2 text-body text-ink-faint">
-                    $
-                  </span>
-                  <NumericInput
-                    decimal
-                    id="withdraw-amount"
-                    placeholder="500"
-                    value={amount}
-                    onChange={(event) => changeAmount(event.target.value)}
-                    className="pl-6 tabular-nums"
-                  />
-                </div>
+                <MoneyInput
+                  id="withdraw-amount"
+                  placeholder="500"
+                  value={amount}
+                  onChange={changeAmount}
+                />
                 {validationError ? (
                   <p className="text-meta font-medium text-bad">
                     {validationError}

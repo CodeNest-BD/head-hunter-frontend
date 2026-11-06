@@ -148,8 +148,8 @@ export const INTERVIEW_TYPE_OPTIONS: ReadonlyArray<InterviewType> = [
 ];
 
 export const MAX_INTERVIEW_STAGES = 5;
-export const MAX_QUALIFICATIONS = 10;
-export const MAX_QUALIFICATION_LENGTH = 50;
+export const MAX_QUALIFICATIONS = 5;
+export const MAX_QUALIFICATION_LENGTH = 30;
 
 /** What else the company is doing to fill the role — mirrors OtherSourcing. */
 export const OTHER_SOURCING_OPTIONS = [

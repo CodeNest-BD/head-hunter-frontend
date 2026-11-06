@@ -14,8 +14,8 @@ import {
   CardTitle,
 } from "@/shared/ui-components/controls/card";
 import { Tile } from "@/shared/ui-components/list/Tile";
-import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
+import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import { useStartTopUp } from "../hooks/useBilling";
 
 const MIN_MAJOR = 10;
@@ -98,24 +98,15 @@ export function TopUpCard() {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="topup-amount">Or enter a custom amount</Label>
-            {/* `.moneywrap` — the currency mark sits inside the field so the
-                figure the user types reads as money at a glance. */}
-            <div className="relative">
-              <span className="pointer-events-none absolute left-[11px] top-1/2 -translate-y-1/2 text-body text-ink-faint">
-                $
-              </span>
-              <NumericInput
-                decimal
-                id="topup-amount"
-                placeholder="1000"
-                value={amount}
-                onChange={(event) => {
-                  setAmount(event.target.value);
-                  setValidationError(null);
-                }}
-                className="pl-6 tabular-nums"
-              />
-            </div>
+            <MoneyInput
+              id="topup-amount"
+              placeholder="1,000"
+              value={amount}
+              onChange={(next) => {
+                setAmount(next);
+                setValidationError(null);
+              }}
+            />
             {validationError ? (
               <p className="text-meta font-medium text-bad">
                 {validationError}

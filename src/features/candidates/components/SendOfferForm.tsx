@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { HttpStatusCode } from "axios";
 import { AlertCircle } from "lucide-react";
 
@@ -29,7 +29,7 @@ import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
 import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
-import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
+import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
@@ -153,6 +153,7 @@ export function SendOfferForm({
   const withdrawOffer = useWithdrawOffer(withdrawableOffer?.id ?? "");
 
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -197,7 +198,19 @@ export function SendOfferForm({
         <p className="text-sub font-[650] text-ink">Send Offer</p>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="send-offer-salary">Salary (USD/yr)</Label>
-          <NumericInput id="send-offer-salary" {...register("salary")} />
+          <Controller
+            control={control}
+            name="salary"
+            render={({ field }) => (
+              <MoneyInput
+                ref={field.ref}
+                id="send-offer-salary"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
+          />
           {errors.salary && (
             <p className="text-meta font-medium text-bad">
               {errors.salary.message}
