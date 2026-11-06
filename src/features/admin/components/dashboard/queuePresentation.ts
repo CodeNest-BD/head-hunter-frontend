@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import type { PillTone } from "@/shared/ui-components/badges/Pill";
-import type { DashboardQueueKey } from "../../schemas";
+import type { DashboardQueue, DashboardQueueKey } from "../../schemas";
 
 /**
  * How each work queue reads.
@@ -87,3 +87,34 @@ export const QUEUE_PRESENTATION: Record<DashboardQueueKey, QueuePresentation> =
       href: "/admin/submissions?status=pending_review",
     },
   };
+
+/**
+ * How far up the list each priority belongs.
+ *
+ * The server returns its queues in a fixed declaration order, which put a
+ * newly added queue last whatever it was worth — the submissions queue sat
+ * under two "To review" rows while wearing an Urgent chip and being counted
+ * in the Urgent filter. A panel called "Needs your attention" has to lead with
+ * what needs it most.
+ */
+const PRIORITY_RANK: Record<DashboardQueue["priority"], number> = {
+  urgent: 0,
+  failed: 1,
+  on_hold: 2,
+  to_review: 3,
+};
+
+/**
+ * Most pressing first, and stable within a priority so queues of equal weight
+ * keep the server's order rather than shuffling between renders.
+ *
+ * Returns a new array: the queues come straight from the query cache, and
+ * sorting in place would reorder what every other reader of that cache sees.
+ */
+export function byPriority(
+  queues: readonly DashboardQueue[],
+): DashboardQueue[] {
+  return [...queues].sort(
+    (a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority],
+  );
+}
