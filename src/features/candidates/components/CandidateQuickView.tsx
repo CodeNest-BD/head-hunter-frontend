@@ -126,7 +126,6 @@ export function CandidateQuickView({
                     ? "Not set"
                     : `${candidate.data.noticePeriodDays} days`}
                 </Fact>
-                <Fact label="Phone">{candidate.data.phone ?? "Not set"}</Fact>
               </div>
 
               {candidate.data.pitch && (
