@@ -295,7 +295,7 @@ export const VERIFICATION_LABELS: Record<AdminVerificationStatus, string> = {
 
 export const CANDIDATE_LABELS: Record<AdminCandidateStatus, string> = {
   pending_review: "Pending Review",
-  declined: "Declined",
+  declined: "Rejected",
   submitted: "Submitted",
   reviewing: "Reviewing",
   interviewing: "Interviewing",

@@ -210,8 +210,13 @@ export function useAdminCompany(companyRef: string) {
   });
 }
 
-export function useAdminConversations(params: AdminListParams) {
+export function useAdminConversations(
+  params: AdminListParams,
+  /** Off for a caller that mounts for every role, like the nav count. */
+  enabled = true,
+) {
   return useQuery({
+    enabled,
     queryKey: adminKeys.conversations(params),
     queryFn: () => fetchConversations(params),
     placeholderData: keepPreviousData,

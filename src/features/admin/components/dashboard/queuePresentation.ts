@@ -76,8 +76,11 @@ export const QUEUE_PRESENTATION: Record<DashboardQueueKey, QueuePresentation> =
     submissions_awaiting_review: {
       label: "Submissions awaiting review",
       icon: ClipboardCheck,
-      tone: "info",
-      priorityLabel: "To review",
+      // Amber and "Urgent", matching the flag the server now sets: the row was
+      // already counted under the Urgent filter while wearing a blue "To
+      // review" chip, which read as a contradiction.
+      tone: "warn",
+      priorityLabel: "Urgent",
       // Straight to the queue, already filtered: the point of the row is the
       // work, and an admin landing on every submission ever made would have
       // to re-find the ones that need them.

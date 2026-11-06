@@ -117,14 +117,16 @@ export async function approveCandidate(id: string): Promise<Candidate> {
 }
 
 /** PATCH /v1/candidates/:id/decline — admin only. Sends it back to the
- * recruiter with a reason; the company never learns it existed. */
+ * recruiter, with an optional note; the company never learns it existed. */
 export async function declineCandidate(
   id: string,
-  reason: string,
+  reason?: string,
 ): Promise<Candidate> {
   const { data } = await apiClient.patch<unknown>(
     `/candidates/${id}/decline`,
-    { reason },
+    // Omitted rather than sent empty: the field is optional, and a blank
+    // string would be a note that says nothing.
+    reason ? { reason } : {},
     { suppressGlobalErrorToast: true },
   );
   return candidateSchema.parse(data);
