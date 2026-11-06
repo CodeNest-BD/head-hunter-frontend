@@ -25,14 +25,14 @@ const BELOW_LG = "(max-width: 1023px)";
 const BELOW_XL = "(max-width: 1279px)";
 
 /**
- * Where the columns sit before anyone drags them, as percentages — the shape
- * the fixed `280px` / `380px` / `400px` tracks had at a typical desktop width.
+ * Where the columns sit before anyone drags them, as percentages: the list and
+ * the conversation equal, the candidate between them the widest.
  * The minimums are the point at which a column stops being readable rather
  * than merely narrow: a thread whose bubbles have wrapped to one word a line
  * is worse than no thread.
  */
 const LAYOUT = {
-  three: { list: 18, candidate: 56, conversation: 26 },
+  three: { list: 26, candidate: 48, conversation: 26 },
   two: { candidate: 68, conversation: 32 },
 } as const;
 
@@ -147,7 +147,9 @@ export function InboxMessageWorkspace({
         <PanelGroup
           key={isBelowXl ? "two-column" : "three-column"}
           autoSaveId={
-            isBelowXl ? "hh-inbox-workspace-2" : "hh-inbox-workspace-3"
+            // `-v2`: a width saved under the old id would hide the new
+            // defaults from everyone who has opened the inbox before.
+            isBelowXl ? "hh-inbox-workspace-2" : "hh-inbox-workspace-3-v2"
           }
           direction="horizontal"
           className="min-h-0 flex-1"

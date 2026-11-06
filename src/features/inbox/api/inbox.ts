@@ -130,10 +130,14 @@ export async function fetchCompanySubmissions(
   return paginatedSchema(inboxSubmissionRowSchema).parse(data);
 }
 
-/** GET /v1/company/inbox/submissions/stats — company-wide per-status counts. */
-export async function fetchCompanySubmissionStats(): Promise<InboxSubmissionStats> {
+/** GET /v1/company/inbox/submissions/stats — per-status counts, company-wide
+ * or for one job (its URL ref: serial, or UUID on an old link). */
+export async function fetchCompanySubmissionStats(
+  jobId?: string,
+): Promise<InboxSubmissionStats> {
   const { data } = await apiClient.get<unknown>(
     "/company/inbox/submissions/stats",
+    { params: { jobId } },
   );
   return inboxSubmissionStatsSchema.parse(data);
 }

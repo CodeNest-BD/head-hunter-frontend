@@ -121,10 +121,11 @@ export function useCompanySubmissions(params: CompanySubmissionsParams) {
   });
 }
 
-export function useCompanySubmissionStats() {
+export function useCompanySubmissionStats(jobId?: string) {
   return useQuery({
-    queryKey: inboxKeys.submissionStats,
-    queryFn: fetchCompanySubmissionStats,
+    queryKey: inboxKeys.submissionStats(jobId),
+    queryFn: () => fetchCompanySubmissionStats(jobId),
+    placeholderData: keepPreviousData,
     refetchInterval: REALTIME_POLL_MS,
     refetchOnWindowFocus: true,
   });
