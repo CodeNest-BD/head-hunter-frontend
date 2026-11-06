@@ -30,7 +30,7 @@ export interface NavItem {
   icon: LucideIcon;
   /** Which count pill this item carries, if any: waiting candidates on either
    * side's Inbox, or undecided disputes on Disputes. */
-  badge?: "inbox" | "disputes";
+  badge?: "inbox" | "disputes" | "submissions";
 }
 
 /**
@@ -180,6 +180,7 @@ export const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
           href: "/admin/submissions",
           label: "Candidate Submissions",
           icon: Inbox,
+          badge: "submissions",
         },
         {
           href: "/admin/offers-placements",

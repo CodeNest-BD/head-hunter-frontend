@@ -15,7 +15,10 @@ import type { Candidate } from "../schemas";
  * make here — the API would not have returned the candidate.
  *
  * Returns null at every other stage, so a candidate past the gate shows
- * nothing and the panel reads exactly as it did before.
+ * nothing and the panel reads exactly as it did before. That also makes it
+ * safe to mount unconditionally, which matters: a rejection is the one thing
+ * on this panel the recruiter has to act on, and it must not wait on the
+ * interview and offer queries that surround it.
  */
 export function ReviewStateNotice({ candidate }: { candidate: Candidate }) {
   const resubmit = useResubmitCandidate();
@@ -43,29 +46,48 @@ export function ReviewStateNotice({ candidate }: { candidate: Candidate }) {
   if (candidate.status !== "declined") return null;
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-sm border border-bad-line bg-bad-bg px-3 py-2.5">
+    <div className="flex flex-col gap-2.5 rounded-sm border border-bad-line bg-bad-bg px-3 py-3">
       <div className="flex items-start gap-2.5">
         <XOctagon
           aria-hidden="true"
           className="mt-0.5 size-[15px] shrink-0 text-bad"
         />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sub font-[650] text-bad">
-            Sent back by an admin
+            Rejected by an admin
             {candidate.reviewedAt && (
               <span className="ml-1.5 font-[450] text-ink-muted">
                 · {formatDateTime(candidate.reviewedAt)}
               </span>
             )}
           </p>
-          {/* The reason is the only thing that tells the recruiter what to do
-              next, so it is the body of the notice rather than a detail. */}
-          <p className="mt-1 whitespace-pre-wrap text-sub leading-relaxed text-ink-body">
-            {candidate.reviewNote ?? "No reason was given."}
-          </p>
-          <p className="mt-1.5 text-meta text-ink-muted">
-            The company was not told about this submission. Fix what is asked
-            above, then send it back.
+
+          {candidate.reviewNote ? (
+            <>
+              <p className="mt-2 text-label font-[650] uppercase text-ink-muted">
+                What To Fix
+              </p>
+              {/* Quoted on its own surface rather than run into the notice:
+                  these are someone else's words, they are the only thing here
+                  that tells the recruiter what to do, and a note of several
+                  lines has to stay readable. */}
+              <blockquote className="mt-1 whitespace-pre-wrap break-words rounded-sm border-l-2 border-bad bg-surface px-3 py-2 text-sub leading-relaxed text-ink-body">
+                {candidate.reviewNote}
+              </blockquote>
+            </>
+          ) : (
+            // The note is optional, so most rejections arrive without one.
+            // Say that plainly and still say what to do next, rather than
+            // leaving the recruiter staring at a verdict with no instruction.
+            <p className="mt-1.5 text-sub leading-relaxed text-ink-body">
+              No note was left. Check the CV and the details against the role,
+              then send it back.
+            </p>
+          )}
+
+          <p className="mt-2 text-meta leading-[18px] text-ink-muted">
+            The company was never told about this submission, so nothing is lost
+            — edit the candidate and resubmit when it is ready.
           </p>
         </div>
       </div>
@@ -77,7 +99,7 @@ export function ReviewStateNotice({ candidate }: { candidate: Candidate }) {
           onClick={() => resubmit.mutate(candidate.id)}
         >
           <RotateCcw aria-hidden="true" />
-          {resubmit.isPending ? "Sending…" : "Send back for review"}
+          {resubmit.isPending ? "Sending…" : "Resubmit for review"}
         </Button>
       </div>
     </div>

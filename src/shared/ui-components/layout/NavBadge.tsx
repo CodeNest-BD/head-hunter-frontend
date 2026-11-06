@@ -3,6 +3,7 @@
 import type { NavItem } from "./dashboardNav";
 import { DisputesBadge } from "./DisputesBadge";
 import { InboxBadge } from "./InboxBadge";
+import { SubmissionsBadge } from "./SubmissionsBadge";
 
 /**
  * The count pill a nav item asks for. One component rather than a conditional
@@ -13,5 +14,6 @@ import { InboxBadge } from "./InboxBadge";
 export function NavBadge({ badge }: { badge: NavItem["badge"] }) {
   if (badge === "inbox") return <InboxBadge />;
   if (badge === "disputes") return <DisputesBadge />;
+  if (badge === "submissions") return <SubmissionsBadge />;
   return null;
 }

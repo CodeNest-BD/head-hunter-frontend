@@ -1,11 +1,10 @@
 "use client";
 
-import { Clock3, ShieldCheck, XOctagon } from "lucide-react";
+import type { ReactNode } from "react";
+import { Clock3, XOctagon } from "lucide-react";
 
 import type { Candidate } from "@/features/candidates";
-import { Button } from "@/shared/ui-components/controls/button";
 import { formatDateTime } from "@/shared/utils/formatDate";
-import { SubmissionReviewDialog } from "./SubmissionReviewDialog";
 
 /**
  * The admin's half of the quality-control gate, wherever a single submission
@@ -19,7 +18,19 @@ import { SubmissionReviewDialog } from "./SubmissionReviewDialog";
  * Returns null at every other stage, so a candidate past the gate renders
  * nothing and the surrounding view reads exactly as it did before.
  */
-export function SubmissionGateBar({ candidate }: { candidate: Candidate }) {
+export function SubmissionGateBar({
+  candidate,
+  action,
+}: {
+  candidate: Candidate;
+  /**
+   * How to act on it, when acting is not already possible on the page. The
+   * conversation page lays the record and the decision out beside the thread,
+   * so there is nothing for the bar to offer; a split view with no room for
+   * that passes the dialog instead.
+   */
+  action?: ReactNode;
+}) {
   if (candidate.status === "pending_review") {
     return (
       <div className="flex flex-wrap items-start gap-3 rounded-md border border-warn-line bg-warn-bg px-4 py-3">
@@ -35,20 +46,7 @@ export function SubmissionGateBar({ candidate }: { candidate: Candidate }) {
             you approve it.
           </p>
         </div>
-        <SubmissionReviewDialog
-          candidateId={candidate.id}
-          name={candidate.fullName}
-          trigger={
-            <Button
-              type="button"
-              size="sm"
-              aria-label={`Review ${candidate.fullName}'s submission`}
-            >
-              <ShieldCheck aria-hidden="true" />
-              Review Submission
-            </Button>
-          }
-        />
+        {action}
       </div>
     );
   }
@@ -63,21 +61,21 @@ export function SubmissionGateBar({ candidate }: { candidate: Candidate }) {
       />
       <div className="min-w-0">
         <p className="text-sub font-[650] text-bad">
-          Sent Back To The Recruiter
+          Rejected
           {candidate.reviewedAt && (
             <span className="ml-1.5 font-[450] text-ink-muted">
               · {formatDateTime(candidate.reviewedAt)}
             </span>
           )}
         </p>
-        {/* The reason is what the recruiter is acting on, so an admin
-            re-opening this needs to read the same words they sent. */}
+        {/* The note is optional, so most rejections have none — say that
+            plainly rather than printing an empty paragraph. */}
         <p className="mt-1 whitespace-pre-wrap text-sub leading-relaxed text-ink-body">
-          {candidate.reviewNote ?? "No reason was recorded."}
+          {candidate.reviewNote ?? "No note was left."}
         </p>
         <p className="mt-1.5 text-meta text-ink-muted">
-          The company was never told about this submission. It returns here if
-          the recruiter sends it back for review.
+          Sent back to the recruiter; the company was never told about this
+          submission. It returns here if they fix it and resend.
         </p>
       </div>
     </div>

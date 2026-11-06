@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 
 import { cn } from "@/shared/libs/shadCnConfig";
@@ -22,7 +22,7 @@ import {
 } from "@/shared/ui-components/dashboard/DashboardParts";
 import { useAdminDashboard, useAdminStats } from "../hooks/useAdmin";
 import type { AdminStats, DashboardEvent, DashboardQueue } from "../schemas";
-import { QUEUE_PRESENTATION } from "./dashboard/queuePresentation";
+import { byPriority, QUEUE_PRESENTATION } from "./dashboard/queuePresentation";
 
 const SCOPES = [
   { value: "all" as const, label: "All" },
@@ -136,8 +136,9 @@ function toAttentionItem(queue: DashboardQueue): AttentionItem {
 
 function AttentionPanel({ queues }: { queues: DashboardQueue[] }) {
   const [scope, setScope] = useState<"all" | "urgent">("all");
-  const urgent = queues.filter((q) => q.urgent);
-  const shown = scope === "urgent" ? urgent : queues;
+  const ordered = useMemo(() => byPriority(queues), [queues]);
+  const urgent = ordered.filter((q) => q.urgent);
+  const shown = scope === "urgent" ? urgent : ordered;
 
   return (
     <Section label="Work queues">

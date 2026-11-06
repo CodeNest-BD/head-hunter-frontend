@@ -26,7 +26,7 @@ export type CandidateStatus = z.infer<typeof candidateStatusSchema>;
 
 export const CANDIDATE_STATUS_LABELS: Record<CandidateStatus, string> = {
   pending_review: "Pending Review",
-  declined: "Declined",
+  declined: "Rejected",
   submitted: "Submitted",
   reviewing: "Reviewing",
   interviewing: "Interviewing",

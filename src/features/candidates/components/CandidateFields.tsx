@@ -1,4 +1,5 @@
 import { cn } from "@/shared/libs/shadCnConfig";
+import { ExpandableBlock } from "@/shared/ui-components/data/ExpandableBlock";
 import { RichTextView } from "@/shared/ui-components/data/RichTextView";
 import { safeExternalHref } from "@/shared/utils/externalUrl";
 import { formatMinor } from "@/shared/utils/money";
@@ -85,11 +86,21 @@ export function CandidateFields({ candidate }: CandidateFieldsProps) {
           <p className={FACT_LABEL}>Overview</p>
           {/* An overview is rich text now. `RichTextView` sanitizes markup and
               renders a pre-editor plain-text overview as-is, so both shapes
-              read correctly without a migration. */}
-          <RichTextView
-            value={candidate.overview}
-            className="mt-[3px] text-sub leading-relaxed"
-          />
+              read correctly without a migration.
+
+              Collapsed past a screenful: a recruiter who pasted a whole CV in
+              here should not push the CV attachment, the pitch and the
+              decision buttons off the bottom of the panel. */}
+          <ExpandableBlock
+            collapsedHeight={220}
+            moreLabel="Read full overview"
+            lessLabel="Show less"
+          >
+            <RichTextView
+              value={candidate.overview}
+              className="mt-[3px] text-sub leading-relaxed"
+            />
+          </ExpandableBlock>
         </div>
       )}
     </div>

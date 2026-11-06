@@ -216,15 +216,15 @@ export function useApproveCandidate() {
 export function useDeclineCandidate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
       declineCandidate(id, reason),
     onSuccess: async () => {
       await invalidateAfterReview(queryClient);
-      toast.success("Sent back to the recruiter");
+      toast.success("Rejected — sent back to the recruiter");
     },
     onError: () =>
       toast.error(
-        "Could not decline this submission — it may already be reviewed",
+        "Could not reject this submission — it may already be reviewed",
       ),
   });
 }
@@ -235,8 +235,8 @@ export function useResubmitCandidate() {
     mutationFn: (id: string) => resubmitCandidate(id),
     onSuccess: async () => {
       await invalidateAfterReview(queryClient);
-      toast.success("Sent back for review");
+      toast.success("Resubmitted — an admin will review it again");
     },
-    onError: () => toast.error("Could not send this candidate back for review"),
+    onError: () => toast.error("Could not resubmit this candidate for review"),
   });
 }

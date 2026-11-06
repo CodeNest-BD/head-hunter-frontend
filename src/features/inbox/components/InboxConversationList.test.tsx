@@ -189,8 +189,10 @@ describe("the stage filter respects who is looking", () => {
     expect(
       screen.getByRole("menuitemcheckbox", { name: /pending review/i }),
     ).toBeInTheDocument();
+    // "Rejected", not "Declined": the admin's button says Reject, so the
+    // stage a rejection lands in says the same word.
     expect(
-      screen.getByRole("menuitemcheckbox", { name: /declined/i }),
+      screen.getByRole("menuitemcheckbox", { name: /rejected/i }),
     ).toBeInTheDocument();
   });
 

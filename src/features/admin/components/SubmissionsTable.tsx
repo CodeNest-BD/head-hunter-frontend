@@ -51,13 +51,13 @@ import { SubmissionReviewDialog } from "./SubmissionReviewDialog";
 /** The design's status wording for a submission. */
 const STATUS_LABELS: Record<string, string> = {
   pending_review: "Pending Review",
-  declined: "Declined",
+  declined: "Rejected",
   submitted: "New",
   reviewing: "Reviewing",
   interviewing: "Interviewing",
   offered: "Offer",
   hired: "Hired",
-  passed: "Rejected",
+  passed: "Passed",
   unknown: "Unknown",
 };
 
@@ -65,13 +65,13 @@ const STATUS_FILTER_OPTIONS = [
   // First, because it is the only stage that needs an admin to act: every
   // other row here is somebody else's move.
   { value: "pending_review", label: "Pending Review" },
-  { value: "declined", label: "Declined" },
+  { value: "declined", label: "Rejected" },
   { value: "submitted", label: "New" },
   { value: "reviewing", label: "Reviewing" },
   { value: "interviewing", label: "Interviewing" },
   { value: "offered", label: "Offer" },
   { value: "hired", label: "Hired" },
-  { value: "passed", label: "Rejected" },
+  { value: "passed", label: "Passed" },
 ] as const;
 
 /** The windows the design offers, newest-relative rather than absolute. */

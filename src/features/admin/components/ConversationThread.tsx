@@ -25,6 +25,8 @@ import {
 } from "../schemas";
 import { DetailSkeleton } from "./DetailPrimitives";
 import { SubmissionGateBar } from "./SubmissionGateBar";
+import { SubmissionDecision, SubmissionRecord } from "./SubmissionReview";
+import { SubmissionReviewDialog } from "./SubmissionReviewDialog";
 import { CANDIDATE_STATUS_TONES } from "./statusStyles";
 
 const EVENT_ICON: Record<ConversationEvent["type"], LucideIcon> = {
@@ -147,141 +149,186 @@ export function ConversationThread({
             : event.type !== "message",
         );
 
+  // A submission at the gate is reviewed on the page itself when there is room
+  // for it. The standalone page is mostly empty — a thread this short leaves
+  // the right-hand half blank — so covering that emptiness with a modal bought
+  // nothing. A split view has no such room, and keeps the dialog.
+  const reviewsInline =
+    !embedded && header.candidate.status === "pending_review";
+
   return (
     <div
       className={cn(
         "flex w-full flex-col gap-3.5",
-        embedded ? "max-w-none" : "max-w-5xl",
+        embedded ? "max-w-none" : reviewsInline ? "max-w-7xl" : "max-w-5xl",
       )}
     >
-      {/* Before the thread, and outside the `embedded` guard: when a
-          submission is sitting at the gate the decision is the only thing on
-          this page worth reading, and an admin arriving from the review queue
-          should not have to find it under the timeline. */}
-      <SubmissionGateBar candidate={header.candidate} />
-      {!embedded && (
-        <Card>
-          <CardContent className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="text-card font-[650] text-ink">
-                {header.company.name}
-              </span>
-              <ArrowLeftRight className="size-[15px] text-ink-faint" />
-              <span className="text-card font-[650] text-ink">
-                {header.recruiter.name}
-              </span>
-              <StatusBadge
-                className="ml-auto"
-                label={
-                  CANDIDATE_LABELS[header.candidate.status] ??
-                  header.candidate.status
-                }
-                tone={
-                  CANDIDATE_STATUS_TONES[header.candidate.status] ?? "neutral"
-                }
-              />
-            </div>
-            <p className="text-sub text-ink-body">
-              Candidate:{" "}
-              <span className="font-[650] text-ink">
-                {header.candidate.fullName}
-              </span>{" "}
-              · Role:{" "}
-              <span className="font-[650] text-ink">{header.job.title}</span>
-            </p>
-            {/* The legend the timeline icons answer to. */}
-            <div className="flex items-center gap-4 text-meta text-ink-muted">
-              <span className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-navy" />
-                Company
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-blue" />
-                Recruiter
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Before the thread: when a submission is sitting at the gate, why it
+          is stuck is the first thing an admin arriving from the review queue
+          needs, not something to find under the timeline. */}
+      <SubmissionGateBar
+        candidate={header.candidate}
+        action={
+          reviewsInline ? undefined : header.candidate.status ===
+            "pending_review" ? (
+            <SubmissionReviewDialog
+              candidateId={header.candidate.id}
+              name={header.candidate.fullName}
+            />
+          ) : undefined
+        }
+      />
+      <div
+        className={cn(
+          reviewsInline && "flex flex-col gap-4 lg:flex-row lg:items-start",
+        )}
+      >
+        <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+          {!embedded && (
+            <Card>
+              <CardContent className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="text-card font-[650] text-ink">
+                    {header.company.name}
+                  </span>
+                  <ArrowLeftRight className="size-[15px] text-ink-faint" />
+                  <span className="text-card font-[650] text-ink">
+                    {header.recruiter.name}
+                  </span>
+                  <StatusBadge
+                    className="ml-auto"
+                    label={
+                      CANDIDATE_LABELS[header.candidate.status] ??
+                      header.candidate.status
+                    }
+                    tone={
+                      CANDIDATE_STATUS_TONES[header.candidate.status] ??
+                      "neutral"
+                    }
+                  />
+                </div>
+                <p className="text-sub text-ink-body">
+                  Candidate:{" "}
+                  <span className="font-[650] text-ink">
+                    {header.candidate.fullName}
+                  </span>{" "}
+                  · Role:{" "}
+                  <span className="font-[650] text-ink">
+                    {header.job.title}
+                  </span>
+                </p>
+                {/* The legend the timeline icons answer to. */}
+                <div className="flex items-center gap-4 text-meta text-ink-muted">
+                  <span className="flex items-center gap-1.5">
+                    <span className="size-2 rounded-full bg-navy" />
+                    Company
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="size-2 rounded-full bg-blue" />
+                    Recruiter
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-      {hasNextPage && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="self-center"
-          disabled={isFetchingNextPage}
-          onClick={() => void fetchNextPage()}
-        >
-          {isFetchingNextPage ? "Loading…" : "Load older"}
-        </Button>
-      )}
+          {hasNextPage && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="self-center"
+              disabled={isFetchingNextPage}
+              onClick={() => void fetchNextPage()}
+            >
+              {isFetchingNextPage ? "Loading…" : "Load older"}
+            </Button>
+          )}
 
-      <Card>
-        <CardContent>
-          {/* `.timeline` — a read-only audit trail: a 30px actor-colored icon
+          <Card>
+            <CardContent>
+              {/* `.timeline` — a read-only audit trail: a 30px actor-colored icon
               over a hairline rail, with the entry's body beside it. */}
-          <ol className="flex flex-col">
-            {events.map((event, index) => {
-              // Fall back to the neutral icon rather than throwing on a type
-              // this map doesn't (yet) know about.
-              const Icon = EVENT_ICON[event.type] ?? Send;
-              const actor = event.actor ?? "system";
-              const isLast = index === events.length - 1;
-              const key =
-                event.messageId ??
-                `${event.type}-${event.at}-${event.candidateId ?? "none"}`;
-              return (
-                <li key={key} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <span
-                      className={cn(
-                        "flex size-7.5 shrink-0 items-center justify-center rounded-full",
-                        ACTOR_MARKER[actor] ?? ACTOR_MARKER.system,
-                      )}
-                    >
-                      <Icon className="size-3.5" />
-                    </span>
-                    {!isLast && (
-                      <span className="my-1 w-[1.5px] flex-1 bg-line" />
-                    )}
-                  </div>
-                  <div
-                    className={cn(
-                      "min-w-0 flex-1",
-                      isLast ? "pb-0" : "pb-[18px]",
-                    )}
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-block font-[650] text-ink">
-                        {event.title}
-                      </p>
-                      <span
+              <ol className="flex flex-col">
+                {events.map((event, index) => {
+                  // Fall back to the neutral icon rather than throwing on a type
+                  // this map doesn't (yet) know about.
+                  const Icon = EVENT_ICON[event.type] ?? Send;
+                  const actor = event.actor ?? "system";
+                  const isLast = index === events.length - 1;
+                  const key =
+                    event.messageId ??
+                    `${event.type}-${event.at}-${event.candidateId ?? "none"}`;
+                  return (
+                    <li key={key} className="flex gap-3">
+                      <div className="flex flex-col items-center">
+                        <span
+                          className={cn(
+                            "flex size-7.5 shrink-0 items-center justify-center rounded-full",
+                            ACTOR_MARKER[actor] ?? ACTOR_MARKER.system,
+                          )}
+                        >
+                          <Icon className="size-3.5" />
+                        </span>
+                        {!isLast && (
+                          <span className="my-1 w-[1.5px] flex-1 bg-line" />
+                        )}
+                      </div>
+                      <div
                         className={cn(
-                          "text-label font-[650] uppercase",
-                          ACTOR_TEXT[actor] ?? "text-ink-muted",
+                          "min-w-0 flex-1",
+                          isLast ? "pb-0" : "pb-[18px]",
                         )}
                       >
-                        {ACTOR_LABEL[actor] ?? "System"}
-                      </span>
-                    </div>
-                    <p className="mt-[3px] text-meta tabular-nums text-ink-faint">
-                      {formatDateTime(event.at)}
-                    </p>
-                    {event.body && (
-                      /* `.well` — the message itself, quoted rather than
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-block font-[650] text-ink">
+                            {event.title}
+                          </p>
+                          <span
+                            className={cn(
+                              "text-label font-[650] uppercase",
+                              ACTOR_TEXT[actor] ?? "text-ink-muted",
+                            )}
+                          >
+                            {ACTOR_LABEL[actor] ?? "System"}
+                          </span>
+                        </div>
+                        <p className="mt-[3px] text-meta tabular-nums text-ink-faint">
+                          {formatDateTime(event.at)}
+                        </p>
+                        {event.body && (
+                          /* `.well` — the message itself, quoted rather than
                          restated in the entry's own voice. */
-                      <p className="mt-1.5 rounded-sm border border-line bg-surface-sub px-3 py-2.5 text-body text-ink-body">
-                        {event.body}
-                      </p>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </CardContent>
-      </Card>
+                          <p className="mt-1.5 rounded-sm border border-line bg-surface-sub px-3 py-2.5 text-body text-ink-body">
+                            {event.body}
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </CardContent>
+          </Card>
+        </div>
+
+        {reviewsInline && (
+          /* Not sticky: `CandidateDetailPanel` carries its own
+             `lg:overflow-y-auto`, and pinning a taller-than-viewport panel
+             inside a second scroller is how the Approve button ends up
+             somewhere you cannot reach. The page is short — that was the
+             complaint — so it scrolls as one. */
+          <aside className="flex w-full flex-col gap-3 lg:w-[400px] lg:shrink-0">
+            {/* The same record and the same two buttons the dialog shows, so
+                an admin reviewing from here and one reviewing from the
+                submissions table are deciding on identical information. */}
+            <SubmissionRecord candidate={header.candidate} />
+            <div className="rounded-md border border-line bg-surface p-4 shadow-e1">
+              <SubmissionDecision candidateId={header.candidate.id} />
+            </div>
+          </aside>
+        )}
+      </div>
     </div>
   );
 }

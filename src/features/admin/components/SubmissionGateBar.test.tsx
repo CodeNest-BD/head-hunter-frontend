@@ -1,18 +1,9 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { renderWithProviders } from "@/test/utils";
 import type { Candidate } from "@/features/candidates";
 import { SubmissionGateBar } from "./SubmissionGateBar";
-
-// The dialog pulls the whole candidate record and its attachments over the
-// wire; this suite is about what the bar says and offers, so the panel itself
-// is stubbed down to its trigger.
-vi.mock("./SubmissionReviewDialog", () => ({
-  SubmissionReviewDialog: ({ trigger }: { trigger?: React.ReactNode }) => (
-    <>{trigger}</>
-  ),
-}));
 
 function candidate(overrides: Partial<Candidate> = {}): Candidate {
   return {
@@ -38,7 +29,7 @@ function candidate(overrides: Partial<Candidate> = {}): Candidate {
 }
 
 describe("SubmissionGateBar", () => {
-  it("offers the review when a submission is held at the gate", () => {
+  it("says why a submission is stuck, and who it is stuck on", () => {
     renderWithProviders(<SubmissionGateBar candidate={candidate()} />);
 
     expect(screen.getByText(/waiting on your review/i)).toBeInTheDocument();
@@ -46,9 +37,27 @@ describe("SubmissionGateBar", () => {
     expect(
       screen.getByText(/company cannot see this submission/i),
     ).toBeInTheDocument();
+  });
+
+  it("renders whatever way of acting the page gave it", () => {
+    // The conversation page lays the decision out beside the thread and
+    // passes nothing; a split view with no room passes the dialog.
+    renderWithProviders(
+      <SubmissionGateBar
+        candidate={candidate()}
+        action={<button type="button">Review Submission</button>}
+      />,
+    );
+
     expect(
-      screen.getByRole("button", { name: /review ada lovelace's submission/i }),
+      screen.getByRole("button", { name: "Review Submission" }),
     ).toBeInTheDocument();
+  });
+
+  it("offers nothing to press when the page acts for itself", () => {
+    renderWithProviders(<SubmissionGateBar candidate={candidate()} />);
+
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
   it("shows the reason it was sent back, and offers no decision to re-make", () => {
@@ -62,19 +71,19 @@ describe("SubmissionGateBar", () => {
       />,
     );
 
-    expect(screen.getByText(/sent back to the recruiter/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Rejected/)).toBeInTheDocument();
     expect(
       screen.getByText("The CV is for a different role."),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("says so when a decline carries no reason", () => {
+  it("says so when a rejection carries no note", () => {
     renderWithProviders(
       <SubmissionGateBar candidate={candidate({ status: "declined" })} />,
     );
 
-    expect(screen.getByText(/no reason was recorded/i)).toBeInTheDocument();
+    expect(screen.getByText(/no note was left/i)).toBeInTheDocument();
   });
 
   it("renders nothing once a candidate is past the gate", () => {
