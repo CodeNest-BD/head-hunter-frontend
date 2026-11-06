@@ -124,35 +124,6 @@ describe("ProposeSlotsForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("expands a window into back-to-back times", async () => {
-    renderForm();
-    await pickADay();
-
-    // 9:00 AM start (the default) through 11:00 AM at the default 60 min.
-    await userEvent.selectOptions(screen.getByLabelText("End time"), "11:00");
-    await userEvent.click(
-      screen.getByRole("button", { name: "Add to proposal" }),
-    );
-
-    expect(
-      screen.getByText(`2 of ${MAX_PROPOSAL_SLOTS} times added`),
-    ).toBeInTheDocument();
-  });
-
-  it("says how many of a long window did not fit in the batch", async () => {
-    // The whole point of capping in the form rather than in `expandWindow`:
-    // a 9-to-5 window at 60 minutes is eight interviews and the API takes
-    // five, so the three that are dropped are named rather than vanishing.
-    renderForm();
-    await pickADay();
-
-    await userEvent.selectOptions(screen.getByLabelText("End time"), "17:00");
-
-    expect(
-      screen.getByText(/Adds 5 times, 60 min apart \(3 more than fit\)/),
-    ).toBeInTheDocument();
-  });
-
   it("lists each added time with a remove control named after its window", async () => {
     renderForm();
     await pickADay();

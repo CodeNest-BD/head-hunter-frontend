@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  MAX_PROPOSAL_SLOTS,
   SLOT_TIME_STEP_MINUTES,
   type Interview,
   type InterviewSlot,
 } from "../schemas";
 import {
-  expandWindow,
   firstStartDayAfterInterview,
   formatSlotWindow,
-  selectableEndTimes,
   selectableTimeOptions,
   SLOT_TIME_OPTIONS,
   toSlotRange,
@@ -193,97 +190,5 @@ describe("firstStartDayAfterInterview", () => {
         }),
       ),
     ).toBe("2026-09-24");
-  });
-});
-
-describe("expandWindow", () => {
-  const day = "2026-11-10";
-
-  it("turns a hiring manager's window into back-to-back slots", () => {
-    // The client's own example: available 9:00–11:00, hour-long interviews.
-    expect(
-      expandWindow({
-        day,
-        startTime: "09:00",
-        endTime: "11:00",
-        durationMinutes: 60,
-      }),
-    ).toEqual([
-      { day, startTime: "09:00", durationMinutes: 60 },
-      { day, startTime: "10:00", durationMinutes: 60 },
-    ]);
-  });
-
-  it("drops a trailing remainder too short to hold a full interview", () => {
-    // 9:00–11:45 at 60 minutes is two interviews, not two and a 45-min stub
-    // that would disagree with the length shown on screen.
-    const slots = expandWindow({
-      day,
-      startTime: "09:00",
-      endTime: "11:45",
-      durationMinutes: 60,
-    });
-
-    expect(slots.map((slot) => slot.startTime)).toEqual(["09:00", "10:00"]);
-  });
-
-  it("treats an unset end time as a single slot", () => {
-    expect(
-      expandWindow({
-        day,
-        startTime: "14:30",
-        endTime: "",
-        durationMinutes: 45,
-      }),
-    ).toEqual([{ day, startTime: "14:30", durationMinutes: 45 }]);
-  });
-
-  it("still offers one slot when the window is shorter than the length", () => {
-    // Picking 9:00–9:15 with a 30-minute length means an interview at 9:00,
-    // not no interview at all.
-    expect(
-      expandWindow({
-        day,
-        startTime: "09:00",
-        endTime: "09:15",
-        durationMinutes: 30,
-      }),
-    ).toEqual([{ day, startTime: "09:00", durationMinutes: 30 }]);
-  });
-
-  it("reports the whole window, leaving the batch cap to the caller", () => {
-    // A working day at 30 minutes really is 16 interviews. Capping here would
-    // hide the other 11 from the form, which needs the true count to say how
-    // many did not fit.
-    const slots = expandWindow({
-      day,
-      startTime: "09:00",
-      endTime: "17:00",
-      durationMinutes: 30,
-    });
-
-    expect(slots).toHaveLength(16);
-    expect(slots.length).toBeGreaterThan(MAX_PROPOSAL_SLOTS);
-    expect(slots.at(-1)).toEqual({
-      day,
-      startTime: "16:30",
-      durationMinutes: 30,
-    });
-  });
-});
-
-describe("selectableEndTimes", () => {
-  it("offers only times later the same day", () => {
-    const options = selectableEndTimes("23:00", SLOT_TIME_OPTIONS);
-
-    expect(options.map((option) => option.value)).toEqual([
-      "23:15",
-      "23:30",
-      "23:45",
-    ]);
-  });
-
-  it("offers nothing once the start is the last slot of the day", () => {
-    expect(selectableEndTimes("23:45", SLOT_TIME_OPTIONS)).toEqual([]);
   });
 });

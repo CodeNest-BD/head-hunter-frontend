@@ -9,7 +9,6 @@ import {
   SLOT_TIME_STEP_MINUTES,
   type Interview,
   type ProposeSlotFormValues,
-  type SlotDurationMinutes,
 } from "../schemas";
 
 export interface SlotTimeOption {
@@ -75,71 +74,6 @@ export function selectableTimeOptions(
   return SLOT_TIME_OPTIONS.filter(
     (option) => new Date(`${day}T${option.value}`) > now,
   );
-}
-
-/** "09:30" → 570. The list is `HH:mm` throughout, so this never sees a date. */
-function toMinutes(time: string): number {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-/**
- * The end times offerable for a window that starts at `startTime`: every
- * option later in the same day. Empty near midnight, which the caller reads as
- * "this window is a single slot" rather than as an error — the company is
- * still allowed to offer 11:45 PM.
- */
-export function selectableEndTimes(
-  startTime: string,
-  dayOptions: readonly SlotTimeOption[],
-): readonly SlotTimeOption[] {
-  if (!startTime) return [];
-  const start = toMinutes(startTime);
-  return dayOptions.filter((option) => toMinutes(option.value) > start);
-}
-
-/**
- * A hiring manager's availability window → the back-to-back interview slots
- * inside it.
- *
- * The company told us "Tuesday, 9:00 AM to 11:00 AM, one hour each"; the API
- * stores a shortlist of discrete windows, so 9–11 at 60 minutes becomes 9:00
- * and 10:00. This is what spares a company from adding every start time by
- * hand, which is what the client reported as redundant.
- *
- * A window too short to hold one full length still yields exactly one slot: a
- * company that picked 9:00–9:15 with a 30-minute length meant an interview at
- * 9:00, not nothing. The trailing remainder of a longer window is dropped —
- * 9:00–11:45 at 60 minutes is 9:00 and 10:00, never a 45-minute stub that
- * disagrees with the length on screen.
- *
- * Deliberately NOT capped at `MAX_PROPOSAL_SLOTS`: this returns what the
- * window actually holds, and the caller caps it. Capping here hid the
- * difference — a 9:00–17:00 window at 30 minutes would quietly become five
- * slots with no hint that eleven more were dropped.
- */
-export function expandWindow({
-  day,
-  startTime,
-  endTime,
-  durationMinutes,
-}: {
-  day: string;
-  startTime: string;
-  endTime: string;
-  durationMinutes: SlotDurationMinutes;
-}): ProposeSlotFormValues[] {
-  const start = toMinutes(startTime);
-  const end = endTime === "" ? start : toMinutes(endTime);
-  const slots: ProposeSlotFormValues[] = [];
-  for (let at = start; at + durationMinutes <= end; at += durationMinutes) {
-    slots.push({
-      day,
-      startTime: `${pad(Math.floor(at / 60))}:${pad(at % 60)}`,
-      durationMinutes,
-    });
-  }
-  return slots.length > 0 ? slots : [{ day, startTime, durationMinutes }];
 }
 
 /**

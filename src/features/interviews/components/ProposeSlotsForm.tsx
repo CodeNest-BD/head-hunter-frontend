@@ -18,6 +18,7 @@ import {
   proposeSlotsFormSchema,
   SLOT_DURATION_OPTIONS,
   type InterviewType,
+  type ProposeSlotFormValues,
   type ProposeSlotsFormValues,
   type SlotDurationMinutes,
 } from "../schemas";
@@ -26,9 +27,7 @@ import {
   proposeSlotsErrorMessage,
 } from "../utils/interviewErrorMessages";
 import {
-  expandWindow,
   formatSlotWindow,
-  selectableEndTimes,
   selectableTimeOptions,
   toSlotRange,
 } from "../utils/slotTiming";
@@ -62,7 +61,7 @@ const DEFAULT_INTERVIEW_TYPE: InterviewType = "video";
  * instead of being re-derived beside every hint.
  */
 type AddState =
-  | { kind: "ready" }
+  | { kind: "ready"; slot: ProposeSlotFormValues }
   | { kind: "needsDay"; hint: string }
   | { kind: "noTimesToday"; hint: string }
   | { kind: "duplicate"; hint: string }
@@ -114,10 +113,6 @@ export function ProposeSlotsForm({
   // still be in the past — `selectableTimeOptions` below handles that half.
   const [day, setDay] = useState("");
   const [startTime, setStartTime] = useState("09:00");
-  // The far end of the hiring manager's availability, not of one interview:
-  // 9:00–11:00 at a 60-minute length is two interviews, and that expansion is
-  // the whole point of the field. Empty means "just the one slot".
-  const [endTime, setEndTime] = useState("");
   const [duration, setDuration] =
     useState<SlotDurationMinutes>(DEFAULT_DURATION);
 
@@ -134,37 +129,6 @@ export function ProposeSlotsForm({
     ? startTime
     : (timeOptions[0]?.value ?? "");
 
-  // Same derive-don't-reset rule the start time follows: the end options
-  // depend on the start, so a stale end is ignored rather than cleared by an
-  // effect on every start change.
-  const endOptions = selectableEndTimes(effectiveStartTime, timeOptions);
-  const effectiveEndTime = endOptions.some((option) => option.value === endTime)
-    ? endTime
-    : "";
-
-  // What this day/window would add, before any of it is staged. Everything
-  // below reads the window through this one expansion, so the hints, the
-  // button and the submit can never disagree about what a click would do.
-  const windowSlots =
-    day === "" || effectiveStartTime === ""
-      ? []
-      : expandWindow({
-          day,
-          startTime: effectiveStartTime,
-          endTime: effectiveEndTime,
-          durationMinutes: duration,
-        });
-
-  // O(1) per candidate slot rather than a nested scan of the staged list.
-  const stagedKeys = new Set(
-    fields.map((field) => `${field.day}T${field.startTime}`),
-  );
-  const freeSlots = windowSlots.filter(
-    (slot) => !stagedKeys.has(`${slot.day}T${slot.startTime}`),
-  );
-  const room = MAX_PROPOSAL_SLOTS - fields.length;
-  const addableSlots = freeSlots.slice(0, Math.max(room, 0));
-
   const addState: AddState = ((): AddState => {
     if (day === "") {
       return { kind: "needsDay", hint: "Choose a day first" };
@@ -177,30 +141,28 @@ export function ProposeSlotsForm({
         hint: "No times left today — pick another day.",
       };
     }
-    if (freeSlots.length === 0) {
-      return {
-        kind: "duplicate",
-        hint:
-          windowSlots.length === 1
-            ? "That time is already offered"
-            : "Every time in that window is already offered",
-      };
+    if (
+      fields.some(
+        (field) => field.day === day && field.startTime === effectiveStartTime,
+      )
+    ) {
+      return { kind: "duplicate", hint: "That time is already offered" };
     }
-    if (room <= 0) {
+    if (fields.length >= MAX_PROPOSAL_SLOTS) {
       return { kind: "full", hint: "Remove one to offer a different time" };
     }
-    return { kind: "ready" };
+    return {
+      kind: "ready",
+      slot: { day, startTime: effectiveStartTime, durationMinutes: duration },
+    };
   })();
 
   const canAdd = addState.kind === "ready";
 
   const addTime = (): void => {
-    if (!canAdd) {
-      return;
+    if (addState.kind === "ready") {
+      append(addState.slot);
     }
-    // One `append` per slot: `useFieldArray` accepts an array, and appending
-    // the whole window in a single call keeps it to one re-render.
-    append(addableSlots);
   };
 
   // Length belongs to the batch, so changing it re-stamps what is already
@@ -381,26 +343,6 @@ export function ProposeSlotsForm({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="propose-end-time">End time</Label>
-            <NativeSelect
-              id="propose-end-time"
-              className="w-auto"
-              value={effectiveEndTime}
-              disabled={endOptions.length === 0}
-              onChange={(event) => setEndTime(event.target.value)}
-            >
-              {/* The empty option is a real choice, not a placeholder: a
-                  hiring manager free for exactly one slot picks no end. */}
-              <option value="">One slot only</option>
-              {endOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </NativeSelect>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
             <Label htmlFor="propose-duration">Length</Label>
             <NativeSelect
               id="propose-duration"
@@ -431,16 +373,6 @@ export function ProposeSlotsForm({
 
         <div className="flex flex-wrap items-center gap-3 text-meta text-ink-faint">
           {addState.kind !== "ready" && <span>{addState.hint}</span>}
-          {/* What a window actually turns into, said before the click rather
-              than discovered after it — the whole point of an end time is that
-              one choice adds several times. */}
-          {canAdd && addableSlots.length > 1 && (
-            <span>
-              Adds {addableSlots.length} times, {duration} min apart
-              {addableSlots.length < freeSlots.length &&
-                ` (${freeSlots.length - addableSlots.length} more than fit)`}
-            </span>
-          )}
           {/* Says out loud that the button is a convenience: the submit already
               includes whatever is picked here. Users reading the old
               "+ Add time" took the click for a precondition. */}
