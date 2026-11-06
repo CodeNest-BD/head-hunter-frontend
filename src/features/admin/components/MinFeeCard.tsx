@@ -9,8 +9,8 @@ import {
 } from "@/shared/utils/money";
 import { Button } from "@/shared/ui-components/controls/button";
 import { CardContent } from "@/shared/ui-components/controls/card";
-import { Input } from "@/shared/ui-components/controls/input";
 import { Label } from "@/shared/ui-components/controls/label";
+import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import { Alert } from "@/shared/ui-components/feedback/Alert";
 import { SettingsCard } from "@/shared/ui-components/layout/SettingsParts";
 import {
@@ -75,19 +75,12 @@ export function MinFeeCard() {
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="min-recruiter-fee">Minimum fee (USD)</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-sub text-ink-muted">$</span>
-                <Input
-                  id="min-recruiter-fee"
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  inputMode="decimal"
-                  value={value}
-                  onChange={(event) => setValue(event.target.value)}
-                  className="max-w-[160px] tabular-nums"
-                />
-              </div>
+              <MoneyInput
+                id="min-recruiter-fee"
+                value={value}
+                onChange={setValue}
+                className="max-w-[160px]"
+              />
             </div>
 
             <div>

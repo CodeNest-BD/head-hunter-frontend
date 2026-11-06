@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 // Imported from the schemas module directly, not the offers barrel: the barrel
 // also re-exports the feature's hooks, which would drag its API client into a
@@ -12,7 +12,7 @@ import {
 } from "@/features/offers/schemas";
 import { Button } from "@/shared/ui-components/controls/button";
 import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
-import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
+import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
 import { majorInputToMinor } from "@/shared/utils/money";
@@ -53,6 +53,7 @@ export function CounterOfferForm({
   isPending,
 }: CounterOfferFormProps) {
   const {
+    control,
     register,
     handleSubmit,
     watch,
@@ -80,7 +81,19 @@ export function CounterOfferForm({
       {/* `.field` */}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="offer-counter-salary">New salary (USD/yr)</Label>
-        <NumericInput id="offer-counter-salary" {...register("salary")} />
+        <Controller
+          control={control}
+          name="salary"
+          render={({ field }) => (
+            <MoneyInput
+              ref={field.ref}
+              id="offer-counter-salary"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+            />
+          )}
+        />
         {errors.salary && (
           <p className="text-meta font-medium text-bad">
             {errors.salary.message}

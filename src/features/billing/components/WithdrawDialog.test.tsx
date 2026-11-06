@@ -129,7 +129,7 @@ describe("WithdrawDialog", () => {
 
     await user.click(screen.getByRole("button", { name: "Open withdraw" }));
     await user.click(screen.getByRole("button", { name: "Withdraw all" }));
-    expect(screen.getByLabelText("Amount")).toHaveValue("3200");
+    expect(screen.getByLabelText("Amount")).toHaveValue("3,200");
 
     await user.click(screen.getByRole("button", { name: "Withdraw" }));
     await waitFor(() => expect(createPayoutMock).toHaveBeenCalledTimes(1));

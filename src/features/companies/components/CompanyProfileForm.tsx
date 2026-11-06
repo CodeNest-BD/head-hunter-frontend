@@ -9,6 +9,7 @@ import { CityCombobox } from "@/shared/ui-components/controls/CityCombobox";
 import { Input } from "@/shared/ui-components/controls/input";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
+import { MoneyInput } from "@/shared/ui-components/controls/MoneyInput";
 import {
   Select,
   SelectContent,
@@ -243,30 +244,18 @@ export function CompanyProfileForm({ profile }: CompanyProfileFormProps) {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="revenue">Annual Revenue</Label>
-              {/* The $ is a permanent prefix, not part of the value. The field is
-                  numeric-only, so legacy free-text values like "$50M" are cleaned
-                  to their digits on first edit. */}
               <Controller
                 control={control}
                 name="revenue"
                 render={({ field }) => (
-                  <div className="relative">
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-body text-ink-faint"
-                    >
-                      $
-                    </span>
-                    <NumericInput
-                      decimal
-                      id="revenue"
-                      className="pl-7 tabular-nums"
-                      placeholder="50000000"
-                      value={(field.value ?? "").replace(/[^\d.]/g, "")}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                    />
-                  </div>
+                  <MoneyInput
+                    ref={field.ref}
+                    id="revenue"
+                    placeholder="50,000,000"
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  />
                 )}
               />
               {errors.revenue && (
