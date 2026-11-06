@@ -117,6 +117,8 @@ export const POSITION_OPEN_REASON_CARD_LABELS: Record<
 
 /** The client asks for exactly three hiring-decision keys. */
 export const MAX_SELECTION_KEYS = 3;
+/** Mirrors the backend cap on each key. */
+export const MAX_SELECTION_KEY_LENGTH = 200;
 
 /** Mirrors the backend cap: a paragraph about the company, not a pitch deck. */
 export const MAX_WHAT_THEY_DO_LENGTH = 600;
@@ -695,7 +697,15 @@ export const jobFormSchema = z
       .trim()
       .max(2000, "Keep it under 2,000 characters"),
     selectionKeys: z
-      .array(z.string().trim().max(200, "Keep it under 200 characters"))
+      .array(
+        z
+          .string()
+          .trim()
+          .max(
+            MAX_SELECTION_KEY_LENGTH,
+            `Keep each key under ${MAX_SELECTION_KEY_LENGTH} characters`,
+          ),
+      )
       .max(MAX_SELECTION_KEYS, `Up to ${MAX_SELECTION_KEYS} keys`),
     positionOpenReason: positionOpenReasonSchema.or(z.literal("")),
     confidentialSearch: z.boolean(),

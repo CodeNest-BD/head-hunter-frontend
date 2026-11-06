@@ -1373,28 +1373,47 @@ export function JobForm({
                 name="selectionKeys"
                 render={({ field }) => (
                   <div className="grid gap-2.5">
-                    {Array.from({ length: MAX_SELECTION_KEYS }, (_, index) => (
-                      <div key={index} className="flex items-center gap-2.5">
-                        <span className="w-4 shrink-0 text-sub font-[550] tabular-nums text-ink">
-                          {index + 1}.
-                        </span>
-                        <Input
-                          aria-label={`Hiring decision key ${index + 1}`}
-                          className={CONTROL_HEIGHT}
-                          value={field.value[index] ?? ""}
-                          onChange={(event) => {
-                            // A fixed three rows over a sparse array, so typing in
-                            // row 3 first does not collapse into row 1.
-                            const next = Array.from(
-                              { length: MAX_SELECTION_KEYS },
-                              (_, position) => field.value[position] ?? "",
-                            );
-                            next[index] = event.target.value;
-                            field.onChange(next);
-                          }}
-                        />
-                      </div>
-                    ))}
+                    {Array.from({ length: MAX_SELECTION_KEYS }, (_, index) => {
+                      const keyError = errors.selectionKeys?.[index]?.message;
+                      return (
+                        <div key={index} className="flex items-start gap-2.5">
+                          <span
+                            className={cn(
+                              "flex w-4 shrink-0 items-center text-sub font-[550] tabular-nums text-ink",
+                              CONTROL_HEIGHT,
+                            )}
+                          >
+                            {index + 1}.
+                          </span>
+                          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                            <Input
+                              aria-label={`Hiring decision key ${index + 1}`}
+                              aria-invalid={keyError !== undefined}
+                              className={CONTROL_HEIGHT}
+                              value={field.value[index] ?? ""}
+                              onChange={(event) => {
+                                // A fixed three rows over a sparse array, so typing in
+                                // row 3 first does not collapse into row 1.
+                                const next = Array.from(
+                                  { length: MAX_SELECTION_KEYS },
+                                  (_, position) => field.value[position] ?? "",
+                                );
+                                next[index] = event.target.value;
+                                field.onChange(next);
+                              }}
+                            />
+                            {keyError && (
+                              <p
+                                role="alert"
+                                className="text-meta font-medium text-bad"
+                              >
+                                {keyError}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               />
