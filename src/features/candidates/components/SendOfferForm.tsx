@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { HttpStatusCode } from "axios";
@@ -21,7 +22,9 @@ import {
   type CandidateNegotiationState,
   type OpenInterviewBadge,
 } from "@/features/conversations/utils/candidateNegotiationState";
+import { useWallet } from "@/features/billing";
 import { firstStartDayAfterInterview } from "@/features/interviews/utils/slotTiming";
+import { useJob } from "@/features/jobs";
 import { allMessages, isApiError } from "@/shared/libs/errorHandler";
 import { Button } from "@/shared/ui-components/controls/button";
 import { ConfirmAction } from "@/shared/ui-components/controls/ConfirmAction";
@@ -29,10 +32,12 @@ import { DayPickerField } from "@/shared/ui-components/controls/DayPickerField";
 import { NumericInput } from "@/shared/ui-components/controls/NumericInput";
 import { Label } from "@/shared/ui-components/controls/label";
 import { Textarea } from "@/shared/ui-components/controls/textarea";
-import { majorInputToMinor } from "@/shared/utils/money";
+import { formatMinor, majorInputToMinor } from "@/shared/utils/money";
 
 export interface SendOfferFormProps {
   candidateId: string;
+  /** The candidate's job, whose recruiter fee the wallet must cover. */
+  jobId: string;
   /** This candidate's entry from `candidateNegotiationState`, or `null` when
    * the candidate has neither an interview nor an offer yet — derived once
    * per page from the page-level `useOffers({ candidateId })` query, never
@@ -128,12 +133,15 @@ const EMPTY_VALUES: OfferTermsFormValues = {
  */
 export function SendOfferForm({
   candidateId,
+  jobId,
   negotiationState,
 }: SendOfferFormProps) {
   const disabledReasonId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const createOffer = useCreateOffer();
+  const wallet = useWallet();
+  const job = useJob(jobId);
 
   const liveOffer = negotiationState?.offerRecord ?? null;
   const withdrawableOffer = isWithdrawableByCompany(liveOffer)
@@ -186,7 +194,7 @@ export function SendOfferForm({
         onSubmit={onSubmit}
         className="flex flex-col gap-3 rounded-sm border border-line bg-surface-sub p-3"
       >
-        <p className="text-sub font-[650] text-ink">Send offer</p>
+        <p className="text-sub font-[650] text-ink">Send Offer</p>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="send-offer-salary">Salary (USD/yr)</Label>
           <NumericInput id="send-offer-salary" {...register("salary")} />
@@ -223,7 +231,7 @@ export function SendOfferForm({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" size="sm" disabled={createOffer.isPending}>
-            {createOffer.isPending ? "Sending…" : "Send offer"}
+            {createOffer.isPending ? "Sending…" : "Send Offer"}
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={closeForm}>
             Cancel
@@ -240,22 +248,44 @@ export function SendOfferForm({
   }
 
   const disabledReason = offerDisabledReason(negotiationState);
+  // Unknown while either query loads; the server refuses an unaffordable
+  // offer regardless, so this only spares the company a wasted form.
+  const availableMinor = wallet.data?.availableMinor;
+  const feeMinor = job.data?.recruiterFeeMinor;
+  const isShortOfFunds =
+    disabledReason === null &&
+    availableMinor !== undefined &&
+    feeMinor !== undefined &&
+    availableMinor < feeMinor;
+  const isDisabled = disabledReason !== null || isShortOfFunds;
 
   return (
     <div className="flex flex-col gap-1.5">
       <Button
         type="button"
-        variant="success"
         size="sm"
-        disabled={Boolean(disabledReason)}
-        aria-describedby={disabledReason ? disabledReasonId : undefined}
+        disabled={isDisabled}
+        aria-describedby={isDisabled ? disabledReasonId : undefined}
         onClick={() => setIsOpen(true)}
       >
-        Send Offer
+        Make Offer
       </Button>
       {disabledReason && (
         <p id={disabledReasonId} className="text-meta text-ink-muted">
           {disabledReason}
+        </p>
+      )}
+      {isShortOfFunds && (
+        <p id={disabledReasonId} className="text-meta text-ink-muted">
+          Your wallet has {formatMinor(availableMinor)} available, but this
+          job&apos;s recruiter fee is {formatMinor(feeMinor)}.{" "}
+          <Link
+            href="/company/wallet#load-funds"
+            className="font-[550] text-blue-ink underline-offset-2 hover:underline"
+          >
+            Load funds
+          </Link>{" "}
+          before making an offer.
         </p>
       )}
       {withdrawableOffer &&

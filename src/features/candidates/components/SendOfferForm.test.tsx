@@ -10,6 +10,18 @@ import { SendOfferForm } from "./SendOfferForm";
 const fetchOffersMock = vi.fn();
 const createOfferMock = vi.fn();
 const withdrawOfferMock = vi.fn();
+const fetchWalletMock = vi.fn();
+const fetchJobMock = vi.fn();
+
+const FEE_MINOR = 500000;
+
+vi.mock("@/features/billing/api/billing", () => ({
+  fetchWallet: () => fetchWalletMock(),
+}));
+
+vi.mock("@/features/jobs/api/jobs", () => ({
+  fetchJob: (id: string) => fetchJobMock(id),
+}));
 
 // `fetchOffers` is mocked only so a stray call would be caught, not because
 // the component still uses it — it reads its candidate's negotiation state
@@ -53,7 +65,29 @@ describe("SendOfferForm", () => {
     fetchOffersMock.mockReset();
     createOfferMock.mockReset();
     withdrawOfferMock.mockReset();
+    fetchWalletMock.mockResolvedValue({ availableMinor: FEE_MINOR });
+    fetchJobMock.mockResolvedValue({
+      id: "job-1",
+      recruiterFeeMinor: FEE_MINOR,
+    });
     vi.setSystemTime(new Date("2026-08-22T12:00:00"));
+  });
+
+  it("blocks making an offer the wallet cannot cover and points to loading funds", async () => {
+    fetchWalletMock.mockResolvedValue({ availableMinor: FEE_MINOR - 1 });
+
+    renderWithProviders(
+      <SendOfferForm
+        candidateId="candidate-1"
+        jobId="job-1"
+        negotiationState={negotiationState()}
+      />,
+    );
+
+    expect(
+      await screen.findByRole("link", { name: /load funds/i }),
+    ).toHaveAttribute("href", "/company/wallet#load-funds");
+    expect(screen.getByRole("button", { name: /make offer/i })).toBeDisabled();
   });
 
   afterEach(() => {
@@ -64,11 +98,12 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState()}
       />,
     );
 
-    await screen.findByRole("button", { name: /send offer/i });
+    await screen.findByRole("button", { name: /make offer/i });
     expect(fetchOffersMock).not.toHaveBeenCalled();
   });
 
@@ -76,6 +111,7 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState({
           offer: { kind: "sent", salaryMinor: null, sentBy: "company" },
         })}
@@ -83,7 +119,7 @@ describe("SendOfferForm", () => {
     );
 
     expect(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     ).toBeDisabled();
     expect(
       screen.getByText(/already has an offer awaiting a response/i),
@@ -94,6 +130,7 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState({
           offer: { kind: "accepted", salaryMinor: null },
         })}
@@ -101,7 +138,7 @@ describe("SendOfferForm", () => {
     );
 
     expect(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     ).toBeDisabled();
     expect(screen.getByText(/already been hired/i)).toBeInTheDocument();
   });
@@ -110,6 +147,7 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState({
           offer: { kind: "declined", salaryMinor: null },
         })}
@@ -117,7 +155,7 @@ describe("SendOfferForm", () => {
     );
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: /send offer/i })).toBeEnabled(),
+      expect(screen.getByRole("button", { name: /make offer/i })).toBeEnabled(),
     );
     expect(screen.queryByText(/already has an offer/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/already been hired/i)).not.toBeInTheDocument();
@@ -127,6 +165,7 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState({
           interview: {
             kind: "scheduled",
@@ -138,7 +177,7 @@ describe("SendOfferForm", () => {
     );
 
     expect(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     ).toBeDisabled();
     expect(screen.getByText(/record its outcome first/i)).toBeInTheDocument();
   });
@@ -147,6 +186,7 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState({
           interview: { kind: "awaiting_time" },
         })}
@@ -154,7 +194,7 @@ describe("SendOfferForm", () => {
     );
 
     expect(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     ).toBeDisabled();
     expect(screen.getByText(/finish the round first/i)).toBeInTheDocument();
   });
@@ -166,6 +206,7 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState({
           offer: { kind: "sent", salaryMinor: 1500000, sentBy: "company" },
           offerRecord: offer({ status: "sent", createdBy: "company" }),
@@ -188,6 +229,7 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState({
           offer: { kind: "sent", salaryMinor: 1500000, sentBy: "recruiter" },
           offerRecord: offer({ status: "sent", createdBy: "recruiter" }),
@@ -196,7 +238,7 @@ describe("SendOfferForm", () => {
     );
 
     expect(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     ).toBeDisabled();
     expect(
       screen.queryByRole("button", { name: /^withdraw offer$/i }),
@@ -210,12 +252,13 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState()}
       />,
     );
 
     await user.click(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     );
     await user.type(screen.getByLabelText(/salary/i), "150000");
     await user.click(screen.getByText(/pick a start date/i));
@@ -248,12 +291,13 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState()}
       />,
     );
 
     await user.click(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     );
 
     expect(screen.queryByLabelText(/title/i)).not.toBeInTheDocument();
@@ -265,12 +309,13 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState()}
       />,
     );
 
     await user.click(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     );
     // The trigger is a button associated with a `<label for>`, so its
     // accessible name is the label ("Start date"), not its own visible text —
@@ -291,12 +336,13 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState()}
       />,
     );
 
     await user.click(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     );
     await user.click(screen.getByText(/pick a start date/i));
 
@@ -328,12 +374,13 @@ describe("SendOfferForm", () => {
     renderWithProviders(
       <SendOfferForm
         candidateId="candidate-1"
+        jobId="job-1"
         negotiationState={negotiationState()}
       />,
     );
 
     await user.click(
-      await screen.findByRole("button", { name: /send offer/i }),
+      await screen.findByRole("button", { name: /make offer/i }),
     );
     await user.click(screen.getByRole("button", { name: /^send offer$/i }));
 

@@ -21,8 +21,8 @@ import {
 import { REALTIME_POLL_MS } from "@/shared/libs/polling";
 import { conversationKeys } from "@/features/conversations/keys";
 import { inboxKeys } from "@/features/inbox/keys";
-import { offerKeys } from "@/features/offers/keys";
 import { adminKeys } from "@/features/admin/keys";
+import { offerKeys } from "@/features/offers/keys";
 import { candidateKeys } from "../keys";
 
 /** The calling recruiter's own candidates on one job — at most five. */
@@ -153,17 +153,21 @@ export function usePassCandidate(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => passCandidate(id),
-    // Passing withdraws a live offer server-side, so the offer cards refresh
-    // alongside the candidate, thread and inbox.
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
         queryClient.invalidateQueries({ queryKey: conversationKeys.all }),
         queryClient.invalidateQueries({ queryKey: inboxKeys.all }),
-        queryClient.invalidateQueries({ queryKey: offerKeys.all }),
       ]);
       toast.success("Candidate passed");
     },
+    // Refused because an offer went out that this page has not seen yet —
+    // refetching shows it, which hides Pass and explains the refusal.
+    onError: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: offerKeys.all }),
+        queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
+      ]),
   });
 }
 
