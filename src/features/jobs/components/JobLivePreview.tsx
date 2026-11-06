@@ -57,7 +57,7 @@ function PillRow({ label, entries }: { label: string; entries: string[] }) {
       <BlockLabel>{label}</BlockLabel>
       <ul className="flex flex-wrap gap-1.5">
         {entries.map((entry) => (
-          <li key={entry}>
+          <li key={entry} className="max-w-full">
             <Tag>{entry}</Tag>
           </li>
         ))}
