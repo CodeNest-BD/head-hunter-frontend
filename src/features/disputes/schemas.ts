@@ -161,6 +161,7 @@ export const participantDisputeSchema = z.object({
   placementId: z.string(),
   offerId: z.string(),
   jobTitle: z.string(),
+  candidateName: z.string(),
   counterpartyName: z.string(),
   amountMinor: z.number(),
   status: disputeStatusSchema,

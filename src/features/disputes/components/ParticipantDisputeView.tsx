@@ -78,6 +78,7 @@ export function ParticipantDisputeView({ disputeRef }: { disputeRef: string }) {
 
       <Card>
         <CardContent className="grid grid-cols-2 gap-x-5 gap-y-3.5 sm:grid-cols-3">
+          <DisputeFact label="Candidate" value={data.candidateName} />
           <DisputeFact label="Counterparty" value={data.counterpartyName} />
           <DisputeFact
             label="Fee In Escrow"
@@ -97,7 +98,7 @@ export function ParticipantDisputeView({ disputeRef }: { disputeRef: string }) {
           />
           <DisputeFact
             className="col-span-2 sm:col-span-3"
-            label="Release Countdown"
+            label="Guarantee Status"
             value={describeCountdown(data.countdown)}
           />
           {data.resolutionNote ? (
