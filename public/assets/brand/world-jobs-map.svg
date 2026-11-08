@@ -54,7 +54,7 @@
 <rect x="498.4" y="476" width="149.2" height="44" rx="22" fill="#FFFFFF" filter="url(#soft)"></rect>
 <text x="573" y="498" fill="#0F1B3D" font-size="23" font-weight="500" text-anchor="middle" dominant-baseline="central">New York</text>
 </g>
-<path d="M 556 318 L 610 318 L 591 376 Z" fill="#FFFFFF"></path><g transform="translate(-29,38.4) scale(0.8)">
+<path d="M 556 318 L 610 318 L 591 376 Z" fill="#FFFFFF"></path><g transform="translate(-226,-32)">
 <rect x="620" y="60" width="404" height="292" rx="18" fill="#FFFFFF" filter="url(#card)"></rect>
 <text x="652" y="112" fill="#0F1B3D" font-size="25" font-weight="700">New York, NY</text>
 <path d="M 966 90 l 20 20 M 986 90 l -20 20" stroke="#9AA0AE" stroke-width="2.4" stroke-linecap="round"></path>
