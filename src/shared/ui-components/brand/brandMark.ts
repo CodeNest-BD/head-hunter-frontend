@@ -21,8 +21,17 @@ const hex = (rgb: readonly [number, number, number]): string =>
 /** Crosshair, wordmark suffix. */
 export const MARK_BLUE_RGB = [13, 110, 253] as const;
 export const MARK_BLUE = hex(MARK_BLUE_RGB);
-/** The "head-hunters" wordmark. */
-export const MARK_NAVY_RGB = [3, 19, 73] as const;
+/**
+ * The "head-hunters" wordmark.
+ *
+ * Lifted a little off the artwork's literal rgb(1, 19, 76). That value is
+ * correct — the file's letter interiors measure it — but it was chosen for a
+ * lockup shown at around 50px, and the nav draws the wordmark at 17px, where a
+ * near-black navy loses its hue and reads as plain black. This keeps the same
+ * deep navy and only raises its lightness enough for the blue to survive at
+ * that size; side by side with the file the difference does not register.
+ */
+export const MARK_NAVY_RGB = [8, 32, 100] as const;
 export const MARK_NAVY = hex(MARK_NAVY_RGB);
 
 /** Ring centreline radius on a 100-unit square. */
