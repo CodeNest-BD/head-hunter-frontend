@@ -17,10 +17,10 @@ const MARK = "#2563EB";
  * is nothing for a skeleton to trace), but a bare circle on an empty canvas
  * reads as a stall; the mark says the product is loading.
  *
- * Geometry matches `Logo` on a 100-unit square: ring at r=36 under an 8-wide
- * stroke, four arms 8 wide running r=24→48 so they cross the ring and poke
- * past it, and a solid core of r=17. Drawn rather than imported because only
- * part of it moves.
+ * Geometry matches `Logo` on a 100-unit square: ring at r=40 under an
+ * 8.5-wide stroke, four arms 6 wide running r=28→50 so they cross the ring and
+ * reach the mark's edge, and a solid core of r=18.5. Drawn rather than
+ * imported because only part of it moves.
  */
 export function BrandLoader({
   /** Shown under the mark. Pass `null` for a bare mark. */
@@ -54,25 +54,25 @@ export function BrandLoader({
           <circle
             cx="50"
             cy="50"
-            r="36"
+            r="40"
             fill="none"
             stroke={MARK}
-            strokeWidth="8"
+            strokeWidth="8.5"
           />
           {[0, 90, 180, 270].map((angle) => (
             <rect
               key={angle}
-              x="46"
-              y="2"
-              width="8"
-              height="24"
+              x="47"
+              y="0"
+              width="6"
+              height="22"
               fill={MARK}
               transform={`rotate(${angle} 50 50)`}
             />
           ))}
         </g>
         {/* The core holds still — the mark stays sighted on its target. */}
-        <circle cx="50" cy="50" r="17" fill={MARK} />
+        <circle cx="50" cy="50" r="18.5" fill={MARK} />
       </svg>
 
       {label !== null && (

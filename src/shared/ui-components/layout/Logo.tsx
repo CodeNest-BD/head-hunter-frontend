@@ -22,9 +22,10 @@ interface LogoProps {
  * sharp from the 26px nav lockup to the 40px auth one, costs no request, and
  * takes its colour from the brand token rather than a baked pixel value.
  *
- * Geometry on a 100-unit square, shared with `BrandLoader`: ring at r=36 under
- * an 8-wide stroke, four arms 8 wide running r=24→48 so they cross the ring
- * and poke past it, and a solid core of r=17.
+ * Geometry on a 100-unit square, shared with `BrandLoader` and `icon.svg`,
+ * measured off the supplied artwork: ring at r=40 under an 8.5-wide stroke,
+ * four arms 6 wide running r=28→50 so they cross the ring and reach the mark's
+ * edge, and a solid core of r=18.5.
  *
  * The wordmark is live text so it stays crisp and the colours match exactly —
  * navy "head-hunters" and a primary-blue ".com". Height comes from `size`;
@@ -57,25 +58,25 @@ export function Logo({
         <circle
           cx="50"
           cy="50"
-          r="36"
+          r="40"
           fill="none"
           stroke="currentColor"
-          strokeWidth="8"
+          strokeWidth="8.5"
         />
         {[0, 90, 180, 270].map((angle) => (
           <rect
             key={angle}
-            x="46"
-            y="2"
-            width="8"
-            height="24"
+            x="47"
+            y="0"
+            width="6"
+            height="22"
             fill="currentColor"
             transform={`rotate(${angle} 50 50)`}
           />
         ))}
         {/* Solid, not a ring: the final logo fills the core, where the older
             mark left a hole through it. */}
-        <circle cx="50" cy="50" r="17" fill="currentColor" />
+        <circle cx="50" cy="50" r="18.5" fill="currentColor" />
       </svg>
       <span
         className={cn(

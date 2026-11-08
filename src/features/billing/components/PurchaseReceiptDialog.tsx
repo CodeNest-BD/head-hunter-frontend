@@ -58,13 +58,13 @@ function drawMark(doc: jsPDF, x: number, y: number, size: number): void {
   const cy = y + size / 2;
   doc.setDrawColor(37, 99, 235);
   doc.setFillColor(37, 99, 235);
-  doc.setLineWidth(8 * k);
-  doc.circle(cx, cy, 36 * k, "S");
-  doc.rect(x + 46 * k, y + 2 * k, 8 * k, 24 * k, "F");
-  doc.rect(x + 46 * k, y + 74 * k, 8 * k, 24 * k, "F");
-  doc.rect(x + 2 * k, y + 46 * k, 24 * k, 8 * k, "F");
-  doc.rect(x + 74 * k, y + 46 * k, 24 * k, 8 * k, "F");
-  doc.circle(cx, cy, 17 * k, "F");
+  doc.setLineWidth(8.5 * k);
+  doc.circle(cx, cy, 40 * k, "S");
+  doc.rect(x + 47 * k, y, 6 * k, 22 * k, "F");
+  doc.rect(x + 47 * k, y + 78 * k, 6 * k, 22 * k, "F");
+  doc.rect(x, y + 47 * k, 22 * k, 6 * k, "F");
+  doc.rect(x + 78 * k, y + 47 * k, 22 * k, 6 * k, "F");
+  doc.circle(cx, cy, 18.5 * k, "F");
 }
 
 /** Builds and saves a standalone PDF receipt for the transaction. */

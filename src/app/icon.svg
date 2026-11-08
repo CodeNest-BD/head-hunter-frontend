@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
   <!--
-    The brand crosshair, same 100-unit geometry as `Logo` and `BrandLoader`:
-    ring at r=36 under an 8-wide stroke, four arms 8 wide running r=24 to 48,
-    and a solid core of r=17.
+    The brand crosshair, same 100-unit geometry as `Logo` and `BrandLoader`,
+    measured off the supplied artwork: ring at r=40 under an 8.5-wide stroke,
+    four arms 6 wide running r=28 to 50, and a solid core of r=18.5.
 
     Sits beside the existing favicon.ico rather than replacing it: an .ico
     cannot be authored here, and browsers that understand an SVG icon prefer
     it while older ones keep the raster fallback.
   -->
-  <circle cx="50" cy="50" r="36" fill="none" stroke="#2563EB" stroke-width="8" />
-  <rect x="46" y="2" width="8" height="24" fill="#2563EB" />
-  <rect x="46" y="74" width="8" height="24" fill="#2563EB" />
-  <rect x="2" y="46" width="24" height="8" fill="#2563EB" />
-  <rect x="74" y="46" width="24" height="8" fill="#2563EB" />
-  <circle cx="50" cy="50" r="17" fill="#2563EB" />
+  <circle cx="50" cy="50" r="40" fill="none" stroke="#2563EB" stroke-width="8.5" />
+  <rect x="47" y="0" width="6" height="22" fill="#2563EB" />
+  <rect x="47" y="78" width="6" height="22" fill="#2563EB" />
+  <rect x="0" y="47" width="22" height="6" fill="#2563EB" />
+  <rect x="78" y="47" width="22" height="6" fill="#2563EB" />
+  <circle cx="50" cy="50" r="18.5" fill="#2563EB" />
 </svg>
