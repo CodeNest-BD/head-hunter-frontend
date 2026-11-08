@@ -24,14 +24,11 @@ interface PurchaseReceiptDialogProps {
   children: ReactNode;
 }
 
-const LOGO_MARK_SRC = "/assets/brand/logo-mark.png";
 /** The wordmark drawn in the PDF, colour-matched to the brand lockup. */
 const WORDMARK: ReadonlyArray<{ text: string; rgb: [number, number, number] }> =
   [
-    { text: "Head", rgb: [10, 23, 56] },
-    { text: "-", rgb: [3, 74, 239] },
-    { text: "Hunters.", rgb: [10, 23, 56] },
-    { text: "com", rgb: [133, 138, 152] },
+    { text: "head-hunters", rgb: [10, 23, 56] },
+    { text: ".com", rgb: [37, 99, 235] },
   ];
 
 /** A short, human-friendly receipt number derived from the ledger id. */
@@ -43,16 +40,31 @@ function lineItemLabel(entry: LedgerEntry): string {
   return entry.description ?? LEDGER_TYPE_LABELS[entry.entryType];
 }
 
-/** Loads a same-origin image as a data URL so jsPDF can embed it. */
-async function loadImageDataUrl(src: string): Promise<string> {
-  const res = await fetch(src);
-  const blob = await res.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Failed to read logo image"));
-    reader.readAsDataURL(blob);
-  });
+/**
+ * Draws the crosshair mark into the PDF, tracing the same 100-unit geometry as
+ * `Logo` and `BrandLoader`.
+ *
+ * Vector rather than an embedded PNG: the receipt is a print document, so the
+ * mark should stay sharp at any zoom, and drawing it removes a fetch that
+ * could fail — the old version wrapped the whole lockup in a try/catch because
+ * loading the file might not succeed before the PDF was built.
+ *
+ * All four arms are axis-aligned (the source rotates one rect by 0/90/180/270),
+ * so each is a plain rect here.
+ */
+function drawMark(doc: jsPDF, x: number, y: number, size: number): void {
+  const k = size / 100;
+  const cx = x + size / 2;
+  const cy = y + size / 2;
+  doc.setDrawColor(37, 99, 235);
+  doc.setFillColor(37, 99, 235);
+  doc.setLineWidth(8 * k);
+  doc.circle(cx, cy, 36 * k, "S");
+  doc.rect(x + 46 * k, y + 2 * k, 8 * k, 24 * k, "F");
+  doc.rect(x + 46 * k, y + 74 * k, 8 * k, 24 * k, "F");
+  doc.rect(x + 2 * k, y + 46 * k, 24 * k, 8 * k, "F");
+  doc.rect(x + 74 * k, y + 46 * k, 24 * k, 8 * k, "F");
+  doc.circle(cx, cy, 17 * k, "F");
 }
 
 /** Builds and saves a standalone PDF receipt for the transaction. */
@@ -66,17 +78,10 @@ async function downloadReceiptPdf(
   const amount = formatMinor(entry.amountMinor);
   const number = receiptNumber(entry.id);
 
-  // Brand lockup: the crosshair mark (if it loads) plus the coloured wordmark.
-  let wordmarkX = marginX;
-  try {
-    const markDataUrl = await loadImageDataUrl(LOGO_MARK_SRC);
-    const markH = 22;
-    const markW = markH * (292 / 298);
-    doc.addImage(markDataUrl, "PNG", marginX, 54, markW, markH);
-    wordmarkX = marginX + markW + 8;
-  } catch {
-    // Logo is decorative — fall back to the wordmark alone.
-  }
+  // Brand lockup: the crosshair mark plus the coloured wordmark.
+  const markSize = 22;
+  drawMark(doc, marginX, 54, markSize);
+  let wordmarkX = marginX + markSize + 8;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   for (const part of WORDMARK) {

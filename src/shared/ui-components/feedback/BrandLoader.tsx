@@ -1,12 +1,11 @@
 import { cn } from "@/shared/libs/shadCnConfig";
 
 /**
- * The brand mark's own two blues. They predate the semantic palette — the mark
- * is a fixed asset, so it keeps its colours rather than drifting with the
- * theme.
+ * The brand mark's blue. The final logo draws the ring, the arms and the core
+ * in one colour, where the older mark paled the ring and left a hole through
+ * the core.
  */
-const RING = "#4F80E6";
-const CORE = "#034AEF";
+const MARK = "#2563EB";
 
 /**
  * The full-page wait: the brand's crosshair, drawn rather than imported, so its
@@ -18,10 +17,10 @@ const CORE = "#034AEF";
  * is nothing for a skeleton to trace), but a bare circle on an empty canvas
  * reads as a stall; the mark says the product is loading.
  *
- * Geometry traces `public/assets/brand/logo-mark.png` on a 100-unit square:
- * ring at r=36 under an 8-wide stroke, four arms 8 wide running r=24→48 so they
- * cross the ring and poke past it, and a core ring spanning r=8→17.5. Redrawn
- * instead of animating the PNG because only part of it moves.
+ * Geometry matches `Logo` on a 100-unit square: ring at r=36 under an 8-wide
+ * stroke, four arms 8 wide running r=24→48 so they cross the ring and poke
+ * past it, and a solid core of r=17. Drawn rather than imported because only
+ * part of it moves.
  */
 export function BrandLoader({
   /** Shown under the mark. Pass `null` for a bare mark. */
@@ -57,7 +56,7 @@ export function BrandLoader({
             cy="50"
             r="36"
             fill="none"
-            stroke={RING}
+            stroke={MARK}
             strokeWidth="8"
           />
           {[0, 90, 180, 270].map((angle) => (
@@ -67,23 +66,13 @@ export function BrandLoader({
               y="2"
               width="8"
               height="24"
-              fill={RING}
+              fill={MARK}
               transform={`rotate(${angle} 50 50)`}
             />
           ))}
         </g>
-        {/* The core holds still — the mark stays sighted on its target. Drawn
-            as a stroked ring rather than a filled disc over a second one, so
-            its hole is genuinely transparent and the mark sits on any
-            background. */}
-        <circle
-          cx="50"
-          cy="50"
-          r="12.75"
-          fill="none"
-          stroke={CORE}
-          strokeWidth="9.5"
-        />
+        {/* The core holds still — the mark stays sighted on its target. */}
+        <circle cx="50" cy="50" r="17" fill={MARK} />
       </svg>
 
       {label !== null && (

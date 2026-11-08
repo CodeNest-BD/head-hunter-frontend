@@ -25,7 +25,7 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden bg-background">
-      <div className="mx-auto grid max-w-[1240px] items-stretch gap-12 px-4 pb-16 pt-10 sm:px-5 md:px-10 md:pb-20 lg:grid-cols-[1fr_1.05fr]">
+      <div className="mx-auto grid max-w-[1240px] items-stretch gap-12 px-4 pb-16 pt-10 sm:px-5 md:px-10 md:pb-20 lg:grid-cols-[1fr_1.18fr]">
         <div className="flex flex-col [animation:fadeUp_500ms_ease_both]">
           {/* Text block centers vertically in the space above the CTAs so it
               sits opposite the map, instead of clinging to the top edge. */}
