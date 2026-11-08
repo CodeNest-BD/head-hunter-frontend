@@ -8,6 +8,14 @@ import { Download, X } from "lucide-react";
 import { Button } from "@/shared/ui-components/controls/button";
 import { Pill } from "@/shared/ui-components/badges/Pill";
 import { Logo } from "@/shared/ui-components/layout/Logo";
+import {
+  ARM,
+  CORE_R,
+  MARK_BLUE_RGB,
+  MARK_NAVY_RGB,
+  RING_R,
+  RING_W,
+} from "@/shared/ui-components/brand/brandMark";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { formatMinor } from "@/shared/utils/money";
 import { LEDGER_TYPE_LABELS, type LedgerEntry } from "../schemas";
@@ -25,11 +33,13 @@ interface PurchaseReceiptDialogProps {
 }
 
 /** The wordmark drawn in the PDF, colour-matched to the brand lockup. */
-const WORDMARK: ReadonlyArray<{ text: string; rgb: [number, number, number] }> =
-  [
-    { text: "head-hunters", rgb: [10, 23, 56] },
-    { text: ".com", rgb: [37, 99, 235] },
-  ];
+const WORDMARK: ReadonlyArray<{
+  text: string;
+  rgb: readonly [number, number, number];
+}> = [
+  { text: "head-hunters", rgb: MARK_NAVY_RGB },
+  { text: ".com", rgb: MARK_BLUE_RGB },
+];
 
 /** A short, human-friendly receipt number derived from the ledger id. */
 function receiptNumber(id: string): string {
@@ -56,15 +66,29 @@ function drawMark(doc: jsPDF, x: number, y: number, size: number): void {
   const k = size / 100;
   const cx = x + size / 2;
   const cy = y + size / 2;
-  doc.setDrawColor(37, 99, 235);
-  doc.setFillColor(37, 99, 235);
-  doc.setLineWidth(8.5 * k);
-  doc.circle(cx, cy, 40 * k, "S");
-  doc.rect(x + 47 * k, y, 6 * k, 22 * k, "F");
-  doc.rect(x + 47 * k, y + 78 * k, 6 * k, 22 * k, "F");
-  doc.rect(x, y + 47 * k, 22 * k, 6 * k, "F");
-  doc.rect(x + 78 * k, y + 47 * k, 22 * k, 6 * k, "F");
-  doc.circle(cx, cy, 18.5 * k, "F");
+  const [r, g, b] = MARK_BLUE_RGB;
+  doc.setDrawColor(r, g, b);
+  doc.setFillColor(r, g, b);
+  doc.setLineWidth(RING_W * k);
+  doc.circle(cx, cy, RING_R * k, "S");
+
+  // The breaks each bar sits in. Painted over the ring in the page's own white
+  // rather than drawn as four arcs: jsPDF has no arc primitive, and the dash
+  // pattern it does have starts at an angle the caller cannot place.
+  const half = (RING_W / 2 + 1) * k;
+  const reach = 6 * k;
+  doc.setFillColor(255, 255, 255);
+  doc.rect(cx - reach, cy - RING_R * k - half, reach * 2, half * 2, "F");
+  doc.rect(cx - reach, cy + RING_R * k - half, reach * 2, half * 2, "F");
+  doc.rect(cx - RING_R * k - half, cy - reach, half * 2, reach * 2, "F");
+  doc.rect(cx + RING_R * k - half, cy - reach, half * 2, reach * 2, "F");
+
+  doc.setFillColor(r, g, b);
+  doc.rect(x + ARM.x * k, y, ARM.width * k, ARM.height * k, "F");
+  doc.rect(x + ARM.x * k, y + 78 * k, ARM.width * k, ARM.height * k, "F");
+  doc.rect(x, y + ARM.x * k, ARM.height * k, ARM.width * k, "F");
+  doc.rect(x + 78 * k, y + ARM.x * k, ARM.height * k, ARM.width * k, "F");
+  doc.circle(cx, cy, CORE_R * k, "F");
 }
 
 /** Builds and saves a standalone PDF receipt for the transaction. */

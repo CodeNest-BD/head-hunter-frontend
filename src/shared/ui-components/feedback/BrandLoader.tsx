@@ -1,11 +1,14 @@
 import { cn } from "@/shared/libs/shadCnConfig";
-
-/**
- * The brand mark's blue. The final logo draws the ring, the arms and the core
- * in one colour, where the older mark paled the ring and left a hole through
- * the core.
- */
-const MARK = "#2563EB";
+import {
+  ARM,
+  ARM_ANGLES,
+  CORE_R,
+  MARK_BLUE,
+  RING_DASH,
+  RING_R,
+  RING_ROTATE,
+  RING_W,
+} from "@/shared/ui-components/brand/brandMark";
 
 /**
  * The full-page wait: the brand's crosshair, drawn rather than imported, so its
@@ -17,9 +20,8 @@ const MARK = "#2563EB";
  * is nothing for a skeleton to trace), but a bare circle on an empty canvas
  * reads as a stall; the mark says the product is loading.
  *
- * Geometry matches `Logo` on a 100-unit square: ring at r=40 under an
- * 8.5-wide stroke, four arms 6 wide running r=28→50 so they cross the ring and
- * reach the mark's edge, and a solid core of r=18.5. Drawn rather than
+ * Geometry and colour come from `brandMark`, the same constants `Logo` draws
+ * from, so the spinner and the lockup cannot drift apart. Drawn rather than
  * imported because only part of it moves.
  */
 export function BrandLoader({
@@ -54,25 +56,24 @@ export function BrandLoader({
           <circle
             cx="50"
             cy="50"
-            r="40"
+            r={RING_R}
             fill="none"
-            stroke={MARK}
-            strokeWidth="8.5"
+            stroke={MARK_BLUE}
+            strokeWidth={RING_W}
+            strokeDasharray={RING_DASH}
+            transform={`rotate(${RING_ROTATE} 50 50)`}
           />
-          {[0, 90, 180, 270].map((angle) => (
+          {ARM_ANGLES.map((angle) => (
             <rect
               key={angle}
-              x="47"
-              y="0"
-              width="6"
-              height="22"
-              fill={MARK}
+              {...ARM}
+              fill={MARK_BLUE}
               transform={`rotate(${angle} 50 50)`}
             />
           ))}
         </g>
         {/* The core holds still — the mark stays sighted on its target. */}
-        <circle cx="50" cy="50" r="18.5" fill={MARK} />
+        <circle cx="50" cy="50" r={CORE_R} fill={MARK_BLUE} />
       </svg>
 
       {label !== null && (

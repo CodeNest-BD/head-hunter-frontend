@@ -1,4 +1,15 @@
 import { cn } from "@/shared/libs/shadCnConfig";
+import {
+  ARM,
+  ARM_ANGLES,
+  CORE_R,
+  MARK_BLUE,
+  MARK_NAVY,
+  RING_DASH,
+  RING_R,
+  RING_ROTATE,
+  RING_W,
+} from "@/shared/ui-components/brand/brandMark";
 
 interface LogoProps {
   /** Wordmark ink: dark blue on light surfaces, white over navy panels. */
@@ -22,10 +33,9 @@ interface LogoProps {
  * sharp from the 26px nav lockup to the 40px auth one, costs no request, and
  * takes its colour from the brand token rather than a baked pixel value.
  *
- * Geometry on a 100-unit square, shared with `BrandLoader` and `icon.svg`,
- * measured off the supplied artwork: ring at r=40 under an 8.5-wide stroke,
- * four arms 6 wide running r=28→50 so they cross the ring and reach the mark's
- * edge, and a solid core of r=18.5.
+ * Geometry and colour both come from `brandMark`, measured off the supplied
+ * artwork — including the breaks in the ring that each bar sits inside, which
+ * are what make it read as a crosshair rather than a wheel.
  *
  * The wordmark is live text so it stays crisp and the colours match exactly —
  * navy "head-hunters" and a primary-blue ".com". Height comes from `size`;
@@ -51,43 +61,45 @@ export function Logo({
         viewBox="0 0 100 100"
         aria-hidden="true"
         className={cn(
-          "shrink-0 select-none text-blue",
+          "shrink-0 select-none",
           large ? "size-[40px]" : "size-[26px] sm:size-[32px]",
         )}
       >
+        {/* Four arcs, not a closed ring: the dash pattern leaves a break on
+            each axis and the bar sits inside it, clear of both arc ends. */}
         <circle
           cx="50"
           cy="50"
-          r="40"
+          r={RING_R}
           fill="none"
-          stroke="currentColor"
-          strokeWidth="8.5"
+          stroke={MARK_BLUE}
+          strokeWidth={RING_W}
+          strokeDasharray={RING_DASH}
+          transform={`rotate(${RING_ROTATE} 50 50)`}
         />
-        {[0, 90, 180, 270].map((angle) => (
+        {ARM_ANGLES.map((angle) => (
           <rect
             key={angle}
-            x="47"
-            y="0"
-            width="6"
-            height="22"
-            fill="currentColor"
+            {...ARM}
+            fill={MARK_BLUE}
             transform={`rotate(${angle} 50 50)`}
           />
         ))}
         {/* Solid, not a ring: the final logo fills the core, where the older
             mark left a hole through it. */}
-        <circle cx="50" cy="50" r="18.5" fill="currentColor" />
+        <circle cx="50" cy="50" r={CORE_R} fill={MARK_BLUE} />
       </svg>
       <span
         className={cn(
           "font-heading font-[750] leading-none tracking-[-0.015em]",
+          onDark && "text-white",
           large ? "text-[21px]" : "text-[14.5px] sm:text-[17px]",
         )}
       >
-        <span className={onDark ? "text-white" : "text-navy"}>
+        <span style={onDark ? undefined : { color: MARK_NAVY }}>
           head-hunters
         </span>
-        <span className={onDark ? "text-white/70" : "text-blue"}>.com</span>
+        <span style={onDark ? undefined : { color: MARK_BLUE }}>.com</span>
       </span>
     </span>
   );
