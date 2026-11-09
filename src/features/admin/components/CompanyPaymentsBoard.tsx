@@ -2,7 +2,14 @@
 
 import { Fragment, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ChevronRight, Wallet2 } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronRight,
+  CircleDollarSign,
+  Lock,
+  Undo2,
+  Wallet2,
+} from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
@@ -390,6 +397,7 @@ export function CompanyPaymentsBoard({
           {
             key: "balance",
             label: "Total Wallet Balance",
+            icon: Wallet2,
             value: band ? formatMinor(band.balanceMinor) : "—",
             note: band
               ? `Across ${band.fundedWallets} funded company wallet${band.fundedWallets === 1 ? "" : "s"}`
@@ -398,18 +406,21 @@ export function CompanyPaymentsBoard({
           {
             key: "available",
             label: "Available Funds",
+            icon: CircleDollarSign,
             value: band ? formatMinor(band.availableMinor) : "—",
             note: "Free for companies to reserve against new jobs",
           },
           {
             key: "reserved",
             label: "Reserved Funds",
+            icon: Lock,
             value: band ? formatMinor(band.reservedMinor) : "—",
             note: "Held for live jobs and placements in guarantee",
           },
           {
             key: "refunded",
             label: `Refunded · ${windowLabel(days)}`,
+            icon: Undo2,
             value: band ? formatMinor(band.refundedMinor) : "—",
             note: band
               ? `${band.refundCount} refund${band.refundCount === 1 ? "" : "s"} from resolved disputes`

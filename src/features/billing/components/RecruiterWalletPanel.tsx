@@ -3,7 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Wallet2 } from "lucide-react";
+import {
+  AlertCircle,
+  CircleDollarSign,
+  Lock,
+  Scale,
+  Wallet2,
+  type LucideIcon,
+} from "lucide-react";
 
 import { RaiseDisputeForm } from "@/features/disputes";
 import { ENABLE_RECRUITER_PAYOUTS } from "@/shared/config/featureFlags";
@@ -105,6 +112,7 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
   // only the head and tail of the strip change with the payout flag.
   const cards: readonly {
     label: string;
+    icon: LucideIcon;
     valueMinor: number | undefined;
     hint: string;
   }[] = [
@@ -112,6 +120,7 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
       ? [
           {
             label: "Available to Withdraw",
+            icon: Wallet2,
             valueMinor: data?.availableMinor,
             hint:
               pendingPayoutMinor > 0
@@ -122,12 +131,14 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
       : [
           {
             label: "Total Balance",
+            icon: Wallet2,
             valueMinor: data?.totalMinor,
             hint: "Everything you've earned so far",
           },
         ]),
     {
       label: "In Escrow",
+      icon: Lock,
       valueMinor: data?.inEscrowMinor,
       hint: data?.nextReleaseAt
         ? `Next release ${formatDate(data.nextReleaseAt)}`
@@ -135,6 +146,7 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
     },
     {
       label: "In Dispute",
+      icon: Scale,
       valueMinor: data?.inDisputeMinor,
       hint: "Held pending a dispute",
     },
@@ -142,6 +154,7 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
       ? [
           {
             label: "Earned YTD",
+            icon: CircleDollarSign,
             valueMinor: data?.earnedYtdMinor,
             hint: "Released to you this calendar year",
           },
@@ -155,6 +168,7 @@ function BalanceCards({ data }: { data?: RecruiterWalletSummary }) {
       views={cards.map((card) => ({
         key: card.label,
         label: card.label,
+        icon: card.icon,
         value:
           card.valueMinor === undefined ? "—" : formatMinor(card.valueMinor),
         note: card.hint ?? "",

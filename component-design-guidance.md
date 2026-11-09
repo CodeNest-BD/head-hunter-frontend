@@ -144,9 +144,11 @@ deterministic tint from the name, `variant="logo"`, `round`) · `CountChip` ·
 
 ### Dashboard / list / brand / media / mobile
 
-`StatCard` · `StatValueSkeleton` · `Panel` · `PanelGroup` · `AttentionRow` ·
-`ListRow` · `Tile` · `PageHeader` · `BackLink` · `ImageUploader` ·
-`ImageCropDialog` · `MobileRecordCard` + `MobileRecordList`.
+`QuickViewBand` (the summary card band) · `StatValueSkeleton` · `Section` +
+`SectionHead` · `PanelGroup` · `AttentionTable` · `ActivityFeed` ·
+`Segmented` · `ListRow` · `Tile` (`sm` 32px row glyph, `lg` 40px card square) ·
+`PageHeader` · `BackLink` · `ImageUploader` · `ImageCropDialog` ·
+`MobileRecordCard` + `MobileRecordList`.
 
 ---
 
@@ -155,7 +157,7 @@ deterministic tint from the name, `variant="logo"`, `round`) · `CountChip` ·
 ### A table page
 
 ```
-PageHeader → stat strip (grid gap-3) → Alert (if any) → toolbar
+PageHeader → QuickViewBand → Alert (if any) → toolbar
 → TABLE_CARD > TABLE_SCROLL > table > TablePager
 ```
 
@@ -173,6 +175,30 @@ PageHeader → stat strip (grid gap-3) → Alert (if any) → toolbar
   `TABLE_CELL_SUB`; money right-aligned; unread rows `TABLE_ROW_UNREAD` plus
   `TABLE_TD_RAIL` **on the first cell** — an inset shadow on a `<tr>` does not
   render reliably across browsers.
+
+### A summary card band
+
+Every figure above a dashboard or a list goes in **`QuickViewBand`** — never a
+hand-rolled strip. One card per figure, `gap-3` between them, each card:
+
+```
+Tile (lg, tone="blue")  →  LABEL (11px, uppercase, blue-ink)
+                           figure (text-display, tabular-nums)
+                           note (text-meta, ink-muted)
+```
+
+- **Every card carries an `icon`** that says what the figure is _about_ — the
+  subject, not the sentiment. Reuse the nav's vocabulary so the same thing wears
+  the same glyph everywhere: `Briefcase` jobs · `Users` candidates ·
+  `Handshake` offers and placements · `Wallet2` spendable money ·
+  `CircleDollarSign` earned money · `Lock` escrow and reserved ·
+  `Scale` disputes · `Clock3` waiting · `BadgeCheck` verified · `Ban` suspended.
+- **No per-card colour.** Every card is blue; only the glyph changes. Tinting
+  one card is how "Expired" ended up amber on one page and plain on another.
+- A card either links (`href`), toggles the filter it counts (`filter`), or just
+  reports. A pressed card takes `bg-tint` + `ring-blue` and inverts its square.
+- A figure still loading holds a `StatValueSkeleton`, never `—` and never
+  `null`.
 
 ### A form page
 

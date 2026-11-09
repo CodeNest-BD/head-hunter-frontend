@@ -5,11 +5,13 @@ import Link from "next/link";
 import {
   AlertCircle,
   Briefcase,
+  CalendarX2,
   Eye,
   MoreHorizontal,
   Plus,
   SquarePen,
   Trash2,
+  UserCheck,
 } from "lucide-react";
 
 // Deep-imported (not via the feature barrels): JobsTable is exported from the
@@ -319,18 +321,21 @@ export function JobsTable() {
     {
       key: "published",
       label: "Published",
+      icon: Briefcase,
       value: publishedTotal.toLocaleString(),
       note: "Open to recruiters",
     },
     {
       key: "expired",
       label: "Expired",
+      icon: CalendarX2,
       value: expiredTotal.toLocaleString(),
       note: "Closed after 30 days",
     },
     {
       key: "filled",
       label: "Filled",
+      icon: UserCheck,
       value: filledTotal.toLocaleString(),
       note: "Hire made",
     },

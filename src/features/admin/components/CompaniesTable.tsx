@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AlertCircle, Building2 } from "lucide-react";
+import {
+  AlertCircle,
+  BadgeCheck,
+  Ban,
+  Building2,
+  Clock3,
+  Wallet2,
+} from "lucide-react";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -270,6 +277,7 @@ export function CompaniesTable() {
     {
       key: "pending",
       label: "Pending Approval",
+      icon: Clock3,
       value: figure(counts?.pending),
       note: "Awaiting review",
       filter: quickFilter("pending", "", ""),
@@ -277,6 +285,7 @@ export function CompaniesTable() {
     {
       key: "approved",
       label: "Approved & Active",
+      icon: BadgeCheck,
       value: figure(counts?.approved),
       note: "Can post and fund jobs",
       filter: quickFilter("verified", "active", ""),
@@ -284,6 +293,7 @@ export function CompaniesTable() {
     {
       key: "funded",
       label: "Funded Wallets",
+      icon: Wallet2,
       value: figure(fundedTotal),
       note: "Balance above $0",
       filter: quickFilter("", "", "funded"),
@@ -291,6 +301,7 @@ export function CompaniesTable() {
     {
       key: "suspended",
       label: "Suspended",
+      icon: Ban,
       value: figure(counts?.held),
       note: "Access blocked",
       filter: quickFilter("", "suspended", ""),

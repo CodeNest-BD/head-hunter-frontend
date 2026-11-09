@@ -5,6 +5,9 @@ import Link from "next/link";
 import {
   AlertCircle,
   Banknote,
+  CalendarCheck,
+  CircleDollarSign,
+  Clock3,
   Landmark,
   PauseCircle,
   ShieldAlert,
@@ -373,24 +376,28 @@ export function AdminPayoutDetail({ payoutRef }: { payoutRef: string }) {
           {
             key: "commission",
             label: "Commission",
+            icon: CircleDollarSign,
             value: formatMinor(data.commissionMinor),
             note: "Fixed fee from the job",
           },
           {
             key: "joined",
             label: "Joined",
+            icon: CalendarCheck,
             value: longDay(data.joiningDate),
             note: "Confirmed by the company",
           },
           {
             key: "eligible",
             label: "Eligible",
+            icon: Clock3,
             value: longDay(data.eligibleAt),
             note: `Day ${day} of ${total}`,
           },
           {
             key: "destination",
             label: "Payout Account",
+            icon: Landmark,
             value: DESTINATION_STATUS_LABELS[destinationStatus] ?? "Unknown",
             note: data.destination?.bankLast4
               ? `${data.destination.bankName ?? "Bank account"} •• ${data.destination.bankLast4}`

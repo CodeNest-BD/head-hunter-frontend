@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, AlertTriangle, Clock3, Lock, Scale } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { adminDisputePath } from "@/shared/utils/entityPaths";
@@ -230,6 +230,7 @@ export function AdminDisputesTable({
     {
       key: "open",
       label: "Open Cases",
+      icon: Scale,
       value: figure(summary.data?.openCases),
       note: `Across ${summary.data?.companies ?? 0} compan${
         summary.data?.companies === 1 ? "y" : "ies"
@@ -245,6 +246,7 @@ export function AdminDisputesTable({
     {
       key: "attention",
       label: "Needs My Attention",
+      icon: AlertTriangle,
       value: figure(summary.data?.needsAttention),
       note: "Unread since the last message",
       filter: {
@@ -258,6 +260,7 @@ export function AdminDisputesTable({
     {
       key: "due",
       label: "Payout Due Within 3 Days",
+      icon: Clock3,
       value: figure(summary.data?.payoutDueSoon),
       note: "Original dates, unchanged by the dispute",
       // No server filter for a date window, so this reports rather than
@@ -266,6 +269,7 @@ export function AdminDisputesTable({
     {
       key: "held",
       label: "Held In Open Disputes",
+      icon: Lock,
       value:
         summary.data === undefined ? (
           <StatValueSkeleton />

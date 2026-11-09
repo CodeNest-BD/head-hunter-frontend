@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Briefcase, RotateCcw, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  Briefcase,
+  CalendarCheck,
+  Handshake,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 import { StatusBadge } from "@/shared/ui-components/data/StatusBadge";
@@ -354,6 +361,7 @@ export function JobsTable({
     {
       key: "live",
       label: "Live Jobs",
+      icon: Briefcase,
       value: figure(liveTotal),
       note: "Published and accepting submissions",
       filter: quickFilter("published", ""),
@@ -361,6 +369,7 @@ export function JobsTable({
     {
       key: "interviewing",
       label: "Interview Scheduled",
+      icon: CalendarCheck,
       value: figure(stats.data?.scheduledJobs),
       note: "At least one interview booked",
       filter: quickFilter("", "interviewing"),
@@ -368,6 +377,7 @@ export function JobsTable({
     {
       key: "offer",
       label: "Offer Made or Accepted",
+      icon: Handshake,
       value: figure(stats.data?.offerJobs),
       note: "Includes counteroffers",
       filter: quickFilter("", "offer"),

@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import { Button } from "@/shared/ui-components/controls/button";
 import { cn } from "@/shared/libs/shadCnConfig";
 import { TONE_DOT, type PillTone } from "@/shared/ui-components/badges/Pill";
+import { Tile } from "@/shared/ui-components/list/Tile";
 
 export interface DashboardPanel {
   id: string;
@@ -473,72 +474,72 @@ export function ActivityFeed({
 }
 
 /**
- * One tile of a `QuickViewBand`. A tile that stands for a filter is a button
+ * One card of a `QuickViewBand`. A card that stands for a filter is a button
  * carrying `aria-pressed`; one that only reports a figure is a plain `div`, so
  * a number with nothing behind it never looks pressable.
  *
- * Every tile renders identically — a blue dot, a blue label, a black figure —
- * and there is deliberately no way to tint one. Per-tile colour used to be
- * tunable, and the result was that the same count wore different colours on
- * different pages: "Expired" sat in an amber wash on the company's job list
- * while the admin's read plain, and "Reviewing" looked like a problem when it
- * is simply a stage. The figure carries the meaning; the band stays quiet.
+ * Every card renders identically — a tinted icon square, a blue caption, a
+ * black figure — and there is deliberately no way to tint one. Per-card colour
+ * used to be tunable, and the result was that the same count wore different
+ * colours on different pages: "Expired" sat in an amber wash on the company's
+ * job list while the admin's read plain, and "Reviewing" looked like a problem
+ * when it is simply a stage. The icon carries the subject and the figure
+ * carries the meaning; the colour stays blue everywhere.
  */
 export interface QuickView {
   readonly key: string;
   readonly label: string;
-  /** `ReactNode` so a tile can hold a `StatValueSkeleton` until its count lands. */
+  /** The glyph in the card's tinted square — what this figure is *about*. */
+  readonly icon: LucideIcon;
+  /** `ReactNode` so a card can hold a `StatValueSkeleton` until its count lands. */
   readonly value: ReactNode;
   /** The line under the figure that says what it counts. */
   readonly note: string;
-  /** Omit for a read-only tile. */
+  /** Omit for a read-only card. */
   readonly filter?: {
     readonly active: boolean;
     readonly apply: () => void;
   };
   /**
    * Where the figure goes, for a band that navigates rather than filters — a
-   * dashboard's summary. Mutually exclusive with `filter`: a tile is one or
+   * dashboard's summary. Mutually exclusive with `filter`: a card is one or
    * the other, never both.
    */
   readonly href?: string;
 }
 
-function QuickViewTile({ view }: { view: QuickView }) {
+function QuickViewCard({ view }: { view: QuickView }) {
   const { filter, href } = view;
+  const active = filter?.active ?? false;
   const body = (
     <>
-      <span className="flex items-center gap-2 text-meta font-medium text-blue-ink">
-        <span
-          aria-hidden="true"
-          className="size-1.5 shrink-0 rounded-full bg-blue"
-        />
-        {view.label}
+      {/* On a pressed card the tint moves to the card, so the square inverts to
+          white rather than dissolving into the fill behind it. */}
+      <Tile
+        icon={view.icon}
+        tone="blue"
+        size="lg"
+        className={active ? "bg-surface" : undefined}
+      />
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-[11px] font-semibold uppercase leading-4 tracking-[0.06em] text-blue-ink">
+          {view.label}
+        </span>
+        <span className="text-stat font-semibold tabular-nums">
+          {view.value}
+        </span>
+        <span className="text-meta text-ink-muted">{view.note}</span>
       </span>
-      <span className="text-[26px] font-semibold leading-8 tracking-[-0.02em] tabular-nums">
-        {view.value}
-      </span>
-      <span className="text-meta leading-[18px] text-ink-muted">
-        {view.note}
-      </span>
-      {filter?.active && (
-        /* The pressed marker is its own element rather than a second inset
-           shadow: the tile already spends its shadow on the divider, and two
-           inset shadows on one box fight whenever `cn` merges them. */
-        <span
-          aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 h-0.5 bg-blue"
-        />
-      )}
     </>
   );
 
   const className = cn(
-    "relative flex flex-col gap-1 px-6 py-4.5 text-left text-ink",
-    "shadow-[inset_-1px_0_0_theme(colors.line.DEFAULT)] last:shadow-none",
+    "flex items-start gap-3 rounded-md bg-surface p-4 text-left text-ink shadow-e1",
     (filter || href) &&
-      "transition-colors duration-150 ease-out hover:bg-surface-sub",
-    filter?.active && "bg-tint hover:bg-tint",
+      "transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-px hover:shadow-e2 motion-reduce:transform-none",
+    // `ring` composes with `shadow-e1` rather than replacing it, so a pressed
+    // card paints a blue edge over the resting ring at the same radius.
+    active && "bg-tint ring-1 ring-blue",
   );
 
   if (href) {
@@ -563,12 +564,11 @@ function QuickViewTile({ view }: { view: QuickView }) {
 }
 
 /**
- * The reference's quick-view band above a directory: one surface split by
- * hairlines, each cell a figure that doubles as the filter behind it. Pressing
- * a tile applies its filter and pressing it again clears it, so the band is
- * both the summary and the way into each slice.
+ * The summary band above a dashboard or a directory: one card per figure, each
+ * led by the icon for what it counts, each doubling as the way into its slice.
+ * Pressing a card applies its filter and pressing it again clears it.
  *
- * One band for every summary in the app: a tile either links somewhere
+ * One band for every summary in the app: a card either links somewhere
  * (`href`), toggles the filter it counts (`filter`), or just reports.
  */
 export function QuickViewBand({
@@ -582,13 +582,11 @@ export function QuickViewBand({
   return (
     <section
       aria-label={label}
-      className="overflow-hidden rounded-lg bg-surface shadow-e1"
+      className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]"
     >
-      <div className="grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
-        {views.map((view) => (
-          <QuickViewTile key={view.key} view={view} />
-        ))}
-      </div>
+      {views.map((view) => (
+        <QuickViewCard key={view.key} view={view} />
+      ))}
     </section>
   );
 }

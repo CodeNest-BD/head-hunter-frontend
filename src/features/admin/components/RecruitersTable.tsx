@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Users } from "lucide-react";
+import {
+  AlertCircle,
+  BadgeCheck,
+  Ban,
+  Clock3,
+  UserPlus,
+  Users,
+} from "lucide-react";
 
 import { PageHeader } from "@/shared/ui-components/brand";
 import {
@@ -273,6 +280,7 @@ export function RecruitersTable() {
     {
       key: "pending",
       label: "Pending Verification",
+      icon: Clock3,
       value: figure(counts?.pending),
       note: "Awaiting review",
       filter: quickFilter("pending", ""),
@@ -280,6 +288,7 @@ export function RecruitersTable() {
     {
       key: "verified",
       label: "Verified & Active",
+      icon: BadgeCheck,
       value: figure(counts?.verified),
       note: "Can browse and submit",
       filter: quickFilter("verified", "active"),
@@ -287,6 +296,7 @@ export function RecruitersTable() {
     {
       key: "suspended",
       label: "Suspended",
+      icon: Ban,
       value: figure(counts?.held),
       note: "Marketplace access blocked",
       filter: quickFilter("", "suspended"),
@@ -296,6 +306,7 @@ export function RecruitersTable() {
       // filter for this figure to apply.
       key: "joined",
       label: "Joined This Month",
+      icon: UserPlus,
       value: figure(latestSignups?.recruiters),
       note: monthStartLabel(latestSignups?.month),
     },

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Briefcase, Building2, TrendingUp, Users, Wallet2 } from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { formatMinor } from "@/shared/utils/money";
@@ -77,6 +78,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
     {
       key: "wallet-total",
       label: "Wallet Total",
+      icon: Wallet2,
       value: formatMinor(stats.walletTotalMinor),
       note: `${formatMinor(stats.walletAvailableMinor)} available · ${formatMinor(stats.walletReservedMinor)} reserved`,
       href: "/admin/companies",
@@ -84,6 +86,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
     {
       key: "recruiters",
       label: "Recruiters",
+      icon: Users,
       value: stats.recruiters.total.toLocaleString(),
       note: `${stats.recruiters.verified.toLocaleString()} verified & active`,
       href: "/admin/recruiters",
@@ -91,6 +94,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
     {
       key: "companies",
       label: "Companies",
+      icon: Building2,
       value: stats.companies.total.toLocaleString(),
       note: `${stats.companies.approved.toLocaleString()} approved & active`,
       href: "/admin/companies",
@@ -98,6 +102,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
     {
       key: "live-jobs",
       label: "Live Jobs",
+      icon: Briefcase,
       value: stats.liveJobs.toLocaleString(),
       note: `${stats.scheduledJobs} interviewing · ${stats.offerJobs} at offer`,
       href: "/admin/jobs",
@@ -105,6 +110,7 @@ function KpiBand({ stats }: { stats: AdminStats }) {
     {
       key: "average-fee",
       label: "Average Fee",
+      icon: TrendingUp,
       value: formatMinor(stats.avgFeeMinor),
       note: `Across live jobs · ${formatMinor(stats.feeMinMinor)} – ${formatMinor(stats.feeMaxMinor)}`,
       href: "/admin/jobs",

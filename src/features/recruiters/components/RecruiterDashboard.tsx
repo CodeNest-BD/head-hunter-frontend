@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeCheck, Briefcase, MessageSquare, Users } from "lucide-react";
+import {
+  BadgeCheck,
+  Briefcase,
+  CircleDollarSign,
+  Handshake,
+  MessageSquare,
+  Users,
+  Wallet2,
+} from "lucide-react";
 
 import { useJobs } from "@/features/jobs";
 
@@ -186,14 +194,16 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
         subtitle={subtitleParts.join(" · ")}
       />
 
-      {/* No `tone` on any tile: the summary reports stages, not statuses, so
-          every tile wears the same blue dot and blue label. */}
+      {/* No `tone` on any card: the summary reports stages, not statuses, so
+          every card wears the same blue caption and tinted icon square — only
+          the glyph changes with the subject. */}
       <QuickViewBand
         label="Recruiter summary"
         views={[
           {
             key: "open-roles",
             label: "Open Roles",
+            icon: Briefcase,
             value: openRoles.isPending ? (
               <StatValueSkeleton />
             ) : (
@@ -205,6 +215,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
           {
             key: "in-process",
             label: "Candidates In Process",
+            icon: Users,
             // `?? "—"` because a failed count is not a pending one: react-query
             // reports `isPending: false` with no data on error, which would
             // render a tile with a blank figure under its caption.
@@ -219,6 +230,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
           {
             key: "new-offers",
             label: "New Offers",
+            icon: Handshake,
             value: isNewOffersPending ? (
               <StatValueSkeleton />
             ) : (
@@ -233,6 +245,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
           {
             key: "pending",
             label: "Pending Commission",
+            icon: Wallet2,
             value: wallet.isPending ? (
               <StatValueSkeleton />
             ) : (
@@ -244,6 +257,7 @@ export function RecruiterDashboard({ firstName }: { firstName: string }) {
           {
             key: "ytd",
             label: "Commissions YTD",
+            icon: CircleDollarSign,
             value: wallet.isPending ? (
               <StatValueSkeleton />
             ) : (

@@ -3,7 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Briefcase, Inbox, Search } from "lucide-react";
+import {
+  Briefcase,
+  CalendarCheck,
+  Eye,
+  Handshake,
+  Inbox,
+  Search,
+  UserCheck,
+  Users,
+  UserX,
+  type LucideIcon,
+} from "lucide-react";
 
 import {
   CANDIDATE_STATUSES,
@@ -126,6 +137,8 @@ const COLUMNS: ColumnDef[] = [
 interface StatCardDef {
   key: CandidateStatus | "total";
   label: string;
+  /** What the figure is about, in the card's tinted square. */
+  icon: LucideIcon;
   value: (stats: InboxSubmissionStats) => number;
 }
 
@@ -146,22 +159,30 @@ const STAT_CARDS: StatCardDef[] = [
   {
     key: "total",
     label: "Total Submissions",
+    icon: Users,
     value: (s) => s.total,
   },
-  { key: "submitted", label: "New", value: (s) => s.submitted },
+  { key: "submitted", label: "New", icon: Inbox, value: (s) => s.submitted },
   {
     key: "reviewing",
     label: "Reviewing",
+    icon: Eye,
     value: (s) => s.reviewing,
   },
   {
     key: "interviewing",
     label: "Scheduled",
+    icon: CalendarCheck,
     value: (s) => s.interviewing,
   },
-  { key: "passed", label: "Passed", value: (s) => s.passed },
-  { key: "offered", label: "Offered", value: (s) => s.offered },
-  { key: "hired", label: "Hired", value: (s) => s.hired },
+  { key: "passed", label: "Passed", icon: UserX, value: (s) => s.passed },
+  {
+    key: "offered",
+    label: "Offered",
+    icon: Handshake,
+    value: (s) => s.offered,
+  },
+  { key: "hired", label: "Hired", icon: UserCheck, value: (s) => s.hired },
 ];
 
 function RecruiterCell({ row }: { row: InboxSubmissionRow }) {
@@ -316,9 +337,10 @@ export function CompanySubmissionsQueue() {
   };
 
   const quickViews: readonly QuickView[] = STAT_CARDS.map(
-    ({ key, label, value }) => ({
+    ({ key, label, icon, value }) => ({
       key,
       label,
+      icon,
       value: stats.data ? value(stats.data).toLocaleString() : "—",
       note: STAT_NOTES[key],
       // Every card but the total stands for a status, and the status filter

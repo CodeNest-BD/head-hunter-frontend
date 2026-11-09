@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, AlertCircle } from "lucide-react";
+import {
+  ChevronRight,
+  AlertCircle,
+  Briefcase,
+  Handshake,
+  TrendingUp,
+  Wallet2,
+} from "lucide-react";
 
 import { CompanyLogo } from "@/shared/ui-components/data/CompanyLogo";
 
@@ -204,24 +211,28 @@ export function CompanyDetail({ companyRef }: { companyRef: string }) {
     {
       key: "balance",
       label: "Wallet Balance",
+      icon: Wallet2,
       value: formatMinor(data.balanceMinor),
       note: `${formatMinor(data.availableMinor)} available · ${formatMinor(data.reservedMinor)} reserved`,
     },
     {
       key: "open-jobs",
       label: "Open Jobs",
+      icon: Briefcase,
       value: data.openJobCount.toLocaleString(),
       note: `${data.jobCount.toLocaleString()} posted in total`,
     },
     {
       key: "placements",
       label: "Placements",
+      icon: Handshake,
       value: data.placementCount.toLocaleString(),
       note: `From ${data.offerCount.toLocaleString()} offer${data.offerCount === 1 ? "" : "s"}`,
     },
     {
       key: "average-fee",
       label: "Average Fee",
+      icon: TrendingUp,
       value: data.avgFeeMinor === null ? "—" : formatMinor(data.avgFeeMinor),
       note: feeRange,
     },

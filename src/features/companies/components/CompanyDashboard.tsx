@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Briefcase, Building2, MessageSquare, UserPlus } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  Lock,
+  MessageSquare,
+  UserPlus,
+  Users,
+  Wallet2,
+} from "lucide-react";
 
 import { useWallet } from "@/features/billing";
 
@@ -150,13 +158,14 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
 
       {/* Ordered left-to-right as the employer's flow: post jobs → review
           candidates → the funds that back it all. */}
-      {/* No `tone` on any tile — see the recruiter dashboard. */}
+      {/* No `tone` on any card — see the recruiter dashboard. */}
       <QuickViewBand
         label="Company summary"
         views={[
           {
             key: "published",
             label: "Published Jobs",
+            icon: Briefcase,
             value: published.isPending ? <StatValueSkeleton /> : publishedTotal,
             // A job with no fee ranks last for recruiters, so the card still
             // says so — in words now rather than in a warm wash, since every
@@ -170,6 +179,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           {
             key: "new-candidates",
             label: "New Candidates",
+            icon: Users,
             value: inbox.isPending ? <StatValueSkeleton /> : newCandidates,
             note:
               newCandidates === 0
@@ -180,6 +190,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           {
             key: "available",
             label: "Available Funds",
+            icon: Wallet2,
             value: wallet.isPending ? (
               <StatValueSkeleton />
             ) : (
@@ -191,6 +202,7 @@ export function CompanyDashboard({ firstName }: { firstName: string }) {
           {
             key: "reserved",
             label: "Reserved Funds",
+            icon: Lock,
             value: wallet.isPending ? (
               <StatValueSkeleton />
             ) : (

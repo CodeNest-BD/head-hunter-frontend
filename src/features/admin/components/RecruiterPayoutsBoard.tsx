@@ -2,7 +2,17 @@
 
 import { Fragment, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, Banknote, ChevronRight, Clock } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  Banknote,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Clock3,
+  PauseCircle,
+  type LucideIcon,
+} from "lucide-react";
 
 import { cn } from "@/shared/libs/shadCnConfig";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
@@ -95,30 +105,35 @@ const STAGE_TILES: {
   key: "in_guarantee" | "ready" | "on_hold" | "paid";
   summaryKey: "inGuarantee" | "ready" | "onHold" | "paid";
   label: string;
+  icon: LucideIcon;
   note: string;
 }[] = [
   {
     key: "in_guarantee",
     summaryKey: "inGuarantee",
     label: "In Guarantee",
+    icon: Clock3,
     note: "Clock still running",
   },
   {
     key: "ready",
     summaryKey: "ready",
     label: "Ready for Release",
+    icon: Banknote,
     note: "Due in the next release run",
   },
   {
     key: "on_hold",
     summaryKey: "onHold",
     label: "On Hold",
+    icon: PauseCircle,
     note: "A dispute or an admin hold",
   },
   {
     key: "paid",
     summaryKey: "paid",
     label: "Paid",
+    icon: CheckCircle2,
     note: "Released to the recruiter",
   },
 ];
@@ -428,12 +443,13 @@ export function RecruiterPayoutsBoard({
       <QuickViewBand
         label="Payout pipeline"
         views={[
-          ...STAGE_TILES.map(({ key, summaryKey, label, note }) => {
+          ...STAGE_TILES.map(({ key, summaryKey, label, icon, note }) => {
             const total = band?.[summaryKey];
             return {
               key,
               // Paid is a flow, so it carries the window it was counted over.
               label: key === "paid" ? `${label} · ${windowLabel(days)}` : label,
+              icon,
               value: total ? formatMinor(total.amountMinor) : "—",
               note: total
                 ? `${plural(total.count, "commission")} · ${note}`
@@ -452,6 +468,7 @@ export function RecruiterPayoutsBoard({
           {
             key: "failed",
             label: `Failed · ${windowLabel(days)}`,
+            icon: AlertTriangle,
             value: band ? formatMinor(band.failed.amountMinor) : "—",
             note: band
               ? `${plural(band.failed.count, "bank withdrawal")} · Needs follow-up`
